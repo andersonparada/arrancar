@@ -14,7 +14,7 @@ export function usarValeDeGasto(fondoId: () => string, alTerminar: () => Promise
   async function traerConceptos(): Promise<void> {
     if (traidos) return;
     try {
-      conceptos.value = await catalogosDeCajaChica.conceptosDeGasto();
+      conceptos.value = (await catalogosDeCajaChica.obtener()).conceptosDeGasto;
       traidos = true;
     } catch (error) {
       avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar los conceptos de gasto.');

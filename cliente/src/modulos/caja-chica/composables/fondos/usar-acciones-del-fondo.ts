@@ -5,6 +5,12 @@ import type { Fondo } from '../../servicios/tipos-de-fondos';
 import { edicionDeMotivo, faltaElMotivo } from '../edicion-de-motivo';
 import { usarVentanaDeAccion } from '../usar-ventana-de-accion';
 import {
+  cambiaElTope,
+  cuerpoDeEdicionDelFondo,
+  edicionDeDatosDelFondo,
+  faltaDelFondo,
+} from './edicion-de-datos-del-fondo';
+import {
   cuerpoDeAnulacionDeApertura,
   cuerpoDeAumento,
   cuerpoDeCustodio,
@@ -43,6 +49,20 @@ function ventanasDeDinero(contexto: Contexto) {
   return { aumentar, disminuir };
 }
 
+/** Corregir el nombre, la localidad, el tope y la cuenta; si el tope cambia, la ventana pide el motivo. */
+function ventanaDeEdicion(contexto: Contexto) {
+  const { fondo } = contexto;
+  const edicion = usarVentanaDeAccion({
+    inicial: () => edicionDeDatosDelFondo(fondo.value),
+    validar: faltaDelFondo,
+    alAbrir: contexto.alAbrir,
+    enviar: (datos) => apiFondos.editar(idDe(contexto), cuerpoDeEdicionDelFondo(datos, fondo.value)),
+    exito: 'Fondo actualizado.',
+    alTerminar: contexto.recargar,
+  });
+  return { edicion, cambiaElTope: computed(() => cambiaElTope(edicion.edicion.value, fondo.value)) };
+}
+
 /** Cambiar el custodio y anular la apertura (esta lleva de vuelta a la lista: el fondo ya no se usa). */
 function ventanasDeCambio(contexto: Contexto) {
   const router = useRouter();
@@ -69,6 +89,7 @@ export function usarAccionesDelFondo(fondo: Ref<Fondo | null>, recargar: () => P
   const contexto = { fondo, recargar, alAbrir: catalogos.cargar };
   return {
     catalogos,
+    ...ventanaDeEdicion(contexto),
     ...ventanasDeDinero(contexto),
     ...ventanasDeCambio(contexto),
     abierto: computed(() => fondo.value?.estado === 'abierto'),

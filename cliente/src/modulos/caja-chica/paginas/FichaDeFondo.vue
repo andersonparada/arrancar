@@ -33,6 +33,7 @@ const volver = { texto: 'Fondos de caja chica', ruta: { name: 'caja-chica.fondos
       >
         <AccionesDelFondo
           :fondo="ficha.fondo.value"
+          @editar="acciones.edicion.abrir"
           @aumentar="acciones.aumentar.abrir"
           @disminuir="acciones.disminuir.abrir"
           @custodio="acciones.custodio.abrir"

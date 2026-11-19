@@ -1,14 +1,23 @@
 <script setup lang="ts">
-import { ArrowDownToLine, ArrowUpFromLine, Ban, UserRoundCog } from 'lucide-vue-next';
+import { ArrowDownToLine, ArrowUpFromLine, Ban, Pencil, UserRoundCog } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import type { Fondo } from '../servicios/tipos-de-fondos';
 
 /** Las acciones del fondo. Solo se ven las que el servidor dice que se pueden hacer y el usuario tiene permiso de hacer. */
 defineProps<{ fondo: Fondo }>();
-const emit = defineEmits<{ aumentar: []; disminuir: []; custodio: []; anular: [] }>();
+const emit = defineEmits<{ editar: []; aumentar: []; disminuir: []; custodio: []; anular: [] }>();
 </script>
 
 <template>
+  <BotonBase
+    v-if="fondo.puedeEditar"
+    v-permiso="'caja-chica.fondos.editar'"
+    variante="secundario"
+    :icono="Pencil"
+    @click="emit('editar')"
+  >
+    Editar
+  </BotonBase>
   <BotonBase
     v-if="fondo.puedeAumentar"
     v-permiso="'caja-chica.fondos.cambiar-monto'"

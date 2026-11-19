@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { RouterLink } from 'vue-router';
 import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
@@ -73,13 +72,8 @@ function elegirForma(forma: FormaDeEntrega): void {
       :error="errorDelMedio"
     />
     <p v-if="sinMedios" class="text-sm text-tierra-600 dark:text-tierra-300" role="status">
-      No hay {{ esCheque ? 'chequeras activas' : 'cuentas bancarias activas' }} que pueda ver. Créelas en
-      <RouterLink
-        :to="esCheque ? '/bancos/chequeras' : '/bancos/cuentas-bancarias'"
-        class="font-medium underline underline-offset-2"
-        >Bancos</RouterLink
-      >
-      o pida el acceso a Bancos.
+      No hay {{ esCheque ? 'chequeras activas' : 'cuentas bancarias activas' }}. Pida que las creen en Bancos para poder
+      continuar.
     </p>
 
     <template v-if="esCheque">

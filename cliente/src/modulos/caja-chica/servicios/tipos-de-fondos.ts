@@ -45,11 +45,13 @@ export interface FondoResumen {
 export interface Fondo extends FondoResumen {
   topePorComprobante: string | null;
   cuentaBancariaId: string | null;
+  cuentaBancariaNombre: string | null;
   fechaDeCierre: string | null;
   motivoDeCierre: string | null;
   observaciones: string | null;
   custodios: CustodioDelFondo[];
   cambiosDeMonto: CambioDeMonto[];
+  puedeEditar: boolean;
   puedeAumentar: boolean;
   puedeDisminuir: boolean;
   puedeCambiarCustodio: boolean;

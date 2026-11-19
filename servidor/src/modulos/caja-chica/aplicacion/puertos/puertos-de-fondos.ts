@@ -93,6 +93,8 @@ export interface DatosDeLectura {
   custodio: string | null;
   custodioUsuarioId: string | null;
   localidadNombre: string | null;
+  /** La cuenta bancaria que se propone al reponer, si el fondo la tiene. */
+  cuentaBancariaNombre: string | null;
   montoCentavos: number;
   pendienteCentavos: number;
   valesCentavos: number;

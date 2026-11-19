@@ -66,6 +66,9 @@ const puedeSobreElTope = usarSesion().puede('caja-chica.comprobantes.sobre-el-to
         :opciones="opciones"
         :error="errores.conceptoDeGastoId"
       />
+      <p v-if="conceptos.length === 0" class="text-sm text-tierra-600 dark:text-tierra-300" role="status">
+        No hay conceptos de gasto activos. Pida que creen uno en Libro de compras para registrar el vale.
+      </p>
       <CampoTexto
         v-model="edicion.motivoSinDocumento"
         etiqueta="Por qué no hay factura"

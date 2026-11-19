@@ -3631,6 +3631,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   solo aparecen con el permiso y si `puede*` del servidor lo dice. **Ingreso de facturas** (libro): lee también `destino` de la
   consulta, deja ese destino fijo (la referencia solo la entiende su módulo) y, al registrar, vuelve al destino mostrando los avisos
   que dio (p. ej. «Quedó en la bandeja de Caja chica»). Lo demás de CC-8/CC-9 (reposición, arqueo, vales provisionales, cierre,
-  impresiones) queda para sus pasos. Los catálogos (cuentas y chequeras de Bancos, localidades, conceptos de gasto y usuarios) se
-  leen por sus rutas de API desde `servicios/catalogos.api.ts`: cada uno pide el permiso de ver de su módulo y, si falta, esa lista
-  queda vacía; pendiente un endpoint propio de Caja chica para no depender de esos permisos.
+  impresiones) queda para sus pasos. Los catálogos se leen del endpoint propio de Caja chica (ver la entrada siguiente).
+- **2026-11-19 (CC-8, correcciones de la revisión)**: (1) **Catálogos propios** — `GET /caja-chica/catalogos` (servidor:
+  `aplicacion/casos-uso/catalogos`, `infraestructura/persistencia/consultas-de-catalogos.drizzle.ts`, `http/catalogos.rutas.ts`)
+  devuelve cuentas y chequeras activas, localidades, usuarios de la empresa y conceptos de gasto, por nombre, sin pedir permisos
+  de Bancos, Empresas, Libro de compras ni Usuarios (§9.1: abrir un fondo no pide permisos de Bancos). Exige `fondos.ver` y alguno
+  de `fondos.crear`, `fondos.editar`, `fondos.cambiar-monto`, `comprobantes.crear` o `reposiciones.crear`; no se declaró un permiso
+  nuevo. **No devuelve el saldo** de las cuentas (es de Bancos): las cuentas se ofrecen solo por nombre. Una sola petición llena
+  todas las ventanas; si falla se avisa y se reintenta al abrir. Los textos de lista vacía ya no remiten a un acceso de Bancos que
+  este usuario no tiene: piden que creen la chequera, cuenta o concepto. (2) **Editar el fondo** — acción «Editar» en la ficha
+  (`caja-chica.fondos.editar` y `puedeEditar` del servidor, nuevo en el DTO), ventana con nombre, localidad, tope y cuenta que se
+  propone al reponer; el motivo del tope solo se pide si el tope cambia. La ficha muestra la «Cuenta para reponer» con el nombre
+  que ahora da el servidor (`cuentaBancariaNombre` en el DTO del fondo).

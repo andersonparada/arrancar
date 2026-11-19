@@ -56,6 +56,8 @@ describe('abrir con cheque', () => {
       topePorComprobante: '300.00',
       aperturaAnulada: false,
       puedeAnularApertura: true,
+      puedeEditar: true,
+      cuentaBancariaNombre: expect.any(String),
     });
     expect(fondo.cambiosDeMonto).toMatchObject([{ tipo: 'apertura', forma: 'cheque', monto: '1500.00' }]);
     const [apertura] = await cambiosEnBase(fondo.id);

@@ -1,5 +1,4 @@
 import type { OpcionBuscable } from '@/modulos/core/utilidades/busqueda-de-opciones';
-import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type {
   ChequeraParaElFondo,
   CuentaParaElFondo,
@@ -30,10 +29,10 @@ export function opcionesDeChequeras(chequeras: readonly ChequeraParaElFondo[]): 
   );
 }
 
-/** Las cuentas activas con su saldo. */
+/** Las cuentas activas, por nombre (el saldo es de Bancos y no se ofrece aquí). */
 export function opcionesDeCuentas(cuentas: readonly CuentaParaElFondo[], vacia?: string): Opcion[] {
   return ordenadas(
-    cuentas.map((c) => ({ valor: c.id, texto: `${c.nombre} · saldo ${formatearMonto(c.saldo)}` })),
+    cuentas.map((c) => ({ valor: c.id, texto: c.nombre })),
     vacia,
   );
 }

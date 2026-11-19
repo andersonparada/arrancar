@@ -231,7 +231,7 @@ export async function armarEscenario(montoDelFondoCentavos = 100_000): Promise<E
           {
             custodio: 'Juan',
             custodioUsuarioId: null,
-            localidadNombre: null,
+            ...{ localidadNombre: null, cuentaBancariaNombre: null },
             montoCentavos: montoDelFondoCentavos,
             pendienteCentavos: comprobantes.pendienteDe(id),
             valesCentavos: 0,

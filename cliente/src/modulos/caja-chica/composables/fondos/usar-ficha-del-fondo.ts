@@ -46,7 +46,7 @@ export function usarFichaDelFondo(id: string) {
     cargandoComprobantes: comprobantes.cargando,
     conRetencion: conRetencion.datos,
     ecuacion: computed(() => (fondo.datos.value ? partesDeLaEcuacion(fondo.datos.value) : [])),
-    detalles: computed(() => (fondo.datos.value ? detallesDeLaFicha(fondo.datos.value, null) : [])),
+    detalles: computed(() => (fondo.datos.value ? detallesDeLaFicha(fondo.datos.value) : [])),
     recargar: () => Promise.all([fondo.cargar(), comprobantes.cargar(), conRetencion.cargar()]),
   };
 }

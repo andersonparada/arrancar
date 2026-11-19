@@ -25,11 +25,13 @@ const fondo: Fondo = {
   avisos: [],
   topePorComprobante: null,
   cuentaBancariaId: null,
+  cuentaBancariaNombre: null,
   fechaDeCierre: null,
   motivoDeCierre: null,
   observaciones: null,
   custodios: [],
   cambiosDeMonto: [],
+  puedeEditar: true,
   puedeAumentar: true,
   puedeDisminuir: true,
   puedeCambiarCustodio: true,
@@ -52,10 +54,16 @@ describe('detalles del fondo', () => {
     ]);
   });
 
+  it('la ficha muestra la cuenta para reponer solo si el fondo la tiene', () => {
+    expect(detallesDeLaFicha(fondo).some((d) => d.etiqueta === 'Cuenta para reponer')).toBe(false);
+    const conCuenta = { ...fondo, cuentaBancariaId: 'c-1', cuentaBancariaNombre: 'Banrural 001' };
+    expect(detallesDeLaFicha(conCuenta).find((d) => d.etiqueta === 'Cuenta para reponer')?.valor).toBe('Banrural 001');
+  });
+
   it('la ficha agrega el cierre solo si el fondo se cerró', () => {
-    expect(detallesDeLaFicha(fondo, null).some((d) => d.etiqueta === 'Cierre')).toBe(false);
+    expect(detallesDeLaFicha(fondo).some((d) => d.etiqueta === 'Cierre')).toBe(false);
     const cerrado = { ...fondo, estado: 'cerrado' as const, fechaDeCierre: '2026-11-01', motivoDeCierre: 'Se cerró' };
-    expect(detallesDeLaFicha(cerrado, null).some((d) => d.etiqueta === 'Motivo del cierre')).toBe(true);
+    expect(detallesDeLaFicha(cerrado).some((d) => d.etiqueta === 'Motivo del cierre')).toBe(true);
   });
 
   it('el estado distingue la apertura anulada', () => {

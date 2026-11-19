@@ -1,37 +1,34 @@
-import { ref } from 'vue';
-import {
-  catalogosDeCajaChica,
-  type ChequeraParaElFondo,
-  type CuentaParaElFondo,
-  type LocalidadParaElFondo,
-  type UsuarioParaElFondo,
-} from '../../servicios/catalogos.api';
+import { reactive, ref, toRefs } from 'vue';
+import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { catalogosDeCajaChica, type CatalogosDeCajaChicaDatos } from '../../servicios/catalogos.api';
 
 /**
- * Lo que se elige al abrir un fondo o moverle el dinero: cuentas, chequeras, localidades y usuarios. Se traen la
- * primera vez que se pide; lo que el usuario no tiene permiso de ver queda vacío y el formulario sigue funcionando.
+ * Lo que se elige al abrir un fondo o moverle el dinero: cuentas, chequeras, localidades y usuarios. Se traen una vez,
+ * de una sola petición a Caja chica; si falla se avisa y se vuelve a intentar al abrir la ventana otra vez.
  */
 export function usarCatalogosDelFondo() {
-  const cuentas = ref<CuentaParaElFondo[]>([]);
-  const chequeras = ref<ChequeraParaElFondo[]>([]);
-  const localidades = ref<LocalidadParaElFondo[]>([]);
-  const usuarios = ref<UsuarioParaElFondo[]>([]);
+  const avisos = usarAvisos();
+  const datos = reactive<Omit<CatalogosDeCajaChicaDatos, 'conceptosDeGasto'>>({
+    cuentas: [],
+    chequeras: [],
+    localidades: [],
+    usuarios: [],
+  });
   const cargando = ref(false);
   let cargado = false;
 
   async function cargar(): Promise<void> {
     if (cargado) return;
-    cargado = true;
     cargando.value = true;
-    const c = catalogosDeCajaChica;
-    const resultados = await Promise.allSettled([c.cuentas(), c.chequeras(), c.localidades(), c.usuarios()]);
-    const [deCuentas, deChequeras, deLocalidades, deUsuarios] = resultados;
-    if (deCuentas.status === 'fulfilled') cuentas.value = deCuentas.value;
-    if (deChequeras.status === 'fulfilled') chequeras.value = deChequeras.value;
-    if (deLocalidades.status === 'fulfilled') localidades.value = deLocalidades.value;
-    if (deUsuarios.status === 'fulfilled') usuarios.value = deUsuarios.value;
-    cargando.value = false;
+    try {
+      Object.assign(datos, await catalogosDeCajaChica.obtener());
+      cargado = true;
+    } catch (error) {
+      avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar las listas para elegir.');
+    } finally {
+      cargando.value = false;
+    }
   }
 
-  return { cuentas, chequeras, localidades, usuarios, cargando, cargar };
+  return { ...toRefs(datos), cargando, cargar };
 }

@@ -25,7 +25,7 @@ export function partesDeLaEcuacion(fondo: FondoResumen): DetalleDeRegistro[] {
 }
 
 /** Los datos fijos de la ficha. */
-export function detallesDeLaFicha(fondo: Fondo, nombreDeLaCuenta: string | null): DetalleDeRegistro[] {
+export function detallesDeLaFicha(fondo: Fondo): DetalleDeRegistro[] {
   const detalles: DetalleDeRegistro[] = [
     { etiqueta: 'Estado', valor: textoDelEstado(fondo) },
     { etiqueta: 'Custodio', valor: fondo.custodio ?? 'Sin custodio' },
@@ -36,7 +36,7 @@ export function detallesDeLaFicha(fondo: Fondo, nombreDeLaCuenta: string | null)
       valor: fondo.topePorComprobante ? formatearMonto(fondo.topePorComprobante) : 'El de la empresa',
     },
   ];
-  if (nombreDeLaCuenta) detalles.push({ etiqueta: 'Cuenta bancaria', valor: nombreDeLaCuenta });
+  if (fondo.cuentaBancariaNombre) detalles.push({ etiqueta: 'Cuenta para reponer', valor: fondo.cuentaBancariaNombre });
   if (fondo.fechaDeCierre) {
     detalles.push({ etiqueta: 'Cierre', valor: formatearFecha(fondo.fechaDeCierre) });
     detalles.push({ etiqueta: 'Motivo del cierre', valor: fondo.motivoDeCierre ?? '—', largo: true });

@@ -7,6 +7,7 @@ import type { Fondo } from '../servicios/tipos-de-fondos';
 import VentanaDeAsignacion from './VentanaDeAsignacion.vue';
 import VentanaDeAumento from './VentanaDeAumento.vue';
 import VentanaDeCustodio from './VentanaDeCustodio.vue';
+import VentanaDeEdicionDelFondo from './VentanaDeEdicionDelFondo.vue';
 import VentanaDeDisminucion from './VentanaDeDisminucion.vue';
 import VentanaDeMotivo from './VentanaDeMotivo.vue';
 import VentanaDeValeDeGasto from './VentanaDeValeDeGasto.vue';
@@ -20,6 +21,17 @@ defineProps<{
 </script>
 
 <template>
+  <VentanaDeEdicionDelFondo
+    :model-value="acciones.edicion.edicion"
+    :abierta="acciones.edicion.abierta"
+    :enviando="acciones.edicion.enviando"
+    :errores="acciones.edicion.errores"
+    :localidades="acciones.catalogos.localidades"
+    :cuentas="acciones.catalogos.cuentas"
+    :cambia-el-tope="acciones.cambiaElTope"
+    @cerrar="acciones.edicion.cerrar"
+    @guardar="acciones.edicion.guardar"
+  />
   <VentanaDeAumento
     :model-value="acciones.aumentar.edicion"
     :abierta="acciones.aumentar.abierta"
