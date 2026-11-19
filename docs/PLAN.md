@@ -3025,3 +3025,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `reglas-de-articulo`, `textos-de-catalogo`, `cantidades`, `opciones-de-referencias`). Pendiente: la ficha sin kardex hasta
   INV-4c; las bodegas y su asignación son de INV-2c.
 - 2026-11-18 — **INV-1, correcciones de revisión**: el código propuesto del artículo usa una fecha fija para que el correlativo no se reinicie por año aunque la empresa reinicie los suyos, y si no hay código libre responde el error esperado `sin_codigo_libre` (antes un 500). Los conceptos que ofrece el artículo son solo activos y que no sean de activo fijo. Pendientes bajos: conversiones con unidad inactiva, formato de factores, Docena y coherencia de lotes al llegar el kardex (INV-4).
+- **2026-11-19 — INV-2 (Inventarios, servidor).** Bodegas con alcance de registros propio `inventarios.bodegas`: tablas
+  `bodegas` y `accesos_a_bodegas` (migración `0003_inv2_bodegas_y_accesos`, con el disparador `asignar_al_creador` del core
+  y `asignar_bodega_al_responsable`, que da acceso al responsable que es usuario de la empresa sin pedirle el permiso de
+  asignar, como el custodio de Caja chica), permisos `ver`, `ver-todas`, `crear`, `editar`, `eliminar`, `asignar`,
+  `importar` y `exportar`, y `recursosConAlcance`. CRUD (`GET/POST/PUT/DELETE /inventarios/bodegas`; inactivar con
+  auditoría), ventana de asignación con `operadorParaAsignar` (`/inventarios/bodegas/accesos/...`, `asignar` y `quitar`
+  auditados en `inventarios.accesos-a-bodegas`, también los del creador y el responsable) y Excel con `sinAsignarAlCrear`
+  (localidad por nombre). Generada con `npm run generar -- recurso inventarios/bodega` (solo la parte del servidor; sus
+  pantallas son de INV-2c). Pruebas: dominio y casos de uso, tablas (checks, únicos, RLS de alcance, disparadores,
+  ventana) y API de aislamiento entre bodegueros. Decisiones: el número de migración es `0003` (el `0002` ya era la
+  búsqueda de artículos); la regla «no se inactiva con existencias, conteos ni traslados en tránsito» y la guardia de
+  eliminar con documentos llegan con las tablas de INV-4 (hoy eliminar solo lo impiden las llaves); el responsable con
+  usuario no va en el Excel (se elige en el formulario); la lista de usuarios de una bodega exige `asignar`.
