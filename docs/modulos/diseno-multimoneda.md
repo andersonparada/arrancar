@@ -1370,9 +1370,18 @@ ese número para las monedas distintas del USD.
 | C. Guardar solo el cruce y convertir al usar | `referencia` en la convención publicada; `vigente` combina con el USD al leer | Fiel a la fuente | Cambia el significado de `referencia` según la moneda; `vigente`, `TipoDeCambio`, los reportes y el diferencial cambiario (§8) tendrían que conocer convenciones; un USD corregido cambiaría el EUR de días ya registrados. Rechazada |
 | D. Guardar el cruce en una tabla aparte y el Q por unidad en `tipos_de_cambio` | Dos tablas | Separa fuente y resultado | Duplica la versión, el índice único y la bitácora sin ganar nada sobre A |
 
-**Recomendada: A.** Fórmula, con aritmética entera (`bigint`, sin `number`), igual que `referenciaEscalada`:
+**Base legal (dictamen de cruces, §1).** La fórmula es la metodología oficial de la Junta Monetaria, no una aproximación:
+**JM-126-2006, numeral 2** (reformada por JM-55-2010; antes JM-130-2001, numeral 2), dictada en virtud del Decreto
+94-2000, art. 4: el tipo de las demás monedas «se determinará por la equivalencia de la moneda extranjera de que se trate
+con relación al dólar…, al cual se aplicará el Tipo de Cambio de Referencia del quetzal respecto al dólar», con
+cotizaciones tomadas entre las 8:00 y las 9:00, y «tendrán vigencia durante el día de que se trate, debiéndose citar la
+fuente». De ahí la vigencia de un solo día (B.9) y que se guarde lo publicado (opción A). El servicio web no es fuente
+oficial («no constituye un servicio oficial de información»), otra razón para guardar el dato original.
 
-- `p` = valor publicado del día (B.5: el promedio de compra y venta), con todos sus decimales (hasta 9).
+**Recomendada: A** (dictamen: correcto). Fórmula, con aritmética entera (`bigint`, sin `number`), igual que `referenciaEscalada`:
+
+- `p` = valor publicado del día (B.5: el promedio de compra y venta **del cruce publicado**, sacado antes de convertir),
+  con todos sus decimales (hasta 9).
 - `d` = `referencia` del USD **del Banguat** para la **misma fecha** (`origen = 'banguat'`, código 2). El USD tiene fila
   todos los días calendario (también en asuetos, repitiendo), así que todo día con cruce tiene su USD.
 - `usd_por_unidad` (EUR, GBP): `referencia = d × p`.
@@ -1403,8 +1412,9 @@ siguiente (B.9). No se usa el USD de otro día: el dictamen pide no inventar la 
 **Precisión (riesgo, no bloquea).** Con 8 decimales, el error relativo de redondeo es como mucho `0.5 × 10⁻⁸ ÷
 referencia`. En el COP (0.0023) es 2.2 × 10⁻⁶: un documento de Q100,000 en pesos colombianos puede diferir hasta Q0.22
 del cálculo con el cruce exacto; en el CRC, Q0.03; en el MXN, menos de un centavo. Ampliar la escala obligaría a cambiar
-`TipoDeCambio` (8 decimales) y las columnas de tipo de cambio de todos los módulos: no lo recomiendo en v1. Lo anoto
-como V-15 para el contador (B.13) y como pregunta P-B6.
+`TipoDeCambio` (8 decimales) y las columnas de tipo de cambio de todos los módulos: no lo recomiendo en v1. **El contador
+lo acepta en v1 (V-15 resuelto):** la diferencia es menor que el redondeo de un DTE a centavos por línea y el dato
+original queda guardado; no hace falta bloquear COP ni ARS (P-B6 cerrada en a).
 
 ### B.4 Convención por código: columna en `core.monedas_del_banguat`
 
@@ -1463,8 +1473,26 @@ euro que en el peso mexicano.
   fue 0.96 %.
 - Si `venta < compra`, `dato_invalido`.
 
-Es una decisión con efecto fiscal (qué tipo se aplica a un documento en otra moneda): **la revisa `contador-guatemala`
-(V-14) antes de preguntarla al usuario** (P-B2), y reemplaza la respuesta D-3 del usuario si la acepta.
+**Dictamen (V-14, correcto con ajuste).** Ninguna norma dice qué hacer con compra ≠ venta en el cruce; el promedio sigue
+el espíritu de JM-126-2006 (una sola referencia para el USD, numerales 1 y 4), es el medio usual del mercado y cabe en
+NIIF para PYMES 30.8 y 30.9. Por eso:
+
+- **Es una política contable de la instalación, no «la referencia del Banguat».** Así se nombra en la documentación, en
+  la ventana de muestra y en el reporte, que lo dice en una nota: «Q por unidad = promedio del cruce publicado ×
+  referencia USD» (o «referencia USD ÷ promedio del cruce publicado» en las monedas de unidades por dólar). Ningún texto
+  de la app llama «tipo del Banguat» al valor en quetzales de una moneda distinta del USD; el USD sí lo es.
+- **Orden fijo: primero el promedio del cruce publicado, después la conversión.** `p = (compra + venta) ÷ 2` en la
+  convención publicada y luego `d × p` o `d ÷ p` (B.3). En las monedas de unidades por dólar, `d ÷ promedio` **no** es
+  igual al promedio de `d ÷ compra` y `d ÷ venta` (CRC: unos Q2 por cada Q100,000). Prueba unitaria en MM-3a″ con el CRC
+  del 18/11 (compra 444.77, venta 449.04, USD 7.64489): `normalizarAQuetzales` da 0.01710630 (`7.64489 ÷ 446.905`) y no
+  0.01710669 (promedio de `7.64489 ÷ 444.77` y `7.64489 ÷ 449.04`).
+- **Peso del medio diferencial:** CRC 0.48 %, DOP 0.36 %, HNL 0.25 % (en Q100,000 en colones, promedio contra venta
+  mueve unos Q480). Para esas monedas importa C-6 (B.13) antes de encender su carga; ver Q-1.
+- **Condición de C-5:** si la consulta pública del Banguat resulta mostrar un valor **en quetzales** para las demás
+  monedas, Arrancar debe reproducir **ese** valor y esta política se ajusta antes de MM-3d (la columna `compra`/`venta`
+  guardada permite recalcular sin perder nada).
+
+Reemplaza la respuesta D-3 del usuario (P-B2, confirmada por el contador).
 
 ### B.6 Comprobaciones al cargar (reemplazan las filas de A.7 para las demás monedas)
 
@@ -1477,7 +1505,7 @@ En orden; la primera que falla decide el resultado. El USD sigue como está (ban
 | 3 | Diferencial de hasta 3 % (B.5) | `valor_ambiguo` |
 | 4 | Hay USD `banguat` de esa fecha (B.3) | `sin_dolar_del_dia` (resultado nuevo); queda como hueco |
 | 5 | **Inversión probable** contra el valor publicado anterior (promedio de la fila `banguat` más reciente de los 7 días anteriores, en la misma convención): si `p` cambió más de 5 % **y** `p × anterior` está más cerca de 1 que `p ÷ anterior` | `convencion_dudosa` (resultado nuevo): no se guarda; aviso en el panel |
-| 6 | Variación del valor en quetzales de más de 25 % contra el anterior | `variacion_excesiva` (como A.7) |
+| 6 | Variación del valor en quetzales de más de 25 % contra el anterior | `variacion_excesiva` (como A.7). El aviso del panel y la bitácora dicen la salida: «Si la variación es real (una devaluación), ingrese el tipo a mano con su motivo» y llevan a la ventana de ingreso manual (§4.4). Una devaluación real grande (ARS de diciembre de 2023, más de 50 %) cae aquí a propósito |
 | 7 | Variación de más de 3 % del **valor publicado** o del valor en quetzales | Se guarda con aviso (sustituye al «cruce implícito» de A.7, que ya no tiene sentido: el cruce es el dato de entrada) |
 
 Por qué la 5 y no solo la 6: si el euro llegara un día «al revés» (0.8883 EUR por USD en vez de 1.1257 USD por EUR), el
@@ -1544,6 +1572,11 @@ de EUR invertido, CHF moviéndose 2 % cerca de la paridad y ARS devaluado 87 %.
     `falta_publicacion`. Así se respeta D-4 del usuario («aviso solo si faltó una publicación esperada») con los días
     reales.
   - El aviso de atraso de 3 días hábiles (A.6) cuenta lunes a viernes.
+  - **Sábado y domingo no se sintetiza nada** (dictamen de cruces, §2): no se arma un EUR del sábado con el USD del
+    sábado. Ese día no existe referencia del EUR; `vigente` devuelve la del último día publicado (el viernes) por la
+    regla de D-4. Prueba en MM-3c: tras un viernes con EUR y un sábado con USD, no aparece fila de EUR del sábado.
+  - **Asueto guatemalteco** (V-16, resuelto): el cruce del día × el USD repetido de ese día, que es el último publicado y
+    el que rige (JM-126-2006, numeral 1).
 - **Orden dentro de una vuelta:** el USD siempre primero (`monedasACargar` ordena el código 2 al inicio), para que el
   relleno de 45 días tenga el USD antes de normalizar las demás. La vuelta `manana` (09:30) usa el USD que dejaron la
   `noche` anterior o la `madrugada`; si falta, sus monedas quedan `sin_dolar_del_dia` y la vuelta `noche` las repite
@@ -1579,7 +1612,8 @@ de EUR invertido, CHF moviéndose 2 % cerca de la paridad y ARS devaluado 87 %.
   7.64489 = Q10.06411544». En Tipos de cambio, el detalle de una fila muestra lo publicado, la convención y el USD usado; la
   bitácora traduce `sin_dolar_del_dia`, `convencion_dudosa` y `sin_convencion`.
 - **Excel:** el reporte «Tipos de cambio» de Multimoneda (Reportes: imprime y exporta; rama de MM-5) suma las columnas
-  «Compra publicada», «Venta publicada», «Convención» y «Dólar usado» (`tipos-de-cambio.columnas.ts`). Las ventanas de
+  «Compra publicada», «Venta publicada», «Convención» y «Dólar usado» (`tipos-de-cambio.columnas.ts`), y una nota al pie
+  (impresa y en el Excel) con la política contable de B.5: «Q por unidad = promedio del cruce publicado × referencia USD». Las ventanas de
   Plataforma no importan ni exportan (A.9).
 - **Permisos:** ninguno nuevo.
 - **Auditoría:** sin cambios; `core.tipos_de_cambio` y la bitácora son su propio rastro y nunca se borran; la convención
@@ -1607,31 +1641,42 @@ no puede pasar es encender `CARGAR_TIPOS_DE_CAMBIO` antes de MM-3c (P-B8).
 
 | Paso | Qué | Pruebas clave | Depende de |
 |---|---|---|---|
-| **MM-1b** (servidor, datos del núcleo) | Migración `00xx_cruces_del_banguat`: `convencion` en `monedas_del_banguat` con los datos de B.4 y su `revoke`; `convencion`, `dolar_usado_id`, checks e índice en `tipos_de_cambio`; resultados nuevos en `consultas_al_banguat`; guarda de datos existentes; PLN. Tablas Drizzle | La convención sobrevive a `ActualizarMonedasDelBanguat`; un código nuevo nace sin convención; una fila de cruce sin USD, sin compra o con `venta < compra` falla; una `manual` sin convención pasa; la app no puede cambiar `convencion`; PLN existe inactiva; la guarda detiene la migración con una fila `banguat` de otra moneda | Nada (V-14 solo frena MM-3a″ y MM-3c) |
-| **MM-3a″** (servidor, dominio, sin base) | `CODIGOS_DEL_BANGUAT_EXCLUIDOS`; URL; 28 → 24 en `main`; grabaciones reales; `validarPublicacion` sin `valor_ambiguo` por `compra ≠ venta` (solo diferencial > 3 %); `promedioPublicado`, `normalizarAQuetzales`, `inversionProbable`, `esDiaDePublicacionDeCruces`; se quita `cruceImplicito` | Los cinco ejemplos de B.3 dan exactamente esos valores; promedio con un decimal más (ARS); diferencial de 3.01 % rechazado; `venta < compra` inválido; EUR invertido → inversión; CHF ±2 % y ARS +87 % no; jueves santo y 25/12 son días de publicación, el sábado no | MM-1b (tipos) o ninguno si se programa sin base |
+| **MM-1b** (servidor, datos del núcleo) | Migración `00xx_cruces_del_banguat`: `convencion` en `monedas_del_banguat` con los datos de B.4 y su `revoke`; `convencion`, `dolar_usado_id`, checks e índice en `tipos_de_cambio`; resultados nuevos en `consultas_al_banguat`; guarda de datos existentes; PLN. Tablas Drizzle | La convención sobrevive a `ActualizarMonedasDelBanguat`; un código nuevo nace sin convención; una fila de cruce sin USD, sin compra o con `venta < compra` falla; una `manual` sin convención pasa; la app no puede cambiar `convencion`; PLN existe inactiva; la guarda detiene la migración con una fila `banguat` de otra moneda | Nada (V-14 ya resuelto) |
+| **MM-3a″** (servidor, dominio, sin base) | `CODIGOS_DEL_BANGUAT_EXCLUIDOS`; URL; 28 → 24 en `main`; grabaciones reales; `validarPublicacion` sin `valor_ambiguo` por `compra ≠ venta` (solo diferencial > 3 %); `promedioPublicado`, `normalizarAQuetzales`, `inversionProbable`, `esDiaDePublicacionDeCruces`; se quita `cruceImplicito` | Los cinco ejemplos de B.3 dan exactamente esos valores; promedio con un decimal más (ARS); el CRC del 18/11 da 0.01710630 (promedio del cruce y luego conversión) y no 0.01710669 (B.5); diferencial de 3.01 % rechazado; `venta < compra` inválido; EUR invertido → inversión; CHF ±2 % y ARS +87 % no; jueves santo y 25/12 son días de publicación, el sábado no | MM-1b (tipos) o ninguno si se programa sin base |
 | **MM-3c** (servidor, carga; sobre la rama de MM-3b integrada) | `ConsultarAlBanguat` normaliza con el USD `banguat` de la fecha y guarda `convencion` y `dolar_usado_id`; comprobaciones de B.6 en orden; `monedasACargar` solo con convención y el USD primero; días de B.9; reintentos de la noche; `vigente` con `dia_sin_calculo` solo en fin de semana; `muestra` con el valor en quetzales; `CodigoDelDolarNecesario`; 28 → 24 en las pruebas de la rama; columnas del reporte (MM-5) | Con reloj fijo: EUR del lunes con el USD del lunes; EUR sin USD → `sin_dolar_del_dia` y se rellena al llegar el USD; EUR de un asueto con el USD repetido; EUR invertido → `convencion_dudosa`; un sábado no es hueco y un asueto sí; `vigente` del EUR un sábado (`dia_sin_calculo`) y un 20 de octubre sin fila (`falta_publicacion`); quitar el código del USD con el EUR unido → 422; la referencia guardada se rehace con su fila | MM-1b, MM-3a″, rama de MM-3b integrada |
 | **MM-4** (cliente, Plataforma) | Como A.14, más B.10 | Unitarias de `edicion-de-moneda.ts` (solo `ofrecida`; texto de la convención); QA con el servidor falso devolviendo cruces | MM-3c |
-| **MM-3d** (operación, sin código) | `curl` desde producción a la URL de B.9; encender `CARGAR_TIPOS_DE_CAMBIO`; revisar la bitácora la primera semana (horas de B.9) | — | MM-3c, MM-4, P-B8 |
+| **MM-3d** (operación, sin código) | **Antes de encender:** C-5 (la consulta pública del Banguat, ¿muestra quetzales para las demás monedas?; si sí, ajustar B.5) y, si hay clientes en CRC, DOP o HNL (Q-1), C-6. Luego `curl` desde producción a la URL de B.9; encender `CARGAR_TIPOS_DE_CAMBIO`; revisar la bitácora la primera semana (horas de B.9) | C-5: comparar en 3 a 5 fechas la consulta pública con la fórmula de B.3 | MM-3c, MM-4, P-B8, C-5 (C-6 según Q-1) |
 
-### B.13 Por validar con `contador-guatemala` (antes de MM-3c)
+### B.13 Validación de `contador-guatemala` (dictamen de cruces)
 
-| # | Qué | Por qué |
+Dictamen completo: `dictamen-multimoneda-cruces-2026-11-18.md` (veredicto: **correcto con ajustes**, ya aplicados en B.3,
+B.5, B.6, B.9, B.10 y B.12). Fe de erratas del dictamen anterior: al inicio de
+`dictamen-multimoneda-monedas-del-banguat-2026-11-18.md` (la frase «de México» es JM-126-2006; Código de Comercio art.
+369, no 368; el servicio web no publica quetzales para las demás monedas).
+
+| # | Qué | Estado |
 |---|---|---|
-| V-14 | Que el tipo en quetzales de una moneda distinta del USD sea **promedio del cruce publicado × (o ÷) el USD de referencia del Banguat del mismo día**, y que el promedio de compra y venta sea aceptable como «referencia» | Reemplaza D-3 (a); afecta todo documento en otra moneda |
-| V-15 | Si el redondeo a 8 decimales en monedas de valor muy bajo (COP, ARS: hasta Q0.22 por cada Q100,000) es aceptable o si conviene impedir activarlas en v1 | B.3, precisión |
-| V-16 | Si en un asueto guatemalteco el cruce del día se combina con el USD repetido del día anterior (lo que hace la fórmula) o si debe usarse otro | B.2: el USD se repite en asuetos y el cruce no |
+| V-14 | Q por unidad = promedio del cruce publicado × (o ÷) el USD del Banguat del mismo día | **Resuelto, con la condición de C-5.** La fórmula es la de JM-126-2006, numeral 2; el promedio es política contable de la instalación (B.5) |
+| V-15 | Redondeo a 8 decimales en COP y ARS | **Resuelto: se acepta en v1** (B.3); no se bloquean |
+| V-16 | Asueto guatemalteco: cruce del día × USD repetido | **Resuelto: correcto** (JM-126-2006, numeral 1; B.9) |
+| C-5 | ¿La consulta pública del Banguat (`banguat.gob.gt/tipo_cambio/`) muestra un valor **en quetzales** para el EUR y las demás, y cuál (compra, venta o medio)? | **Pendiente, antes de MM-3d.** Abrirla en un navegador en 3 a 5 fechas y comparar con B.3; si muestra quetzales, Arrancar reproduce ese valor y B.5 se ajusta. No bloquea MM-1b, MM-3a″ ni MM-3c |
+| C-6 | ¿Qué tipo usa la precarga de Declaraguate o el libro de compras para un DTE en EUR o CRC? | **Pendiente, antes de encender la carga de CRC, DOP y HNL si hay clientes en ellas (Q-1).** Un DTE real o una consulta a la SAT (Código Tributario, art. 102; Q-2) |
 
 ### B.14 Preguntas para el usuario
 
+La primera opción es la recomendada.
+
 | # | Pregunta | Opciones | Recomendación |
 |---|---|---|---|
-| P-B1 | ¿Cómo pasamos las monedas distintas del dólar a quetzales? | A. Calcular al cargar con el dólar del Banguat del mismo día y guardar también lo publicado; B. Guardar solo el resultado; C. Guardar el cruce y convertir al usar | **A** (B.3): nada cambia para los módulos que usan el tipo y cada valor se puede explicar |
-| P-B2 | Cuando compra y venta son distintas (casi siempre), ¿qué valor tomamos? Su respuesta D-3 («no cargar») dejaría casi todas las monedas sin tipo | a. No cargar; b. Promedio; c. Venta; d. Compra | **b, promedio**, y no cargar si la diferencia pasa de 3 %; antes lo valida el contador (V-14) |
+| P-B1 | ¿Cómo pasamos las monedas distintas del dólar a quetzales? | A. Calcular al cargar con el dólar del Banguat del mismo día y guardar también lo publicado; B. Guardar solo el resultado; C. Guardar el cruce y convertir al usar | **A** (B.3): es la metodología oficial (JM-126-2006, numeral 2, confirmada por el contador), nada cambia para los módulos que usan el tipo y cada valor se puede explicar |
+| P-B2 | Cuando compra y venta son distintas (casi siempre), ¿qué valor tomamos? Su respuesta D-3 («no cargar») dejaría casi todas las monedas sin tipo | a. Promedio del cruce publicado, como política contable, y no cargar si la diferencia pasa de 3 %; b. Venta; c. Compra; d. No cargar | **a** (B.5): el contador lo confirma; ninguna norma obliga a compra ni a venta y el promedio es lo más neutral. Se revisa si C-5 muestra que el Banguat publica otro valor en quetzales |
 | P-B3 | ¿Dónde se decide si una moneda viene «en dólares por unidad» o «en unidades por dólar»? | A. Columna fijada por migración; B. Constante en el código; C. Adivinarlo por el tamaño del número; D. Que soporte lo elija | **A**, con el rechazo automático si un día llega «al revés» (B.6) |
-| P-B4 | ¿Qué días se espera tipo de las demás monedas? | a. Lunes a viernes, también en asuetos (lo que muestra el Banguat); b. Lunes a viernes sin asuetos (lo de la adenda A) | **a** (B.2 y B.9): con b, un asueto con publicación pasaría sin aviso y uno sin publicación también |
-| P-B5 | ¿Excluimos del selector, además del DEG, los bolívares y el colón salvadoreño, el quetzal, las monedas europeas retiradas por el euro y la Unidad de Cuenta del BID? | Sí / No | **Sí** (B.8): no son monedas en circulación y se confundirían con el euro |
-| P-B6 | Las monedas de valor muy bajo (peso colombiano, peso argentino) pierden hasta Q0.22 por cada Q100,000 por el redondeo a 8 decimales. | a. Aceptarlo en v1; b. No dejar activarlas en v1; c. Ampliar los decimales del tipo en todos los módulos | **a** si el contador lo acepta (V-15); si no, **b** (una regla más, como la de los decimales) |
-| P-B7 | ¿Bloqueamos en la base que la app cambie la convención (solo la cambia una migración)? | Sí / No | **Sí**: una línea en la migración |
+| P-B4 | ¿Qué días se espera tipo de las demás monedas? | a. Lunes a viernes, también en asuetos (lo que muestra el Banguat), sin inventar sábados ni domingos; b. Lunes a viernes sin asuetos (lo de la adenda A) | **a** (B.2 y B.9, confirmada por el contador): con b, un asueto con publicación pasaría sin aviso y uno sin publicación también |
+| P-B5 | ¿Excluimos del selector, además del DEG, los bolívares y el colón salvadoreño, el quetzal, las monedas europeas retiradas por el euro y la Unidad de Cuenta del BID? | Sí / No | **Sí** (B.8, confirmada por el contador): no son monedas en circulación y se confundirían con el euro |
+| P-B6 | Las monedas de valor muy bajo (peso colombiano, peso argentino) pierden hasta Q0.22 por cada Q100,000 por el redondeo a 8 decimales. | a. Aceptarlo en v1; b. No dejar activarlas en v1; c. Ampliar los decimales del tipo en todos los módulos | **a**: el contador lo acepta (V-15); es menos que el redondeo de un DTE a centavos y el dato original queda guardado |
+| P-B7 | ¿Bloqueamos en la base que la app cambie la convención (solo la cambia una migración)? | Sí / No | **Sí**: una línea en la migración; el contador lo ve como buen control interno |
 | P-B8 | ¿Integramos MM-3b y MM-5 como están (con la carga apagada) y corregimos encima, o los corregimos antes en su rama? | Integrar y corregir encima / Corregir en la rama | **Integrar y corregir encima** (B.11); la carga sigue apagada hasta MM-3d |
 | P-B9 | La dirección `www.banguat.gob.gt` no respondió desde aquí y `banguat.gob.gt` sí. ¿Cambiamos la dirección por omisión? | a. Cambiar a `banguat.gob.gt`; b. Dejar `www` y configurarla en producción; c. Las dos con respaldo | **a**, y probar desde el servidor de producción antes de encender la carga |
 | P-B10 | ¿Agregamos el zloty polaco (PLN), que el Banguat publica y faltó en la lista? | Sí / No | **Sí**, inactivo y sin código, como las demás |
+| Q-1 | ¿Algún cliente factura o compra hoy en colones costarricenses, pesos dominicanos o lempiras (las monedas con más diferencia entre compra y venta)? | a. Sí: hacer C-6 antes de encender la carga de esas monedas; b. No: encender con las demás y dejar C-6 para cuando aparezca uno | Depende del dato; si hay alguno, **a** (en Q100,000 en colones, promedio contra venta mueve unos Q480) |
+| Q-2 | ¿Presentamos una consulta formal a la SAT (Código Tributario, art. 102) sobre el tipo para DTE en monedas distintas del USD? | a. No por ahora: basta con C-5 y C-6; b. Sí, ya | **a**, salvo que un cliente tenga volumen relevante en esas monedas |
