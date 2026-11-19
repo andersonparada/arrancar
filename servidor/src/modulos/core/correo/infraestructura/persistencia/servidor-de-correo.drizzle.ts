@@ -1,3 +1,4 @@
+import { and, eq } from 'drizzle-orm';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
 import { bitacoraSuperacceso } from '../../../bitacora/infraestructura/persistencia/bitacora.tablas.js';
 import type { SecretoCifrado } from '../../aplicacion/puertos/cifrador-de-secretos.js';
@@ -74,6 +75,27 @@ export class ServidorDeCorreoDrizzle implements ServidorDeCorreoRepositorio {
         actualizadoEn: new Date(),
       });
       await tx.insert(bitacoraSuperacceso).values(this.entradaDeBitacora(entrada));
+    });
+  }
+
+  async recifrar(anterior: SecretoCifrado, nuevo: SecretoCifrado): Promise<boolean> {
+    return this.bd.transaction(async (tx) => {
+      const filas = await tx
+        .update(servidorDeCorreo)
+        .set(columnasDelSecreto(nuevo))
+        .where(and(eq(servidorDeCorreo.versionDeClave, anterior.versionDeClave), eq(servidorDeCorreo.iv, anterior.iv)))
+        .returning({ creadoPor: servidorDeCorreo.creadoPor, actualizadoPor: servidorDeCorreo.actualizadoPor });
+      const usuarioId = filas[0]?.actualizadoPor ?? filas[0]?.creadoPor;
+      if (usuarioId)
+        await tx.insert(bitacoraSuperacceso).values(
+          this.entradaDeBitacora({
+            usuarioId,
+            direccionIp: null,
+            accion: 'correo.servidor.recifrar',
+            detalle: { versionAnterior: anterior.versionDeClave, versionNueva: nuevo.versionDeClave },
+          }),
+        );
+      return filas.length > 0;
     });
   }
 

@@ -42,6 +42,10 @@ export class CifradorAesGcm implements CifradorDeSecretos {
     return this.actual !== null;
   }
 
+  esVigente(secreto: SecretoCifrado): boolean {
+    return this.actual !== null && versionDeLlave(this.actual) === secreto.versionDeClave;
+  }
+
   cifrar(texto: string, contexto: string): SecretoCifrado {
     if (!this.actual) throw new LlaveDeSecretosNoDisponible();
     const iv = randomBytes(LARGO_DEL_IV);

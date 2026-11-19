@@ -1,5 +1,6 @@
 import { DireccionDeEnvio } from '../dominio/direccion-de-envio.js';
 import { ServidorDeCorreoNoConfigurado } from '../dominio/errores-del-servidor-de-correo.js';
+import { recifrarSiHaceFalta } from './recifrar-secreto.js';
 import { CONTEXTO_DE_LA_CONTRASENA } from './contexto-de-la-contrasena.js';
 import type { CifradorDeSecretos } from './puertos/cifrador-de-secretos.js';
 import type { FabricaDeTransporte } from './puertos/fabrica-de-transporte.js';
@@ -38,8 +39,9 @@ export class ProveedorDeTransporte {
    * @throws LlaveDeSecretosNoDisponible si falta la llave con que se cifró la contraseña.
    */
   async obtener(): Promise<TransporteListo> {
-    const servidor = await this.dependencias.repositorio.obtener();
-    if (!servidor?.activo || !servidor.contrasena) throw new ServidorDeCorreoNoConfigurado();
+    const guardado = await this.dependencias.repositorio.obtener();
+    if (!guardado?.activo || !guardado.contrasena) throw new ServidorDeCorreoNoConfigurado();
+    const servidor = { ...guardado, contrasena: await recifrarSiHaceFalta(this.dependencias, guardado.contrasena) };
     const huella = huellaDe(servidor);
     if (this.actual?.huella !== huella) {
       await this.cerrar();

@@ -11,6 +11,8 @@ export interface SecretoCifrado {
 export interface CifradorDeSecretos {
   /** Falso si falta la llave en el entorno: no se puede cifrar ni descifrar nada. */
   readonly disponible: boolean;
+  /** Verdadero si el secreto se cifró con la llave actual (si no, conviene volver a cifrarlo). */
+  esVigente(secreto: SecretoCifrado): boolean;
   /** @throws LlaveDeSecretosNoDisponible si falta la llave. */
   cifrar(texto: string, contexto: string): SecretoCifrado;
   /** @throws LlaveDeSecretosNoDisponible si falta la llave con que se cifró. */

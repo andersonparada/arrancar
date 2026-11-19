@@ -2688,6 +2688,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `pago_anulado` suman `cuentaId` y `usuarioId` (cambio aditivo del contrato, en `eventos-de-pagos.ts` y
   `cuentas-por-pagar.contratos.ts`); Cuentas por pagar los llena desde el operador del caso de uso (registrar, todas las
   formas, y anular). Sin migración.
+- **2026-11-18 (correo, correcciones de la revisión de seguridad).** Rotación de la llave completada: si el secreto del
+  servidor no se cifró con `CLAVE_SECRETOS`, `ProveedorDeTransporte` y `EnviarPrueba` lo vuelven a cifrar con la vigente
+  (`recifrarSiHaceFalta`; `CifradorDeSecretos.esVigente`, `ServidorDeCorreoRepositorio.recifrar` con `update … where`
+  de la versión y el IV viejos) y anotan `correo.servidor.recifrar` en `core.bitacora_superacceso` a nombre de quien
+  guardó el servidor (sin contraseña). `EnviarLoteDeCorreos` registra por qué no hay transporte (no cuando solo falta
+  configurar el servidor). Rangos 192.0.0.0/24 y 198.18.0.0/15 rechazados como destino. Prueba de rotación A, A+B, B.
+  Pendientes de bajo riesgo: permisos por columnas y llaves compuestas en la 0026, señal de parada del lote, ficha del
+  arriendo en `resolver_correo`, bitácora de pruebas fallidas, DNS al conectar, y plazo de los correos pendientes.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la

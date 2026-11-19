@@ -5,7 +5,7 @@ const MAXIMO = 253;
 const ETIQUETA = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
 const SUFIJOS_INTERNOS = ['.local', '.localhost', '.internal', '.localdomain', '.lan', '.home.arpa'];
 
-/** Bloques IPv4 que no son de internet (primer byte, y rango del segundo): privados, bucle local, enlace local, CGNAT y reservados. */
+/** Bloques IPv4 que no son de internet (primer byte, y rango del segundo): privados, bucle local, enlace local, CGNAT, pruebas de red y reservados. */
 const BLOQUES_INTERNOS: ReadonlyArray<readonly [primero: number, desde: number, hasta: number]> = [
   [0, 0, 255],
   [10, 0, 255],
@@ -13,7 +13,9 @@ const BLOQUES_INTERNOS: ReadonlyArray<readonly [primero: number, desde: number, 
   [100, 64, 127],
   [169, 254, 254],
   [172, 16, 31],
+  [192, 0, 0],
   [192, 168, 168],
+  [198, 18, 19],
 ];
 
 function esIpv4Interna(ip: string): boolean {

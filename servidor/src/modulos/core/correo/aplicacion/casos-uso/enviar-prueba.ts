@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { DireccionDeEnvio } from '../../dominio/direccion-de-envio.js';
 import { armarCuerpos } from '../../dominio/diseno-de-correo.js';
 import { ServidorDeCorreoNoConfigurado } from '../../dominio/errores-del-servidor-de-correo.js';
+import { recifrarSiHaceFalta } from '../recifrar-secreto.js';
 import { CONTEXTO_DE_LA_CONTRASENA } from '../contexto-de-la-contrasena.js';
 import type { ResultadoDePruebaDto } from '../dto/servidor-de-correo.dto.js';
 import type { CifradorDeSecretos, SecretoCifrado } from '../puertos/cifrador-de-secretos.js';
@@ -57,7 +58,8 @@ export class EnviarPrueba {
     const direccion = DireccionDeEnvio.crear(destino.trim());
     const servidor = await repositorio.obtener();
     if (!servidor?.contrasena) throw new ServidorDeCorreoNoConfigurado();
-    const transporte = fabrica.crear(this.conexionA(servidor, servidor.contrasena));
+    const secreto = await recifrarSiHaceFalta(this.dependencias, servidor.contrasena);
+    const transporte = fabrica.crear(this.conexionA(servidor, secreto));
     try {
       const respuesta = await transporte.enviar(mensajeDePrueba(servidor, direccion));
       await repositorio.registrarPrueba(respuesta.resultado, {

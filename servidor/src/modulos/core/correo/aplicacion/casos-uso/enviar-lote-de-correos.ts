@@ -1,5 +1,6 @@
 import type { Almacenamiento } from '../../../compartido/aplicacion/almacenamiento.js';
 import { DireccionDeEnvio } from '../../dominio/direccion-de-envio.js';
+import { ServidorDeCorreoNoConfigurado } from '../../dominio/errores-del-servidor-de-correo.js';
 import { DireccionNoUtilizable } from '../../dominio/errores-de-correo.js';
 import type { ColaDeEnvio, CorreoPorEnviar, Resolucion } from '../puertos/cola-de-envio.js';
 import type { ProveedorDeTransporte, TransporteListo } from '../proveedor-de-transporte.js';
@@ -72,7 +73,10 @@ export class EnviarLoteDeCorreos {
   private async transporte(): Promise<TransporteListo | null> {
     try {
       return await this.dependencias.proveedor.obtener();
-    } catch {
+    } catch (error) {
+      // Sin transporte los correos esperan; el motivo queda en el registro (nunca el secreto).
+      if (!(error instanceof ServidorDeCorreoNoConfigurado))
+        this.dependencias.registro.error('No hay transporte de correo disponible', error);
       return null;
     }
   }
