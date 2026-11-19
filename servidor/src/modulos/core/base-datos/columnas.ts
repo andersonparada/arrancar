@@ -63,12 +63,31 @@ export const politicaPorCuenta = () =>
     withCheck: sql.raw(`cuenta_id = ${cuentaDeLaTransaccion}`),
   });
 
+interface OpcionesDeEscritura {
+  /** Sin política de `delete`: nadie borra. */
+  sinBorrar?: boolean;
+  /** La lectura también se limita a la cuenta; lo que necesita ver más allá pasa por funciones `security definer`. */
+  lecturaPorCuenta?: boolean;
+}
+
 /** Condición de cuenta para tablas sin `cuenta_id` propio: el registro padre (por su llave) es de la cuenta. */
 const delPadreEnLaCuenta = (padre: string, llave: string) =>
   `exists (select 1 from ${padre} p where p.id = ${llave} and p.cuenta_id = ${cuentaDeLaTransaccion})`;
 
-function politicasDeEscrituraConCondicion(condicion: string, opciones: { sinBorrar?: boolean }) {
-  const leer = pgPolicy('leer_sin_filtro', { as: 'permissive', for: 'select', to: rolAplicacion, using: sql`true` });
+function politicaDeLectura(condicion: string, opciones: OpcionesDeEscritura) {
+  if (!opciones.lecturaPorCuenta) {
+    return pgPolicy('leer_sin_filtro', { as: 'permissive', for: 'select', to: rolAplicacion, using: sql`true` });
+  }
+  return pgPolicy('leer_en_la_cuenta', {
+    as: 'permissive',
+    for: 'select',
+    to: rolAplicacion,
+    using: sql.raw(condicion),
+  });
+}
+
+function politicasDeEscrituraConCondicion(condicion: string, opciones: OpcionesDeEscritura) {
+  const leer = politicaDeLectura(condicion, opciones);
   const crear = pgPolicy('crear_en_la_cuenta', {
     as: 'permissive',
     for: 'insert',
@@ -96,7 +115,7 @@ function politicasDeEscrituraConCondicion(condicion: string, opciones: { sinBorr
  * escriben dentro de la cuenta de la transacción: insertar, cambiar y borrar exigen `cuenta_id` igual a `app.cuenta_id`.
  * Un error que escriba en otra cuenta lo rechaza la base. Con `sinBorrar` no hay política de `delete` (nadie borra).
  */
-export const politicasDeEscrituraPorCuenta = (opciones: { sinBorrar?: boolean } = {}) =>
+export const politicasDeEscrituraPorCuenta = (opciones: OpcionesDeEscritura = {}) =>
   politicasDeEscrituraConCondicion(`cuenta_id = ${cuentaDeLaTransaccion}`, opciones);
 
 /**

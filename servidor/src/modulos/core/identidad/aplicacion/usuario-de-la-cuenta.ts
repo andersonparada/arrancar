@@ -19,13 +19,16 @@ export async function usuarioDeLaCuenta(
   operador: Operador,
 ): Promise<UsuarioAdministrado> {
   const usuario = await repositorio.buscar(Identificador.desde(usuarioId));
-  const cuentas = usuario ? await repositorio.cuentasDe(usuario.id) : [];
-  if (!usuario || usuario.esSuperacceso || !cuentas.includes(operador.cuentaId)) {
+  const trabajaEnLaCuenta = usuario ? await repositorio.pertenenciaEn(usuario.id, operador.cuentaId) : null;
+  if (!usuario || usuario.esSuperacceso || !trabajaEnLaCuenta?.enLaCuenta) {
     throw new RecursoNoEncontrado('El usuario');
   }
   return {
     usuario,
-    pertenencia: { esElMismo: usuarioId === operador.usuarioId, soloEnEstaCuenta: cuentas.length === 1 },
+    pertenencia: {
+      esElMismo: usuarioId === operador.usuarioId,
+      soloEnEstaCuenta: trabajaEnLaCuenta.otrasCuentas === 0,
+    },
   };
 }
 

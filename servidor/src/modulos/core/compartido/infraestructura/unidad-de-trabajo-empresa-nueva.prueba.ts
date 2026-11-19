@@ -34,7 +34,7 @@ function registrarAcceso(contexto: ContextoEmpresa, recurso: string) {
 }
 
 async function cuentaAjenaId(): Promise<string> {
-  const [ajena] = await bd
+  const [ajena] = await bdPropietario
     .select({ cuentaId: empresas.cuentaId })
     .from(empresas)
     .where(eq(empresas.id, empresaDeOtraCuentaId));
@@ -127,7 +127,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     });
 
     await expect(libro).rejects.toThrow(FalloProvocado);
-    const guardadas = await bd
+    const guardadas = await bdPropietario
       .select()
       .from(empresas)
       .where(inArray(empresas.id, [primera.empresaId, segunda.empresaId]));
@@ -141,7 +141,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
       await abrirYSembrar(segunda, 'segunda');
     });
 
-    const guardadas = await bd
+    const guardadas = await bdPropietario
       .select()
       .from(empresas)
       .where(inArray(empresas.id, [primera.empresaId, segunda.empresaId]));
@@ -221,9 +221,11 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
       await unidadDeTrabajo.ejecutarEnEmpresaNueva(id, async () => void (entro = true));
     });
 
-    await expect(enOtraCuenta).rejects.toThrow();
+    await expect(enOtraCuenta).rejects.toMatchObject({
+      cause: { code: '42501', message: expect.stringContaining('row-level security') },
+    });
     expect(entro).toBe(false);
-    expect(await bd.select().from(empresas).where(eq(empresas.id, id))).toEqual([]);
+    expect(await bdPropietario.select().from(empresas).where(eq(empresas.id, id))).toEqual([]);
   });
 
   it('rechaza una segunda empresa nueva mientras otra sigue abierta (llamadas en paralelo)', async () => {
@@ -276,12 +278,12 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     expect(corridas).toEqual([]);
   });
 
-  it('la lectura de core.empresas sigue abierta a todas las cuentas: la comprobación debe ver la empresa ajena', async () => {
+  it('una empresa de otra cuenta no se ve ni se puede pasar por nueva: la lectura de core.empresas es por cuenta', async () => {
     const vistas = await unidadDeTrabajo.ejecutar(enEmpresaA, () =>
       transaccionEnCurso().select({ id: empresas.id }).from(empresas).where(eq(empresas.id, empresaDeOtraCuentaId)),
     );
 
-    expect(vistas).toHaveLength(1);
+    expect(vistas).toEqual([]);
   });
 
   it('sin transacción en curso falla: no abre una por su cuenta', async () => {

@@ -4,7 +4,8 @@ import {
   usuarioRoles,
 } from '../../../autorizacion/infraestructura/persistencia/permisos-de-usuario.tablas.js';
 import { roles } from '../../../autorizacion/infraestructura/persistencia/roles.tablas.js';
-import type { BaseDatos } from '../../../base-datos/conexion.js';
+import type { Ejecutor } from '../../../base-datos/conexion.js';
+import { transaccionEnCurso } from '../../../compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { empresas, empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { UsuarioDto } from '../../aplicacion/dto/usuario.dto.js';
 import type { ConsultasUsuarios } from '../../aplicacion/puertos/consultas-usuarios.js';
@@ -26,9 +27,9 @@ function agruparPorUsuario(filas: FilaDeEmpresa[]): Map<string, UsuarioDto> {
   return porUsuario;
 }
 
-/** Las tablas no tienen seguridad por filas: se filtra por la cuenta. */
+/** Corre en la transacción de la unidad de trabajo: `core.empresas` solo se lee dentro de la cuenta. */
 export class ConsultasUsuariosDrizzle implements ConsultasUsuarios {
-  constructor(private readonly bd: BaseDatos) {}
+  constructor(private readonly ejecutor: () => Ejecutor = transaccionEnCurso) {}
 
   async listarDeCuenta(cuentaId: string): Promise<UsuarioDto[]> {
     const porUsuario = agruparPorUsuario(await this.empresasDe(cuentaId));
@@ -41,7 +42,7 @@ export class ConsultasUsuariosDrizzle implements ConsultasUsuarios {
   }
 
   private empresasDe(cuentaId: string) {
-    return this.bd
+    return this.ejecutor()
       .select({
         id: usuarios.id,
         usuario: usuarios.usuario,
@@ -61,7 +62,7 @@ export class ConsultasUsuariosDrizzle implements ConsultasUsuarios {
   }
 
   private rolesDe(cuentaId: string) {
-    return this.bd
+    return this.ejecutor()
       .select({
         usuarioId: usuarioRoles.usuarioId,
         rolId: roles.id,
@@ -75,7 +76,7 @@ export class ConsultasUsuariosDrizzle implements ConsultasUsuarios {
   }
 
   private permisosDirectosDe(cuentaId: string) {
-    return this.bd
+    return this.ejecutor()
       .select({ usuarioId: usuarioPermisos.usuarioId, total: count() })
       .from(usuarioPermisos)
       .where(eq(usuarioPermisos.cuentaId, cuentaId))

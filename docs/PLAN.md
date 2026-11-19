@@ -3124,6 +3124,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `seguridad`) y R-5 (CLAUDE.md y ARQUITECTURA.md); las tablas nuevas de `core` deben clasificarse en
   `RESTRICCIONES_DE_PRIVILEGIOS` (la prueba lo exige).
 
+- **2026-11-19, RLS del núcleo R-4 y R-5 (lectura por cuenta de `core.empresas`; documentos).** Migración
+  `core/0035_rls_de_lectura_de_empresas` (política generada `leer_en_la_cuenta` en lugar de `leer_sin_filtro`, y a mano las
+  seis funciones `security definer` `empresa_de_la_sesion`, `empresas_del_usuario`, `todas_las_empresas`,
+  `pertenencia_del_usuario`, `resumen_de_cuentas` y `nombres_de_empresas`, con `execute` solo para `arrancar_app`; el
+  número 0035 deja la 0033 a Multimoneda y la 0034 a los cupos del correo, por tener el `when` más alto: al unir, su entrada del diario va con idx 35 y el `prevId` del snapshot 0035 apunta al del 0034 de cupos; unir en orden de `when`, porque el migrador de drizzle salta sin error una migración con `when` menor que el de la última aplicada). Adaptadores: `EmpresasDeLaSesionDrizzle` (sesión, cambio de
+  empresa, superacceso), `ConsultasCuentasDrizzle` (conteo), `BitacoraDrizzle` (nombre de empresa) y
+  `RepositorioUsuariosDrizzle.pertenenciaEn` reemplaza a `cuentasDe`, que decide `soloEnEstaCuenta` sin revelar las otras
+  cuentas; `ListarUsuarios` corre en la unidad de trabajo. Pruebas: `rls-de-lectura-de-empresas.prueba.ts` (A no ve B ni con
+  una unión sin filtro, sin variables no se ve nada, las seis funciones, usuario compartido entre A y B con
+  `soloEnEstaCuenta = false`, funciones sin `execute` para `public`) y `usuario-de-la-cuenta.prueba.ts`; la prueba «core.empresas
+  tiene la lectura abierta» pasa a «una empresa de otra cuenta no se ve ni pasa por nueva». R-5: `CLAUDE.md` (privilegios en
+  el migrador, tablas de `core` con RLS de escritura y de lectura) y `docs/ARQUITECTURA.md` §4.1.1. Revisión de `seguridad`
+  antes de unir (lo pide el diseño). Pendiente: `core.configuraciones` con RLS (P-4) y las dos notas de Multimoneda
+  (auditoría de `EditarMoneda` en la cuenta de soporte y revisión de código por ediciones simultáneas).
+
 - **2026-11-18, Multimoneda MM-1 (datos del núcleo).** Migración `core/0029_multimoneda` (generada, con la semilla y el
   disparador a mano): `core.monedas` suma `activa` (`default false`), `codigo_banguat` (único, con llave a
   `core.monedas_del_banguat`), `letras_singular` y `letras_plural` y los checks de dos decimales, letras completas y

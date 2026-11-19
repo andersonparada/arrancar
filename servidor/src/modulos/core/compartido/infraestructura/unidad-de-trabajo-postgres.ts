@@ -165,8 +165,8 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
    * que una empresa anterior no pasa). Nunca se trabaja en una empresa que no se probó como nueva.
    * La seguridad descansa en esta comprobación y en dos defensas de la base: `core.empresas` tiene RLS de escritura
    * por cuenta (nadie inserta una empresa en otra cuenta) y un disparador más el privilegio por columna impiden
-   * cambiar `cuenta_id` y `creado_en`, así que una empresa vieja no puede pasar por nueva. Su lectura sigue abierta
-   * a todas las cuentas; si algún día se filtra (R-4), la consulta debe ir por una función `security definer`.
+   * cambiar `cuenta_id` y `creado_en`, así que una empresa vieja no puede pasar por nueva. Su lectura también es por
+   * cuenta: una empresa de otra cuenta no se ve, así que tampoco es nueva.
    */
   private async exigirQueSeCreoAqui(punto: Transaccion, contexto: ContextoEmpresa): Promise<void> {
     const filas = await punto.execute(

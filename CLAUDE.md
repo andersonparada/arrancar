@@ -138,7 +138,13 @@ datos de otro archivo ni de recursos globales (puertos, carpetas fijas).
   viven en `infraestructura/persistencia/*.tablas.ts` (en el core, dentro de cada
   contexto: empresas en `cuentas`, monedas en `monedas`); drizzle-kit solo lee esos.
 - La app se conecta como `arrancar_app` (sin privilegios). Las migraciones usan
-  `DATABASE_URL_PROPIETARIO`. El migrador da los permisos (GRANT) por esquema.
+  `DATABASE_URL_PROPIETARIO`. El migrador da los permisos (GRANT) por esquema y, **en la misma consulta**,
+  quita lo que la aplicación nunca debe hacer: `core/base-datos/privilegios-restringidos.ts`
+  (`RESTRICCIONES_DE_PRIVILEGIOS`) lista por tabla de `core` los privilegios que sobran (`insert`, `update`,
+  `delete`) y las columnas que sí se pueden actualizar. Un `revoke` dentro de una migración no sirve: la
+  siguiente corrida del migrador lo deshace con el `grant`. **Toda tabla nueva de `core` se clasifica ahí** (una
+  prueba falla si falta). Un `42501` por privilegio negado sale como fallo inesperado (500); solo el de RLS es
+  «no encontrado».
 - `casing: 'snake_case'`: en la base las columnas van en snake_case (`creado_por`) y en
   TypeScript en camelCase (`creadoPor`); Drizzle convierte solo.
 - Toda tabla de negocio lleva `...marcasDeTiempo` y `...autoria` (`creado_por`,
@@ -150,6 +156,17 @@ datos de otro archivo ni de recursos globales (puertos, carpetas fijas).
 - Toda tabla de negocio lleva `empresa_id` y `politicaPorEmpresa()`.
 - Toda consulta a esas tablas corre dentro de `UnidadDeTrabajo.ejecutar(contexto, ...)`
   con la transacción en curso; así RLS limita a la empresa activa.
+- **Tablas de `core` con RLS por cuenta** (`docs/modulos/diseno-rls-de-core.md`): `core.empresas`,
+  `empresa_usuarios`, `roles`, `rol_permisos`, `usuario_roles` y `usuario_permisos` solo se escriben dentro de la cuenta
+  de la transacción (`politicasDeEscrituraPorCuenta` y `…De(padre, llave)`; la alta de cuenta fija `app.cuenta_id` y
+  `app.usuario_id` al abrir su transacción). `core.empresas` también se **lee** solo dentro de la cuenta: lo que la
+  sesión, soporte y la bitácora ven más allá (empresa de la sesión, empresas del usuario, todas, pertenencia del
+  usuario a otras cuentas, conteo por cuenta, nombres por id) pasa por seis funciones `security definer`
+  (`core.empresa_de_la_sesion`, `empresas_del_usuario`, `todas_las_empresas`, `pertenencia_del_usuario`,
+  `resumen_de_cuentas`, `nombres_de_empresas`; sin `execute` para `public`). Una consulta nueva que necesite
+  empresas de otra cuenta se suma como función, no abriendo la política. El superacceso solo lo crea el dueño de la
+  base (la siembra usa `DATABASE_URL_PROPIETARIO`; un disparador lo impide a `arrancar_app`). Las pruebas que siembran
+  cuentas y empresas usan `bdPropietario` (`core/base-datos/sembrado-de-prueba.soporte.ts`).
 - Para tablas compartidas por **todas las empresas de una cuenta** (p. ej. `terceros`):
   llevan `cuenta_id` y `politicaPorCuenta()` en vez de `empresa_id`/`politicaPorEmpresa()`.
   La unidad de trabajo también fija `app.cuenta_id`, que siempre sale de la empresa activa.

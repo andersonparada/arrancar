@@ -239,6 +239,13 @@
       "when": 1795090084856,
       "tag": "0033_cruces_del_banguat",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1795090179158,
+      "tag": "0035_rls_de_lectura_de_empresas",
+      "breakpoints": true
     }
   ]
 }

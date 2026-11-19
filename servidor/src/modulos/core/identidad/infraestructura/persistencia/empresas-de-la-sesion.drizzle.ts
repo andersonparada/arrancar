@@ -1,61 +1,55 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
 import type { EmpresaSesion } from '../../../compartido/aplicacion/contexto-de-sesion.js';
-import { cuentaModulos, cuentas } from '../../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
-import { empresas, empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
+import { cuentaModulos } from '../../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import type { EmpresasDeLaSesion } from '../../aplicacion/puertos/empresas-de-la-sesion.js';
 
-const columnasDeEmpresa = {
-  id: empresas.id,
-  nombre: empresas.nombre,
-  nit: empresas.nit,
-  cuentaId: empresas.cuentaId,
-  cuentaNombre: cuentas.nombre,
-};
+interface FilaDeEmpresa extends Record<string, unknown> {
+  id: string;
+  nombre: string;
+  nit: string | null;
+  cuenta_id: string;
+  cuenta_nombre: string;
+}
 
-const empresaYCuentaActivas = and(eq(empresas.activa, true), eq(cuentas.activa, true));
+const aEmpresaSesion = (fila: FilaDeEmpresa): EmpresaSesion => ({
+  id: fila.id,
+  nombre: fila.nombre,
+  nit: fila.nit,
+  cuentaId: fila.cuenta_id,
+  cuentaNombre: fila.cuenta_nombre,
+});
 
-/** Se consulta antes de saber la empresa activa: conexión directa y filtros explícitos. */
+/**
+ * Se consulta antes de saber la empresa activa, sin variables de la transacción: `core.empresas` solo se deja leer
+ * por cuenta, así que las empresas pasan por funciones `security definer` que devuelven únicamente lo que la sesión usa.
+ */
 export class EmpresasDeLaSesionDrizzle implements EmpresasDeLaSesion {
   constructor(private readonly bd: BaseDatos) {}
 
   async buscar(empresaId: string): Promise<EmpresaSesion | null> {
-    const [empresa] = await this.bd
-      .select(columnasDeEmpresa)
-      .from(empresas)
-      .innerJoin(cuentas, eq(cuentas.id, empresas.cuentaId))
-      .where(eq(empresas.id, empresaId));
-    return empresa ?? null;
+    const filas = await this.consultar(sql`select * from core.empresa_de_la_sesion(${empresaId}::uuid)`);
+    return filas[0] ?? null;
   }
 
   async esMiembro(usuarioId: string, empresaId: string): Promise<boolean> {
-    const [fila] = await this.bd
-      .select({ usuarioId: empresaUsuarios.usuarioId })
-      .from(empresaUsuarios)
-      .innerJoin(empresas, eq(empresas.id, empresaUsuarios.empresaId))
-      .innerJoin(cuentas, eq(cuentas.id, empresas.cuentaId))
-      .where(
-        and(eq(empresaUsuarios.usuarioId, usuarioId), eq(empresaUsuarios.empresaId, empresaId), empresaYCuentaActivas),
-      );
-    return fila !== undefined;
+    const filas = await this.consultar(
+      sql`select * from core.empresas_del_usuario(${usuarioId}::uuid) where id = ${empresaId}::uuid`,
+    );
+    return filas.length > 0;
   }
 
   disponiblesPara(usuarioId: string): Promise<EmpresaSesion[]> {
-    return this.bd
-      .select(columnasDeEmpresa)
-      .from(empresaUsuarios)
-      .innerJoin(empresas, eq(empresas.id, empresaUsuarios.empresaId))
-      .innerJoin(cuentas, eq(cuentas.id, empresas.cuentaId))
-      .where(and(eq(empresaUsuarios.usuarioId, usuarioId), empresaYCuentaActivas))
-      .orderBy(asc(cuentas.nombre), asc(empresas.nombre));
+    return this.consultar(sql`select * from core.empresas_del_usuario(${usuarioId}::uuid)`);
   }
 
   todas(): Promise<EmpresaSesion[]> {
-    return this.bd
-      .select(columnasDeEmpresa)
-      .from(empresas)
-      .innerJoin(cuentas, eq(cuentas.id, empresas.cuentaId))
-      .orderBy(asc(cuentas.nombre), asc(empresas.nombre));
+    return this.consultar(sql`select * from core.todas_las_empresas()`);
+  }
+
+  private async consultar(consulta: ReturnType<typeof sql>): Promise<EmpresaSesion[]> {
+    const { rows } = await this.bd.execute<FilaDeEmpresa>(consulta);
+    return rows.map(aEmpresaSesion);
   }
 
   async modulosContratados(cuentaId: string): Promise<string[]> {
