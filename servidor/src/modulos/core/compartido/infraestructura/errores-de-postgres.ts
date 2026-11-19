@@ -9,6 +9,7 @@ const VIOLACION_DE_EXCLUSION = '23P01';
 const PROFUNDIDAD_MAXIMA_DE_CAUSAS = 5;
 
 const PEDIR_ACCESO_A_LOCALIDADES = 'Si no la ve, pida acceso a quien administra las localidades.';
+const PEDIR_ACCESO_AL_INMUEBLE = 'Si no lo ve, pida acceso a su localidad a quien administra las localidades.';
 const MENSAJE_DOCUMENTO_DE_LA_CUENTA =
   'Ese documento ya está registrado en esta empresa o en otra empresa de su cuenta.';
 
@@ -28,6 +29,8 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   departamentos_codigo_unico: 'Ya existe un departamento con ese código.',
   departamentos_nombre_unico: 'Ya existe un departamento con ese nombre.',
   localidades_establecimiento_sat_unico: `Ya existe una localidad con ese código de establecimiento SAT. ${PEDIR_ACCESO_A_LOCALIDADES}`,
+  inmuebles_nombre_unico: `Ya existe un inmueble con ese nombre. ${PEDIR_ACCESO_AL_INMUEBLE}`,
+  inmuebles_registro_unico: `Ese inmueble ya está registrado (mismo registro, departamento, finca, folio y libro). ${PEDIR_ACCESO_AL_INMUEBLE}`,
   activos_codigo_unico: 'Ya existe un activo con ese código.',
   documentos_sat_unico: MENSAJE_DOCUMENTO_DE_LA_CUENTA,
   documentos_autorizacion_fel_unica: MENSAJE_DOCUMENTO_DE_LA_CUENTA,

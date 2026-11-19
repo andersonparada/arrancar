@@ -25,6 +25,7 @@ import { rutasDeAccesosALocalidades } from './composicion/accesos-a-localidades.
 import { ALCANCE_DE_LOCALIDADES } from './infraestructura/persistencia/accesos-a-localidades.tablas.js';
 import { intercambioDeEmpresas } from './composicion/intercambio-de-empresas.js';
 import { rutasDeDepartamentos } from './composicion/departamentos.js';
+import { rutasDeInmuebles } from './composicion/inmuebles.js';
 // generador: importaciones
 
 /** El controlador de empresas con sus casos de uso, y lo que comparten las demás rutas del módulo. */
@@ -67,6 +68,7 @@ function componerRutas(compartidas: DependenciasCompartidas) {
     rutasDeLocalidades(),
     rutasDeAccesosALocalidades(),
     rutasDeDepartamentos(),
+    rutasDeInmuebles(),
     // generador: rutas
   ]);
 }
@@ -125,6 +127,12 @@ export const moduloEmpresas: DefinicionModulo = {
     { clave: 'empresas.departamentos.eliminar', descripcion: 'Eliminar departamentos' },
     { clave: 'empresas.departamentos.importar', descripcion: 'Importar departamentos desde Excel' },
     { clave: 'empresas.departamentos.exportar', descripcion: 'Exportar departamentos a Excel' },
+    { clave: 'empresas.inmuebles.ver', descripcion: 'Ver los inmuebles registrales (fincas, folios, matrículas)' },
+    { clave: 'empresas.inmuebles.crear', descripcion: 'Registrar inmuebles' },
+    { clave: 'empresas.inmuebles.editar', descripcion: 'Editar, inactivar y reactivar inmuebles' },
+    { clave: 'empresas.inmuebles.eliminar', descripcion: 'Eliminar inmuebles que nadie usa' },
+    { clave: 'empresas.inmuebles.importar', descripcion: 'Importar inmuebles desde Excel' },
+    { clave: 'empresas.inmuebles.exportar', descripcion: 'Exportar inmuebles a Excel' },
     // generador: permisos
   ],
   recursosConAlcance: [

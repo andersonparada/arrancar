@@ -99,6 +99,13 @@
       "when": 1795061336878,
       "tag": "0013_nombres_de_ubicaciones",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795097277524,
+      "tag": "0014_inmuebles",
+      "breakpoints": true
     }
   ]
 }
