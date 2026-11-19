@@ -1,10 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
+import '../../core/contratos/cuentas-por-pagar.contratos.js';
+import { mediador } from '../../core/mediador/contexto.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import {
   ListarPagos,
   ObtenerComprobanteDePago,
   ObtenerPago,
 } from '../aplicacion/casos-uso/pagos/consultas-de-la-ficha-de-pagos.js';
+import { DetalleParaComprobanteDeEgreso } from '../aplicacion/casos-uso/pagos/detalle-para-comprobante-de-egreso.js';
 import { ArmadorDeLaFichaDelPago } from '../aplicacion/casos-uso/pagos/ficha-del-pago.js';
 import { REGLAS_PARA_ANULAR_PAGO, REGLAS_PARA_REAPLICAR_PAGO } from '../dominio/reglas-de-anulacion-de-pagos.js';
 import { ConsultaDePagosControlador } from '../http/consulta-de-pagos.controlador.js';
@@ -43,6 +46,10 @@ export function rutasDeConsultaDePagosComponidas(): FastifyPluginAsync {
   const { unidadDeTrabajo, reloj } = dependenciasCompartidas();
   const armador = armadorDeLaFicha();
   const empresa = new DatosDeLaEmpresaEnMediador();
+  const detalle = new DetalleParaComprobanteDeEgreso({ pagos: new RepositorioDePagosDrizzle(), armador });
+  mediador.atender('cuentas-por-pagar', 'cuentas-por-pagar.detalle_para_comprobante_de_egreso', (datos, operador) =>
+    detalle.ejecutar(operador, datos),
+  );
   return rutasDeConsultaDePagos(
     new ConsultaDePagosControlador({
       listar: new ListarPagos({ unidadDeTrabajo, reloj, lista: new ListaDePagosDrizzle() }),

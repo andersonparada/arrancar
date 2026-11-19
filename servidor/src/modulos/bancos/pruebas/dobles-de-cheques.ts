@@ -86,7 +86,7 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
   private accionesDe(cheque: Cheque): AccionesDeCheque {
     const { estado, movimientoId } = cheque.instantanea();
     const hechos = movimientoId && this.movimientos ? this.movimientos.hechosDe(movimientoId) : null;
-    return accionesDeCheque(estado, hechos);
+    return accionesDeCheque(estado, hechos, cheque.estaImpreso);
   }
 
   private abonoDe(cheque: Cheque): boolean {

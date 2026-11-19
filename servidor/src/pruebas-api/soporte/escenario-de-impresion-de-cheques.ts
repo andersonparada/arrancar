@@ -64,7 +64,7 @@ export class EscenarioDeCheques {
     const chequeId = await this.chequeDe(numero, chequeraId);
     const emitido = await this.propietario.post(`/api/bancos/cheques/${chequeId}/emitir`, {
       fecha: '2026-02-01',
-      monto: '150.00',
+      monto: '10.00',
       beneficiario: 'Juan Pérez López',
       noNegociable: true,
       conceptoId: this.conceptoId,

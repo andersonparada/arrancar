@@ -77,7 +77,7 @@ const aListado = ({ movimientoId, hechosDelMovimiento, ...fila }: FilaDelListado
     impresoEn: fila.impresoEn ? fila.impresoEn.toISOString() : null,
     parteDeApertura: hechos?.parteDeApertura ?? null,
     moduloDeOrigen: hechos ? hechosDelMovimiento.moduloDeOrigen : null,
-    ...accionesDeCheque(estado, hechos),
+    ...accionesDeCheque(estado, hechos, fila.impresoEn !== null),
   };
 };
 

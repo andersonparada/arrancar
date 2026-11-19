@@ -46,7 +46,7 @@ export const mapeadorDeCheque = {
       impresoEn: impresoEn ? impresoEn.toISOString() : null,
       parteDeApertura: movimiento?.parteDeApertura ?? null,
       moduloDeOrigen: movimiento ? (hechosDelMovimiento?.moduloDeOrigen ?? null) : null,
-      ...accionesDeCheque(dto.estado, movimiento),
+      ...accionesDeCheque(dto.estado, movimiento, impresoEn !== null),
     };
   },
 };
