@@ -4141,3 +4141,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   decimales validados en el cliente; costo manual exige monto mayor que cero; el texto del descarte aclara que
   devolver solo vale en la sesión. **Pendiente de decisión del usuario:** listar las descartadas en el servidor
   (filtro `descartadas` de la bandeja) para poder devolverlas tras recargar.
+- **2026-11-19 (AF-5c y AF-6c, cliente de Activos fijos):** pantalla **Cierre de depreciación** (Operación,
+  `depreciacion.ver`): mes por cerrar con «Revisar y cerrar» (ventana con totales, hallazgos que bloquean y avisos, y el
+  resumen de lo que va a pasar; cerrar solo si el servidor dice `puedeCerrar`, con su huella; si el cierre falla se
+  vuelve a revisar) y lista de meses cerrados con «Reabrir» (motivo obligatorio) solo en el último cerrado. Pestaña
+  **Depreciación** de la ficha con los tramos vigentes por libro (contable en meses, fiscal en porcentaje y base).
+  Pantalla **Saldos iniciales de activos** (Administración, con Excel: importar y exportar): cuadre con totales y por clase,
+  lista, formulario en página (alta y corrección) y aviso cuando la carga está cerrada o falta la fecha de inicio (se ocultan
+  las acciones de escritura); la ficha de un activo de saldo inicial muestra su saldo. Pruebas puras nuevas.
+  **Pendiente:** las cuotas por año y mes de la ficha necesitan una ruta del servidor (`GET /activos-fijos/activos/:id/cuotas`)
+  que hoy no existe; la pestaña muestra los tramos.
+  **Corrección (revisión):** al corregir un saldo inicial, el departamento ya no se borra si el saldo llega antes que las
+  ubicaciones (el vigilante de coherencia no actúa mientras la lista de departamentos está vacía); prueba nueva.

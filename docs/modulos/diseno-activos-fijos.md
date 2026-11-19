@@ -1316,9 +1316,9 @@ dos decimales.
 | **AF-4** | Dominio de depreciación (§7, pruebas puras con los ejemplos: tope del inmueble con el mayor y el 70 %, reproductores, ocioso, exceso de nota de crédito por libro), `tramos`, poner en uso y quitar de uso | backend | **Programado, en revisión** (2026-11-19; migración `0004_af4_tramos`) |
 | **AFI-3** (con AF-4) | `PonerEnUsoVarios`, ubicación y «En bodega de activos» al ponerlo disponible, textos de «Disponible para uso» | backend | |
 | **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | **Programado, en revisión** (2026-11-19; migración `0005_af5_cierres_y_cuotas`; faltan los hallazgos de inventario en curso (AF-10) y de bodega (AFI-7)) |
-| AF-5c | Cierre de depreciación y pestaña Depreciación | frontend | |
+| AF-5c | Cierre de depreciación y pestaña Depreciación | frontend | **Programado** (2026-11-19; la pestaña muestra los tramos: faltan las cuotas por año y mes, que piden una ruta nueva del servidor) |
 | **AF-6** | Saldos iniciales (con costo fiscal, A1; con «Cantidad» y «En bodega», AFI), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | **Programado, en revisión** (2026-11-19; migración `0006_af6_saldos_iniciales`; notas abajo) |
-| AF-6c | Saldos iniciales (Administración) | frontend | |
+| AF-6c | Saldos iniciales (Administración) | frontend | **Programado** (2026-11-19; incluye el saldo inicial en la ficha del activo) |
 | **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend | |
 | AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | |
 | **AF-8** | Traslados con boleta (grupo), anular | backend | |

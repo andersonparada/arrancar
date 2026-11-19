@@ -4,6 +4,8 @@ import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EtiquetasDeActivo from '../componentes/activos/EtiquetasDeActivo.vue';
 import HistorialDeUbicacion from '../componentes/activos/HistorialDeUbicacion.vue';
+import PanelDeDepreciacion from '../componentes/depreciacion/PanelDeDepreciacion.vue';
+import PanelDeSaldoInicial from '../componentes/saldos-iniciales/PanelDeSaldoInicial.vue';
 import PestanasDeFicha from '../componentes/activos/PestanasDeFicha.vue';
 import VentanaDeMotivo from '../componentes/comunes/VentanaDeMotivo.vue';
 import PanelDeCostos from '../componentes/costos/PanelDeCostos.vue';
@@ -11,6 +13,7 @@ import VentanaDeCosto from '../componentes/costos/VentanaDeCosto.vue';
 import { usarFichaDeActivo } from '../composables/activos/usar-ficha-de-activo';
 import { usarAnulacionDeCosto } from '../composables/costos/usar-anulacion-de-costo';
 import { usarCostosDeActivo } from '../composables/costos/usar-costos-de-activo';
+import { usarSaldoDeFicha } from '../composables/saldos-iniciales/usar-saldo-de-ficha';
 import { VENTANAS_ACTIVOS_FIJOS } from '../textos';
 
 const props = defineProps<{ activoId: string }>();
@@ -19,10 +22,12 @@ const ventana = VENTANAS_ACTIVOS_FIJOS.activos;
 const { registro, cargando, cargar, detalles, etiquetas } = usarFichaDeActivo(props.activoId);
 const costos = usarCostosDeActivo(props.activoId, () => registro.value?.incisoFiscal === 'edificios', cargar);
 const anulacion = usarAnulacionDeCosto(() => costos.datos.value.total, costos.anular);
+const saldo = usarSaldoDeFicha(() => registro.value);
 const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: 'activos-fijos.activos' } };
 const pestanas = [
   { clave: 'datos', texto: 'Datos' },
   { clave: 'costos', texto: 'Costos' },
+  { clave: 'depreciacion', texto: 'Depreciación' },
 ];
 const pestana = ref('datos');
 </script>
@@ -41,8 +46,14 @@ const pestana = ref('datos');
     <div id="panel-de-la-ficha" role="tabpanel" class="space-y-4">
       <template v-if="pestana === 'datos'">
         <DatosDelRegistro :detalles="detalles" />
+        <PanelDeSaldoInicial v-if="saldo" :saldo="saldo" />
         <HistorialDeUbicacion :traslados="registro.traslados" />
       </template>
+      <PanelDeDepreciacion
+        v-else-if="pestana === 'depreciacion'"
+        :tramos="registro.tramos"
+        :en-construccion="registro.estado === 'en_construccion'"
+      />
       <PanelDeCostos
         v-else
         :costos="costos.datos.value.costos"

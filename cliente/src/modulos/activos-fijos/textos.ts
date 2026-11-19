@@ -20,5 +20,16 @@ export const VENTANAS_ACTIVOS_FIJOS = {
     descripcion:
       'Las compras marcadas como activo fijo en el libro de compras, listas para convertirse en costo de un activo.',
   },
+  depreciacion: {
+    titulo: 'Cierre de depreciación',
+    descripcion:
+      'Cierre mensual de la depreciación contable y fiscal: se revisa el mes, se cierra y, si hace falta, se reabre.',
+  },
+  saldosIniciales: {
+    titulo: 'Saldos iniciales de activos',
+    descripcion: 'Los activos que la empresa ya tenía a la fecha de inicio, con su depreciación acumulada.',
+    nuevo: 'Cargar saldo inicial',
+    editar: 'Corregir saldo inicial',
+  },
   // generador: ventanas
 } as const;
