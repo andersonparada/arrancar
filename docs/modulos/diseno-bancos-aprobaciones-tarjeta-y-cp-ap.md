@@ -3,8 +3,14 @@
 _Agente `arquitecto-de-datos`. Base contable y fiscal: `dictamen-bancos-aprobaciones-tarjeta-2026-11-18.md`
 (contador-guatemala, mismo día: «correcto con ajustes» en las tres partes). Aterriza lo que quedó como «diseño corto» en
 `diseno-bancos-segunda-parte.md` §11.1 (aprobaciones), §11.3 (tarjeta de crédito), §2.5 y §16.2 (CP-AP, la bandeja de
-cheques de apertura anulados) y §17 N-2 (el posfechado de apertura y la factura que paga). **Nada de esto se programa
-hasta que el usuario responda §16.** Lo que el arquitecto agrega o no comparte del dictamen va marcado **[arquitecto]**._
+cheques de apertura anulados) y §17 N-2 (el posfechado de apertura y la factura que paga). Lo que el arquitecto agrega o
+no comparte del dictamen va marcado **[arquitecto]**._
+
+**Estado (2026-11-19).** El usuario respondió §16: aceptó todas las recomendaciones (§17). El contador validó el diseño
+(`dictamen-bancos-aprobaciones-tarjeta-validacion-2026-11-19.md`, «correcto con ajustes»; §18). Lo que cambió por esa
+validación va marcado **[contador 19/11]**. Quedan abiertas las preguntas P-1 a P-5 del contador (§19): el diseño ya trae
+la opción que él recomienda, marcada «(P-n)», y la tabla de pasos (§15) dice qué paso espera cada respuesta. **Primer paso
+programable: AP-0** (no espera ninguna respuesta ni ningún otro paso).
 
 Sirve a empresas de **cualquier rubro y régimen**: nada aquí supone ganado, fincas, régimen de IVA o ISR, ni que la empresa
 sea agente de retención. Los avisos de retención de la tarjeta salen solo si los datos fiscales de la empresa
@@ -29,7 +35,7 @@ Tres partes independientes, que se programan en este orden (§15):
 
 | Parte | Qué | Módulos | Depende de |
 |---|---|---|---|
-| **AP** (CP-AP y N-2) | (1) Forma de pago `cheque_de_apertura` en Cuentas por pagar: liga el pago de facturas del saldo inicial al **posfechado de apertura** que ya está en Bancos, con la fecha del cheque, y cambia su concepto para no duplicar el gasto; desligar con motivo. (2) **Bandeja** de cheques en circulación de apertura anulados: reconocer la deuda (cargo nuevo fuera del Libro) o descartarla con causa. (3) Referencia informativa del pago «cuenta de apertura» al cheque de apertura | Cuentas por pagar (tablas), Bancos (dos órdenes, sin migración) | BS-3 y CP4-12 en `main` |
+| **AP** (CP-AP y N-2) | (1) Forma de pago `cheque_de_apertura` en Cuentas por pagar: liga el pago de facturas del saldo inicial al **posfechado de apertura** que ya está en Bancos, con la fecha del cheque, y cambia su concepto para no duplicar el gasto; desligar con motivo. (2) **Bandeja** de cheques en circulación de apertura anulados: reconocer la deuda (cargo nuevo fuera del Libro) o descartarla con causa. (3) Referencia informativa del pago «cuenta de apertura» al cheque de apertura | Cuentas por pagar (tablas), Bancos (cuatro órdenes, sin migración) | BS-3 y CP4-12 en `main` |
 | **AB** (aprobaciones) | Solicitar → aprobar para cheques, notas de débito y transferencias, con **niveles** (1 o 2 aprobadores distintos), **acumulado** por beneficiario y día, referencia del banco después de aprobar; y la regla «quien autorizó no paga» en Cuentas por pagar y Caja chica cuando la aprobación está encendida | Bancos (tablas), Cuentas por pagar y Caja chica (reglas, sin migración) | IC-1 (impresión) para la firma «Autorizó» |
 | **TC** (tarjeta de crédito) | Tipo de cuenta `tarjeta_de_credito` (pasivo), cortes del estado de cuenta, **conciliación por corte**, compras en cuotas, conceptos del pago de la tarjeta, fuera del flujo de efectivo, forma de pago `tarjeta` en Cuentas por pagar | Bancos (tablas), Cuentas por pagar (forma) | Multimoneda en Bancos (MM-B) |
 
@@ -89,9 +95,14 @@ nadie y responde órdenes.
 La opción (b) de N-2 («aplicar a la cuenta de apertura» mientras tanto) **no se usa** (dictamen §3.2). Mientras AP-3 no
 esté en `main`, la factura queda pendiente con el aviso de AP-0.
 
-### 2.2 Datos (esquema `cuentas_por_pagar`, migración siguiente libre, hoy previsiblemente `0014_cp_ap_cheques_de_apertura`)
+### 2.2 Datos (esquema `cuentas_por_pagar`, dos migraciones: AP-1 y AP-4a)
 
-**`cuentas_por_pagar.pagos` (cambia).**
+**[contador 19/11]** Los datos se parten en dos migraciones para que la primera no espere las preguntas P-3 a P-5: **AP-1**
+(siguiente libre, hoy previsiblemente `0014_cp_ap_cheques_de_apertura`) trae solo el cambio de `pagos` y los permisos de
+ligar y desligar; **AP-4a** (la siguiente libre después, `00xx_cp_ap_bandeja_de_anulados`) trae el `origen` nuevo de
+`documentos`, la tabla de decisiones y los permisos de la bandeja.
+
+**`cuentas_por_pagar.pagos` (cambia, AP-1).**
 
 | Cambio | Detalle |
 |---|---|
@@ -102,12 +113,12 @@ esté en `main`, la factura queda pendiente con el aviso de AP-0.
 `pagos_referencia_de_su_forma` no cambia (la forma nueva no lleva `referencia`: el cheque ya tiene la suya). El índice
 `pagos_movimiento_idx` ya cubre la FK de `movimiento_id`.
 
-**`cuentas_por_pagar.documentos` (cambia).** `origen` suma `'cheque_de_apertura_anulado'` (cargo de la bandeja, §2.5): sin
+**`cuentas_por_pagar.documentos` (cambia, AP-4a).** `origen` suma `'cheque_de_apertura_anulado'` (cargo de la bandeja, §2.5): sin
 documento del libro (`documento_id` nulo, como el saldo inicial), `retenciones = 0`, `saldo_al_inicio` nulo,
 `retenciones_por_practicar` nulo. Los checks de saldo inicial (`restriccionesDeSaldoInicial`) se revisan para que la tercera
 clase quede explícita: `documento_id is null` ⇔ `origen in ('saldo_inicial', 'cheque_de_apertura_anulado')`.
 
-**Tabla nueva `cuentas_por_pagar.cheques_de_apertura_anulados`** (la decisión de la bandeja; una por cheque anulado).
+**Tabla nueva `cuentas_por_pagar.cheques_de_apertura_anulados`** (AP-4a; la decisión de la bandeja; una por cheque anulado).
 
 | Columna | Tipo | Nulo | Regla |
 |---|---|---|---|
@@ -116,17 +127,20 @@ clase quede explícita: `documento_id is null` ⇔ `origen in ('saldo_inicial', 
 | `movimiento_id` | uuid | no | El cheque de apertura anulado: FK `→ bancos.movimientos (id)` no action. Único **parcial** `cheques_de_apertura_anulados_vigente_unico (movimiento_id) where estado = 'vigente'` (una decisión vigente por cheque; deshacer deja historia) |
 | `inverso_id` | uuid | no | El inverso de Bancos: FK `→ bancos.movimientos (id)`; índice |
 | `decision` | text | no | check `in ('reconocida', 'descartada')` |
-| `causa_de_descarte` | text | sí | check: `(decision = 'descartada') = (causa_de_descarte is not null)` y `in ('ya_pagada', 'no_se_debe', 'prescrita')` |
-| `proveedor_id` | uuid | sí | FK `terceros.proveedores`; obligatorio si `reconocida` (check) |
+| `causa_de_descarte` | text | sí | check: `(decision = 'descartada') = (causa_de_descarte is not null)` y `in ('ya_pagada', 'pagada_antes_del_corte', 'no_se_debe', 'prescrita')` **[contador 19/11, P-3]** |
+| `proveedor_id` | uuid | sí | FK `terceros.proveedores`; obligatorio si `reconocida` o `pagada_antes_del_corte` (check) |
+| `naturaleza` | text | sí | **[contador 19/11, P-5]** `in ('proveedor', 'acreedor_vario', 'remuneracion', 'socio')`; obligatoria si `reconocida` o `pagada_antes_del_corte`, nula en las demás (check). Sin valor por omisión: el usuario la elige |
 | `documento_id` | uuid | sí | El cargo creado: FK compuesta `(documento_id, empresa_id) → documentos (id, empresa_id)`; obligatorio si `reconocida` (check); único |
-| `fecha` | date | no | Reconocida: la del **inverso** (dictamen §3.4). Descartada: la del inverso, o la del pago si «ya pagada» |
+| `fecha` | date | no | Reconocida, `no_se_debe` y `pagada_antes_del_corte`: la del **inverso** (dictamen §3.4). `ya_pagada`: la del movimiento o documento del pago sustituto. `prescrita`: **la elige el usuario** (cuando se cumplió el plazo), `>=` la del inverso y `<=` hoy (dominio) **[contador 19/11, P-4]** |
 | `medio_de_pago` | text | sí | Solo `ya_pagada`: `in ('cuenta_bancaria', 'efectivo')` |
-| `cuenta_bancaria_id` | uuid | sí | Solo `ya_pagada` con cuenta: FK `bancos.cuentas_bancarias`; check de presencia por medio |
+| `movimiento_de_pago_id` | uuid | sí | **[contador 19/11, P-3; reemplaza `cuenta_bancaria_id`]** Solo `ya_pagada` con `cuenta_bancaria`: el cheque o la nota de débito de Bancos con que se pagó después del corte. FK `cheques_de_apertura_anulados_pago_fk → bancos.movimientos (id)` no action; único parcial `(movimiento_de_pago_id) where estado = 'vigente'` (un pago sustituto no sirve para dos decisiones), que sirve de índice de la FK |
+| `modulo_del_pago`, `documento_del_pago_id` | text, uuid | sí | **[contador 19/11, P-3]** Solo `ya_pagada` con `efectivo`: el documento del módulo que pagó (p. ej. el gasto de Caja chica). Un pago registrado en Cuentas por pagar no sirve: ver §2.5. Juntos o ninguno, sin llave (como `bancos.movimientos.modulo_de_origen`): Cuentas por pagar no depende de todos esos módulos. Check de presencia por medio: `cuenta_bancaria` ⇔ `movimiento_de_pago_id` no nulo; `efectivo` ⇔ los dos no nulos |
 | `motivo` | text | no | 1–500, sin espacios a los lados |
 | `estado` | text | no | `'vigente' \| 'deshecha'`, default `vigente`; con `deshecha_en/por`, `motivo_de_deshacer` (checks de completitud como `restriccionesDeEstadoYAnulacion`) |
 | `...marcasDeTiempo`, `...autoria` | | | |
 
-Índices: `(empresa_id, estado, fecha)` para la lista de decididos. **RLS** `politicaPorEmpresa()`. Sin alcance por registro
+Índices: `(empresa_id, estado, fecha)` para la lista de decididos; `movimiento_de_pago_id` usa su único parcial y
+`proveedor_id` uno parcial `where proveedor_id is not null`. **RLS** `politicaPorEmpresa()`. Sin alcance por registro
 (Cuentas por pagar no lo tiene). La lista de **pendientes** no es tabla: es la consulta «cheques de apertura revertidos sin
 decisión vigente» (§2.5).
 
@@ -150,7 +164,8 @@ Con `cuentas-por-pagar.pagos.ligar-cheques-de-apertura`. Reglas (dictamen §3.3,
 5. **Sin retención descontada** (retenciones del sistema anterior, U8): `retencion_descontada = 0` en todas las líneas. Si
    un cargo tiene `retenciones_por_practicar > 0`, el aviso de CP4 §5.5 de siempre.
 6. **Carga abierta o cerrada**: se permite en las dos (no cambia ningún saldo al corte). También después de la fecha del
-   cheque y aunque ya esté conciliado o cobrado (monto y fecha no cambian).
+   cheque y aunque ya esté conciliado o cobrado (monto y fecha no cambian). Si quedó marcado en la primera conciliación de
+   la cuenta, el aviso «posfechado cobrado pronto» de §2.7 **[contador 19/11]**.
 7. **Orden de bloqueo**: primero el movimiento en Bancos (la orden lo bloquea `for update`), después contraseña y cargos;
    el mismo orden de la nota ligada (CP4 §5.2), así no se invierte.
 8. **Orden a Bancos** `bancos.ligar_cheque_de_apertura` (§2.7) con el desglose por activo fijo de las líneas (como CP4: una
@@ -195,7 +210,11 @@ número, fecha y monto del cheque, beneficiario escrito, fecha del inverso, y si
 1. Bloquea el movimiento (`for update` desde `infraestructura`) y revisa que siga pendiente.
 2. Pide **proveedor** (obligatorio; si el beneficiario no es proveedor, se crea en Terceros como proveedor, que admite NIT
    nulo: Q-AP1), **tipo** del documento original (por omisión `factura`), **número** (por omisión `«Cheque <n> de
-   apertura»`, 1–50) y observaciones.
+   apertura»`, 1–50) y observaciones. **[contador 19/11, P-5]** Pide también la **naturaleza** de la deuda
+   (`proveedor`, `acreedor_vario`, `remuneracion`, `socio`; sin valor propuesto): el cheque pudo ser para un empleado, un
+   socio o una entidad pública, y Contabilidad no debe presentarlo como «Proveedores». **Aviso** (no bloquea) si el
+   proveedor tiene NIT nulo y el monto es de Q30,000 o más: «La bancarización exige individualizar al beneficiario de pagos
+   de Q30,000 o más (Decreto 20-2006, art. 20, pendiente de cotejo literal): registre su NIT antes de pagar.»
 3. Crea el cargo: `origen = 'cheque_de_apertura_anulado'`, `total = monto del cheque` (el neto: dictamen §3.4),
    `retenciones = 0`, `fecha_emision = vencimiento = fecha del inverso`, `estado = 'registrado'` (debe autorizarse y ir a
    contraseña para pagarse, como cualquier cargo), `tiene_activo_fijo = false`. **No entra al Libro de compras** (no hay
@@ -208,13 +227,30 @@ número, fecha y monto del cheque, beneficiario escrito, fecha del inverso, y si
 
 | Causa | Qué pide | Para Contabilidad |
 |---|---|---|
-| `ya_pagada` | Medio (`cuenta_bancaria` con la cuenta, o `efectivo`) y fecha | Contra la cuenta con que se pagó (C-9 de §16.2) |
-| `no_se_debe` | Solo el motivo | Otros ingresos (lo decide el contador) |
-| `prescrita` | Solo el motivo; la ventana muestra el texto de prescripción de §16.2 (5 años, art. 1508; 2 años mercadería, art. 1514; no opera sola, art. 1501) y que el ingreso es gravable en el régimen sobre las utilidades | Otros ingresos gravables |
+| `ya_pagada` (después del corte) **[contador 19/11, P-3]** | Medio. Con `cuenta_bancaria`: **el movimiento** del pago sustituto (reglas abajo); la fecha es la suya. Con `efectivo`: el módulo y el documento que pagó, y su fecha | Contra **la misma cuenta que usó el pago sustituto** (el concepto `pago_a_proveedor` del movimiento ligado: Proveedores), nunca otra vez Bancos: así las dos patas se compensan |
+| `pagada_antes_del_corte` **[contador 19/11, P-3]** | Proveedor, naturaleza y motivo; fecha del inverso | El sistema anterior pagó dos veces: Haber Proveedores y Acreedores varios (el saldo deudor del proveedor) |
+| `no_se_debe` | Solo el motivo. La ventana dice **[contador 19/11]**: «Si la factura original se anuló o se devolvió, registre la nota de crédito del proveedor en Libro de compras (el crédito fiscal del IVA que se tomó debe revertirse).» | Ingreso del período **o corrección de un error de un período anterior** (NIIF para las Pymes 10.19 a 10.23), según el contador |
+| `prescrita` **[contador 19/11, P-4]** | El motivo y **la fecha en que se cumplió el plazo** (`>=` la del inverso, `<=` hoy). La ventana muestra, **sin plazos fijos** hasta cotejar el Código Civil: «La prescripción no opera sola y la interrumpe el reconocimiento de la deuda (la entrega de este cheque, el dd/mm/aaaa). Confirme con su abogado o contador que el plazo se cumplió.» Se quita «2 años mercadería» (art. 1514): falta confirmar si rige entre comerciantes | Otros ingresos gravables en el régimen sobre las utilidades (pendiente de cotejo) |
+
+**Pago sustituto en Bancos (`ya_pagada` con `cuenta_bancaria`; [contador 19/11, P-3], forma del arquitecto).** El usuario
+elige el movimiento entre los **débitos vigentes** de la empresa (cheque o nota de débito; ni anulado, ni revertido, ni
+inverso, ni partida de apertura), con fecha posterior al corte y **sin origen** (`PagoSustitutoConOrigen` si lo tiene: un
+pago que registró Cuentas por pagar, Caja chica u otro módulo ya lo contabiliza ese módulo; el mensaje pide revisar con el
+contador si la factura se registró dos veces). Los primeros de la lista son los del mismo beneficiario normalizado. Monto
+distinto del cheque anulado: **aviso**, no bloqueo (pudo pagarse con otro monto; la diferencia la ve Contabilidad). Orden a
+Bancos `bancos.ligar_pago_sustituto_de_apertura` (§2.7): pone el origen (Cuentas por pagar, la decisión) y el concepto
+`pago_a_proveedor`, con auditoría `corregir`; desde entonces el `RevisorDeCambios` lo protege como a todo movimiento con
+origen. **Se reusa `pago_a_proveedor`** **[arquitecto]** en vez de un concepto nuevo «Pago de deuda de apertura»: es la pata
+que se busca (Debe Proveedores), no pide migración de Bancos y el reporte por concepto lo junta con los demás pagos a
+proveedores; la alternativa queda en P-3. Deshacer la decisión manda `bancos.desligar_pago_sustituto_de_apertura` (quita el
+origen y deja `sin_clasificar`, como §2.7). Si Bancos quiere anular o cambiar el movimiento ligado, el aviso
+`bancos.movimiento_por_cambiar` llega a Cuentas por pagar, que lo **rechaza** («Deshaga primero la decisión en Cheques de
+apertura anulados»).
 
 **Deshacer una decisión** (mismo permiso, motivo): `reconocida` solo si su cargo **no tiene movimientos** (ni pagos,
 ni notas, ni ajustes vigentes; `DeudaReconocidaConMovimientos`); anula el cargo (como un saldo inicial sin movimientos) y
-deja la decisión `deshecha`. `descartada` se deshace siempre. **Auditoría `anular`**, recurso
+deja la decisión `deshecha`. `descartada` se deshace siempre (con pago sustituto en Bancos, lo desliga en la misma
+transacción). **Auditoría `anular`**, recurso
 `cuentas-por-pagar.cheques-de-apertura-anulados`, con la decisión como estaba y el motivo. El cheque vuelve a pendientes.
 
 Los depósitos en tránsito rechazados siguen en la opción A (reporte de Bancos) hasta Cuentas por cobrar (§2.5 de la
@@ -243,6 +279,15 @@ segunda parte).
   datos: { origen: OrigenDeMovimientoContrato; movimientoId: string; motivo: string };
   respuesta: { conceptoId: string };
 };
+// [contador 19/11, P-3] Pago sustituto de un cheque de apertura anulado (bandeja, §2.5)
+'bancos.ligar_pago_sustituto_de_apertura': {
+  datos: { origen: OrigenDeMovimientoContrato; movimientoId: string; montoEsperadoCentavos: number };
+  respuesta: { fecha: string; montoCentavos: number; cuentaBancariaId: string; avisos: AvisoDeBancos[] };
+};
+'bancos.desligar_pago_sustituto_de_apertura': {
+  datos: { origen: OrigenDeMovimientoContrato; movimientoId: string; motivo: string };
+  respuesta: { conceptoId: string };
+};
 ```
 
 **Ligar** (caso de uso `LigarChequeDeApertura`): bloquea el movimiento; exige `parte_de_apertura = 'cheque_posfechado'`,
@@ -252,6 +297,22 @@ monto) y el desglose si hay dos líneas (reglas de `fijar_desglose_de_conceptos`
 `bancos.cheques`, con el movimiento como estaba (concepto anterior incluido) y el motivo «Ligado al pago N de Cuentas por
 pagar». Aviso si `nombre_para_comparar(beneficiario) <> nombre_para_comparar(beneficiarioEsperado)`. No cambia monto, fecha,
 número, conciliación ni impresión.
+
+**Posfechado cobrado pronto** **[contador 19/11, §2 punto 7; forma del arquitecto]**. El contador pide avisar cuando el banco
+pagó el posfechado **en o antes del corte**: entonces la factura ya estaba pagada y no debía ir en el saldo inicial de
+Cuentas por pagar. Arrancar no guarda la fecha en que el banco pagó cada cheque, y la conciliación no baja del corte («nada
+del corte para atrás», `reglas-de-la-cuenta.ts`), así que no hay un período «que termine en o antes del corte». Lo que sí
+se sabe: el posfechado quedó marcado en la **primera conciliación** de la cuenta. En ese caso Ligar devuelve el aviso
+(no bloquea), y la conciliación lo da al marcarlo: «El banco cobró este cheque posfechado en el primer período conciliado.
+Si lo cobró en o antes del corte (dd/mm/aaaa), la factura ya estaba pagada y no debía ir en el saldo inicial de Cuentas por
+pagar: corríjalo con la carga abierta. Si lo cobró después, está bien.» Cobrarlo después del corte y antes de su fecha no
+cambia nada (la diferencia es de días; el pago conserva la fecha del cheque).
+
+**Ligar y desligar el pago sustituto** (`LigarPagoSustitutoDeApertura`): como el cheque de apertura, pero el movimiento es un
+cheque o nota de débito vigente, de fecha posterior al corte, sin origen y que no es partida de apertura
+(`PagoSustitutoNoLigable`); el monto no tiene que ser igual (aviso `monto_distinto` si no lo es); pone el concepto
+`pago_a_proveedor` sin desglose. Auditoría `corregir` en `bancos.cheques` o `bancos.notas` con el movimiento como estaba y el
+motivo «Pago de la deuda del cheque de apertura N anulado». Desligar quita el origen y deja `sin_clasificar` (como arriba).
 
 **Desligar**: exige que el origen sea el que pide. Quita el origen y el desglose y pone el concepto `sin_clasificar`
 **[arquitecto]**: el concepto anterior queda en la auditoría del ligado, pero leer la auditoría para decidir es frágil; el
@@ -291,7 +352,9 @@ Variable `bancos.aprobaciones.niveles` (empresa e instalación): lista de **uno 
 `[{ desde: '0.00', aprobadores: 1 }]`: todo pasa con un aprobador). Ejemplo: `[{desde:'5000.00',aprobadores:1},
 {desde:'50000.00',aprobadores:2}]`: hasta Q4,999.99 no pide aprobación, de Q5,000 a Q49,999.99 una persona, desde Q50,000
 dos personas distintas. Reemplaza el `monto_minimo` de §11.1. Montos en la moneda de la cuenta; con Multimoneda, los
-niveles se comparan contra el **equivalente en quetzales** al tipo del día (una sola tabla de niveles por empresa).
+niveles se comparan contra el **equivalente en quetzales** al tipo de cambio **de referencia del Banguat** de la fecha
+pedida (el servicio `tiposDeCambio` de Multimoneda; una sola tabla de niveles por empresa) **[contador 19/11, V-3]**.
+Mientras Bancos no tenga la moneda de la cuenta (MM-B), todo está en quetzales y se compara directo.
 
 ### 3.3 Solicitudes (`bancos.solicitudes`) y aprobaciones (`bancos.aprobaciones_de_solicitudes`)
 
@@ -440,7 +503,7 @@ No crea nada.
 |---|---|---|
 | **Cuentas por pagar** (cheque, nota de débito y, con TC, tarjeta) | Quien registra el pago **no** puede ser `autorizado_por` de ninguno de los cargos del pago. Aplica también a la nota ligada si la nota la registró quien paga **[arquitecto]**. Con `aprobadores = 2` la regla es la misma (segregación de dos personas: una autoriza, otra paga) | `AutorizadorNoPaga` (403): «Usted autorizó la factura S-N: el pago lo registra otra persona (la aprobación de Bancos está encendida).» |
 | **Caja chica** (reposición) | CC-k se vuelve **bloqueo** sin importar `caja-chica.control.separacion_de_funciones`: el custodio vigente no repone su propio fondo. Caja chica no tiene «aprobar la liquidación» (§1.9); el equivalente de «quien autoriza» es el custodio, que es el beneficiario **[arquitecto: corrige la redacción del dictamen]** | `SeparacionDeFunciones` (el de CC-k) |
-| **Cuentas por liquidar** (entregar anticipo) | **Hueco abierto** **[arquitecto]**: un usuario entrega un anticipo (cheque o nota) sin que nadie lo autorice. Q-A6 | — |
+| **Cuentas por liquidar** (entregar anticipo) | **Hueco aceptado por ahora** (Q-A6 c, §17): un usuario entrega un anticipo (cheque o nota) sin que nadie lo autorice; la ayuda lo dice textualmente (§3.9, V-7). El mecanismo general «solicitud de origen» queda para una fase posterior si un cliente lo pide | — |
 
 No se agrega variable propia por módulo: la regla se enciende sola con la aprobación de Bancos (la alternativa del
 dictamen, `…exigir_autorizador_distinto` por módulo, queda en Q-A3).
@@ -456,6 +519,14 @@ dictamen, `…exigir_autorizador_distinto` por módulo, queda en Q-A3).
 | `bancos.aprobaciones.acumular_por` | `'dia' \| 'semana' \| 'no'` | `'dia'` | No |
 | `bancos.aprobaciones.dias_sin_referencia` | entero 1–30 | `3` | No |
 
+**Ayuda de las variables** (en `textos-de-aprobaciones.ts` y en la descripción de cada variable) **[contador 19/11, V-6 y
+V-7]**: además de «La aprobación en Arrancar no sustituye las firmas registradas en el banco» (§3.7), dos frases fijas:
+
+- En `niveles`: «Dos aprobadores aplican a los cheques, notas y transferencias que se registran en Bancos. Los pagos de
+  Cuentas por pagar llevan dos personas: una autoriza la factura y otra registra el pago.»
+- En las tres de tipo (`cheques`, `notas_de_debito`, `transferencias`): «Los anticipos de Cuentas por liquidar no pasan por
+  aprobación.»
+
 Si la pantalla de configuración del core no tiene un gancho «al guardar», el aviso de A-9 sale en la bandeja de
 Solicitudes y en la respuesta de solicitar (§3.5), no al encender la variable.
 
@@ -470,8 +541,12 @@ Solicitudes y en la respuesta de solicitar (§3.5), no al encender la variable.
   (devolución del comercio) o la pata de crédito de la transferencia que paga la tarjeta.
 - **No hay cheques ni chequeras** en una tarjeta. **No hay sobregiro**: el `límite de crédito` solo **avisa** («El cargo
   pasa el límite de crédito de Q…; el emisor puede rechazarlo»).
-- **No es efectivo**: el flujo de efectivo **excluye** las cuentas de tipo tarjeta (NIIF para las Pymes 7.18). La salida de
-  efectivo es la pata de débito de la cuenta monetaria que paga la tarjeta, con su concepto (§4.5).
+- **No es efectivo**: el flujo de efectivo **excluye** las cuentas de tipo tarjeta: la compra con tarjeta no es salida de
+  efectivo (pasivo financiero, NIIF para las Pymes sección 11, sin compensar, 2.52). La salida de efectivo es la pata de
+  débito de la cuenta monetaria que paga la tarjeta, con su concepto (§4.5). **[contador 19/11, §2 punto 1]** El diseño
+  citaba 7.18, que trata de transacciones de **inversión y financiación** sin efectivo: si la compra se excluye porque la
+  financió el emisor, lo coherente es que su pago sea Financiamiento. Por eso la actividad del pago es una **política
+  contable** que la empresa elige y mantiene (sección 10): Operación por omisión, editable (Q-T4), con la ayuda de §4.5.
 - **Bimonetaria** = dos cuentas (GTQ y USD) unidas por `tarjeta_principal_id`.
 - **Tarjeta personal** de un empleado o socio: no se registra como cuenta de la empresa (Q-T5, recomendado «No»); esos
   gastos van por Cuentas por liquidar. Es texto de ayuda, sin columna.
@@ -546,6 +621,14 @@ emisor y se guarda con el signo de los libros (`saldo_estado_de_cuenta = −sald
 | `monto` | numeric(14,2) | no | `> 0`; Σ = monto del cargo (dominio; la última absorbe el redondeo) |
 | `conciliacion_id` | uuid | sí | La conciliación del corte en que el emisor la facturó; índice |
 
+**Interés de las cuotas y parte no corriente** **[contador 19/11, V-10]**: el cargo en cuotas es por el **precio de la
+compra**; si el emisor cobra interés por las cuotas, el interés se registra como **cargo aparte** (concepto con
+`es_cargo_bancario`) cuando lo factura, nunca dentro del total ni repartido en las cuotas (la ayuda de la casilla «En
+cuotas» lo dice). Las cuotas que vencen a más de 12 meses son **pasivo no corriente** (NIIF para las Pymes 4.7): Contabilidad
+las separa con la fecha del cargo, el número de cada cuota y el día de corte de la tarjeta, que ya están; **sin columna
+nueva** **[arquitecto]**: el contador dice que fecha y número alcanzan. El evento de movimientos de Bancos (cuando exista,
+§5) llevará las cuotas no facturadas con su número.
+
 RLS por empresa. El cargo en cuotas **no** es candidato en la conciliación: lo son sus cuotas pendientes. Se crean al
 registrar el cargo (casilla «En cuotas», número de cuotas; el sistema reparte) y se corrigen mientras ninguna esté
 marcada. El cargo queda conciliado (`movimientos.conciliacion_id`) cuando se marca su última cuota. La conciliación de la
@@ -576,6 +659,8 @@ en el dominio (§4.4).
    (dictamen §2.2): si el emisor emite FEL a nombre del NIT, se registra en Libro de compras como cualquier compra y, con
    Cuentas por pagar, se paga **ligando** el cargo de la tarjeta (marcarlo para Cuentas por pagar y forma `nota_ligada`,
    como un seguro, H7). La nota ligada ya acepta cualquier nota de débito marcada; aquí se permite también en una tarjeta.
+   **[contador 19/11, V-11]** Correcto; sigue **pendiente de cotejo** el alcance vigente de la exención de la Ley del IVA,
+   art. 7, numeral 4, para los emisores (el Decreto 2-2024 los pone bajo la SIB): solo afecta el texto de ayuda, no la regla.
 5. **Interés con ISR retenido** (H8) y **posfechado**: no aplican a tarjetas (rechazo).
 6. **Fecha de inicio y período conciliado**: las mismas reglas, con el `hasta` del corte.
 7. **Diferencial cambiario** (Multimoneda): la tarjeta en USD entra como partida monetaria de naturaleza
@@ -615,6 +700,10 @@ transferencia guardan su concepto como hoy. Con monedas distintas es la transfer
 la aprobación de transferencias (§3.1). El aviso «Pago de contado del último corte: Q…; fecha límite dd/mm» se muestra al
 elegir la tarjeta como destino.
 
+**Ayuda del concepto** **[contador 19/11, P-1 b]**, junto al selector y en la descripción del concepto de sistema: «Operación
+si la tarjeta se paga de contado cada mes; Financiamiento si se usa como crédito (pago mínimo, saldo con intereses). Elija
+una política y úsela siempre.» No cambia datos: el concepto ya es editable.
+
 ### 4.6 Consumos sin documento y Cuentas por pagar
 
 - **Forma `tarjeta` en Cuentas por pagar** (Q-T7 a): un pago con `forma = 'tarjeta'` crea, por
@@ -623,8 +712,17 @@ elegir la tarjeta como destino.
   tarjetas (`UseLaFormaTarjeta`); **fecha = fecha del consumo** (no futura; no anterior a las mínimas de CP4 §5.1.5); **sin
   retención descontada**: si algún cargo del pago tiene retenciones y la empresa es agente de retención de IVA, o el
   proveedor es del régimen opcional simplificado y la empresa debe retenerle ISR (datos fiscales del libro), **aviso**
-  (dictamen §2.2): «La forma tarjeta no descuenta retenciones: el emisor cobrará el total de la factura. Revise con su
-  contador si debe retener; si no, corrija la retención en Libro de compras antes de pagar.» No bloquea. Cuenta para la
+  (dictamen §2.2). **[contador 19/11, P-2 b; texto pendiente de cotejar el reglamento del Decreto 20-2006]** Se separa por
+  impuesto, porque con tarjeta la retención de IVA al comercio la practica el **emisor** y el aviso de antes inducía a
+  retener dos veces:
+  - **IVA** (empresa agente de retención de IVA y el cargo tiene retención de IVA): «Pagada con tarjeta, la retención de IVA
+    la practica el emisor de la tarjeta: no registre retención de IVA en esta factura. Revise con su contador y, si la
+    registró, corríjala en Libro de compras antes de pagar.»
+  - **ISR** (proveedor del régimen opcional simplificado, Decreto 10-2012, art. 48): el aviso de antes, porque el emisor no
+    retiene ISR por la empresa: «La forma tarjeta no descuenta retenciones: el emisor cobrará el total de la factura. Revise
+    con su contador si debe retener; si no, corrija la retención en Libro de compras antes de pagar.»
+
+  No bloquea. Cuenta para la
   bancarización (medio bancario). Regla «quien autorizó no paga» de §3.8 si `bancos.aprobaciones.notas_de_debito` aplica.
   Evento `pago_registrado` con `efecto = 'tarjeta'` (nuevo: Debe Proveedores / Haber la cuenta de pasivo de la tarjeta).
   Anular: como la nota de débito (`anular_movimiento_de_origen`).
@@ -655,7 +753,7 @@ Contabilidad no existe todavía; los eventos se publican al confirmar (bus) y qu
 | Evento | Quién | Datos | Partida que sacará Contabilidad |
 |---|---|---|---|
 | `cuentas-por-pagar.pago_registrado` / `pago_anulado` (cambian) | CP | `forma` suma `'cheque_de_apertura'` y `'tarjeta'`; `efecto` suma `'tarjeta'` | Cheque de apertura: Debe Proveedores / Haber Bancos en la **fecha del cheque** (Contabilidad debe ignorar el concepto que tenía el cheque antes de ligar: Bancos lo reclasifica al ligar y su evento de reclasificación, cuando exista, lleva el concepto anterior). Tarjeta: Debe Proveedores / Haber Tarjeta |
-| `cuentas-por-pagar.cheque_de_apertura_anulado_decidido` (nuevo) | CP | `movimientoId`, `inversoId`, `decision`, `causa`, `proveedorId`, `documentoId`, `fecha`, `montoCentavos`, `medio`, `cuentaBancariaId` | Completa la contrapartida del inverso `anulacion_de_apertura` (Debe Bancos): Haber Proveedores (reconocida), Haber la cuenta del pago (ya pagada), Haber otros ingresos (no se debe, prescrita) |
+| `cuentas-por-pagar.cheque_de_apertura_anulado_decidido` (nuevo) | CP | `movimientoId`, `inversoId`, `decision`, `causa`, `proveedorId`, `naturaleza`, `documentoId`, `fecha`, `montoCentavos`, `medio`, `movimientoDePagoId`, `moduloDelPago`, `documentoDelPagoId` **[contador 19/11, P-3 y P-5]** | Completa la contrapartida del inverso `anulacion_de_apertura` (Debe Bancos): reconocida, Haber la cuenta de su `naturaleza` (Proveedores, Acreedores varios, remuneraciones por pagar o cuentas con socios); `ya_pagada`, Haber **la cuenta que usó el pago sustituto** (el movimiento ligado lleva `pago_a_proveedor`: Proveedores; con efectivo, la del documento de ese módulo), nunca otra vez Bancos; `pagada_antes_del_corte`, Haber Proveedores y Acreedores varios; `no_se_debe`, otros ingresos o corrección de error de un período anterior (lo decide el contador); `prescrita`, otros ingresos gravables, en la fecha elegida |
 | `cuentas-por-pagar.cheque_de_apertura_anulado_deshecho` (nuevo) | CP | El de arriba y el motivo | Reversa |
 | Movimientos de Bancos (cuando Bancos publique, con Contabilidad) | Bancos | Cada movimiento lleva `tipoDeCuenta` | La cuenta contable de una tarjeta es de pasivo |
 
@@ -672,7 +770,8 @@ Las solicitudes y aprobaciones **no** publican eventos contables (no son hechos 
 | Cierre de la carga | Bancos responde `empresas.revisar_cierre_de_carga` con `posfechados_sin_ligar` y `total_tarjetas` |
 | CP paga con tarjeta | `bancos.medios_de_pago` (suma `tipo`) y `registrar_nota_de_origen` |
 | Multimoneda | La tarjeta responde a `multimoneda.partidas_en_moneda_extranjera` como cuenta de pasivo |
-| Llaves entre esquemas (con índice) | `cuentas_por_pagar.cheques_de_apertura_anulados.movimiento_id`, `.inverso_id`, `.cuenta_bancaria_id` → `bancos.*`; `.proveedor_id` → `terceros.proveedores`; `pagos.cheque_de_apertura_referido_id` → `bancos.movimientos`. Todas hacia su `dependeDe` (la prueba de importaciones entre módulos las revisa) |
+| CP liga el pago sustituto de un cheque de apertura anulado | Órdenes `bancos.ligar_pago_sustituto_de_apertura` y `bancos.desligar_pago_sustituto_de_apertura` (§2.7) |
+| Llaves entre esquemas (con índice) | `cuentas_por_pagar.cheques_de_apertura_anulados.movimiento_id`, `.inverso_id`, `.movimiento_de_pago_id` → `bancos.movimientos`; `.proveedor_id` → `terceros.proveedores`; `pagos.cheque_de_apertura_referido_id` → `bancos.movimientos`. Todas hacia su `dependeDe` (la prueba de importaciones entre módulos las revisa) |
 
 ## 7. Permisos (PLAN §3.5; ninguno `soloSuperacceso`)
 
@@ -687,8 +786,8 @@ Las solicitudes y aprobaciones **no** publican eventos contables (no son hechos 
 | `bancos.consumos-por-documentar.ver` / `.exportar` | Reporte de consumos por documentar | Quien tenía `bancos.movimientos.ver` / `.exportar` |
 | `cuentas-por-pagar.pagos.ligar-cheques-de-apertura` | Forma `cheque_de_apertura` | Quien tenía `cuentas-por-pagar.pagos.aplicar-a-apertura` |
 | `cuentas-por-pagar.pagos.desligar-cheques-de-apertura` | Desligar | Ídem |
-| `cuentas-por-pagar.cheques-de-apertura-anulados.ver` | Bandeja | Quien tenía `cuentas-por-pagar.documentos.ver` |
-| `cuentas-por-pagar.cheques-de-apertura-anulados.decidir` | Reconocer, descartar y deshacer | Quien tenía `cuentas-por-pagar.pagos.aplicar-a-apertura` |
+| `cuentas-por-pagar.cheques-de-apertura-anulados.ver` | Bandeja (migración de AP-4a) | Quien tenía `cuentas-por-pagar.documentos.ver` |
+| `cuentas-por-pagar.cheques-de-apertura-anulados.decidir` | Reconocer, descartar (con el pago sustituto) y deshacer (migración de AP-4a) | Quien tenía `cuentas-por-pagar.pagos.aplicar-a-apertura` |
 | `cuentas-por-pagar.pagos.pagar-con-tarjeta` | Forma `tarjeta` | Quien tenía `cuentas-por-pagar.pagos.emitir` |
 
 ## 8. Auditoría (todo dentro de la unidad de trabajo; `core.auditoria` solo se agrega)
@@ -699,6 +798,7 @@ Las solicitudes y aprobaciones **no** publican eventos contables (no son hechos 
 | Cambiar `pide_aprobacion` | `bancos.conceptos`, `corregir` | El concepto como estaba |
 | Cambiar una referencia ya escrita | `bancos.notas` o `bancos.transferencias`, `corregir` | El movimiento como estaba |
 | Ligar y desligar el cheque | `bancos.cheques`, `corregir` | El movimiento con su concepto, origen y desglose |
+| Ligar y desligar el pago sustituto **[contador 19/11]** | `bancos.cheques` o `bancos.notas`, `corregir` | El movimiento con su concepto y origen |
 | Desligar (lado CP) | `cuentas-por-pagar.pagos`, `anular` | El `PagoDto` |
 | Deshacer una decisión de la bandeja | `cuentas-por-pagar.cheques-de-apertura-anulados`, `anular` | La decisión y, si fue reconocida, el cargo |
 | Eliminar o corregir un corte | `bancos.cortes-de-tarjeta`, `eliminar` / `corregir` | El corte |
@@ -710,10 +810,11 @@ Aprobar, solicitar, reconocer y descartar son altas: sin auditoría (quedan en s
 
 Bancos: `RequiereAprobacion` (409), `SolicitudYaResuelta` (409), `AprobadorEsElSolicitante` (403), `SuperaccesoNoAprueba`
 (403), `YaAprobada` (409), `CorreccionRequiereAprobacion` (409), `ChequeDeAperturaNoLigable` (422),
-`MontoDistintoDelCheque` (422), `TarjetaSinCheques` (422), `NumeroDeTarjetaCompleto` (422), `TipoDeCuentaConMovimientos`
+`MontoDistintoDelCheque` (422), `PagoSustitutoNoLigable` (422) **[contador 19/11]**, `TarjetaSinCheques` (422), `NumeroDeTarjetaCompleto` (422), `TipoDeCuentaConMovimientos`
 (409), `ParteNoAdmitidaEnTarjeta` (422), `CorteRepetidoEnElMes` (409), `CuotasYaFacturadas` (409).
 Cuentas por pagar: `AutorizadorNoPaga` (403), `PagoNoEsChequeDeApertura` (422), `DeudaReconocidaConMovimientos` (409),
-`ChequeDeAperturaYaDecidido` (409), `CuentaNoEsTarjeta` (422), `UseLaFormaTarjeta` (422).
+`ChequeDeAperturaYaDecidido` (409), `PagoSustitutoConOrigen` (422) y `FechaDePrescripcionInvalida` (422)
+**[contador 19/11]**, `CuentaNoEsTarjeta` (422), `UseLaFormaTarjeta` (422).
 
 ## 10. API
 
@@ -731,7 +832,8 @@ Cuentas por pagar: `AutorizadorNoPaga` (403), `PagoNoEsChequeDeApertura` (422), 
 | `POST /api/cuentas-por-pagar/pagos` con `forma: 'cheque_de_apertura' \| 'tarjeta'` | El de la forma |
 | `POST /api/cuentas-por-pagar/pagos/:id/desligar {motivo}` | `pagos.desligar-cheques-de-apertura` |
 | `GET /api/cuentas-por-pagar/cheques-de-apertura-anulados?estado=pendientes\|decididos` | `cheques-de-apertura-anulados.ver` |
-| `POST …/cheques-de-apertura-anulados/:movimientoId/reconocer` · `/descartar` · `/deshacer` | `…decidir` |
+| `POST …/cheques-de-apertura-anulados/:movimientoId/reconocer` (con `naturaleza`) · `/descartar` (cuerpo por causa: `movimientoDePagoId`, o `moduloDelPago` y `documentoDelPagoId` con su fecha, o `proveedorId` y `naturaleza`, o `fecha` en `prescrita`) · `/deshacer` | `…decidir` |
+| `GET …/cheques-de-apertura-anulados/:movimientoId/pagos-sustitutos` (débitos ligables, del mismo beneficiario primero) | `…decidir` |
 
 Rutas que cambian de forma: `POST /bancos/cheques`, `/bancos/notas`, `/bancos/transferencias` pueden responder 409
 `RequiereAprobacion`; la de transferencias acepta `conceptoId`; las de cuentas bancarias aceptan los datos de tarjeta.
@@ -758,8 +860,11 @@ Dinero como texto con dos decimales en la API.
   posfechados sin ligar en la ficha del proveedor; campo «Cheque de apertura con que se pagó» en la cuenta de apertura;
   **Operación → «Cheques de apertura anulados»** (bandeja con ventanas reconocer, descartar y deshacer, texto de
   prescripción). Mensaje de `AutorizadorNoPaga` tal como viene.
-- Textos legales en un solo lugar por lado (`textos-de-aprobaciones.ts`, `textos-de-tarjeta.ts`), para cotejarlos
-  (dictamen: «pendiente de cotejar antes de la ayuda»).
+- Textos legales en un solo lugar por lado (`textos-de-aprobaciones.ts`, `textos-de-tarjeta.ts` y, para la bandeja,
+  `textos-de-cheques-de-apertura.ts` en Cuentas por pagar), para cotejarlos. **[contador 19/11, V-14]** Cada texto que cita
+  una ley lleva la marca `pendienteDeCotejo: true` y la cita del cuadro de §18.3; una prueba lista los marcados, y la QA de
+  cada parte (AP-7, AB-7, TC-9) no se da por terminada mientras quede alguno sin cotejar o sin cambiar por una versión sin
+  cita. Los textos de §2.5 (prescripción, `no_se_debe`) y de §4.6 (retenciones) ya traen la redacción del contador.
 
 ## 12. Reportes y Excel (según la sección del menú)
 
@@ -778,7 +883,8 @@ Dinero como texto con dos decimales en la API.
 
 | Migración | Módulo | Contenido | Datos existentes |
 |---|---|---|---|
-| `00xx_cp_ap_cheques_de_apertura` (AP-1) | Cuentas por pagar | Forma, único parcial, referido, origen nuevo, tabla de decisiones, permisos y su reparto | Cero pagos en desarrollo; los checks se reemplazan con los valores viejos dentro |
+| `00xx_cp_ap_cheques_de_apertura` (AP-1) | Cuentas por pagar | Forma, único parcial, referido, permisos de ligar y desligar y su reparto | Cero pagos en desarrollo; los checks se reemplazan con los valores viejos dentro |
+| `00xx_cp_ap_bandeja_de_anulados` (AP-4a) **[contador 19/11]** | Cuentas por pagar | Origen nuevo de `documentos`, tabla de decisiones con `naturaleza`, `movimiento_de_pago_id`, `modulo_del_pago`/`documento_del_pago_id` y la causa `pagada_antes_del_corte`, permisos de la bandeja y su reparto | Tabla nueva; ningún documento tiene el origen nuevo |
 | `00xx_aprobaciones` (AB-1) | Bancos | `solicitudes`, `aprobaciones_de_solicitudes`, `conceptos.pide_aprobacion` (relleno `false` donde `es_cargo_bancario` o clave de sistema), correlativo, permisos y su reparto | Nada cambia hasta encender las variables |
 | `00xx_tarjetas_de_credito` (TC-1) | Bancos | Check de `tipo`, columnas de tarjeta, `cortes_de_tarjeta`, `cuotas_de_tarjeta`, `conciliaciones.corte_id`, `.hasta` (relleno y `not null`), `.foto_total_cuotas_por_facturar`, `transferencias.concepto_id`, parte `compra_en_cuotas`, tres conceptos de sistema, permisos | `hasta` = fin de mes de cada conciliación; ninguna cuenta es tarjeta |
 | `00xx_pago_con_tarjeta` (TC-5) | Cuentas por pagar | Forma `tarjeta`, único, permiso | — |
@@ -803,40 +909,58 @@ Todas repetibles donde insertan conceptos o permisos; `when` del journal mayor q
    aprobaciones lo resuelven (uno ejecuta, el otro ve `SolicitudYaResuelta`).
 8. **Textos legales** a cotejar antes de mostrarlos (dictamen, al final): Decreto 20-2006 arts. 4 y 20; Ley del IVA arts.
    7.4, 16, 18 y 37; Decreto 10-2012 arts. 21.22, 23 y 48; Decreto 2-2024; Código Civil arts. 1501, 1506, 1508 y 1514.
+   **[contador 19/11]** Siguen pendientes de cotejo literal (§18.3); no bloquean programar, sí dar la QA por terminada
+   (§11). Se suman el reglamento del Decreto 20-2006 (retención del emisor de la tarjeta) y el Código de Comercio, arts.
+   410, 501 y 513.
 
 ## 15. Pasos (un commit cada uno; servidor y cliente por separado; pruebas en cada uno)
 
-Orden de las partes: **AP** primero (desbloquea a usuarios con apertura en curso), **AB** después de IC-1, **TC** después
-de Multimoneda en Bancos.
+Orden acordado (Q-O1): **AP** primero (desbloquea a usuarios con apertura en curso), **AB** después, **TC** cuando
+Multimoneda esté en Bancos. Estado de lo que se esperaba (verificado en `main` `b9c0a036`, 2026-11-19): BS-3, BS-4, BS-7,
+BS-R1, CP4-B3b, CP4-12 (QA), IC-1 a IC-7 y EM-2 **ya están en `main`**; Multimoneda en Bancos (MM-B1, MM-B2) **no**.
+Regla de siempre: nunca dos ramas generando migraciones del mismo módulo a la vez (AP-1 y AP-4a en Cuentas por pagar;
+AB-1 y TC-1 en Bancos).
 
-| Paso | Contenido | Pruebas | Va después de |
-|---|---|---|---|
-| **AP-0** (servidor y cliente, dos commits) | Hallazgo `posfechados_sin_ligar` en la revisión de cierre de Bancos; aviso en la ficha del proveedor y en la ventana de pago de CP | Con y sin CP activo; con posfechados ligados (no cuentan) | BS-3 en `main` |
-| **AP-1** (servidor, datos CP) | Migración de §2.2, `*.tablas.ts`, permisos y su reparto | Cada check (forma, referido solo en apertura, decisión y causa, reconocida sin cargo falla), único vigente (dos pagos vigentes al mismo cheque fallan; anulado + vigente pasa), RLS, reparto en roles y directos | CP4-12 (QA) |
-| **AP-2** (servidor, Bancos) | Órdenes `ligar` y `desligar` (§2.7), hallazgo, auditoría | Ligar no posfechado, con origen, anulado, monto distinto (rechazos); beneficiario distinto (aviso); concepto y desglose; corregir/eliminar/blanquear después (rechazo); desligar ajeno (rechazo); auditoría | AP-1 |
-| **AP-3** (servidor, CP) | Forma `cheque_de_apertura`, desligar, anular y aviso `movimiento_por_cambiar`, referido en cuenta de apertura, evento | Solo saldos iniciales, otro proveedor, sin autorizar; fecha = cheque, comprometido y pagado en su fecha; carga cerrada (pasa); desligar y religar; anular (factura pendiente, sin bandeja); lote de caducos; CP5 al corte; bancarización en el mes del cheque; 403 | AP-2 |
-| **AP-4** (servidor, CP) | Bandeja: listar, reconocer, descartar, deshacer, evento | Fecha del inverso; fuera del libro; monto del cheque; con referido (no anula el pago de apertura); ya pagada con cuenta y con efectivo; prescrita; deshacer con movimientos (rechazo); doble decisión (rechazo); 403 | AP-3 |
-| **AP-5** (cliente, CP) | Formas y desligar en la ventana y la ficha del pago, campo referido, aviso en el proveedor | Lógica pura de la ventana | AP-3 |
-| **AP-6** (cliente, CP) | Pantalla de la bandeja | Lógica pura de las ventanas | AP-4 |
-| **AP-7** (QA) | Apertura con un posfechado de chequera no registrada y su factura de saldo inicial; ligar, pagado en su fecha, anular, religar; cheque en circulación anulado → reconocer y pagar; descartar «ya pagada»; cierre de la carga con el hallazgo | — | AP-5, AP-6 |
-| **AB-1** (servidor, datos Bancos) | Migración de §3.3 y `pide_aprobacion`, permisos | Checks por tipo y estado, PK de aprobaciones, solo agregar en aprobaciones, relleno de `pide_aprobacion`, RLS | IC-1 en `main` (orden de migraciones) |
-| **AB-2** (servidor) | Evaluador (niveles, concepto, acumulado día/semana/no), `RequiereAprobacion` en las tres acciones, solicitar, corrección de lo aprobado, variables | Umbral exacto, dos niveles, fraccionamiento en tres cheques, nombres con acentos, semana ISO, nota de cargo bancario (no pide), nota de crédito (no pide), transferencia, corregir monto arriba (rechazo) y fecha (pasa), rendimiento | AB-1 |
-| **AB-3** (servidor) | Aprobar (con ejecución), rechazar, cancelar, referencia, superacceso, A-9, reporte y Excel, auditoría | Autoaprobación (rechazo aun con todos los permisos), superacceso, dos aprobadores (el mismo dos veces falla), ejecución que falla por sobregiro (se deshace todo), fecha de hoy y posfechado conservado, mes conciliado al aprobar, número de cheque sin huecos, concurrencia, referencia sin y con auditoría, 403 | AB-2 |
-| **AB-4** (servidor, CP y Caja chica) | Orden `evaluar_aprobacion` y la regla de §3.8 | CP: autorizó y paga (rechazo con la variable; pasa sin ella o bajo el umbral); nota ligada; Caja chica: custodio repone con `avisar` (rechazo si aplica) | AB-2 |
-| **AB-5** (cliente, Bancos) | Bandeja de solicitudes, flujo del 409 en las tres ventanas, referencia, avisos | Lógica pura | AB-3 |
-| **AB-6** (servidor y cliente) | Firmas del comprobante (A-6) | Con uno y dos aprobadores, sin solicitud | AB-3 e IC-5 |
-| **AB-7** (QA) | Dos niveles, fraccionamiento, rechazo, referencia vencida, CP con autorizador, Caja chica, celular | — | AB-5, AB-6 |
-| **TC-1** (servidor, datos Bancos) | Migración de §4.2 | Checks, relleno de `hasta` (conciliaciones iguales), cuotas en cascada, Luhn no va en la base (dominio), RLS | Multimoneda en Bancos (MM-B) y BS-R1 |
-| **TC-2** (servidor) | Cuenta tarjeta (Luhn, tipo con movimientos, principal), reglas de movimientos (§4.3), transferencias con concepto, flujo sin tarjetas, Saldos por cuenta y estado de cuenta, medios de pago | Cheque en tarjeta (rechazo), límite (aviso), sin sobregiro, pago de tarjeta en el flujo como Operación y adelanto como Financiamiento, compra con tarjeta fuera del flujo, grupos de saldos sin compensar, Excel de cuentas | TC-1 |
-| **TC-3** (servidor) | Cortes, conciliación por corte, cuotas, consumos por documentar | Período del corte, corte que cae en fin de semana, dos cortes en un mes (rechazo), cuotas marcadas en tres cortes y cargo conciliado al final, foto, período conciliado con `hasta`, regresión de cuentas comunes | TC-2, BS-4 |
-| **TC-4** (servidor) | Saldo inicial de tarjeta | Partes admitidas y rechazadas, cuadre con cuotas, cifra `total_tarjetas` en el cierre | TC-3 |
-| **TC-5** (servidor, CP) | Migración y forma `tarjeta`, nota de débito rechaza tarjeta, avisos de retención según datos fiscales, evento | Empresa agente y no agente (aviso solo en la primera), régimen simplificado, bancarización, anular, quien autorizó no paga | TC-2, AB-4 |
-| **TC-6** (cliente, Bancos) | Cuentas, notas con cuotas, transferencia con concepto, ficha de la tarjeta, reportes | Lógica pura (reparto de cuotas, signos) | TC-2 |
-| **TC-7** (cliente, conciliación) | Cortes y conciliación por corte | Lógica pura | TC-3, BS-7 |
-| **TC-8** (cliente, CP) | Forma tarjeta | Lógica pura | TC-5 |
-| **TC-9** (QA) | Tarjeta bimonetaria, compras en cuotas, consumo sin documento, pago desde monetaria, conciliación de dos cortes, saldo inicial, CP con tarjeta | — | TC-6 a TC-8 |
+La columna «Espera» dice qué respuesta del usuario (§19) necesita el paso; «—» = ninguna.
+
+| Paso | Contenido | Pruebas | Va después de | Espera |
+|---|---|---|---|---|
+| **AP-0** (servidor y cliente, dos commits) | Hallazgo `posfechados_sin_ligar` en la revisión de cierre de Bancos (§2.6); aviso en la ficha del proveedor y en la ventana de pago de CP (texto «…se podrán ligar pronto») | Con y sin CP activo; con posfechados ligados (no cuentan); sin posfechados (sin hallazgo) | — (BS-3 y EM-2 en `main`) | — |
+| **AP-1** (servidor, datos CP) | Migración de `pagos` (§2.2, la parte AP-1), `*.tablas.ts`, permisos `ligar-` y `desligar-cheques-de-apertura` y su reparto | Forma nueva, referido solo en apertura, único vigente (dos pagos vigentes al mismo cheque fallan; anulado + vigente pasa), RLS, reparto en roles y directos | — (CP4-12 en `main`) | — |
+| **AP-2** (servidor, Bancos) | Órdenes `ligar_cheque_de_apertura` y `desligar_cheque_de_apertura` (§2.7), auditoría, aviso «posfechado cobrado pronto» en Ligar y al marcarlo en la conciliación | Ligar no posfechado, con origen, anulado, monto distinto (rechazos); beneficiario distinto (aviso); marcado en la primera conciliación (aviso) y en una posterior (sin aviso); concepto y desglose; corregir/eliminar/blanquear después (rechazo); desligar ajeno (rechazo); auditoría | — (sin migración; puede ir en paralelo con AP-1) | — |
+| **AP-3** (servidor, CP) | Forma `cheque_de_apertura`, desligar, anular y aviso `movimiento_por_cambiar`, referido en cuenta de apertura, evento | Solo saldos iniciales, otro proveedor, sin autorizar; fecha = cheque, comprometido y pagado en su fecha; carga cerrada (pasa); desligar y religar; anular (factura pendiente, sin bandeja); lote de caducos; CP5 al corte; bancarización en el mes del cheque; 403 | AP-1, AP-2 | — |
+| **AP-4a** (servidor, datos CP) **[contador 19/11]** | Migración de la bandeja (§2.2, la parte AP-4a): origen nuevo de `documentos`, tabla de decisiones con `naturaleza`, pago sustituto y `pagada_antes_del_corte`, permisos de la bandeja y su reparto | Checks de decisión y causa (reconocida sin cargo, sin naturaleza o sin proveedor fallan; `ya_pagada` con cuenta sin movimiento falla; efectivo sin documento falla), único vigente por cheque y por pago sustituto, RLS | AP-1 (orden de migraciones de CP) | P-3, P-5 |
+| **AP-4b** (servidor, Bancos) **[contador 19/11]** | Órdenes `ligar_pago_sustituto_de_apertura` y `desligar_pago_sustituto_de_apertura` (§2.7), auditoría | Débito con origen, partida de apertura, anterior al corte, anulado (rechazos); monto distinto (aviso); concepto `pago_a_proveedor`; corregir o anular después (rechazo por el revisor); desligar | AP-2 | P-3 |
+| **AP-4** (servidor, CP) | Bandeja: listar, reconocer (con naturaleza y aviso de NIT nulo desde Q30,000), descartar con las cuatro causas, deshacer, aviso `movimiento_por_cambiar` del pago sustituto, eventos | Fecha del inverso; fuera del libro; monto del cheque; con referido (no anula el pago de apertura); `ya_pagada` con movimiento (ligado y concepto cambiado) y con efectivo; pago sustituto con origen (rechazo); `pagada_antes_del_corte`; `prescrita` con fecha anterior al inverso o futura (rechazo); deshacer con movimientos (rechazo) y deshacer `ya_pagada` (desliga); doble decisión (rechazo); Bancos anula el pago sustituto (rechazo); 403 | AP-3, AP-4a, AP-4b | P-3, P-4, P-5 |
+| **AP-5** (cliente, CP y conciliación de Bancos) | Formas y desligar en la ventana y la ficha del pago, campo referido, aviso en el proveedor, aviso «posfechado cobrado pronto» en la conciliación | Lógica pura de la ventana | AP-3 | — |
+| **AP-6** (cliente, CP) | Pantalla de la bandeja: ventanas reconocer (naturaleza), descartar (selector del pago sustituto, fecha de prescripción) y deshacer, textos de §2.5 con `pendienteDeCotejo` | Lógica pura de las ventanas | AP-4 | P-4 (texto) |
+| **AP-7** (QA) | Apertura con un posfechado de chequera no registrada y su factura de saldo inicial; ligar, pagado en su fecha, anular, religar; cheque en circulación anulado → reconocer y pagar; descartar «ya pagada» con un cheque posterior y «pagada antes del corte»; cierre de la carga con el hallazgo; textos cotejados | — | AP-5, AP-6 | — |
+| **AB-1** (servidor, datos Bancos) | Migración de §3.3 y `pide_aprobacion`, permisos | Checks por tipo y estado, PK de aprobaciones, solo agregar en aprobaciones, relleno de `pide_aprobacion`, RLS | — (IC-1 en `main`); no a la vez que TC-1 ni otra migración de Bancos | — |
+| **AB-2** (servidor) | Evaluador (niveles, concepto, acumulado día/semana/no; en quetzales directo hasta MM-B), `RequiereAprobacion` en las tres acciones, solicitar, corrección de lo aprobado, variables con la ayuda de §3.9 | Umbral exacto, dos niveles, fraccionamiento en tres cheques, nombres con acentos, semana ISO, nota de cargo bancario (no pide), nota de crédito (no pide), transferencia, corregir monto arriba (rechazo) y fecha (pasa), rendimiento | AB-1 | — |
+| **AB-3** (servidor) | Aprobar (con ejecución), rechazar, cancelar, referencia, superacceso, A-9, reporte y Excel, auditoría | Autoaprobación (rechazo aun con todos los permisos), superacceso, dos aprobadores (el mismo dos veces falla), ejecución que falla por sobregiro (se deshace todo), fecha de hoy y posfechado conservado, mes conciliado al aprobar, número de cheque sin huecos, concurrencia, referencia sin y con auditoría, 403 | AB-2 | — |
+| **AB-4** (servidor, CP y Caja chica) | Orden `evaluar_aprobacion` y la regla de §3.8 | CP: autorizó y paga (rechazo con la variable; pasa sin ella o bajo el umbral); nota ligada; Caja chica: custodio repone con `avisar` (rechazo si aplica) | AB-2 | — |
+| **AB-5** (cliente, Bancos) | Bandeja de solicitudes, flujo del 409 en las tres ventanas, referencia, avisos y ayuda de §3.9 | Lógica pura | AB-3 | — |
+| **AB-6** (servidor y cliente) | Firmas del comprobante (A-6): ajusta el comprobante de IC-5, que ya está en `main` | Con uno y dos aprobadores, sin solicitud | AB-3 | — |
+| **AB-7** (QA) | Dos niveles, fraccionamiento, rechazo, referencia vencida, CP con autorizador, Caja chica, celular; textos cotejados | — | AB-4, AB-5, AB-6 | — |
+| **TC-1** (servidor, datos Bancos) | Migración de §4.2 | Checks, relleno de `hasta` (conciliaciones iguales), cuotas en cascada, Luhn no va en la base (dominio), RLS | MM-B1 y MM-B2 (Multimoneda en Bancos; **no** están en `main`); no a la vez que AB-1 | — |
+| **TC-2** (servidor) | Cuenta tarjeta (Luhn, tipo con movimientos, principal), reglas de movimientos (§4.3), transferencias con concepto y su ayuda (§4.5), flujo sin tarjetas, Saldos por cuenta y estado de cuenta, medios de pago | Cheque en tarjeta (rechazo), límite (aviso), sin sobregiro, pago de tarjeta en el flujo como Operación y adelanto como Financiamiento, compra con tarjeta fuera del flujo, grupos de saldos sin compensar, Excel de cuentas | TC-1 | P-1 (solo el texto) |
+| **TC-3** (servidor) | Cortes, conciliación por corte, cuotas (interés aparte, §4.2), consumos por documentar | Período del corte, corte que cae en fin de semana, dos cortes en un mes (rechazo), cuotas marcadas en tres cortes y cargo conciliado al final, foto, período conciliado con `hasta`, regresión de cuentas comunes | TC-2 (BS-4 en `main`) | — |
+| **TC-4** (servidor) | Saldo inicial de tarjeta | Partes admitidas y rechazadas, cuadre con cuotas, cifra `total_tarjetas` en el cierre | TC-3 | — |
+| **TC-5** (servidor, CP) | Migración y forma `tarjeta`, nota de débito rechaza tarjeta, avisos de retención separados por impuesto (§4.6), evento | Empresa agente de IVA y no agente (aviso de IVA solo en la primera), régimen simplificado (aviso de ISR), los dos a la vez, bancarización, anular, quien autorizó no paga | TC-2, AB-4 | P-2 (solo el texto) |
+| **TC-6** (cliente, Bancos) | Cuentas, notas con cuotas (ayuda del interés), transferencia con concepto y su ayuda, ficha de la tarjeta, reportes | Lógica pura (reparto de cuotas, signos) | TC-2 | P-1 (solo el texto) |
+| **TC-7** (cliente, conciliación) | Cortes y conciliación por corte | Lógica pura | TC-3 (BS-7 en `main`) | — |
+| **TC-8** (cliente, CP) | Forma tarjeta | Lógica pura | TC-5 | P-2 (solo el texto) |
+| **TC-9** (QA) | Tarjeta bimonetaria, compras en cuotas, consumo sin documento, pago desde monetaria, conciliación de dos cortes, saldo inicial, CP con tarjeta; textos cotejados | — | TC-6 a TC-8 | — |
+
+**Primer paso programable: AP-0** (servidor, después su cliente): no espera ningún paso ni respuesta. Sin bloqueos también:
+AP-1, AP-2 (en paralelo con AP-1) y AP-3 (cuando estén AP-1 y AP-2); AB-1 a AB-6 no dependen de AP (el orden AP → AB
+es de prioridad, Q-O1). Lo único que espera respuestas es la
+bandeja (AP-4a, AP-4b, AP-4 y AP-6). Los pasos marcados «solo el texto» se programan con la redacción recomendada y se
+ajustan si la respuesta es otra.
 
 ## 16. Preguntas para el usuario
+
+_Respondidas el 2026-11-19: el usuario aceptó todas las recomendaciones (§17)._
 
 Del dictamen (con la posición del arquitecto) y nuevas del arquitecto (marcadas ★).
 
@@ -862,3 +986,109 @@ Del dictamen (con la posición del arquitecto) y nuevas del arquitecto (marcadas
 | ★Q-AP1 | Cheque de apertura anulado cuyo beneficiario **no es proveedor** | (a) Para reconocer la deuda se elige o crea un proveedor en Terceros (admite NIT nulo); (b) reconocer sin proveedor, solo como decisión para Contabilidad (sin poder pagarlo desde CP) | **(a)**: así se paga por el flujo normal |
 | ★Q-AP2 | ¿Se puede deshacer una decisión de la bandeja? | Sí, si el cargo reconocido no tiene movimientos / no | **Sí** |
 | ★Q-O1 | Orden de las partes | AP → AB → TC / otro | **AP → AB → TC** |
+
+## 17. Respuestas del usuario (2026-11-19)
+
+El usuario **aceptó todas las recomendaciones** de §16 (Q-A, Q-T, Q-N, Q-AP y Q-O). Quedan así:
+
+| # | Decisión |
+|---|---|
+| Q-A1 | (b) Niveles por monto con 1 o 2 aprobadores distintos (máximo dos); el límite por usuario (c), más adelante si alguien lo pide |
+| Q-A2 | Acumulado por beneficiario **por día**, configurable (`bancos.aprobaciones.acumular_por`) |
+| Q-A3 | (a) Separación automática con la aprobación de Bancos: en CP quien autorizó no paga; en Caja chica el custodio no repone |
+| Q-A4 | Aprobar crea el movimiento; la referencia del banco se captura después, con aviso |
+| Q-A5 | (a) Con `transferencias` encendida pasan todas las transferencias entre cuentas propias; la variable, apagada por omisión |
+| Q-A6 | (c) ahora: se acepta el hueco de Cuentas por liquidar y la ayuda lo dice (§3.9); (a) «solicitud de origen» en una fase posterior si un cliente lo pide |
+| Q-A7 | (a) En nivel 2, los pagos de CP llevan dos personas: una autoriza y otra paga |
+| Q-A8 | (a) No se corrige hacia arriba el monto, el beneficiario ni la cuenta de un egreso que pide aprobación: se anula y se solicita otro |
+| Q-A9 | (b) Marcar un concepto como «no pide aprobación» exige `conceptos.editar` **y** `solicitudes.aprobar`, con auditoría |
+| Q-T2 | La tarjeta se concilia **por corte** |
+| Q-T3 | **Sí** a compras en cuotas, con «cuotas por facturar» |
+| Q-T4 | Pago de la tarjeta en **Operación por omisión**, editable al registrar la transferencia |
+| Q-T5 | **No** a tarjetas personales como cuenta de la empresa (van por Cuentas por liquidar) |
+| Q-T6 | (a) Tabla propia de cortes |
+| Q-T7 | (a) Concepto «Consumos por documentar» y reporte hasta reclasificarlos; cargarlos al empleado por Cuentas por liquidar, más adelante |
+| Q-N2 | (a) + aviso mientras tanto; la (b) no se usa |
+| Q-N3 | **Sí** se puede desligar un cheque de apertura sin anularlo, con permiso y motivo |
+| Q-AP1 | (a) Para reconocer la deuda se elige o crea un proveedor en Terceros (admite NIT nulo). El contador agrega la naturaleza de la deuda (P-5), que no cambia esta respuesta |
+| Q-AP2 | **Sí** se puede deshacer una decisión de la bandeja, si el cargo reconocido no tiene movimientos |
+| Q-O1 | Orden **AP → AB → TC** |
+
+## 18. Validación del contador (2026-11-19)
+
+Dictamen completo: `dictamen-bancos-aprobaciones-tarjeta-validacion-2026-11-19.md`. Veredicto: **correcto con ajustes**. El
+diseño no tenía puntos «V-» propios: el contador armó la lista V-1 a V-14 con §14.8 y las decisiones **[arquitecto]**, y esa
+es la numeración que sigue.
+
+### 18.1 Dictamen por punto y dónde quedó
+
+| V | Punto | Dictamen | Dónde quedó en el diseño |
+|---|---|---|---|
+| V-1 | Tabla aparte, aprobador distinto, superacceso no aprueba, sin aprobación notas de crédito y cargos del banco | Correcto | Sin cambios (§3.1, §3.5) |
+| V-2 | `pide_aprobacion` y quién lo cambia | Correcto | Sin cambios (§3.1) |
+| V-3 | Acumulado por día; niveles en quetzales | Correcto | §3.2: tipo de referencia del Banguat (`tiposDeCambio`); en quetzales directo hasta MM-B |
+| V-4 | Fecha al aprobar | Correcto | Sin cambios (§3.5) |
+| V-5 | Corregir lo aprobado | Correcto | Sin cambios (§3.5) |
+| V-6 | Quien autorizó no paga; el custodio no repone | Correcto, con nota de riesgo aceptada | §3.9: ayuda de `niveles` («los pagos de CP llevan dos personas») |
+| V-7 | Cuentas por liquidar sin autorización | Correcto como transitorio | §3.8 y §3.9: la ayuda lo dice textualmente |
+| V-8 | Tarjeta como pasivo sin compensar | Correcto | §4.1: cita corregida (sección 11 y 2.52) |
+| V-9 | Pago de la tarjeta en Operación | Correcto con ajuste de ayuda | §4.1 (la cita de 7.18) y §4.5 (ayuda, P-1) |
+| V-10 | Cuotas y fórmula del saldo inicial | Correcto con ajuste | §4.2: interés de las cuotas como cargo aparte; parte no corriente para Contabilidad sin columna nueva |
+| V-11 | IVA de cargos del emisor solo desde la FEL | Correcto | §4.3.4: pendiente de cotejo el art. 7.4 (solo la ayuda) |
+| V-12 | Aviso de retención de la forma `tarjeta` | **Corregir** el texto | §4.6: avisos separados por impuesto (P-2) |
+| V-13 | Bandeja CP-AP | Correcto con ajustes | §2.2, §2.5, §2.7, §5: `ya_pagada` con el pago sustituto, causa `pagada_antes_del_corte`, `naturaleza`, prescripción, `no_se_debe` (P-3 a P-5) |
+| V-14 | Textos legales | **Pendiente** de cotejo literal | §11 (marca `pendienteDeCotejo`), §14.8 y §18.3 |
+
+Validados sin ajuste en CP-AP: la forma `cheque_de_apertura`, el cambio de concepto al ligar, la fecha del cheque, sin
+retención descontada, desligar con motivo y anular un ligado sin pasar por la bandeja.
+
+### 18.2 Errores o riesgos en lo ya aceptado y qué se hizo
+
+| # | Punto | Qué se hizo | ¿Contradice una respuesta? |
+|---|---|---|---|
+| 1 | La cita de 7.18 en el flujo de la tarjeta | Cita corregida (§4.1) y ayuda del concepto (§4.5) | No: Q-T4 (Operación por omisión, editable) queda igual; solo se agrega la ayuda (P-1) |
+| 2 | El aviso de retención de la forma `tarjeta` induce a retener IVA dos veces | Avisos separados: IVA «la retiene el emisor, no la registre»; ISR como estaba (§4.6) | No: Q-T7 no trata el aviso (P-2) |
+| 3 | `ya_pagada` duplica el registro en Contabilidad | Pago sustituto ligado (`movimiento_de_pago_id`, órdenes nuevas de Bancos, concepto `pago_a_proveedor`), efectivo con su documento y causa `pagada_antes_del_corte` (§2.2, §2.5, §2.7, §5); pasos AP-4a y AP-4b | No: la forma de `ya_pagada` no era una pregunta de §16 (P-3) |
+| 4 | Texto de prescripción con plazos fijos | Texto sin plazos, interrupción por la entrega del cheque, fecha elegida por el usuario (§2.5) | No: Q-AP2 no cambia (P-4) |
+| 5 | `no_se_debe` y el IVA de la factura original | Texto de la ventana y «ingreso o corrección de error» para Contabilidad (§2.5, §5) | No (no pide respuesta: es texto) |
+| 6 | Reconocer siempre contra un proveedor | Columna `naturaleza` en la decisión y en el evento; aviso de NIT nulo desde Q30,000 (§2.2, §2.5, §5) | No: Q-AP1 (a) sigue (se elige o crea un proveedor); la naturaleza se agrega (P-5) |
+| 7 | Posfechado cobrado antes del corte | Aviso en Ligar y en la conciliación (§2.3, §2.7), adaptado a lo que Arrancar sabe (ver nota) | No (no pide respuesta: es aviso) |
+
+**Notas del arquitecto sobre cómo se aplicó** (para que el contador las revise en la QA, sin bloquear):
+
+- **Punto 7.** Arrancar no guarda la fecha en que el banco pagó cada cheque y la conciliación no baja del corte, así que no
+  existe «un período que termine en o antes del corte». El aviso sale cuando el posfechado queda marcado en la **primera
+  conciliación** de la cuenta y pregunta al usuario si se cobró antes del corte (§2.7).
+- **Punto 3, concepto.** Se reusa `pago_a_proveedor` para el pago sustituto en vez de un concepto nuevo «Pago de deuda de
+  apertura» (el contador admite los dos): da la pata Debe Proveedores y no pide migración de Bancos. Si el usuario prefiere
+  el concepto nuevo, va en P-3.
+- **Punto 3, pago sustituto con origen.** Un pago sustituto registrado por Cuentas por pagar (u otro módulo) se rechaza
+  (`PagoSustitutoConOrigen`): ese módulo ya lo contabiliza y lo más probable es que la factura se haya registrado dos veces.
+  **Pendiente para el contador (VC-AP1):** qué debe hacer el usuario en ese caso (anular el cargo duplicado y reconocer la
+  deuda, o descartar con otra causa). No bloquea: el rechazo es lo seguro mientras tanto.
+
+### 18.3 Textos pendientes de cotejo literal (no bloquean programar; sí terminar la QA)
+
+| Texto | Para qué | Estado |
+|---|---|---|
+| Decreto 20-2006, art. 2 y reglamento (retención del emisor de la tarjeta) | Aviso de IVA de §4.6 | Pendiente; decide la redacción final |
+| Decreto 20-2006, art. 20 (bancarización, Q30,000) | Ayuda de §3.4 y aviso de NIT nulo de §2.5 | Resumen validado en CP4-E; falta la cita literal |
+| Ley del IVA, arts. 7.4, 16, 18 y 37 | Ayuda de tarjeta y de `no_se_debe` | Pendiente |
+| Decreto 10-2012, arts. 21 (numeral de intereses), 23 y 48 | Ayuda de intereses y aviso de ISR | Pendiente el numeral del art. 21 |
+| Decreto 2-2024 y JM-56-2024 | Ayuda de tarjeta | Pendiente |
+| Código Civil, arts. 1501, 1506, 1508 y 1514 | Texto de prescripción | Pendiente; no publicar «2 años» |
+| Código de Comercio, arts. 410, 501 y 513 | Ayuda de CP-AP | Pendiente con CENADOJ (ya pedido) |
+
+## 19. Preguntas nuevas (de la validación del contador, 2026-11-19)
+
+Ninguna corrección del contador contradice una respuesta del usuario (§18.2, última columna): ninguna respuesta de §17 se
+cambió. Quedan abiertas las cinco preguntas que el contador hace al usuario. El diseño ya trae la opción recomendada,
+marcada «(P-n)»; si la respuesta es otra, se ajusta antes del paso que la espera.
+
+| # | Pregunta | Opciones | Recomendación (contador y arquitecto) | Paso que la espera |
+|---|---|---|---|---|
+| P-1 | Ayuda del concepto del pago de la tarjeta | (a) Operación sin explicación; (b) Operación por omisión, con la ayuda «Financiamiento si usa la tarjeta como crédito» | **(b)**: es la política contable que la empresa debe elegir y mantener; no cambia datos | TC-2 y TC-6 (solo el texto) |
+| P-2 | Aviso de retención en la forma `tarjeta` | (a) Como estaba («revise si debe retener»); (b) IVA: «la retiene el emisor, no la registre»; ISR: como estaba | **(b)**, sujeto al cotejo del reglamento del Decreto 20-2006: la (a) induce a retener dos veces | TC-5 y TC-8 (solo el texto) |
+| P-3 | «Ya pagada» en la bandeja | (a) Como estaba (medio, cuenta y fecha); (b) ligar el movimiento del pago sustituto (concepto `pago_a_proveedor`; o un concepto nuevo «Pago de deuda de apertura», con migración de Bancos) y causa propia «pagada antes del corte» contra Proveedores | **(b) con `pago_a_proveedor`**: la (a) produce un doble registro en Contabilidad; el concepto nuevo solo separaría estos pagos en el reporte por concepto, a cambio de una migración de Bancos | AP-4a, AP-4b, AP-4 |
+| P-4 | Texto y fecha de la prescripción | (a) Como estaba (5 y 2 años, fecha del inverso); (b) sin plazos fijos hasta cotejar, advertir la interrupción por la entrega del cheque y que el usuario elija la fecha (no antes del inverso) | **(b)**: un «2 años» sin condiciones puede llevar a dar de baja deudas exigibles | AP-4 (la fecha) y AP-6 (el texto) |
+| P-5 | Naturaleza de la deuda reconocida | (a) Siempre proveedor; (b) columna `naturaleza` (`proveedor`, `acreedor_vario`, `remuneracion`, `socio`) en la decisión y el evento; (c) usar el tipo del tercero | **(b)**: el mismo tercero puede ser proveedor en una deuda y socio en otra, y el tipo del tercero no existe hoy con esos valores; Q-AP1 (a) se mantiene | AP-4a, AP-4 |
