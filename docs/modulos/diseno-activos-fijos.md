@@ -963,4 +963,9 @@ Con `seguridad`: las dos dependencias nuevas del cliente (QR y lectura de QR), e
   del ocioso es deducible por omisión, en línea aparte con aviso de riesgo. Los ajustes del contador (A1 `costo_fiscal` en
   bajas, A2 ISO con el activo neto contable del cierre anual, A3/V-7 matrícula o catastro el mayor, V-2, V-3, V-4, V-6, V-8,
   V-10, V-12, y la auditoría permanente con saldos iniciales y mejoras) se incorporan al diseño antes de AF-1.
-- Quedan por responder: AF-P1, AF-P11, AF-P12, AF-P15, AF-P17, AF-P19, AF-P20, AF-P21 y P-C.
+- **Segunda tanda (2026-11-18), todas las recomendaciones:** AF-P1 (a) depende solo de Libro de compras; AF-P11 (a) el cobro
+  de la venta se registra aparte en Bancos con «Venta de activo»; AF-P12 (a) bienes de terceros solo control físico;
+  AF-P15 (a) bloquear anular en el libro un documento capitalizado, con el mensaje que guía; AF-P17 (a) solo se reabre el
+  último mes cerrado, con motivo y auditoría; AF-P19 (a) responsable como texto con usuario opcional; AF-P20 (a) una foto
+  por activo y acta y denuncia en las bajas; AF-P21 (a) cerrar el primer mes exige la carga inicial cerrada si hay saldos
+  iniciales; P-C (a) la marca de activo fijo no se corrige en el libro. **Diseño aprobado.**

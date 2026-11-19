@@ -2861,3 +2861,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-18 (Inventarios aprobado).** Todas las recomendaciones de `docs/modulos/diseno-inventarios.md` (detalle al
   final del diseño). El préstamo de herramientas pasa a Activos fijos (corrige PLAN §6). Orden: INV-3 (motor puro) ya;
   INV-0 después de que la 0038 de CCL entre al libro; luego INV-1, INV-2, INV-4…
+- **2026-11-18 (Activos fijos aprobado).** Todas las respuestas al final de `docs/modulos/diseno-activos-fijos.md`. Cambio
+  respecto al diseño: **sin alcance por localidad** (AF-P2 = a). El arquitecto incorpora el cambio y los ajustes del contador
+  (A1 a A3, V-2 a V-12, auditoría permanente) antes de AF-1.
