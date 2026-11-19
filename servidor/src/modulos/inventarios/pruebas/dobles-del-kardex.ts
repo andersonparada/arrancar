@@ -85,6 +85,7 @@ export class KardexEnMemoria
       saldoCantidad: 0n,
       saldoValor: 0n,
       montoAResultados: 0n,
+      parteDeReparto: n.reparto?.parte ?? null,
       vigente: true,
     }));
     this.movimientos.push(...agregados);
@@ -196,14 +197,13 @@ export class KardexEnMemoria
     const d = this.documentosGuardados.get(id);
     if (!d) throw new RecursoNoEncontrado('El documento');
     const renglones = this.movimientos.filter((m) => m.documentoId === id).map((m) => this.renglonDe(m));
-    const total = renglones.reduce((suma, r) => suma + aCentavosEnteros(r.costoTotal ?? '0'), 0n);
     return {
       ...d,
-      bodegaNombre: this.bodegasDelCatalogo.get(d.bodegaId)?.nombre ?? '',
+      bodegaNombre: (d.bodegaId && this.bodegasDelCatalogo.get(d.bodegaId)?.nombre) || '',
       conceptoDeGastoNombre: null,
       motivoDeAnulacion: null,
       avisos: [],
-      costoTotal: deCentavosEnteros(total),
+      costoTotal: deCentavosEnteros(renglones.reduce((suma, r) => suma + aCentavosEnteros(r.costoTotal ?? '0'), 0n)),
       renglones,
     };
   }

@@ -47,6 +47,15 @@ describe('errores de PostgreSQL que en realidad son esperados', () => {
     expect(error?.message).toContain('costos capitalizados en Activos fijos');
   });
 
+  it('las llaves de los movimientos y documentos de Inventarios al libro explican que el documento se anula, no se elimina', () => {
+    for (const llave of ['movimientos_linea_de_compra_fk', 'documentos_compra_fk']) {
+      const error = interpretarErrorDePostgres(errorDePostgres('23503', llave));
+
+      expect(error).toBeInstanceOf(RecursoEnUso);
+      expect(error?.message).toContain('movimientos en Inventarios');
+    }
+  });
+
   it('un rango que se traslapa es una regla de negocio infringida, con mensaje propio si se conoce la restricción', () => {
     const error = interpretarErrorDePostgres(errorDePostgres('23P01', 'vigencias_de_combustible_sin_traslape'));
 

@@ -3616,6 +3616,57 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   no chocan con `metodos_de_costeo_desde_unico`. Pruebas: casos de uso y API (`inventarios-guardias-de-catalogos`,
   `inventarios-guardias-de-metodo`). **Pendiente:** la guardia de bodega no toma candado, así que un movimiento simultáneo
   a la inactivación podría colarse (el registrador lo rechaza si ve la bodega inactiva ya confirmada).
+- **2026-11-19 — INV-5 (Inventarios, servidor): bandeja por recibir, recepciones, devoluciones, rebajas y descartes.**
+  Migración `0005_inv5_recepciones` (el diseño decía `0004_inv5`; el `0004` ya era el kardex): `repartos_de_costo`
+  (`absorbido + a_resultados = monto`, derivados del recálculo) y `descartes_de_lineas` (con la columna extra
+  `quito_la_marca`: solo si el descarte quitó la marca en el libro, devolverlo la vuelve a poner; una nota de crédito sin
+  marca se descarta y devuelve sin tocar el libro); en `documentos`, `clase` admite `recepcion_de_compra`,
+  `devolucion_a_proveedor` y `rebaja_de_costo`, `bodega_id` pasa a ser nulo solo en la rebaja
+  (`documentos_bodega_segun_clase`) y las tres clases llevan su `documento_de_compra_id` (`documentos_compra_segun_clase`).
+  **Libro de compras:** la orden `libro-de-compras.cambiar_marca_de_inventario` (V-8, P-2 a) con su caso de uso
+  `CambiarMarcaDeInventario` (cambia solo `es_inventario` de una línea de un documento vigente, aunque el período esté
+  cerrado; poner la marca exige un bien que no sea activo fijo; audita `corregir` con la línea antes y el motivo; sin cambio
+  real no hace nada) y el mensaje de la llave `documentos_compra_fk` / `movimientos_linea_de_compra_fk` al eliminar un
+  documento con movimientos (`errores-de-postgres.ts`, el paso INV-5 del diseño). **Inventarios:** `ListarPorRecibir`
+  (`GET /inventarios/por-recibir`: líneas marcadas de documentos vigentes sin descarte con costo pendiente, y las notas de
+  crédito de facturas con entradas aunque no estén marcadas, con el artículo que se recibió la última vez para ese concepto y
+  proveedor), `RecibirLineas` (`POST /inventarios/recepciones`: un documento por documento del libro, candado de la línea y
+  luego los de artículo, Σ de montos ≤ costo de la línea, lote nuevo al recibir), `RegistrarDevolucionAProveedor` (sale al
+  costo unitario de su entrada, con PEPS de su propia capa; respalda una línea de nota de crédito de la factura que recibió;
+  una sola bodega), `RegistrarRebajaDeCosto` (documento de solo valor sin bodega; reparte el monto, en negativo, entre las
+  entradas de la factura por valor o cantidad con el último renglón absorbiendo el redondeo, y el motor decide lo absorbido y
+  lo que va a resultados), `DescartarLinea` y `DevolverLineaALaBandeja` (con la orden al libro dentro de la misma
+  transacción: si el libro rechaza, todo se deshace) y `AnularDocumento` para las tres clases nuevas (una recepción con
+  devoluciones o rebajas vigentes no se anula: `recepcion_con_documentos_posteriores`). R-1: Inventarios escucha
+  `documento_por_anular` y `documento_por_eliminar` del libro y lanza `documento_con_recepciones` con los números. **Motor:**
+  el recálculo ahora lee `movimiento_de_origen_id` y el monto del reparto (`aMovimientosDeCosto`), así que las devoluciones y
+  los repartos de INV-3 corren sobre lo guardado; el costo de una devolución y lo absorbido de un reparto se reescriben con
+  cada recálculo (`cambios-del-recorrido`), `repartos_de_costo` se sincroniza con su movimiento de valor, y `recalculos`
+  guarda `repartos_afectados` y `diferencia_a_resultados`; el evento `costo_recalculado` informa los repartos que cambiaron
+  (una salida con fecha anterior cambia lo absorbido de una rebaja posterior). Permisos: `recepciones.ver`, `.crear` (también
+  devoluciones y rebajas), `.anular` y `.descartar`. Eventos: `entrada_registrada` (recepción: `causa = 'compra'`, con
+  `documentoDeCompraId` y la línea de cada renglón), `devolucion_a_proveedor` y `costo_ajustado`. Rutas: `/inventarios/recepciones`,
+  `/inventarios/devoluciones-a-proveedor`, `/inventarios/rebajas-de-costo` (cada una con `…/:id/anular`) y
+  `/inventarios/por-recibir/:lineaId/descartar` y `/devolver`. Pruebas: dominio (recepción, devolución, rebaja, el motor sobre
+  lo guardado), casos de uso con el kardex y el libro en memoria, y API (bandeja, recepciones, devoluciones con promedio y
+  PEPS, rebajas con su recálculo, descartes con la marca y su auditoría en los dos módulos, R-1, tablas, permisos, bodega
+  ajena y otra cuenta); todas cierran con el «Cuadre del kardex». Decisiones: la bandeja y los montos de las líneas del libro
+  se ven con `recepciones.ver` (no con `costos.ver`: sin el monto no se puede recibir), los DTO de los documentos sí se
+  recortan sin `costos.ver`; una devolución exige la nota de crédito (línea) y no valida su costo contra el de la línea de la
+  nota (sale al costo de su entrada); una rebaja reparte entre las entradas de todas las bodegas (lee `movimientos` sin pasar
+  por los documentos), porque no tiene bodega. Se quitó de `bodegas.prueba.ts` una importación duplicada que el merge
+  de INV-4 dejó y rompía `tsc`. **Pendiente:** los costos adicionales (`costo_adicional`, `POST /inventarios/costos-adicionales`
+  y la base por peso o manual; el motor y `repartos_de_costo` ya los admiten), el aviso del umbral de Activos fijos en los
+  renglones de `repuestos` y `suministros` (la orden `activos-fijos.obtener_umbral_de_capitalizacion` aún no existe: INV-AF),
+  la ficha del documento del libro que marca «con recepciones» y el bloqueo del cierre por recepciones de un documento
+  anulado con el módulo inactivo (INV-8), y la pantalla «Por recibir» (INV-5c). Riesgo anotado: R-1 solo ve por número los
+  documentos de las bodegas que el usuario que anula en el libro tiene asignadas; los demás salen como «un documento de una
+  bodega que no ve» (los movimientos, que no llevan alcance, sí bloquean).
+- **2026-11-19 — Correcciones de la revisión de INV-5 (servidor).** La devolución a proveedor ahora cumple el §6.3: su costo
+  estimado (la parte devuelta de cada entrada, al costo de la entrada, redondeado) más lo ya aplicado no pasa del costo de la
+  línea de la nota (`LineaSobrerrecibida`; sustituye lo anotado arriba de que no se validaba), y su fecha no puede ser anterior
+  a la de las entradas (`devolucion_antes_de_la_entrada`). `EntradaDevolvible` trae `fecha` y `costoCentavos`. Con promedio el
+  costo real del motor puede diferir de la estimación por redondeos; la regla usa la estimación.
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

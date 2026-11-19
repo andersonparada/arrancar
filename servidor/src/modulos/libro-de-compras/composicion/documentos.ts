@@ -3,6 +3,7 @@ import { ModulosActivosDeLaCuentaEnRegistro } from '../../core/mediador/infraest
 import { ListarDestinos, ObtenerDestinoSugerido } from '../aplicacion/casos-uso/documentos/consultas-del-formulario.js';
 import { AnularDocumento } from '../aplicacion/casos-uso/documentos/anular-documento.js';
 import { ListarDocumentos, ObtenerDocumento } from '../aplicacion/casos-uso/documentos/consultar-documentos.js';
+import { CambiarMarcaDeInventario } from '../aplicacion/casos-uso/documentos/cambiar-marca-de-inventario.js';
 import { EliminarDocumento } from '../aplicacion/casos-uso/documentos/eliminar-documento.js';
 import { MarcarDocumentoProcesado } from '../aplicacion/casos-uso/documentos/marcar-documento-procesado.js';
 import { SugerirFacturasAnteriores } from '../aplicacion/casos-uso/documentos/sugerir-facturas-anteriores.js';
@@ -21,6 +22,7 @@ import { ConsultasDeEnterosDrizzle } from '../infraestructura/persistencia/enter
 import { RetencionesDeUnDocumentoDrizzle } from '../infraestructura/persistencia/repositorio-de-retenciones.drizzle.js';
 import { DteAnterioresParaSugerirDrizzle } from '../infraestructura/persistencia/dte-anteriores-para-sugerir.drizzle.js';
 import { RepositorioDeFacturasAnterioresDrizzle } from '../infraestructura/persistencia/repositorio-de-facturas-anteriores.drizzle.js';
+import { MarcasDeInventarioDrizzle } from '../infraestructura/persistencia/marcas-de-inventario.drizzle.js';
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { RepositorioDeDocumentosGuardadosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos-guardados.drizzle.js';
 import { RepositorioDeDatosFiscalesDeEmpresaDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales-de-empresa.drizzle.js';
@@ -70,13 +72,24 @@ export function dependenciasDeDocumentos() {
   };
 }
 
-/** Raíz de composición del registro de documentos: el único lugar donde se eligen las implementaciones concretas. */
-export function rutasDeDocumentosComponidas() {
-  const dependencias = dependenciasDeDocumentos();
+/** Las bajas de documentos y las órdenes que los destinos y Inventarios mandan al libro (con los mismos casos de uso). */
+function bajasYOrdenes(dependencias: ReturnType<typeof dependenciasDeDocumentos>) {
   const bajas = { ...dependencias, repositorio: dependencias.guardados };
   const anular = new AnularDocumento(bajas);
   const eliminar = new EliminarDocumento(bajas);
-  atenderOrdenesDeDocumentos({ marcarProcesado: new MarcarDocumentoProcesado(bajas), anular, eliminar });
+  atenderOrdenesDeDocumentos({
+    marcarProcesado: new MarcarDocumentoProcesado(bajas),
+    anular,
+    eliminar,
+    cambiarMarca: new CambiarMarcaDeInventario({ ...dependencias, marcas: new MarcasDeInventarioDrizzle() }),
+  });
+  return { bajas, anular, eliminar };
+}
+
+/** Raíz de composición del registro de documentos: el único lugar donde se eligen las implementaciones concretas. */
+export function rutasDeDocumentosComponidas() {
+  const dependencias = dependenciasDeDocumentos();
+  const { bajas, anular, eliminar } = bajasYOrdenes(dependencias);
   return rutasDeDocumentos(
     new DocumentosControlador({
       previsualizar: new PrevisualizarDocumento(dependencias),

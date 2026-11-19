@@ -10,6 +10,8 @@ export interface ArticuloParaMovimiento {
   tipoDeInventario: TipoDeInventario;
   unidadBaseId: string;
   manejaLotes: boolean;
+  /** Opcional en las pruebas: sin dato se toma como que no lo maneja. */
+  manejaVencimiento?: boolean;
   conceptoDeGastoId: string | null;
   activo: boolean;
 }

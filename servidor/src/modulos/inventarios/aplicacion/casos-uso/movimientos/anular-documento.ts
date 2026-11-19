@@ -17,7 +17,13 @@ import type { DocumentoGuardado } from '../../puertos/repositorio-de-documentos.
 const RECURSO_DE_AUDITORIA: Record<ClaseDeDocumento, string> = {
   entrada_manual: 'inventarios.entradas',
   salida_por_consumo: 'inventarios.salidas',
+  recepcion_de_compra: 'inventarios.recepciones',
+  devolucion_a_proveedor: 'inventarios.devoluciones-a-proveedor',
+  rebaja_de_costo: 'inventarios.rebajas-de-costo',
 };
+
+/** Revisión extra de una clase antes de anular (por ejemplo, que una recepción no tenga devoluciones vigentes). */
+export type GuardiaDeAnulacion = (documento: DocumentoGuardado) => Promise<void>;
 
 export interface AnulacionPedida {
   documentoId: string;
@@ -39,6 +45,7 @@ export class AnularDocumento {
   constructor(
     private readonly dependencias: DependenciasDelKardex,
     private readonly clase: ClaseDeDocumento,
+    private readonly guardia: GuardiaDeAnulacion = async () => {},
   ) {
     this.recalculador = new RecalculadorDeArticulo(dependencias.almacen);
     this.metodo = new MetodoDeLaEmpresa(dependencias);
@@ -87,6 +94,7 @@ export class AnularDocumento {
     await almacen.bloquear(movimientos.map((m) => m.articuloId));
     const documento = await this.buscar(documentoId);
     await this.exigirVigenteYAbierto(documento);
+    await this.guardia(documento);
     return { documento, movimientos };
   }
 
@@ -111,7 +119,7 @@ export class AnularDocumento {
     const metodo = await this.metodo.usarParaMover(operador, documento.fecha);
     const eventos: EventoDominio[] = [];
     for (const articuloId of [...new Set(movimientos.map((m) => m.articuloId))].sort()) {
-      const diferencias = await this.recalculador.recalcular({
+      const cambios = await this.recalculador.recalcular({
         articuloId,
         metodo,
         causa: 'anulacion',
@@ -122,7 +130,7 @@ export class AnularDocumento {
         empresaId: operador.empresaId,
         causa: 'anulacion',
         documentoId: documento.id,
-        diferencias,
+        ...cambios,
       });
       if (evento) eventos.push(evento);
     }
@@ -131,9 +139,10 @@ export class AnularDocumento {
 
   /** Lo que el documento sumó a las existencias, al revés. */
   private reversa(documento: DocumentoGuardado, movimientos: readonly MovimientoDelKardex[]) {
+    if (TIPO_DE_MOVIMIENTO_POR_CLASE[documento.clase] === 'valor') return [];
     const signo = TIPO_DE_MOVIMIENTO_POR_CLASE[documento.clase] === 'entrada' ? -1n : 1n;
     return movimientos.map((m) => ({
-      bodegaId: documento.bodegaId,
+      bodegaId: documento.bodegaId!,
       articuloId: m.articuloId,
       loteId: m.loteId,
       cantidad: signo * (m.cantidad < 0n ? -m.cantidad : m.cantidad),

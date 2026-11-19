@@ -1,5 +1,6 @@
 import type { TipoDeMovimientoGuardado } from '../movimiento.js';
 import type { MovimientoDeCantidad } from './cantidades-por-clave.js';
+import { CapaNoDisponible } from './errores.js';
 import type { MovimientoDeCosto, TipoDeMovimiento } from './tipos.js';
 
 /**
@@ -23,6 +24,14 @@ export interface MovimientoDelKardex {
   readonly saldoCantidad: bigint;
   readonly saldoValor: bigint;
   readonly montoAResultados: bigint;
+  /** La entrada que devuelve una devolución o que recibe la parte de una rebaja. */
+  readonly movimientoDeOrigenId?: string | null;
+  /** La línea del Libro de compras de donde viene (recepción, devolución, rebaja). */
+  readonly lineaDeCompraId?: string | null;
+  /** El documento del libro (factura o nota) de la línea. */
+  readonly documentoDeCompraId?: string | null;
+  /** Solo en el movimiento de valor de un reparto: lo que le toca a su entrada (con signo, es fijo). */
+  readonly parteDeReparto?: bigint | null;
 }
 
 /** El tipo del motor: la mitad de un traslado es de entrada o de salida según el signo de su cantidad. */
@@ -43,6 +52,28 @@ export function aMovimientoDeCosto(m: MovimientoDelKardex): MovimientoDeCosto {
     cantidad: magnitud(m.cantidad),
     valor: m.tipo === 'entrada' || m.tipo === 'valor' ? m.costoTotal : 0n,
   };
+}
+
+/** Un movimiento de valor que recibe la parte de un reparto: el motor calcula cuánto absorbe la existencia. */
+export const esDeReparto = (m: MovimientoDelKardex): boolean =>
+  m.tipo === 'valor' && !!m.movimientoDeOrigenId && typeof m.parteDeReparto === 'bigint';
+
+/** Una salida que devuelve una entrada: sale a su costo, no al del método. */
+export const esDevolucion = (m: MovimientoDelKardex): boolean => m.tipo === 'salida' && !!m.movimientoDeOrigenId;
+
+/** Lo que el motor necesita de lo guardado: además de la posición y la cantidad, el reparto o la devolución. */
+function extrasDeCosto(m: MovimientoDelKardex, porId: ReadonlyMap<string, MovimientoDelKardex>) {
+  if (esDeReparto(m)) return { reparto: { entradaId: m.movimientoDeOrigenId!, parte: m.parteDeReparto! } };
+  if (!esDevolucion(m)) return {};
+  const entrada = porId.get(m.movimientoDeOrigenId!);
+  if (!entrada) throw new CapaNoDisponible(m.movimientoDeOrigenId!);
+  return { devolucion: { entradaId: entrada.id, costoUnitario: entrada.costoUnitario } };
+}
+
+/** Todos los movimientos vigentes del artículo, listos para el motor (con repartos y devoluciones). */
+export function aMovimientosDeCosto(guardados: readonly MovimientoDelKardex[]): MovimientoDeCosto[] {
+  const porId = new Map(guardados.map((m) => [m.id, m]));
+  return guardados.map((m) => ({ ...aMovimientoDeCosto(m), ...extrasDeCosto(m, porId) }));
 }
 
 /** Lo que la revisión de cantidades por bodega y lote necesita; los de valor no tienen bodega y no cuentan. */

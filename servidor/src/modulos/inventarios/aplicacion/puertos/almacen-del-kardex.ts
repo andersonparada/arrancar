@@ -12,19 +12,27 @@ import type { TipoDeMovimientoGuardado } from '../../dominio/movimiento.js';
 export interface NuevoMovimiento {
   documentoId: string;
   articuloId: string;
-  bodegaId: string;
+  /** Nula solo en un movimiento de valor. */
+  bodegaId: string | null;
   loteId: string | null;
   fecha: string;
   ordenDelDia: 0 | 1 | 2;
   tipo: TipoDeMovimientoGuardado;
   /** Con signo. */
   cantidad: bigint;
-  cantidadEscrita: bigint;
-  unidadEscritaId: string;
+  cantidadEscrita: bigint | null;
+  unidadEscritaId: string | null;
   costoUnitario: bigint;
   /** Con signo. */
   costoTotal: bigint;
   costoDelMetodo: boolean;
+  /** La línea de la factura o nota del libro de donde viene. */
+  lineaDeCompraId?: string | null;
+  documentoDeCompraId?: string | null;
+  /** La entrada que devuelve una devolución o que recibe la parte de una rebaja. */
+  movimientoDeOrigenId?: string | null;
+  /** Solo en un movimiento de valor de una rebaja: el almacén guarda su reparto con el movimiento. */
+  reparto?: { base: string; parte: bigint } | null;
 }
 
 /** El rastro de un recálculo (§5.14). */
@@ -35,6 +43,9 @@ export interface NuevoRecalculo {
   causa: CausaDeRecalculo;
   salidasAfectadas: number;
   diferenciaDeCosto: bigint;
+  /** Repartos (rebajas y costos adicionales) cuyo absorbido cambió (V-2). */
+  repartosAfectados?: number;
+  diferenciaAResultados?: bigint;
 }
 
 /**

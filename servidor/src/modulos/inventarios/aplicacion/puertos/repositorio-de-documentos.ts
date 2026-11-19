@@ -6,7 +6,10 @@ export interface DocumentoGuardado {
   clase: ClaseDeDocumento;
   numero: number;
   fecha: string;
-  bodegaId: string;
+  /** Nula solo en la rebaja de costo (documento de solo valor). */
+  bodegaId: string | null;
+  documentoDeCompraId: string | null;
+  documentoRelacionadoId: string | null;
   causa: CausaDeEntrada | null;
   destino: DestinoDeSalida | null;
   conceptoDeGastoId: string | null;

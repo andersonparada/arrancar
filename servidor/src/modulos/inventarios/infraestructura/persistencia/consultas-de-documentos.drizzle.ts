@@ -39,7 +39,7 @@ const cabeceras = () =>
   transaccionEnCurso()
     .select({ documento: documentos, bodegaNombre: bodegas.nombre, conceptoNombre: conceptosDeGasto.nombre })
     .from(documentos)
-    .innerJoin(bodegas, eq(bodegas.id, documentos.bodegaId))
+    .leftJoin(bodegas, eq(bodegas.id, documentos.bodegaId))
     .leftJoin(conceptosDeGasto, eq(conceptosDeGasto.id, documentos.conceptoDeGastoId));
 
 type Cabecera = Awaited<ReturnType<typeof cabeceras>>[number];
@@ -95,7 +95,9 @@ function datosDelDocumento(d: Cabecera['documento']): DatosDelDocumento {
     clase: d.clase,
     numero: d.numero,
     fecha: d.fecha,
-    bodegaId: d.bodegaId!,
+    bodegaId: d.bodegaId,
+    documentoDeCompraId: d.documentoDeCompraId,
+    documentoRelacionadoId: d.documentoRelacionadoId,
     causa: d.causa,
     destino: d.destino,
     conceptoDeGastoId: d.conceptoDeGastoId,
