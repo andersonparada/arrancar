@@ -3204,3 +3204,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ahora pasa los módulos activos (como crear). Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
   posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
   cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.
+- **2026-11-18 (CL-2, Cuentas por liquidar, servidor):** anticipos sin migraciones nuevas (las tablas ya estaban en
+  CL-1). `EntregarAnticipo` (`anticipos.crear`): el beneficiario es un tercero activo de la cuenta (el cheque va a su
+  nombre, nunca al portador, no negociable por omisión; o nota de débito con la transferencia como referencia), con
+  «es empleado», usuario opcional (de la empresa) y localidad opcional; ordena a Bancos con el anticipo como origen y el
+  concepto `anticipo_por_liquidar`; fecha límite escrita o la entrega más `cuentas-por-liquidar.anticipos.dias_para_liquidar`
+  (15 por omisión; empresa e instalación, pública); aviso C8 («Las facturas deben venir a nombre y NIT de la empresa.») si no
+  es empleado; vencidos (CL-r): aviso, o con `cuentas-por-liquidar.anticipos.bloquear_con_vencidos` rechazo
+  `BeneficiarioConVencidos` salvo el permiso `anticipos.con-vencidos` (lo lee el controlador) y un motivo, que se guarda.
+  `AnularAnticipo` (`anticipos.anular`) y el manejador de `bancos.movimiento_por_cambiar`
+  (`AtenderMovimientoDeAnticipoPorCambiar`): solo abierto, sin gastos vigentes y con el cheque sin cobrar; fecha contable
+  de la anulación como CP5-a; auditoría `anular` con el `AnticipoDto`; cualquier otro cambio en Bancos de lo que registró
+  este módulo se rechaza con `MovimientoDeCuentasPorLiquidar`. Lista (`GET /anticipos`) con `corte` (por justificar y
+  antigüedad al corte, anulados después del corte incluidos), `estado`, `beneficiarioId` y `vencidos`, y ficha. Eventos
+  `anticipo_entregado` y `anticipo_anulado` (`core/contratos/cuentas-por-liquidar.contratos.ts`; los demás llegan con sus
+  pasos). Decisiones: los puertos y las órdenes a Bancos son propios del módulo (no se importa Cuentas por pagar); la
+  devolución y el reembolso aún no existen, así que el aviso de Bancos sobre ellos se rechaza igual (CL-4 los reabrirá);
+  `gastos_sin_documento.permitidos` se declara en CL-3, con su caso de uso.
