@@ -182,7 +182,12 @@ describe('mensajeDeMuestra', () => {
   it('sin valores, con error y con compra distinta de venta, dice qué hacer', () => {
     expect(mensajeDeMuestra(muestra({ resultado: 'sin_datos', valores: [] })).tipo).toBe('info');
     expect(mensajeDeMuestra(muestra({ resultado: 'error', valores: [] })).tipo).toBe('error');
-    expect(mensajeDeMuestra(muestra({ resultado: 'valor_ambiguo', valores: [] })).mensaje).toMatch(/compra y venta/);
+    expect(mensajeDeMuestra(muestra({ resultado: 'valor_ambiguo', moneda: 'USD', valores: [] })).mensaje).toMatch(
+      /compra distinta de venta/,
+    );
+    expect(mensajeDeMuestra(muestra({ resultado: 'valor_ambiguo', moneda: 'CRC', valores: [] })).mensaje).toMatch(
+      /más de 3 %/,
+    );
   });
 });
 

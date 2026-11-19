@@ -81,6 +81,12 @@ export function mensajeDeActualizacion(consulta: ConsultaDeLaLista): MensajeDeRe
   return { tipo: 'exito', mensaje: `Lista actualizada: ${partes.join(' y ')}.` };
 }
 
+function motivoAmbiguo(moneda: string | null): string {
+  return moneda === 'USD'
+    ? 'El Banguat da compra distinta de venta para este código'
+    : 'El Banguat da compra y venta con más de 3 % de diferencia para este código';
+}
+
 /** Qué dice la muestra del código, con palabras; el último valor es lo que se compara con lo que se espera. */
 export function mensajeDeMuestra(muestra: MuestraDelBanguat): MensajeDeResultado {
   if (muestra.resultado === 'error')
@@ -88,8 +94,7 @@ export function mensajeDeMuestra(muestra: MuestraDelBanguat): MensajeDeResultado
   if (muestra.resultado === 'valor_ambiguo')
     return {
       tipo: 'error',
-      mensaje:
-        'El Banguat da compra y venta distintas para este código: no se cargaría solo. Revise que sea el correcto.',
+      mensaje: `${motivoAmbiguo(muestra.moneda)}: no se cargaría solo. Revise que sea el correcto.`,
     };
   if (muestra.valores.length === 0)
     return { tipo: 'info', mensaje: 'El Banguat no publicó valores para este código en los últimos 7 días.' };

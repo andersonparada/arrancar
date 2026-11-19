@@ -19,7 +19,7 @@ const RESULTADOS: Record<ResultadoDeConsulta, { texto: string; tono: Tono }> = {
   sin_datos: { texto: 'Sin datos', tono: 'tierra' },
   error: { texto: 'Falló', tono: 'rojo' },
   valor_fuera_de_rango: { texto: 'Valor fuera de rango', tono: 'rojo' },
-  valor_ambiguo: { texto: 'Compra y venta distintas', tono: 'rojo' },
+  valor_ambiguo: { texto: 'Compra y venta dudosas', tono: 'rojo' },
   variacion_excesiva: { texto: 'Cambió demasiado', tono: 'rojo' },
   sin_dolar_del_dia: { texto: 'Falta el dólar del día', tono: 'trigo' },
   convencion_dudosa: { texto: 'Convención dudosa', tono: 'rojo' },
@@ -31,7 +31,8 @@ const QUE_HACER: Partial<Record<ResultadoDeConsulta, string>> = {
   error: 'El Banguat no respondió. Se reintenta en la próxima vuelta; si urge, use «Cargar ahora» o ingrese el valor.',
   sin_datos: 'El Banguat no tenía valores para esas fechas. Los fines de semana y asuetos no se publican.',
   valor_fuera_de_rango: 'El dólar vino fuera de lo razonable y no se guardó. Si el valor es cierto, ingréselo a mano.',
-  valor_ambiguo: 'El Banguat dio compra y venta distintas y no se guardó. Ingrese el valor a mano con su motivo.',
+  valor_ambiguo:
+    'El Banguat dio un valor dudoso y no se guardó: en el dólar, compra distinta de venta; en las demás monedas, compra y venta con más de 3 % de diferencia. Ingrese el valor a mano con su motivo.',
   variacion_excesiva:
     'El valor cambió más de 25 % contra el de la semana anterior y no se guardó. Revise el código en Monedas; si la variación es real (una devaluación), ingrese el tipo a mano con su motivo.',
   sin_dolar_del_dia:
@@ -44,13 +45,20 @@ const QUE_HACER: Partial<Record<ResultadoDeConsulta, string>> = {
 
 const MOTIVOS_DE_RECHAZO: Record<string, string> = {
   variacion_excesiva: 'cambió más de 25 % y no se guardó',
-  valor_ambiguo: 'compra y venta distintas, no se guardó',
   valor_fuera_de_rango: 'fuera de rango, no se guardó',
   dato_invalido: 'dato inválido, no se guardó',
   sin_dolar_del_dia: 'sin el dólar de esa fecha, no se guardó (queda como hueco)',
   convencion_dudosa: 'parece venir al revés, no se guardó',
   sin_convencion: 'el código no tiene convención comprobada, no se guardó',
 };
+
+/** `valor_ambiguo` se dice distinto en el dólar (compra ≠ venta) que en las cruzadas (diferencial de más de 3 %). */
+function motivoDeRechazo(clave: string, linea: string | undefined): string | undefined {
+  if (clave !== 'valor_ambiguo') return MOTIVOS_DE_RECHAZO[clave];
+  return linea?.startsWith('USD ')
+    ? 'compra distinta de venta, no se guardó'
+    : 'compra y venta con más de 3 % de diferencia, no se guardó';
+}
 
 export const nombreDeLaVuelta = (vuelta: VueltaDeCarga): string => VUELTAS[vuelta];
 
@@ -69,7 +77,7 @@ export function lineasDelDetalle(detalle: string | null, formatearFecha: (fecha:
   if (!detalle) return [];
   return detalle.split(' | ').map((linea) => {
     const rechazo = RECHAZO.exec(linea);
-    const motivo = rechazo?.[2] ? MOTIVOS_DE_RECHAZO[rechazo[2]] : undefined;
+    const motivo = rechazo?.[2] ? motivoDeRechazo(rechazo[2], rechazo[1]) : undefined;
     const texto = rechazo && motivo ? `${rechazo[1]}: ${motivo}` : linea;
     return texto.replace(FECHA_ISO, formatearFecha);
   });

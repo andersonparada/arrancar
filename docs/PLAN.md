@@ -3671,3 +3671,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   contable (B.5) aparece en la muestra, en el detalle y bajo el calendario de las monedas distintas del USD. Lógica pura
   nueva: `convenciones-del-banguat.ts`. **Pendiente:** QA en el navegador con el servidor falso devolviendo cruces; la nota
   impresa y la página del reporte de tipos de cambio (MM-5); MM-3d.
+- **2026-11-19 · Multimoneda MM-4b, corrección de la revisión.** `valor_ambiguo` ya no se traduce siempre como «compra y
+  venta distintas»: en el dólar es compra distinta de venta y en las monedas cruzadas, un diferencial de más de 3 % (B.5,
+  B.6 n.º 3). La bitácora (insignia «Compra y venta dudosas», qué hacer y motivo por línea según el código) y la muestra de
+  `lista-de-monedas.ts` (según la moneda) lo dicen bien; pruebas ajustadas y nuevas.

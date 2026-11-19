@@ -61,6 +61,13 @@ describe('la bitácora de la carga', () => {
     ]);
   });
 
+  it('valor_ambiguo se dice distinto en el dólar y en las cruzadas', () => {
+    expect(lineasDelDetalle('USD 2026-11-17: valor_ambiguo | CRC 2026-11-17: valor_ambiguo', alReves)).toEqual([
+      'USD 17/11/2026: compra distinta de venta, no se guardó',
+      'CRC 17/11/2026: compra y venta con más de 3 % de diferencia, no se guardó',
+    ]);
+  });
+
   it('el detalle sale línea por línea, con los rechazos en palabras y las fechas con el formato de la empresa', () => {
     const detalle = 'EUR 2026-11-17: variacion_excesiva | EUR 2026-11-18: cambió más de 3 % (de 8.8 a 9.2).';
 
