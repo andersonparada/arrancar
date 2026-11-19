@@ -29,6 +29,13 @@
       "when": 1795065243565,
       "tag": "0003_inv2_bodegas_y_accesos",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795091958019,
+      "tag": "0004_inv4_kardex",
+      "breakpoints": true
     }
   ]
 }
