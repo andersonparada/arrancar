@@ -25,10 +25,17 @@ export interface PiezasDeAlta {
   asignador: AsignadorDeNombreDeUsuario;
 }
 
+/** Quién da de alta y qué cuenta nace: la transacción fija ambos para que la RLS y la autoría los reconozcan. */
+export interface OrigenDelAlta {
+  cuentaId: string;
+  /** El usuario de soporte que da de alta; nulo si lo hace la siembra, sin usuario. */
+  usuarioId: string | null;
+}
+
 /**
  * El alta no cabe en la unidad de trabajo: esta exige una empresa y la empresa
  * aún no existe. Si algo falla, no queda nada a medias.
  */
 export interface TransaccionDeAlta {
-  ejecutar<Resultado>(trabajo: (piezas: PiezasDeAlta) => Promise<Resultado>): Promise<Resultado>;
+  ejecutar<Resultado>(origen: OrigenDelAlta, trabajo: (piezas: PiezasDeAlta) => Promise<Resultado>): Promise<Resultado>;
 }

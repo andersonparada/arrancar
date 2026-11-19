@@ -17,6 +17,7 @@ import {
   siSeDeshace,
   transaccionEnCurso,
 } from './unidad-de-trabajo-postgres.js';
+import { bdPropietario } from '../../base-datos/sembrado-de-prueba.soporte.js';
 
 const unidadDeTrabajo = new UnidadDeTrabajoPostgres(bd);
 let enEmpresaA: ContextoEmpresa;
@@ -51,7 +52,7 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'prueba', nombres: 'Prueba', hashContrasena: 'x' })
     .returning();
-  const [a, b] = await bd
+  const [a, b] = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: cuenta!.id, nombre: 'Empresa A' },

@@ -19,6 +19,7 @@ import {
 } from './alcance.js';
 import { bd, grupoConexiones } from './conexion.js';
 import { migrarModulos } from './migrador.js';
+import { bdPropietario } from './sembrado-de-prueba.soporte.js';
 
 export const ALCANCE: AlcanceDeRegistros = {
   recurso: 'prueba.registros',
@@ -85,7 +86,7 @@ async function crearEsquemaDePrueba(): Promise<void> {
 
 async function sembrarDatos(): Promise<void> {
   const [cuenta] = await bd.insert(cuentas).values({ nombre: 'Cuenta' }).returning();
-  const [e1, e2] = await bd
+  const [e1, e2] = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: cuenta!.id, nombre: 'Empresa 1' },

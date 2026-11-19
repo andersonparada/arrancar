@@ -84,20 +84,20 @@ describe('conservación de la auditoría permanente', () => {
     expect(await registrosDeLaPrueba()).toEqual(['otro-reciente', 'permanente-reciente']);
   });
 
-  it('la app solo puede leer el catálogo: insertar, cambiar y borrar los rechaza RLS', async () => {
+  it('la app solo puede leer el catálogo: insertar, cambiar y borrar los rechaza la base de datos', async () => {
     const leidas = await aplicacion.query('select recurso from core.recursos_de_auditoria_permanente');
     await expect(
       aplicacion.query('insert into core.recursos_de_auditoria_permanente (recurso, motivo) values ($1, $2)', [
         'otro.cosa',
         'x',
       ]),
-    ).rejects.toThrow(/row-level security/);
-    const cambiadas = await aplicacion.query("update core.recursos_de_auditoria_permanente set motivo = 'x'");
-    const borradas = await aplicacion.query('delete from core.recursos_de_auditoria_permanente');
+    ).rejects.toThrow(/permission denied/);
+    const cambiar = aplicacion.query("update core.recursos_de_auditoria_permanente set motivo = 'x'");
+    const borrar = aplicacion.query('delete from core.recursos_de_auditoria_permanente');
 
     expect(leidas.rows).toContainEqual({ recurso: RECURSO_PERMANENTE });
-    expect(cambiadas.rowCount).toBe(0);
-    expect(borradas.rowCount).toBe(0);
+    await expect(cambiar).rejects.toThrow(/permission denied/);
+    await expect(borrar).rejects.toThrow(/permission denied/);
   });
 
   it('el catálogo no admite recursos mal escritos ni motivos vacíos', async () => {
