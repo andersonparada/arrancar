@@ -5,15 +5,9 @@ import { GuardarServidorDeCorreo } from './aplicacion/casos-uso/guardar-servidor
 import { ObtenerServidorDeCorreo } from './aplicacion/casos-uso/obtener-servidor-de-correo.js';
 import { ServidorDeCorreoControlador } from './http/servidor-de-correo.controlador.js';
 import { rutasDelServidorDeCorreo } from './http/servidor-de-correo.rutas.js';
-import { CifradorAesGcm } from './infraestructura/cifrador-aes-gcm.js';
+import { cifradorDeSecretos } from './infraestructura/cifrador-del-entorno.js';
 import { FabricaDeTransporteNodemailer } from './infraestructura/fabrica-de-transporte-nodemailer.js';
 import { ServidorDeCorreoDrizzle } from './infraestructura/persistencia/servidor-de-correo.drizzle.js';
-
-/** Un solo cifrador por proceso: la llave se lee una vez del entorno. */
-export const cifradorDeSecretos = new CifradorAesGcm({
-  actual: entorno.CLAVE_SECRETOS,
-  anterior: entorno.CLAVE_SECRETOS_ANTERIOR,
-});
 
 /** Raíz de composición del contexto de correo: el servidor de correo de la instalación (Soporte). */
 export function componerCorreo() {

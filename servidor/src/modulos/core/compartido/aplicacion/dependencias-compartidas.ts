@@ -1,3 +1,4 @@
+import type { BandejaDeSalida } from '../../correo/aplicacion/bandeja-de-salida.js';
 import type { Auditoria } from './auditoria.js';
 import type { Correlativos } from './correlativos.js';
 import type { DocumentosProtegidos } from './documentos-protegidos.js';
@@ -15,4 +16,6 @@ export interface DependenciasCompartidas {
   reloj: Reloj;
   fotos: VerificadorDeFotos;
   documentos: DocumentosProtegidos;
+  /** Para mandar correo dentro de la unidad de trabajo del módulo (ver `core/correo`). */
+  bandeja: BandejaDeSalida;
 }

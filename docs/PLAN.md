@@ -2659,6 +2659,27 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `depurar_correos` (contenido a los `dias` ≥ 7, filas terminadas a los `meses` ≥ 60; borra la fila de `core.archivos`
   del adjunto y conserva su huella). Decisión: el índice del cupo por destinatario es sobre `lower(direccion)`. Pruebas
   de RLS (otra empresa, otra cuenta, sin `delete`, sin escribir intentos) y de cada función, incluida la concurrencia.
+- **2026-11-18 (aviso de pago por correo, paso 5: encolar, trabajador y depuración).** Puerto público
+  `BandejaDeSalida` (en `DependenciasCompartidas.bandeja`, junto a `documentos`) con `encolar(operador, mensaje)`:
+  valida cada dirección con `DireccionDeEnvio`, junta repetidas, exige 1 a 10 destinatarios con al menos un «para», arma
+  asunto y cuerpos con la plantilla (el módulo da la lista cerrada de marcadores del asunto y del mensaje, y los
+  valores), cuenta cupos con `core.reservar_cupo_de_correo` (candado por cuenta; 429 `cupo_de_correos_agotado` con el
+  tope que se pasó), guarda el PDF (solo PDF generado por la app, hasta 5 MB) con `DocumentosProtegidos.guardar` dueño
+  `core.correos_salientes`, inserta el correo y sus destinatarios en la misma transacción y despierta al trabajador al
+  confirmarse. `ProcesarBandeja` (iniciado en `principal.ts`, con SIGTERM: deja de tomar, espera el lote en curso hasta
+  20 s y cierra el transporte) revisa cada 30 s y cuando lo despiertan, nunca corre dos lotes a la vez y sigue mientras
+  los lotes salgan llenos (10 por lote, arriendo de 5 minutos). `EnviarLoteDeCorreos` toma el lote, envía con el
+  transporte de la instalación (un solo transporte, que se rearma si Soporte cambia la conexión), lee el PDF del
+  almacenamiento y anota cada resultado con `core.resolver_correo`; un `autenticacion` detiene el lote y lo que falta
+  vuelve sin gastar intento, y pasados 3 minutos del lote lo que falta también vuelve (para no pasarse del arriendo).
+  Fallos propios: PDF perdido = permanente `ADJUNTO`, dirección guardada inservible = permanente `DIRECCION`, error
+  inesperado = temporal `ERROR_INTERNO`. Sin `CLAVE_SECRETOS` el trabajador no arranca y `principal.ts` lo dice.
+  Depuración diaria (`DepurarCorreos`): contenido a los `core.correo.dias_de_conservacion_del_contenido` (30, de 7 a
+  365) y filas terminadas a los `core.auditoria.meses_de_conservacion` (60); el archivo en disco del PDF lo quita la
+  depuración de huérfanos al día siguiente. Variables nuevas, solo de instalación: `core.correo.tope_por_hora_por_cuenta`
+  (100), `tope_por_dia_por_cuenta` (500), `tope_por_dia_por_destinatario` (20), `tope_por_hora_de_la_instalacion`
+  (1,000) y `dias_de_conservacion_del_contenido` (30). Pruebas con el doble de transporte y fallos simulados, y de
+  integración contra la base (encolar, deshacer, concurrencia de cupos, reintentos, arriendo vencido, depuración).
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
