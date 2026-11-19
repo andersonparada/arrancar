@@ -1,10 +1,9 @@
 /**
  * Lo que dejó la QA de punta a punta de CP4-12 (informe `docs/modulos/informe-qa-cp4-12-2026-11-18.md`). Las pruebas
- * `it.fails` pasan mientras el error siga; al corregirlo, quitar `.fails`:
- * - el pago con cheque o nota de débito no limita `observaciones` ni `referencia` en el esquema http: 501 caracteres de
- *   observaciones dan un 500 (rompe la restricción de la tabla) y 101 de referencia se aceptan (el formulario dice 100);
- * - anular un cheque posfechado deja su anulación con la fecha del cheque (futura): la ficha, la lista y el proveedor ya no
- *   lo cuentan como comprometido, pero R1, R2 y el reporte de cheques posfechados siguen contándolo hasta esa fecha;
+ * `it.fails` fijan el error que siga abierto (al corregirlo, quitar `.fails`). Corregido:
+ * - el pago con cheque o nota de débito limita `observaciones` y `referencia` en el esquema http (400 por campo);
+ * - un cheque posfechado anulado deja de contar como comprometido en la ficha, R1, R2 y el reporte de posfechados al corte
+ *   de hoy, aunque su anulación quede con la fecha contable (futura) del cheque;
  * - el reporte de cheques caducos rotula `origen: 'suelto'` aunque el cheque lo haya emitido un pago de Cuentas por pagar.
  */
 
@@ -35,8 +34,7 @@ describe('textos largos al pagar con cheque o con nota de débito', () => {
     expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
   });
 
-  // Error conocido: el esquema de `pagos` deja `observaciones` sin tope y la tabla lo limita a 500: sale un 500.
-  it.fails('rechaza con 400 unas observaciones de más de 500 caracteres', async () => {
+  it('rechaza con 400 unas observaciones de más de 500 caracteres', async () => {
     const { proveedor, cargo } = await e.proveedorConCargo();
 
     const respuesta = await e.pagar(
@@ -46,8 +44,7 @@ describe('textos largos al pagar con cheque o con nota de débito', () => {
     expect(respuesta.estado).toBe(400);
   });
 
-  // Error conocido: el esquema de `pagos` no limita `referencia` (el formulario y el reintegro admiten 100).
-  it.fails('rechaza con 400 una referencia de más de 100 caracteres', async () => {
+  it('rechaza con 400 una referencia de más de 100 caracteres', async () => {
     const { proveedor, cargo } = await e.proveedorConCargo();
 
     const respuesta = await e.pagar(
@@ -94,8 +91,7 @@ describe('un cheque posfechado anulado hoy', () => {
     expect(ficha).toMatchObject({ comprometido: '0.00', estadoDePago: 'pendiente' });
   });
 
-  // Error conocido: la anulación toma la fecha del cheque (futura) y los reportes al corte de hoy lo siguen contando.
-  it.fails('tampoco cuenta en R1, R2 ni en el reporte de cheques posfechados al corte de hoy', async () => {
+  it('tampoco cuenta en R1, R2 ni en el reporte de cheques posfechados al corte de hoy', async () => {
     const { proveedor, cargo } = await e.proveedorConCargo();
     const pago = await e.pagar(
       e.cheque(proveedor.proveedorId, [{ cargoId: cargo, monto: '700.00' }], { fecha: haceDias(-20) }),

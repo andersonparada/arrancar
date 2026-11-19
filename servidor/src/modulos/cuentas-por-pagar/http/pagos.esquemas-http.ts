@@ -10,12 +10,15 @@ const fecha = z.iso.date({ error: 'Escriba la fecha como AAAA-MM-DD.' });
 
 const lineas = z.array(z.object({ cargoId: z.uuid({ error: 'Escoja el documento.' }), monto })).min(1);
 
+/** Texto opcional con tope: el tope es el de la restricción de la tabla, para responder 400 por campo y no un 500. */
+const textoConTope = (maximo: number, aviso: string) => z.string().max(maximo, aviso).nullable().optional();
+
 /** Lo común a toda forma de pago; las reglas de los montos, la fecha y las diferencias son del dominio y responden por campo. */
 const comun = {
   proveedorId: z.uuid({ error: 'Escoja el proveedor.' }),
   fecha: fecha.optional(),
-  referencia: z.string().nullable().optional(),
-  observaciones: z.string().nullable().optional(),
+  referencia: textoConTope(100, 'La referencia admite hasta 100 caracteres.'),
+  observaciones: textoConTope(500, 'Las observaciones admiten hasta 500 caracteres.'),
   aplicaciones: lineas.max(MAXIMO_DE_DOCUMENTOS_EN_PAGO + 1),
   diferencias: lineas.max(MAXIMO_DE_DOCUMENTOS_EN_PAGO + 1).optional(),
 };
