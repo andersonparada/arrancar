@@ -2874,3 +2874,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   comprometido) también en el bloque de deudores y en `totales.deudores`, ya no va `null`: un proveedor con cargo 100 y a favor
   500 muestra 100.00 como su ficha, y lo a favor nunca resta (A.7). Excepción que queda: el proveedor con neto exactamente 0 sigue
   fuera de R1 sin «incluir sin saldo» (y entra en acreedores con la opción). Prueba nueva en `reportes-de-saldos.prueba.ts`.
+- **2026-11-18, Activos fijos AF-0 (Libro de compras).** Un servicio puede ser activo fijo (AF-P5 = b, dictamen E1). Migración
+  `0037_af_servicio_capitalizable`: se quitan los checks `lineas_de_documento_activo_fijo_es_bien` y
+  `conceptos_de_gasto_activo_fijo_es_bien` y se agrega el único `lineas_de_documento_llave_unica (id, documento_id, empresa_id)`,
+  destino de la llave compuesta de `activos_fijos.costos`. Se quitaron la regla del dominio del concepto y la del resolutor de
+  líneas (combustible e IDP siguen exigiendo bien). `categoriaSql` manda a la casilla de activos solo `es_activo_fijo and tipo =
+  'bien'`; el servicio capitalizado queda en servicios del SAT-2237. El análisis «Activos fijos comprados» muestra todos y suma la
+  columna «Es un» (bien o servicio, también en el Excel). Cliente: ya no se fuerza «Bien» al marcar activo fijo y el texto es
+  «Activo fijo (se capitaliza)».

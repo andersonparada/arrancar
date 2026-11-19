@@ -78,10 +78,10 @@ describe('conceptos de gasto', () => {
     await expect(invalido).rejects.toThrow(ConceptoDeGastoInvalido);
   });
 
-  it('un activo fijo debe ser un bien', async () => {
-    const invalido = casos.crear.ejecutar(operador, solicitud({ esActivoFijo: true, tipoPorOmision: 'servicio' }));
+  it('un servicio también puede ser activo fijo', async () => {
+    const creado = await casos.crear.ejecutar(operador, solicitud({ esActivoFijo: true, tipoPorOmision: 'servicio' }));
 
-    await expect(invalido).rejects.toThrow(ConceptoDeGastoInvalido);
+    expect(creado).toMatchObject({ esActivoFijo: true, tipoPorOmision: 'servicio' });
   });
 
   it('un activo fijo de tipo bien se registra', async () => {
