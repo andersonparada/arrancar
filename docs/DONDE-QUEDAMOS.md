@@ -25,7 +25,7 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `4005af5` (subido). Suite en paralelo (~5–8 min):
+**`main`:** `cf7f095` (subido). Suite en paralelo (~5–9 min):
 prefijo, las bases se crean solas). Última suite completa en verde (integración): servidor 5301, cliente 1540, generador 46.
 En `main` además de lo anterior: CP4-9 corregido (tres revisiones), CP4-E5, CP5-9a y CP5-9b (R6 a R11), plazo de crédito
 PC-1 a PC-3, correo pasos 1 y 3, Caja chica y Cuentas por liquidar (datos: CC-1, CL-1, CC-1c), Excel de Terceros y de
@@ -114,9 +114,12 @@ del Banguat para todas las monedas (MM-3a), correcciones de la QA intermedia.
   QA CP4-12 textos). Después: AF-2 en adelante (con AFI), INV-1 en adelante, CC-2 en adelante, QA CP5-11.
 - **Workflow `arrancar-mas-frentes`** (run `wf_c1facbe4-e32`): BS-6, BS-7, BS-R2, BS-9, AF-2 con AFI-1, INV-1, comprobaciones
   reales del Banguat + MM-3b + MM-5, y QA CP5-11; cada código con revisión de Opus.
-- **Integración en curso:** RLS + MM-1/MM-2, INV-0, QA CP4-12 textos, AFI-0 (docs); falla una prueba de AF-1 por la RLS nueva
-  (agente ajustándola) y 20 pruebas saltadas por revisar. Después entran correo 8 a 13 (0030 y 0031 del core) y CCL-B1
-  (corrigiendo dos medios). Impresión de cheques programando sobre CCL-B1.
+- **En `main` (2026-11-18, noche):** RLS del núcleo R-1 a R-3 (core 0027-0028), Multimoneda MM-1/MM-2 (core 0029), correo 8 a
+  13 (core 0030-0031), CCL-B1 (bancos 0036-0037), INV-0 (libro 0039), INV-3 (motor de costeo), AFI-0 en los diseños, QA CP4-12
+  corregida. Suite: servidor 6190, cliente 1732, generador 46, sin saltadas. **Ojo:** con la máquina cargada, la revisión de
+  qpdf puede fallar y saltar ~20 pruebas sin avisar: en cada integración comprobar que no haya `skipped`.
+- **Workflow `arrancar-caja-chica-y-correo-final`** (run `wf_8950d9e1-c04`): CC-2, CL-2, revisión de seguridad del correo y QA
+  del correo con Mailpit. Impresión de cheques programando sobre la versión vieja de CCL-B1: al unirla, traer `main`.
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
