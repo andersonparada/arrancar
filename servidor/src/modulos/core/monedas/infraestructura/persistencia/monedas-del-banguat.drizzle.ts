@@ -8,10 +8,11 @@ const COLUMNAS = {
   codigo: monedasDelBanguat.codigo,
   descripcion: monedasDelBanguat.descripcion,
   disponible: monedasDelBanguat.disponible,
+  convencion: monedasDelBanguat.convencion,
   vistaPorUltimaVez: monedasDelBanguat.vistaPorUltimaVez,
 };
 
-type Fila = { codigo: number; descripcion: string; disponible: boolean; vistaPorUltimaVez: Date };
+type Fila = Omit<MonedaDelBanguatGuardada, 'vistaPorUltimaVez'> & { vistaPorUltimaVez: Date };
 
 const aGuardada = (fila: Fila): MonedaDelBanguatGuardada => ({
   ...fila,

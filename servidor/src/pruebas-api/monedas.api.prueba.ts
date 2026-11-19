@@ -8,7 +8,13 @@ const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let propietario: pg.Client;
 
-type Opcion = { codigo: number; disponible: boolean; asignadaA: string | null };
+type Opcion = {
+  codigo: number;
+  disponible: boolean;
+  asignadaA: string | null;
+  convencion: string | null;
+  ofrecida: boolean;
+};
 type Moneda = { codigo: string; activa: boolean; codigoBanguat: number | null; tieneSerieDelBanguat: boolean };
 
 /** Lo auditado de la moneda, leído como propietario de la base (la app solo puede agregar). */
@@ -71,6 +77,16 @@ describe('GET /api/monedas/banguat', () => {
     expect(soporte.cuerpo.find((o: Opcion) => o.codigo === 2)).toMatchObject({ asignadaA: 'USD', disponible: true });
     expect(soporte.cuerpo.find((o: Opcion) => o.codigo === 24)).toMatchObject({ asignadaA: null, excluida: false });
   });
+
+  it('dice la convención de cada código y solo ofrece los disponibles, no excluidos y con convención', async () => {
+    const { cuerpo } = await entorno.soporte.get('/api/monedas/banguat');
+
+    const porCodigo = new Map<number, Opcion>(cuerpo.map((o: Opcion) => [o.codigo, o]));
+    expect(porCodigo.get(2)).toMatchObject({ convencion: 'quetzales_por_unidad', ofrecida: true });
+    expect(porCodigo.get(24)).toMatchObject({ convencion: 'usd_por_unidad', ofrecida: true });
+    expect(porCodigo.get(3)).toMatchObject({ convencion: 'unidades_por_usd', ofrecida: true });
+    expect(porCodigo.get(28)).toMatchObject({ convencion: null, excluida: true, ofrecida: false });
+  });
 });
 
 describe('PATCH /api/monedas/:codigo', () => {
@@ -123,6 +139,22 @@ describe('PATCH /api/monedas/:codigo', () => {
     expect(inexistente.cuerpo.error.codigo).toBe('codigo_del_banguat_no_ofrecido');
     expect(enUso.estado).toBe(409);
     expect(enUso.cuerpo.error).toMatchObject({ codigo: 'codigo_del_banguat_en_uso', detalles: { moneda: 'USD' } });
+  });
+
+  it('un código excluido o sin convención no se une, y al dólar no se le quita el suyo mientras el euro tenga el suyo', async () => {
+    const excluido = await entorno.soporte.patch('/api/monedas/GBP', { codigoBanguat: 28 });
+    await entorno.soporte.patch('/api/monedas/EUR', { codigoBanguat: 24 });
+    const sinDolar = await entorno.soporte.patch('/api/monedas/USD', { codigoBanguat: null });
+    await entorno.soporte.patch('/api/monedas/EUR', { codigoBanguat: null });
+
+    expect(excluido.cuerpo.error.codigo).toBe('codigo_del_banguat_no_ofrecido');
+    expect(sinDolar.estado).toBe(422);
+    expect(sinDolar.cuerpo.error).toMatchObject({
+      codigo: 'codigo_del_dolar_necesario',
+      detalles: { monedas: ['EUR'] },
+    });
+    const lista = await cuenta.propietario.get('/api/monedas');
+    expect(lista.cuerpo.find((m: Moneda) => m.codigo === 'USD')).toMatchObject({ codigoBanguat: 2 });
   });
 
   it('valida el cuerpo y responde 404 a una moneda que no existe', async () => {

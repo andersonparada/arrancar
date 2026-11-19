@@ -174,4 +174,43 @@ describe('ListarMonedasDelBanguat', () => {
     expect(opciones.find((o) => o.codigo === 9)).toMatchObject({ excluida: true });
     expect(opciones.find((o) => o.codigo === 99)).toMatchObject({ disponible: false });
   });
+
+  it('solo ofrece lo disponible, no excluido y con convención, y dice la convención de cada código', async () => {
+    const { listar } = armar(new Set([9]));
+
+    const opciones = await listar.ejecutar();
+
+    expect(opciones.filter((o) => o.ofrecida).map((o) => o.codigo)).toEqual([2, 24]);
+    expect(opciones.find((o) => o.codigo === 24)).toMatchObject({ convencion: 'usd_por_unidad' });
+    expect(opciones.find((o) => o.codigo === 98)).toMatchObject({ convencion: null, ofrecida: false });
+  });
+});
+
+describe('EditarMoneda: el código del dólar', () => {
+  it('no se le quita el código al dólar mientras otra moneda tenga el suyo', async () => {
+    const { editar, catalogo } = armar();
+    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 24 });
+
+    await expect(editar.ejecutar(operador, 'USD', { codigoBanguat: null })).rejects.toMatchObject({
+      codigo: 'codigo_del_dolar_necesario',
+      detalles: { monedas: ['EUR'] },
+    });
+    expect((await catalogo.buscar('USD'))?.codigoBanguat).toBe(2);
+  });
+
+  it('sin otras monedas con código, el dólar puede quedarse sin el suyo; con el del euro quitado también', async () => {
+    const { editar } = armar();
+    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 24 });
+    await editar.ejecutar(operador, 'EUR', { codigoBanguat: null });
+
+    expect((await editar.ejecutar(operador, 'USD', { codigoBanguat: null })).codigoBanguat).toBeNull();
+  });
+
+  it('rechaza un código sin convención comprobada', async () => {
+    const { editar } = armar();
+
+    await expect(editar.ejecutar(operador, 'EUR', { codigoBanguat: 98 })).rejects.toMatchObject({
+      codigo: 'codigo_del_banguat_no_ofrecido',
+    });
+  });
 });

@@ -2,7 +2,8 @@ import { auditarCambioDeEstado, type Auditoria } from '../../../compartido/aplic
 import { RecursoNoEncontrado } from '../../../compartido/aplicacion/errores.js';
 import type { Operador } from '../../../compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../compartido/aplicacion/unidad-de-trabajo.js';
-import { CodigoDelBanguatNoOfrecido } from '../../dominio/errores.js';
+import { esCodigoOfrecido } from '../../dominio/codigos-del-banguat-excluidos.js';
+import { CodigoDelBanguatNoOfrecido, CodigoDelDolarNecesario } from '../../dominio/errores.js';
 import { aplicarCambios, type CambiosDeMoneda } from '../../dominio/moneda.js';
 import { CodigoDelBanguatConOtraSerie, CodigoDelBanguatEnUso } from '../errores.js';
 import type { CatalogoDeMonedas, MonedaDto, MonedasDelBanguat } from '../puertos/monedas.js';
@@ -16,6 +17,8 @@ interface Dependencias {
   /** Se avisa, ya con la transacción confirmada, cuando la moneda quedó activa con código y hay que traer su serie. */
   alQuedarParaCargar?: (moneda: string) => void;
 }
+
+const MONEDA_DEL_DOLAR = 'USD';
 
 /** Quedó activa con código y es nuevo: se le unió el código o se activó (el dólar y las demás se cargan igual). */
 function quedoParaCargar(antes: MonedaDto, despues: MonedaDto): boolean {
@@ -33,6 +36,7 @@ export class EditarMoneda {
   /**
    * @throws RecursoNoEncontrado si la moneda no existe.
    * @throws CodigoDelBanguatNoOfrecido, CodigoDelBanguatEnUso o CodigoDelBanguatConOtraSerie según el código.
+   * @throws CodigoDelDolarNecesario si se le quita el código al dólar mientras otra moneda tiene el suyo.
    */
   async ejecutar(operador: Operador, codigo: string, cambios: CambiosDeMoneda): Promise<MonedaDto> {
     const { unidadDeTrabajo, catalogo } = this.dependencias;
@@ -41,6 +45,7 @@ export class EditarMoneda {
       if (!antes) throw new RecursoNoEncontrado('La moneda');
       const despues = aplicarCambios(antes, cambios);
       if (despues.codigoBanguat !== antes.codigoBanguat) await this.revisarCodigo(antes, despues.codigoBanguat);
+      if (despues.codigoBanguat === null && antes.codigo === MONEDA_DEL_DOLAR) await this.exigirDolarSiHayCruces();
       await catalogo.actualizar(codigo, cambios);
       await this.auditar(antes, despues);
       return { antes, despues: (await catalogo.buscar(codigo))! };
@@ -69,9 +74,17 @@ export class EditarMoneda {
     if (serie !== null && serie !== codigoNuevo) throw new CodigoDelBanguatConOtraSerie(moneda.codigo, serie);
   }
 
+  /** Sin el código del dólar no hay cruces: no se le puede quitar mientras otra moneda tenga el suyo. */
+  private async exigirDolarSiHayCruces(): Promise<void> {
+    const conCodigo = (await this.dependencias.catalogo.listar()).filter(
+      (m) => m.codigo !== MONEDA_DEL_DOLAR && m.codigoBanguat !== null,
+    );
+    if (conCodigo.length > 0) throw new CodigoDelDolarNecesario(conCodigo.map((m) => m.codigo));
+  }
+
   private async exigirOfrecido(codigo: number): Promise<void> {
     const { delBanguat, excluidos } = this.dependencias;
     const ofrecido = await delBanguat.buscar(codigo);
-    if (!ofrecido?.disponible || excluidos.has(codigo)) throw new CodigoDelBanguatNoOfrecido(codigo);
+    if (!ofrecido || !esCodigoOfrecido(ofrecido, excluidos)) throw new CodigoDelBanguatNoOfrecido(codigo);
   }
 }

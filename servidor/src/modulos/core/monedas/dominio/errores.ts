@@ -79,3 +79,15 @@ export class CodigoDelBanguatNoOfrecido extends ReglaDeNegocioInfringida {
     super(`El código ${codigo} no está entre las monedas que ofrece el Banguat.`);
   }
 }
+
+/** El dólar es la base de los cruces: sin su código no hay cómo pasar las demás monedas a quetzales. */
+export class CodigoDelDolarNecesario extends ReglaDeNegocioInfringida {
+  readonly codigo = 'codigo_del_dolar_necesario';
+
+  constructor(monedas: readonly string[]) {
+    super(
+      `El dólar necesita su código del Banguat mientras ${monedas.join(', ')} se carguen: sin él no se pueden calcular sus tipos de cambio.`,
+      { monedas },
+    );
+  }
+}

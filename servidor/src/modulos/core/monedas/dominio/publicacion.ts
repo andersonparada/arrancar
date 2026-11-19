@@ -6,6 +6,11 @@ export interface MonedaPedida {
   readonly codigoBanguat: number;
 }
 
+/** Una moneda lista para cargarse: con su convención (la que fija la migración); nula es «sin comprobar» y no se carga. */
+export interface MonedaACargar extends MonedaPedida {
+  readonly convencion: ConvencionDePublicacion | null;
+}
+
 /** Una moneda de la lista `VariablesDisponibles`; el Banguat no da la sigla ISO. */
 export interface MonedaDelBanguat {
   readonly codigo: number;
@@ -24,9 +29,12 @@ export interface PublicacionDeTipoDeCambio {
   readonly codigoBanguat: number;
   /** Fecha en que rige, `AAAA-MM-DD`. */
   readonly fecha: string;
-  /** Quetzales por unidad de la moneda, como texto decimal de hasta 8 decimales (nunca `number`). */
+  /**
+   * Lo que publicó la fuente, en su convención (el promedio de compra y venta), mientras no se normaliza; ya normalizada
+   * son los quetzales por unidad de la moneda, como texto decimal de hasta 8 decimales (nunca `number`).
+   */
   readonly referencia: string;
-  /** Solo en los rangos, donde `compra = venta = referencia`. */
+  /** Tal como los publicó el Banguat, en su convención; en el dólar coinciden con quetzales. */
   readonly compra?: string;
   readonly venta?: string;
   /** Con que se calculó `referencia`; sin indicar es el dólar (`quetzales_por_unidad`). */
@@ -36,7 +44,13 @@ export interface PublicacionDeTipoDeCambio {
 }
 
 /** Por qué se descartó un valor recibido; es lo que se anota en la bitácora de consultas. */
-export type MotivoDeRechazo = 'valor_fuera_de_rango' | 'dato_invalido' | 'valor_ambiguo' | 'variacion_excesiva';
+export type MotivoDeRechazo =
+  | 'valor_fuera_de_rango'
+  | 'dato_invalido'
+  | 'valor_ambiguo'
+  | 'variacion_excesiva'
+  | 'sin_dolar_del_dia'
+  | 'convencion_dudosa';
 
 /** Un valor recibido que no se guarda. */
 export interface PublicacionRechazada {

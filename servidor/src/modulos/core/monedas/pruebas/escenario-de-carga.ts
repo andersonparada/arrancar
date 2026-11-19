@@ -1,4 +1,4 @@
-import { fechasDelRango, sumarDiasAFecha } from '../dominio/fechas-de-publicacion.js';
+import { esDiaDePublicacionDeCruces, fechasDelRango, sumarDiasAFecha } from '../dominio/fechas-de-publicacion.js';
 import type { PublicacionDeTipoDeCambio } from '../dominio/publicacion.js';
 import { ActualizarMonedasDelBanguat } from '../aplicacion/casos-uso/actualizar-monedas-del-banguat.js';
 import { CargarTiposDeCambio, type RelojDeCarga } from '../aplicacion/casos-uso/cargar-tipos-de-cambio.js';
@@ -19,8 +19,7 @@ export class RelojDePrueba implements RelojDeCarga {
   zona = async () => 'America/Guatemala';
 }
 
-export const esHabil = async (fecha: string) => ![0, 6].includes(new Date(`${fecha}T00:00:00Z`).getUTCDay());
-
+/** Lo que publica el Banguat: el dólar en quetzales; las demás, el cruce en su convención (compra = venta). */
 export const publicacion = (moneda: string, fecha: string, referencia: string): PublicacionDeTipoDeCambio => ({
   moneda,
   codigoBanguat: moneda === 'USD' ? 2 : 24,
@@ -30,11 +29,11 @@ export const publicacion = (moneda: string, fecha: string, referencia: string): 
 });
 
 /** Deja los 45 días anteriores a `hoy` completos (el dólar todos, las demás los hábiles) para que el relleno no pida nada. */
-export async function completar(cargas: CargasDeTiposEnMemoria, hoy: string): Promise<void> {
+export function completar(cargas: CargasDeTiposEnMemoria, hoy: string): void {
   for (const fecha of fechasDelRango(sumarDiasAFecha(hoy, -46), sumarDiasAFecha(hoy, -1))) {
     if (!cargas.tipos.some((t) => t.moneda === 'USD' && t.fecha === fecha)) cargas.poner('USD', fecha, '7.70');
     const yaEsta = cargas.tipos.some((t) => t.moneda === 'EUR' && t.fecha === fecha);
-    if (!yaEsta && (await esHabil(fecha))) cargas.poner('EUR', fecha, '9.00');
+    if (!yaEsta && esDiaDePublicacionDeCruces(fecha)) cargas.poner('EUR', fecha, '9.00');
   }
 }
 
@@ -49,7 +48,7 @@ export function armar() {
   const fuentes = { dolar: new FuenteConReintentos(fuente, { esperar }), demas: fuente };
   const consultar = new ConsultarAlBanguat({ fuentes, cargas, ahora });
   const lista = new ActualizarMonedasDelBanguat({ fuente, cargas, cerrojo, ahora });
-  const vueltas = new VueltasDeCarga({ consultar, cargas, calendario: { esHabil }, esperar, alFallar: () => {} });
+  const vueltas = new VueltasDeCarga({ consultar, cargas, esperar, alFallar: () => {} });
   const alGuardar = () => void guardados.veces++;
   const carga = new CargarTiposDeCambio({ cerrojo, cargas, vueltas, lista, reloj, alGuardar });
   return { carga, cargas, fuente, reloj, cerrojo, guardados, lista };

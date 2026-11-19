@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { UnidadDeTrabajoEnMemoria, operadorDePrueba } from '../../../compartido/pruebas/dobles-compartidos.js';
-import { CalendarioLaboral } from '../../../calendario/aplicacion/calendario-laboral.js';
 import { CatalogoDeMonedasEnMemoria } from '../../pruebas/catalogo-de-monedas-en-memoria.js';
 import { TiposDeCambioEnMemoria } from '../../pruebas/tipos-de-cambio-en-memoria.js';
 import { TiposDeCambio } from '../tipos-de-cambio.js';
@@ -10,8 +9,7 @@ const operador = operadorDePrueba({ esSuperacceso: true });
 
 function armar() {
   const guardados = new TiposDeCambioEnMemoria();
-  const calendario = new CalendarioLaboral({ delAnio: async () => [] });
-  const tiposDeCambio = new TiposDeCambio({ guardados, calendario, reloj: { hoy: async () => '2026-11-18' } });
+  const tiposDeCambio = new TiposDeCambio({ guardados, reloj: { hoy: async () => '2026-11-18' } });
   const registrar = new RegistrarTipoDeCambio({
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     guardados,

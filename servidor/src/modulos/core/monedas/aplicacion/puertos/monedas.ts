@@ -1,4 +1,5 @@
 import type { CambiosDeMoneda, Moneda } from '../../dominio/moneda.js';
+import type { ConvencionDePublicacion } from '../../dominio/publicacion.js';
 
 /** La moneda como la entrega la API: con la descripción de su código del Banguat y si ya tiene tipos cargados con él. */
 export interface MonedaDto extends Moneda {
@@ -12,6 +13,8 @@ export interface MonedaDelBanguatGuardada {
   codigo: number;
   descripcion: string;
   disponible: boolean;
+  /** Cómo publica el Banguat el código; nula es «sin comprobar»: no se ofrece ni se carga. */
+  convencion: ConvencionDePublicacion | null;
   vistaPorUltimaVez: string;
 }
 

@@ -1,6 +1,9 @@
 import { fechaLocalEn } from '../../../compartido/dominio/fecha-local.js';
+import { esCodigoOfrecido } from '../../dominio/codigos-del-banguat-excluidos.js';
+import { normalizarAQuetzales } from '../../dominio/cruces-del-banguat.js';
 import { CodigoDelBanguatNoOfrecido, FuenteNoDisponible, RespuestaInvalida } from '../../dominio/errores.js';
 import { sumarDiasAFecha } from '../../dominio/fechas-de-publicacion.js';
+import type { ConvencionDePublicacion, PublicacionDeTipoDeCambio } from '../../dominio/publicacion.js';
 import type { CargasDeTipos, ResultadoDeLaConsulta } from '../puertos/cargas-de-tipos.js';
 import type { FuenteDeTiposDeCambio } from '../puertos/fuente-de-tipos-de-cambio.js';
 import type { CatalogoDeMonedas, MonedasDelBanguat } from '../puertos/monedas.js';
@@ -15,6 +18,19 @@ interface Dependencias {
   excluidos: ReadonlySet<number>;
 }
 
+/** Un día de la muestra: lo publicado, el dólar del mismo día y lo que da en quetzales (nada de esto se guarda). */
+export interface ValorDeLaMuestra {
+  fecha: string;
+  compra: string | null;
+  venta: string | null;
+  /** El promedio de compra y venta, en la convención del código (política contable de la instalación). */
+  promedio: string;
+  /** El dólar del Banguat guardado de esa fecha; nulo en el dólar mismo o si aún no está guardado. */
+  dolar: string | null;
+  /** Quetzales por unidad; nulo si falta el dólar de ese día. */
+  referencia: string | null;
+}
+
 /** Los valores de los últimos 7 días de un código del Banguat, tal como llegaron (nada se guarda). */
 export interface MuestraDelBanguat {
   codigo: number;
@@ -23,8 +39,10 @@ export interface MuestraDelBanguat {
   desde: string;
   hasta: string;
   resultado: ResultadoDeLaConsulta;
-  /** Quetzales por unidad, de la fecha más vieja a la más nueva. */
-  valores: { fecha: string; referencia: string }[];
+  /** Cómo publica el Banguat el código. */
+  convencion: ConvencionDePublicacion;
+  /** De la fecha más vieja a la más nueva. */
+  valores: ValorDeLaMuestra[];
   rechazadas: { fecha: string; motivo: string }[];
   /** Por qué no hay valores, si fue un fallo del servicio. */
   mensaje: string | null;
@@ -46,7 +64,7 @@ function resultadoDe(valores: number, rechazadas: number): ResultadoDeLaConsulta
 
 /**
  * Soporte ve qué publica el Banguat bajo un código antes de unírselo a una moneda («1.1257» es el euro, en dólares por
- * euro; «157.76» el yen, en yenes por dólar). No guarda tipos; la consulta queda en la bitácora con la vuelta `muestra`. Un fallo del Banguat no
+ * euro; «157.76» el yen, en yenes por dólar) y cuánto da en quetzales con el dólar guardado de cada día. No guarda tipos; la consulta queda en la bitácora con la vuelta `muestra`. Un fallo del Banguat no
  * lanza: vuelve como `resultado: 'error'` con su mensaje.
  */
 export class VerMuestraDelBanguat {
@@ -56,11 +74,12 @@ export class VerMuestraDelBanguat {
   async ejecutar(codigo: number, pedido: PedidoDeMuestra): Promise<MuestraDelBanguat> {
     const { delBanguat, excluidos, reloj } = this.dependencias;
     const ofrecida = await delBanguat.buscar(codigo);
-    if (!ofrecida?.disponible || excluidos.has(codigo)) throw new CodigoDelBanguatNoOfrecido(codigo);
+    if (!ofrecida || !esCodigoOfrecido(ofrecida, excluidos)) throw new CodigoDelBanguatNoOfrecido(codigo);
     const hasta = fechaLocalEn(reloj.ahora(), await reloj.zona());
     const vacia: MuestraDelBanguat = {
       codigo,
       descripcion: ofrecida.descripcion,
+      convencion: ofrecida.convencion!,
       moneda: await this.monedaDe(codigo, pedido.moneda),
       desde: sumarDiasAFecha(hasta, -DIAS_DE_LA_MUESTRA),
       hasta,
@@ -91,16 +110,30 @@ export class VerMuestraDelBanguat {
         desde: muestra.desde,
         hasta: muestra.hasta,
       });
-      const valores = recibido.publicaciones
-        .filter((p) => p.moneda === moneda)
-        .map((p) => ({ fecha: p.fecha, referencia: p.referencia }))
-        .sort((a, b) => a.fecha.localeCompare(b.fecha));
+      const propias = recibido.publicaciones.filter((p) => p.moneda === moneda);
+      const valores = await this.enQuetzales(muestra, propias);
       const rechazadas = recibido.rechazadas.map((r) => ({ fecha: r.fecha, motivo: r.motivo }));
       return { ...muestra, valores, rechazadas, resultado: resultadoDe(valores.length, rechazadas.length) };
     } catch (error) {
       if (!(error instanceof FuenteNoDisponible || error instanceof RespuestaInvalida)) throw error;
       return { ...muestra, resultado: 'error', mensaje: error.message };
     }
+  }
+
+  /** Cada publicación con el dólar guardado de su fecha y su valor en quetzales, de la más vieja a la más nueva. */
+  private async enQuetzales(
+    muestra: MuestraDelBanguat,
+    publicaciones: readonly PublicacionDeTipoDeCambio[],
+  ): Promise<ValorDeLaMuestra[]> {
+    const { convencion } = muestra;
+    const guardados =
+      convencion === 'quetzales_por_unidad'
+        ? []
+        : await this.dependencias.cargas.dolaresDelBanguat(muestra.desde, muestra.hasta);
+    const dolares = new Map(guardados.map((d) => [d.fecha, d.referencia]));
+    return [...publicaciones]
+      .sort((a, b) => a.fecha.localeCompare(b.fecha))
+      .map((p) => valorDeLaMuestra(p, convencion, dolares.get(p.fecha) ?? null));
   }
 
   private async dejarConstancia(muestra: MuestraDelBanguat, iniciadaEn: Date, usuarioId: string): Promise<void> {
@@ -122,4 +155,21 @@ export class VerMuestraDelBanguat {
       [],
     );
   }
+}
+
+function valorDeLaMuestra(
+  p: PublicacionDeTipoDeCambio,
+  convencion: ConvencionDePublicacion,
+  dolar: string | null,
+): ValorDeLaMuestra {
+  const enQuetzales = dolar === null ? undefined : normalizarAQuetzales({ convencion, promedio: p.referencia, dolar });
+  const referencia = convencion === 'quetzales_por_unidad' ? p.referencia : (enQuetzales ?? null);
+  return {
+    fecha: p.fecha,
+    compra: p.compra ?? null,
+    venta: p.venta ?? null,
+    promedio: p.referencia,
+    dolar,
+    referencia,
+  };
 }

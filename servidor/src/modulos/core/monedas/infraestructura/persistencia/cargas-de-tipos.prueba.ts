@@ -69,7 +69,28 @@ describe('monedasACargar', () => {
     expect(monedas).toContain('EUR');
     expect(monedas).not.toContain('GBP');
     expect(monedas).not.toContain('GTQ');
-    expect(await cargas.monedasACargar()).toContainEqual({ moneda: 'EUR', codigoBanguat: 24 });
+    expect(await cargas.monedasACargar()).toContainEqual({
+      moneda: 'EUR',
+      codigoBanguat: 24,
+      convencion: 'usd_por_unidad',
+    });
+  });
+
+  it('el dólar va primero, para tener su tipo antes de pasar las demás monedas a quetzales', async () => {
+    const monedas = await cargas.monedasACargar();
+
+    expect(monedas[0]).toEqual({ moneda: 'USD', codigoBanguat: 2, convencion: 'quetzales_por_unidad' });
+  });
+
+  it('una moneda con código pero sin convención no se carga', async () => {
+    await escenario.propietario.query(`update core.monedas_del_banguat set convencion = null where codigo = 24`);
+    try {
+      expect((await cargas.monedasACargar()).map((m) => m.moneda)).not.toContain('EUR');
+    } finally {
+      await escenario.propietario.query(
+        `update core.monedas_del_banguat set convencion = 'usd_por_unidad' where codigo = 24`,
+      );
+    }
   });
 });
 

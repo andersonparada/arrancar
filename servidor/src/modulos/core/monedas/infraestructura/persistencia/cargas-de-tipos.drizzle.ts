@@ -1,18 +1,22 @@
 import { and, desc, eq, gte, inArray, isNotNull, lt, lte, ne, notInArray, sql } from 'drizzle-orm';
 import type { BaseDatos, Transaccion } from '../../../base-datos/conexion.js';
 import type {
+  BusquedaDelPublicado,
   CargasDeTipos,
   ConsultaHecha,
   ConsultaReciente,
+  DolarGuardado,
   ResultadoDeActualizarLista,
 } from '../../aplicacion/puertos/cargas-de-tipos.js';
-import type { MonedaDelBanguat, MonedaPedida, PublicacionDeTipoDeCambio } from '../../dominio/publicacion.js';
+import { promedioPublicado } from '../../dominio/cruces-del-banguat.js';
+import type { MonedaACargar, MonedaDelBanguat, PublicacionDeTipoDeCambio } from '../../dominio/publicacion.js';
 import { consultasAlBanguat } from './consultas-al-banguat.tablas.js';
 import { monedasDelBanguat } from './monedas-del-banguat.tablas.js';
 import { monedas } from './monedas.tablas.js';
 import { tiposDeCambio } from './tipos-de-cambio.tablas.js';
 
 const LARGO_DEL_DETALLE = 500;
+const CODIGO_DEL_DOLAR = 2;
 
 /**
  * La carga automática sobre PostgreSQL. Los tipos y la bitácora son de toda la instalación (RLS de solo agregar), así
@@ -21,13 +25,51 @@ const LARGO_DEL_DETALLE = 500;
 export class CargasDeTiposDrizzle implements CargasDeTipos {
   constructor(private readonly bd: BaseDatos) {}
 
-  async monedasACargar(): Promise<MonedaPedida[]> {
+  async monedasACargar(): Promise<MonedaACargar[]> {
     const filas = await this.bd
-      .select({ moneda: monedas.codigo, codigoBanguat: monedas.codigoBanguat })
+      .select({
+        moneda: monedas.codigo,
+        codigoBanguat: monedasDelBanguat.codigo,
+        convencion: monedasDelBanguat.convencion,
+      })
       .from(monedas)
-      .where(and(eq(monedas.activa, true), isNotNull(monedas.codigoBanguat), ne(monedas.codigo, 'GTQ')))
+      .innerJoin(monedasDelBanguat, eq(monedas.codigoBanguat, monedasDelBanguat.codigo))
+      .where(and(eq(monedas.activa, true), isNotNull(monedasDelBanguat.convencion), ne(monedas.codigo, 'GTQ')))
       .orderBy(monedas.codigo);
-    return filas.map((fila) => ({ moneda: fila.moneda, codigoBanguat: fila.codigoBanguat! }));
+    const dolarPrimero = (fila: { codigoBanguat: number }) => (fila.codigoBanguat === CODIGO_DEL_DOLAR ? 0 : 1);
+    return filas.sort((a, b) => dolarPrimero(a) - dolarPrimero(b));
+  }
+
+  async dolaresDelBanguat(desde: string, hasta: string): Promise<DolarGuardado[]> {
+    return this.bd
+      .select({ id: tiposDeCambio.id, fecha: tiposDeCambio.fecha, referencia: tiposDeCambio.referencia })
+      .from(tiposDeCambio)
+      .where(
+        and(
+          eq(tiposDeCambio.codigoBanguat, CODIGO_DEL_DOLAR),
+          eq(tiposDeCambio.origen, 'banguat'),
+          gte(tiposDeCambio.fecha, desde),
+          lte(tiposDeCambio.fecha, hasta),
+        ),
+      );
+  }
+
+  async publicadoAnterior(busqueda: BusquedaDelPublicado): Promise<string | null> {
+    const [fila] = await this.bd
+      .select({ compra: tiposDeCambio.compra, venta: tiposDeCambio.venta })
+      .from(tiposDeCambio)
+      .where(
+        and(
+          eq(tiposDeCambio.moneda, busqueda.moneda),
+          eq(tiposDeCambio.origen, 'banguat'),
+          eq(tiposDeCambio.convencion, busqueda.convencion),
+          gte(tiposDeCambio.fecha, busqueda.desde),
+          lt(tiposDeCambio.fecha, busqueda.antesDe),
+        ),
+      )
+      .orderBy(desc(tiposDeCambio.fecha))
+      .limit(1);
+    return fila?.compra && fila.venta ? (promedioPublicado(fila.compra, fila.venta) ?? null) : null;
   }
 
   async fechasConTipoDelBanguat(moneda: string, desde: string, hasta: string): Promise<string[]> {
@@ -145,7 +187,7 @@ const aFila = (p: PublicacionDeTipoDeCambio, consultaId: string) => ({
   referencia: p.referencia,
   compra: p.compra ?? null,
   venta: p.venta ?? null,
-  convencion: p.convencion ?? (p.codigoBanguat === 2 ? ('quetzales_por_unidad' as const) : null),
+  convencion: p.convencion ?? (p.codigoBanguat === CODIGO_DEL_DOLAR ? ('quetzales_por_unidad' as const) : null),
   dolarUsadoId: p.dolarUsadoId ?? null,
   origen: 'banguat' as const,
   codigoBanguat: p.codigoBanguat,

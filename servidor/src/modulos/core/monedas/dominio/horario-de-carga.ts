@@ -1,7 +1,10 @@
 import { fechaYHoraLocalEn } from '../../compartido/dominio/fecha-local.js';
 
-/** Las tres vueltas que corre solo el temporizador, en el orden en que se revisan. */
-export type VueltaProgramada = 'madrugada' | 'manana' | 'noche';
+/**
+ * Las vueltas que corre solo el temporizador, en el orden en que se revisan. `dolarDeManana` es el reintento de la
+ * noche: pide solo el dólar de mañana y en la bitácora queda como vuelta `noche`.
+ */
+export type VueltaProgramada = 'madrugada' | 'manana' | 'noche' | 'dolarDeManana';
 
 const aMinutos = (hora: number, minutos: number): number => hora * 60 + minutos;
 
@@ -24,6 +27,12 @@ export const HORA_DE_LA_MANANA = aMinutos(9, 30);
 /** El dólar de mañana ya está publicado de noche (la comprobación C-4 puede mover esta hora). */
 export const HORA_DE_LA_NOCHE = aMinutos(21, 0);
 
+/**
+ * Si el dólar de mañana no llegó a las 21:00, se reintenta a estas horas (C-4 sigue abierta: la bitácora de producción
+ * dirá a qué hora aparece y entonces se ajustan).
+ */
+export const HORAS_DEL_DOLAR_DE_MANANA: readonly number[] = [aMinutos(22, 0), aMinutos(23, 30)];
+
 /** Una consulta que ya quedó en la bitácora. */
 export interface IntentoHecho {
   readonly vuelta: string;
@@ -38,6 +47,8 @@ export interface OpcionesDeVuelta {
   readonly intentos: readonly IntentoHecho[];
   /** Ya hay un tipo del dólar de hoy guardado. */
   readonly hayDolarDeHoy: boolean;
+  /** Ya hay un tipo del dólar de mañana guardado (o no hay dólar activo que esperar). */
+  readonly hayDolarDeManana: boolean;
 }
 
 interface Reloj {
@@ -68,9 +79,17 @@ function tocaLaMadrugada(ahora: Reloj, opciones: OpcionesDeVuelta): boolean {
   return !intentosDeHoy('madrugada', ahora.fecha, opciones).some((minutos) => minutos >= ultimaHora);
 }
 
+/** Toca reintentar el dólar de mañana si la noche ya corrió, el dólar falta y desde la última hora de reintento no se ha pedido. */
+function tocaElReintentoDeLaNoche(ahora: Reloj, opciones: OpcionesDeVuelta): boolean {
+  if (opciones.hayDolarDeManana || intentosDeHoy('noche', ahora.fecha, opciones).length === 0) return false;
+  const ultimaHora = HORAS_DEL_DOLAR_DE_MANANA.filter((hora) => hora <= ahora.minutos).at(-1);
+  if (ultimaHora === undefined) return false;
+  return !intentosDeHoy('noche', ahora.fecha, opciones).some((minutos) => minutos >= ultimaHora);
+}
+
 /**
  * Qué vuelta toca correr ahora, o `null`. Cada vuelta corre una vez al día (la madrugada, mientras falte el dólar,
- * también en cada hora de reintento) y solo cuenta lo hecho hoy en la hora de la instalación. Es una función pura: el
+ * también en cada hora de reintento; la noche, mientras falte el dólar de mañana, también a las 22:00 y a las 23:30) y solo cuenta lo hecho hoy en la hora de la instalación. Es una función pura: el
  * temporizador de 15 minutos la consulta y no guarda nada.
  */
 export function vueltaQueToca(opciones: OpcionesDeVuelta): VueltaProgramada | null {
@@ -79,5 +98,5 @@ export function vueltaQueToca(opciones: OpcionesDeVuelta): VueltaProgramada | nu
   const sinHacer = (vuelta: string) => intentosDeHoy(vuelta, ahora.fecha, opciones).length === 0;
   if (ahora.minutos >= HORA_DE_LA_MANANA && sinHacer('manana')) return 'manana';
   if (ahora.minutos >= HORA_DE_LA_NOCHE && sinHacer('noche')) return 'noche';
-  return null;
+  return tocaElReintentoDeLaNoche(ahora, opciones) ? 'dolarDeManana' : null;
 }

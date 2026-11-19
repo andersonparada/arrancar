@@ -55,3 +55,10 @@ export function esDiaDePublicacionDeCruces(fecha: string): boolean {
 export function diasDePublicacionDeCruces(desde: string, hasta: string): Set<string> {
   return new Set(fechasDelRango(desde, hasta).filter(esDiaDePublicacionDeCruces));
 }
+
+/** El último día de publicación de las demás monedas anterior a `fecha` (de lunes a viernes). */
+export function ultimoDiaDePublicacionDeCrucesAntesDe(fecha: string): string {
+  let dia = sumarDiasAFecha(fecha, -1);
+  while (!esDiaDePublicacionDeCruces(dia)) dia = sumarDiasAFecha(dia, -1);
+  return dia;
+}

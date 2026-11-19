@@ -7,3 +7,14 @@
 export const CODIGOS_DEL_BANGUAT_EXCLUIDOS: ReadonlySet<number> = new Set<number>([
   1, 4, 6, 8, 11, 12, 13, 14, 17, 22, 26, 27, 28, 37, 41,
 ]);
+
+/**
+ * Un código se ofrece (en el selector, al unirlo y en la muestra) si el Banguat todavía lo publica, no está excluido y
+ * tiene convención comprobada (adenda B.8): sin ella no se sabe cómo pasarlo a quetzales.
+ */
+export function esCodigoOfrecido(
+  moneda: { codigo: number; disponible: boolean; convencion: string | null },
+  excluidos: ReadonlySet<number>,
+): boolean {
+  return moneda.disponible && !excluidos.has(moneda.codigo) && moneda.convencion !== null;
+}

@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { configuracion as entorno, esProduccion } from '../../../configuracion.js';
 import { bd, grupoConexiones } from '../base-datos/conexion.js';
-import { calendarioLaboral } from '../calendario/contexto.js';
 import type { DependenciasCompartidas } from '../compartido/aplicacion/dependencias-compartidas.js';
 import { TiposDeCambio } from './aplicacion/tipos-de-cambio.js';
 import { ActualizarMonedasDelBanguat } from './aplicacion/casos-uso/actualizar-monedas-del-banguat.js';
@@ -43,7 +42,6 @@ const reloj = new RelojDeLaInstalacion();
  */
 export const tiposDeCambio = new TiposDeCambio({
   guardados,
-  calendario: calendarioLaboral,
   reloj,
 });
 
@@ -62,8 +60,8 @@ const listaDelBanguat = new ActualizarMonedasDelBanguat({
 });
 
 /**
- * Si la carga automática está encendida: solo con `CARGAR_TIPOS_DE_CAMBIO=true`. Apagada por omisión hasta hacer las
- * comprobaciones reales C-1 a C-4 contra el Banguat desde una red que lo alcance.
+ * Si la carga automática está encendida: solo con `CARGAR_TIPOS_DE_CAMBIO=true`. Apagada por omisión hasta MM-3d (C-5, la
+ * prueba con `curl` desde producción y la revisión de la bitácora de la primera semana).
  */
 export const cargaAutomaticaEncendida = entorno.CARGAR_TIPOS_DE_CAMBIO ?? false;
 
@@ -85,7 +83,6 @@ export const cargaDeTiposDeCambio = new CargarTiposDeCambio({
   vueltas: new VueltasDeCarga({
     consultar: new ConsultarAlBanguat({ fuentes, cargas, ahora: () => reloj.ahora() }),
     cargas,
-    calendario: calendarioLaboral,
     alFallar,
   }),
   lista: listaDelBanguat,
@@ -95,7 +92,6 @@ export const cargaDeTiposDeCambio = new CargarTiposDeCambio({
 
 const estadoDeLaCarga = new ConsultarEstadoDeLaCarga({
   bitacora: new BitacoraDelBanguatDrizzle(bd),
-  calendario: calendarioLaboral,
   reloj,
 });
 
