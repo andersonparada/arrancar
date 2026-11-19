@@ -80,6 +80,7 @@ function alPresionarEnter(evento: KeyboardEvent): void {
               propuestas.fechaDeRecepcion.value ? formatearFecha(propuestas.fechaDeRecepcion.value) : null
             "
             :errores="registro.erroresDelEncabezado.value"
+            :destino-fijado="registro.destinoFijado.value"
           />
         </TarjetaBase>
         <TarjetaBase>
