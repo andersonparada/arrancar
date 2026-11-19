@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ClipboardCheck, HandCoins, Lock, RefreshCw } from 'lucide-vue-next';
+import { ClipboardCheck, HandCoins, Lock, Printer, RefreshCw } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import type { Fondo } from '../servicios/tipos-de-fondos';
 import EnlaceComoBoton from './EnlaceComoBoton.vue';
 
 /**
- * Las acciones de todos los días con el dinero del fondo: reponer y arquear (páginas propias), entregar un vale y
+ * Las acciones de todos los días con el dinero del fondo: reponer y arquear (páginas propias), imprimir la solicitud de reposición (la firma el custodio, que no repone), entregar un vale y
  * cerrar. Solo con el fondo abierto y el permiso de cada una; el servidor valida las reglas al enviar.
  */
 defineProps<{ fondo: Fondo }>();
@@ -21,6 +21,13 @@ const emit = defineEmits<{ entregarVale: []; cerrar: [] }>();
       :to="{ name: 'caja-chica.fondos.reponer', params: { id: fondo.id } }"
     >
       Reponer
+    </EnlaceComoBoton>
+    <EnlaceComoBoton
+      v-permiso="'caja-chica.fondos.ver'"
+      :icono="Printer"
+      :to="{ name: 'caja-chica.fondos.solicitud', params: { id: fondo.id } }"
+    >
+      Imprimir solicitud de reposición
     </EnlaceComoBoton>
     <EnlaceComoBoton
       v-permiso="'caja-chica.arqueos.crear'"

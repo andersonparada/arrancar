@@ -5,13 +5,16 @@ import { proteger } from '../../core/compartido/http/guardias.js';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { ObtenerCatalogos } from '../aplicacion/casos-uso/catalogos/obtener-catalogos.js';
 
-/** Quien abre, edita, mueve el monto, registra vales o repone necesita elegir cuentas, chequeras, custodios y conceptos. */
+/** Quien abre, edita, mueve el monto, registra, entrega o liquida vales, cierra o repone necesita elegir cuentas, chequeras, custodios y conceptos. */
 const PERMISOS_QUE_ELIGEN = [
   'caja-chica.fondos.crear',
   'caja-chica.fondos.editar',
   'caja-chica.fondos.cambiar-monto',
   'caja-chica.comprobantes.crear',
   'caja-chica.reposiciones.crear',
+  'caja-chica.vales.crear',
+  'caja-chica.vales.liquidar',
+  'caja-chica.fondos.cerrar',
 ];
 
 async function soloQuienElige(solicitud: FastifyRequest): Promise<void> {

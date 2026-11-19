@@ -4008,6 +4008,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   plantillas pasan a CT-1p (esperan la plantilla del contador) para que CT-1 no espere. Quedan para el usuario P-1 a P-7
   (ninguna bloquea CT-0a ni CT-1 a CT-2) y para el contador la plantilla de cuentas, los artículos de la LAT sobre los
   intereses, el texto oficial del art. 382 y el canal vigente de la habilitación. Solo documentación.
+- **2026-11-19 (CC-9, correcciones de la revisión, Caja chica)**: `GET /caja-chica/catalogos` también acepta `vales.crear`,
+  `vales.liquidar` y `fondos.cerrar` (quien liquida un vale sin factura, lo entrega o cierra el fondo elige conceptos, cuentas y
+  usuarios sin recibir 403; prueba nueva). «Imprimir solicitud de reposición» pasa a `AccionesDeMovimientos` (ficha, con
+  `fondos.ver`): el custodio la imprime y firma sin tener `reposiciones.crear`; se conserva también en la página de reponer.
 - **2026-11-19 (Bancos: aprobaciones, tarjeta y CP-AP, respuestas y validación del contador; docs):** el usuario aceptó
   todas las recomendaciones de §16 de `diseno-bancos-aprobaciones-tarjeta-y-cp-ap.md` (Q-A1 a Q-A9, Q-T2 a Q-T7, Q-N2,
   Q-N3, Q-AP1, Q-AP2 y Q-O1; §17). El contador validó el diseño
