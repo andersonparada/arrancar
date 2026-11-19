@@ -7,6 +7,7 @@ import {
 import type {
   AnticipoNuevo,
   AnulacionDeAnticipo,
+  LiquidacionDeAnticipo,
   RepositorioDeAnticipos,
 } from '../../aplicacion/puertos/puertos-de-anticipos.js';
 import type { Anticipo } from '../../dominio/anticipos.js';
@@ -84,6 +85,46 @@ export class RepositorioDeAnticiposDrizzle implements RepositorioDeAnticipos {
         ),
       );
     return fila ? aAnticipo(fila) : null;
+  }
+
+  async liquidar(id: string, liquidacion: LiquidacionDeAnticipo): Promise<void> {
+    await transaccionEnCurso()
+      .update(anticipos)
+      .set({
+        estado: 'liquidado',
+        fechaDeLiquidacion: liquidacion.fechaDeLiquidacion,
+        liquidadoEn: new Date(),
+        liquidadoPor: liquidacion.liquidadoPor,
+        devuelto: deCentavos(liquidacion.devueltoCentavos),
+        movimientoDeDevolucionId: liquidacion.movimientoDeDevolucionId,
+        reembolsado: deCentavos(liquidacion.reembolsadoCentavos),
+        movimientoDeReembolsoId: liquidacion.movimientoDeReembolsoId,
+        noLiquidado: deCentavos(liquidacion.noLiquidadoCentavos),
+        destinoDeNoLiquidado: liquidacion.destinoDeNoLiquidado,
+        cuotas: liquidacion.cuotas,
+        motivoDeNoLiquidado: liquidacion.motivoDeNoLiquidado,
+      })
+      .where(eq(anticipos.id, id));
+  }
+
+  async reabrir(id: string): Promise<void> {
+    await transaccionEnCurso()
+      .update(anticipos)
+      .set({
+        estado: 'abierto',
+        fechaDeLiquidacion: null,
+        liquidadoEn: null,
+        liquidadoPor: null,
+        devuelto: '0',
+        movimientoDeDevolucionId: null,
+        reembolsado: '0',
+        movimientoDeReembolsoId: null,
+        noLiquidado: '0',
+        destinoDeNoLiquidado: null,
+        cuotas: null,
+        motivoDeNoLiquidado: null,
+      })
+      .where(eq(anticipos.id, id));
   }
 
   async anular(id: string, { anuladoPor, motivo, fechaDeAnulacion }: AnulacionDeAnticipo): Promise<void> {

@@ -5,8 +5,10 @@ import type {
   AnulacionDeMovimiento,
   AnulacionDelMovimiento,
   ChequeAEmitir,
+  DesgloseDelMovimiento,
   MovimientoCreado,
   MovimientosDeBancos,
+  NotaDeCreditoARegistrar,
   NotaDeDebitoARegistrar,
   OrdenesABancos,
 } from '../aplicacion/puertos/puertos-de-bancos.js';
@@ -34,6 +36,20 @@ export class OrdenesABancosEnMediador implements OrdenesABancos {
       numero: registrada.numero,
       avisos: registrada.avisos,
     };
+  }
+
+  async registrarNotaDeCredito(operador: Operador, nota: NotaDeCreditoARegistrar): Promise<MovimientoCreado> {
+    const registrada = await mediador.enviar(operador, 'bancos.registrar_nota_de_origen', { ...nota, tipo: 'credito' });
+    return {
+      movimientoId: registrada.movimientoId,
+      cuentaBancariaId: nota.cuentaBancariaId,
+      numero: registrada.numero,
+      avisos: registrada.avisos,
+    };
+  }
+
+  async fijarDesglose(operador: Operador, { origen, movimientoId, conceptos }: DesgloseDelMovimiento): Promise<void> {
+    await mediador.enviar(operador, 'bancos.fijar_desglose_de_conceptos', { movimientoId, origen, conceptos });
   }
 
   async anularMovimiento(operador: Operador, anulacion: AnulacionDeMovimiento): Promise<AnulacionDelMovimiento> {

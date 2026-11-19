@@ -4,9 +4,12 @@ import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.
 import type { AnularAnticipo } from '../aplicacion/casos-uso/anticipos/anular-anticipo.js';
 import type { ListarAnticipos, ObtenerAnticipo } from '../aplicacion/casos-uso/anticipos/consultas-de-anticipos.js';
 import type { EntregarAnticipo } from '../aplicacion/casos-uso/anticipos/entregar-anticipo.js';
+import type { LiquidarAnticipo } from '../aplicacion/casos-uso/anticipos/liquidar-anticipo.js';
+import type { ReabrirAnticipo } from '../aplicacion/casos-uso/anticipos/reabrir-anticipo.js';
 import type {
   AnticipoSolicitado,
   AnularAnticipoSolicitado,
+  LiquidarAnticipoSolicitado,
   ListaDeAnticiposSolicitada,
   ParamsDeAnticipo,
 } from './anticipos.esquemas-http.js';
@@ -18,6 +21,8 @@ export interface CasosDeUsoDeAnticipos {
   listar: ListarAnticipos;
   obtener: ObtenerAnticipo;
   anular: AnularAnticipo;
+  liquidar: LiquidarAnticipo;
+  reabrir: ReabrirAnticipo;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
@@ -41,4 +46,10 @@ export class AnticiposControlador {
 
   anular = (solicitud: FastifyRequest<{ Params: ParamsDeAnticipo; Body: AnularAnticipoSolicitado }>) =>
     this.casosDeUso.anular.ejecutar(operadorDe(solicitud), { anticipoId: solicitud.params.id, ...solicitud.body });
+
+  liquidar = (solicitud: FastifyRequest<{ Params: ParamsDeAnticipo; Body: LiquidarAnticipoSolicitado }>) =>
+    this.casosDeUso.liquidar.ejecutar(operadorDe(solicitud), { anticipoId: solicitud.params.id, ...solicitud.body });
+
+  reabrir = (solicitud: FastifyRequest<{ Params: ParamsDeAnticipo; Body: AnularAnticipoSolicitado }>) =>
+    this.casosDeUso.reabrir.ejecutar(operadorDe(solicitud), { anticipoId: solicitud.params.id, ...solicitud.body });
 }

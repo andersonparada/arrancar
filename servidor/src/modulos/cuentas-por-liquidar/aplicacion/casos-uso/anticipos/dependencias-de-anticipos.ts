@@ -6,6 +6,7 @@ import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/uni
 import type { MovimientosDeBancos, OrdenesABancos } from '../../puertos/puertos-de-bancos.js';
 import type {
   ConsultasDeAnticipos,
+  MarcadorDeDocumentos,
   PoliticaDeAnticipos,
   ReferenciasDelAnticipo,
   RepositorioDeAnticipos,
@@ -22,6 +23,8 @@ export interface DependenciasDeAnticipos {
   bancos: OrdenesABancos;
   /** Lo que se lee de Bancos sin orden: bloquear el movimiento, si está conciliado, su fecha, cuenta y número. */
   movimientos: MovimientosDeBancos;
+  /** Los documentos del libro de los gastos se marcan procesados al liquidar. */
+  documentos: MarcadorDeDocumentos;
   correlativos: Correlativos;
   auditoria: Auditoria;
   /** Se publica después de confirmar la transacción de la propia petición (o de la de Bancos, si llegó por aviso). */

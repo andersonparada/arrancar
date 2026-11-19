@@ -3561,3 +3561,43 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   borrarlo (aviso `documento_por_eliminar` del libro) fallaba con 23503. Decisión: se conserva el historial y se rechaza
   con el error propio `comprobante_con_reposicion_anulada` (422) en `DevolverALaBandeja` y `EliminarPorAviso`
   (puerto nuevo `tuvoReposicionAnulada`); lo que sí cabe es anular el documento. Sin migración. Pruebas de API de ambos flujos.
+- **2026-11-19 (CL-3, Cuentas por liquidar, servidor):** gastos de los anticipos, sin migraciones nuevas (la tabla `gastos` ya
+  estaba en CL-1 y CL-1c). `RecibirDocumento` atiende `cuentas-por-liquidar.recibir_documento` (contrato nuevo): guarda el
+  documento en la bandeja con `monto = total − retenciones` y `monto_retenido`; **no rechaza por retención** (queda en la
+  bandeja con el aviso aunque traiga referencia); sin retención y con `referenciaDeDestino` (el anticipo) intenta asignarlo
+  y, si no se puede, queda en la bandeja con el porqué. `AsignarGastos` (`gastos.crear`, 1 a 100, todo o nada) con la
+  excepción de §7.2: sin `gastos.con-retencion` es 403 `retencion_sin_permiso` y nada de la tanda se asigna; con el permiso
+  y sin motivo, `motivo_con_retencion_obligatorio`; con los dos, `asignado_por` es quien autorizó y se audita `autorizar`
+  (recurso `cuentas-por-liquidar.gastos`, con el gasto como estaba en la bandeja); un motivo en un documento sin retención se
+  rechaza. Bancarización con la orden del libro (`evaluar_bancarizacion`, por documento y con `monto + monto_retenido`; con
+  `bloquear` marca `sin_bancarizar` y avisa, nunca bloquea; las notas de crédito no se evalúan) y respuesta a
+  `libro-de-compras.pagado_al_proveedor_en_el_mes` (suma de los gastos de documento asignados, vigentes y que no restan,
+  del proveedor y del mes). `RegistrarGastoSinDocumento` (`gastos.crear`, solo con la configuración nueva
+  `cuentas-por-liquidar.gastos_sin_documento.permitidos`, `true` por omisión, empresa e instalación, pública): concepto de gasto
+  activo, tratamiento `no_deducible` por omisión y `renta_del_trabajo` solo si el beneficiario es empleado. `QuitarGasto`
+  (`gastos.anular`, solo con el anticipo abierto, con motivo): el documento vuelve a la bandeja con su fecha de emisión
+  (`corregir`) y el gasto sin documento queda anulado (`anular`). Avisos de baja del libro (`AtenderBajaDeDocumento`, §7.5):
+  anular o eliminar un documento anula o borra su gasto con auditoría; si está en un anticipo liquidado se rechaza.
+  Rutas: `GET /bandeja` y `GET /anticipos/:id/gastos` (`anticipos.ver`), `POST /anticipos/:id/gastos/documentos`,
+  `POST /anticipos/:id/gastos/sin-documento` y `POST /gastos/:id/quitar`. Eventos `gasto_asignado` y `gasto_quitado`.
+  Decisiones: recibir con referencia no vuelve a pedir `gastos.crear` (lo exigió la ruta del libro, como en Cuentas por
+  pagar); se agregó `GET /anticipos/:id/gastos` (la ficha lo necesita en CL-5); la fecha de un documento en la bandeja es la
+  de emisión y al asignar se puede cambiar (no anterior a la entrega ni futura).
+- **2026-11-19 (CL-4, Cuentas por liquidar, servidor):** liquidar y reabrir anticipos, sin migraciones (la liquidación ya estaba
+  en las tablas de CL-1). `LiquidarAnticipo` (`anticipos.liquidar`): con el anticipo bloqueado (Bancos antes), lo que falta por
+  justificar (`monto − gastos`, las notas de crédito restan) debe ser `devuelto + noLiquidado` (`liquidacion_no_cuadra`,
+  400); lo devuelto es una nota de crédito en Bancos (concepto `devolucion_de_anticipo`, a la cuenta de la entrega o a otra);
+  lo no liquidado pide destino (`cobrar` con 5 cuotas o más salvo `pagoVoluntario`, `renta_del_trabajo` solo de un empleado,
+  `perdida`) y motivo; si se gastó de más, el reembolso (`gastado − monto`) se ordena a Bancos con cheque a nombre del
+  beneficiario (no negociable por omisión) o nota de débito, con concepto `gasto_de_anticipo` o `…_de_activo`. Fija de nuevo
+  el reparto de la entrega (`gasto_de_anticipo`/`…_de_activo` hasta el monto, `anticipo_no_liquidado`, `anticipo_por_liquidar`
+  el resto), marca procesados los documentos en el libro, audita `ajustar` solo si hay no liquidado y publica
+  `anticipo_liquidado`; avisa (E-8) si liquida el propio beneficiario. `ReabrirAnticipo`: con motivo, anula por orden el
+  depósito o el reembolso (si Bancos rechaza, no se reabre), deja el anticipo abierto, vuelve a fijar la entrega como «por
+  liquidar», devuelve los documentos a pendiente, audita `reabrir` y publica `anticipo_reabierto`. El aviso de Bancos sobre la
+  devolución o el reembolso (`anular`) reabre el anticipo sin volver a ordenar; otros cambios se rechazan. Rutas
+  `POST /anticipos/:id/liquidar` y `/reabrir` (`anticipos.liquidar`). Decisiones: `pagoVoluntario` es un dato de la petición
+  (no se guarda: queda en el motivo y en la auditoría); cuotas hasta 120; la impresión «Liquidación del anticipo N» es del
+  cliente (CL-5) con la ficha y `GET /anticipos/:id/gastos`, no hay endpoint de impresión; un gasto cuyo documento fue
+  anulado ya salió del anticipo por el aviso del libro, así que no se marca; `LiquidacionNoCuadra` es 400 como en el retiro.
+

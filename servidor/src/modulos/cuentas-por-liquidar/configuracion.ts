@@ -24,4 +24,13 @@ export const configuracionDeCuentasPorLiquidar: readonly DefinicionConfiguracion
     niveles: ['instalacion', 'empresa'],
     publica: false,
   }),
+  definirConfiguracion({
+    clave: 'cuentas-por-liquidar.gastos_sin_documento.permitidos',
+    descripcion:
+      'Si está encendida, se pueden registrar en un anticipo gastos sin documento (con concepto y motivo); apagada, todo gasto exige su documento del libro de compras.',
+    esquema: z.boolean(),
+    predeterminado: true,
+    niveles: ['instalacion', 'empresa'],
+    publica: true,
+  }),
 ];

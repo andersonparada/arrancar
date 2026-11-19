@@ -1,5 +1,12 @@
 import type { ContextoEmpresa } from '../../../core/compartido/aplicacion/contexto-empresa.js';
-import type { Anticipo, ClaseDeAnticipo, EstadoDeAnticipo, FormaDeAnticipo } from '../../dominio/anticipos.js';
+import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
+import type {
+  Anticipo,
+  ClaseDeAnticipo,
+  DestinoDeLoNoLiquidado,
+  EstadoDeAnticipo,
+  FormaDeAnticipo,
+} from '../../dominio/anticipos.js';
 
 /** El anticipo listo para guardar: el id lo genera el caso de uso porque es el origen del movimiento de Bancos. */
 export interface AnticipoNuevo {
@@ -29,6 +36,20 @@ export interface AnulacionDeAnticipo {
   fechaDeAnulacion: string;
 }
 
+/** Cómo se deja liquidado un anticipo. */
+export interface LiquidacionDeAnticipo {
+  liquidadoPor: string;
+  fechaDeLiquidacion: string;
+  devueltoCentavos: number;
+  movimientoDeDevolucionId: string | null;
+  reembolsadoCentavos: number;
+  movimientoDeReembolsoId: string | null;
+  noLiquidadoCentavos: number;
+  destinoDeNoLiquidado: DestinoDeLoNoLiquidado | null;
+  cuotas: number | null;
+  motivoDeNoLiquidado: string | null;
+}
+
 export interface RepositorioDeAnticipos {
   agregar(anticipo: AnticipoNuevo): Promise<void>;
   buscar(id: string): Promise<Anticipo | null>;
@@ -38,6 +59,20 @@ export interface RepositorioDeAnticipos {
   delMovimiento(movimientoId: string): Promise<Anticipo | null>;
   /** Lo deja `anulado` con quién, cuándo, por qué y la fecha contable. */
   anular(id: string, anulacion: AnulacionDeAnticipo): Promise<void>;
+  /** Lo deja `liquidado` con lo devuelto, lo reembolsado y lo no liquidado. */
+  liquidar(id: string, liquidacion: LiquidacionDeAnticipo): Promise<void>;
+  /** Lo deja `abierto` otra vez y limpia la liquidación. */
+  reabrir(id: string): Promise<void>;
+}
+
+/** Lo gastado de un anticipo para liquidarlo: el total (las notas de crédito restan), lo de activo fijo y qué documentos. */
+export interface RepartoDeLosGastos {
+  totalCentavos: number;
+  deActivoCentavos: number;
+  /** La fecha del gasto más reciente; `null` sin gastos. */
+  ultimaFecha: string | null;
+  /** Los documentos del libro de los gastos vigentes: se marcan procesados al liquidar. */
+  documentosDeCompraIds: string[];
 }
 
 /** Lo gastado de un anticipo: cuántos gastos vigentes tiene y lo que suman (las notas de crédito restan). */
@@ -84,9 +119,16 @@ export interface PaginaDeAnticipos {
 
 export interface ConsultasDeAnticipos {
   gastadoDe(anticipoId: string): Promise<GastadoDelAnticipo>;
+  /** Lo gastado vigente del anticipo, repartido para liquidarlo. */
+  repartoDeLosGastos(anticipoId: string): Promise<RepartoDeLosGastos>;
   /** Los anticipos abiertos del beneficiario cuya fecha límite es anterior a `hoy`, por número. */
   vencidosDe(beneficiarioId: string, hoy: string): Promise<AnticipoVencido[]>;
   listar(filtro: FiltroDeAnticipos): Promise<PaginaDeAnticipos>;
+}
+
+/** La orden al Libro de compras (por el mediador): el documento queda procesado al liquidar y pendiente al reabrir. */
+export interface MarcadorDeDocumentos {
+  marcarProcesado(operador: Operador, documentoId: string, procesado: boolean): Promise<void>;
 }
 
 /** Lo que el anticipo necesita saber de otras tablas para validar lo que se escribe (con seguridad por cuenta y empresa). */
