@@ -1,0 +1,21 @@
+<script setup lang="ts">
+import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
+import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
+import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
+import type { FiltrosDeMovimientos } from '../../composables/movimientos/filtros-de-movimientos';
+
+/** La cuenta (obligatoria) y el rango de fechas; el rango se valida aquí antes de pedirlo al servidor. */
+defineProps<{ opcionesDeCuenta: OpcionDeRegistro[]; errorDelRango?: string }>();
+const filtros = defineModel<FiltrosDeMovimientos>({ required: true });
+</script>
+
+<template>
+  <TarjetaBase>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <CampoSelector v-model="filtros.cuentaBancariaId" etiqueta="Cuenta" requerido :opciones="opcionesDeCuenta" />
+      <CampoTexto v-model="filtros.desde" etiqueta="Desde" tipo="date" requerido :error="errorDelRango" />
+      <CampoTexto v-model="filtros.hasta" etiqueta="Hasta" tipo="date" requerido />
+    </div>
+  </TarjetaBase>
+</template>
