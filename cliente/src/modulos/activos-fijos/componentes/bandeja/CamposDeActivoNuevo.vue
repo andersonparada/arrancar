@@ -79,8 +79,20 @@ const costoPorUnidad = computed(() =>
       {{ costoPorUnidad }}
     </p>
     <div v-if="inciso === 'edificios'" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <CampoTexto v-model="nuevo.valorDeMatricula" etiqueta="Valor de matrícula fiscal" tipo="number" paso="any" />
-      <CampoTexto v-model="nuevo.valorCatastral" etiqueta="Valor catastral municipal" tipo="number" paso="any" />
+      <CampoTexto
+        v-model="nuevo.valorDeMatricula"
+        etiqueta="Valor de matrícula fiscal"
+        tipo="number"
+        paso="any"
+        :error="errores.valorDeMatricula"
+      />
+      <CampoTexto
+        v-model="nuevo.valorCatastral"
+        etiqueta="Valor catastral municipal"
+        tipo="number"
+        paso="any"
+        :error="errores.valorCatastral"
+      />
       <CampoInterruptor
         v-model="nuevo.valoresDelInmuebleCompleto"
         etiqueta="Los valores son del inmueble completo"
