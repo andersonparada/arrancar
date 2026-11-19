@@ -22,6 +22,13 @@
       "when": 1795061548800,
       "tag": "0002_inv1_busqueda_de_articulos",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795065243565,
+      "tag": "0003_inv2_bodegas_y_accesos",
+      "breakpoints": true
     }
   ]
 }
