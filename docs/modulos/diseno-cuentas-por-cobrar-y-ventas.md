@@ -3,8 +3,14 @@
 _Agente `arquitecto-de-datos`. Base contable y fiscal: `dictamen-cuentas-por-cobrar-y-ventas-2026-11-18.md`
 (contador-guatemala, mismo día, «correcto con ajustes»). Aterriza «Cuentas por cobrar / Ventas» de `docs/HOJA-DE-RUTA.md`
 («Módulos grandes que faltan planificar»: incluye las **retenciones que les hacen** a las empresas y sus constancias).
-**Nada de esto se programa hasta que el usuario responda §17.** Lo que el arquitecto no comparte del dictamen, o que el
-código ya resolvió de otra forma, va marcado **[corrige el dictamen]** y pasa a §18 para que lo valide el contador._
+Lo que el arquitecto no comparte del dictamen, o que el código ya resolvió de otra forma, va marcado **[corrige el
+dictamen]** y pasó a §18 para que lo validara el contador._
+
+**Estado (2026-11-19):** el usuario aceptó todas las recomendaciones de §17 y el contador validó §17 y §18
+(`dictamen-cuentas-por-cobrar-y-ventas-validacion-2026-11-19.md`, «correcto con ajustes»). Las correcciones ya están en el
+texto, marcadas **[validación 2026-11-19]**; el resumen, lo pendiente y las preguntas nuevas, al final («Respuestas del
+usuario (2026-11-19)», «Validación del contador (2026-11-19)» y «Preguntas nuevas (2026-11-19)»). **La tabla de §16 está
+lista para programar**: empieza por VC-0a.
 
 Sirve a empresas de **cualquier rubro y régimen**: nada aquí supone ganado, fincas, tabaco, régimen de IVA o ISR, ni que
 la empresa o sus clientes sean agentes de retención. Lo que cambia según el régimen de la empresa (columnas del libro,
@@ -61,8 +67,10 @@ retenciones que puede sufrir, formulario) se lee del historial fiscal que ya exi
    `agente_de_retencion_iva in ('ninguno', 'exportador', 'contribuyente_especial', 'sector_publico', 'otro')`,
    `es_agente_de_retencion_isr`. **[corrige el dictamen §3 y §9.3]**: el régimen **ya está fechado por período** y el
    **régimen agropecuario ya está en el catálogo** (`contribuyente_agropecuario`, solo persona individual por check), con
-   sus familias de documento en compras (`FACA`, `FCCA`, `FAAE`, `FCAE`). Lo que falta es saber qué hace ese régimen **al
-   vender** (formulario, retenciones), que el dictamen deja en [Confirmar].
+   sus familias de documento en compras (`FACA`, `FCCA`, `FAAE`, `FCAE`). **[validación 2026-11-19, V-4]**: ese régimen
+   y el `pequeno_contribuyente_electronico` están **derogados** (Decreto 31-2024) desde
+   `libro-de-compras.regimenes.fecha_de_derogacion` (`2025-07-09`); compras ya impide abrir una vigencia de esos regímenes
+   en esa fecha o después (`problemasDeLaDerogacion`). Solo sirven para meses anteriores.
 3. **Datos fiscales del proveedor** (`libro_de_compras.datos_fiscales_de_proveedor`, por cuenta, llave compuesta a
    `terceros.proveedores (id, cuenta_id)`, sección aportada al formulario de Proveedores): es el molde de los datos
    fiscales del **cliente** (§5.2).
@@ -104,9 +112,11 @@ retenciones que puede sufrir, formulario) se lee del historial fiscal que ya exi
     `pagos` con `forma` y `movimiento_id` (FK a `bancos.movimientos`), `aplicaciones_de_pagos`, `aplicaciones_de_notas`,
     `ajustes_de_saldo` (diferencia menor y baja de notas), cuenta de apertura, eventos en
     `core/contratos/cuentas-por-pagar.contratos.ts`.
-13. **Base de desarrollo (solo leída)**: 4 empresas, todas con datos fiscales (una general sobre utilidades, una general
-    desde 2025-07-01, una **contribuyente agropecuario** individual y una **pequeño contribuyente**), 3 clientes (clases
-    directo, intermediario y subasta), monedas GTQ y USD. No hay tablas de ventas: nada que convertir.
+13. **Base de desarrollo (solo leída)**: 4 empresas, 3 con datos fiscales (una general sobre utilidades desde el inicio; una
+    **contribuyente agropecuario** desde el inicio que pasa a general sobre utilidades el 2025-07-01, antes de la
+    derogación; y una **pequeño contribuyente**), 3 clientes (clases directo, intermediario y subasta), monedas GTQ y USD.
+    Ninguna queda en un régimen derogado después del 2025-07-09. La bandeja de recibidos no tiene ninguna `FESP`
+    (revisado el 2026-11-19). No hay tablas de ventas: nada que convertir.
 
 ## 2. Alcance y forma de los módulos
 
@@ -181,9 +191,21 @@ DTE ─────────────────────────�
   (`libro-de-compras.periodos.control_de_declarados`), solo avisa.
 - **La foto de la declaración incluye ventas.** Libro de compras, al declarar o rectificar, pregunta a todos
   `libro-de-compras.cifras_para_la_declaracion` (`{ periodo }`); Libro de ventas responde con débito por rubro, ventas
-  exentas, exportaciones, cantidad y monto de operaciones (con notas) y retenciones recibidas aplicadas al período. Libro de
-  compras guarda la respuesta dentro de su `foto` (clave `ventas`) y la diferencia de la rectificación la compara también.
-  Con Libro de ventas inactivo, la foto sale como hoy.
+  exentas, exportaciones, cantidad y monto de operaciones (con notas de crédito y de débito; **sin** notas de abono ni
+  facturas especiales recibidas) y retenciones recibidas aplicadas al período. Libro de compras guarda la respuesta dentro
+  de su `foto` (clave `ventas`) y la diferencia de la rectificación la compara también. Con Libro de ventas inactivo, la
+  foto sale como hoy.
+- **Qué retenciones cuentan** **[validación 2026-11-19, V-2 y V-1]**: solo las de IVA **con constancia** cuyo
+  `periodo_de_aplicacion` es el mes; nunca las esperadas sin constancia, y nunca las de `origen = 'factura_especial'`
+  (definitivas e informativas, §4.5).
+- **Remanente de retenciones** **[validación 2026-11-19, V-2]**: lo que las retenciones pasan del impuesto del mes se
+  traslada al mes siguiente y **no se mezcla** con el remanente del crédito fiscal. La foto guarda aparte tres cifras:
+  `retenciones_del_periodo` (la respuesta de ventas), `remanente_de_retenciones_anterior` (el `…_al_siguiente` de la foto
+  del mes anterior; sin foto anterior, lo escribe el usuario al declarar, `0` por omisión) y
+  `remanente_de_retenciones_al_siguiente` = máx(0, retenciones del período + remanente anterior − impuesto del mes después
+  del crédito). Lo calcula **Libro de compras**, que tiene débito y crédito. En el SAT-2046, lo mismo con las constancias
+  del 5 % (`constancias_del_periodo`, `saldo_de_constancias_anterior`, `saldo_de_constancias_al_siguiente`). La casilla
+  exacta del SAT-2237 queda por confirmar con una captura (pregunta VC-P29); las cifras se guardan igual.
 - Las pantallas «Datos para el SAT-2237» y «Datos para el SAT-2046» de Libro de compras muestran la sección de ventas
   con la misma pregunta. El cálculo del impuesto del pequeño contribuyente (5 % de los ingresos − constancias − remanente)
   llega aquí (estaba esperando a Ventas, `investigacion-sat-2237-y-2046.md`).
@@ -195,13 +217,23 @@ El régimen se toma del historial fiscal vigente **en el mes del documento** y s
 
 | Régimen de IVA de la empresa | Tipos de DTE que emite (familia) | Columnas del libro | Débito |
 |---|---|---|---|
-| `general` | `FACT`, `FCAM`, `NCRE`, `NDEB`, `NABN`, `RECI`, `RDON` | Gravadas bienes, gravadas servicios, exentas, exportación (bienes y servicios), IVA débito, total | 12 % incluido en el total de lo gravado |
-| `pequeno_contribuyente` / `…_electronico` | `FPEQ`, `FCAP` / `FAPE`, `FCPE`, notas | Ingresos del mes (sin débito) | No hay; el impuesto es 5 % de ingresos (SAT-2046 / SAT-2241) |
-| `contribuyente_agropecuario` | `FACA`, `FCCA`, `FAAE`, `FCAE`, notas | Ingresos del mes | **Por validar** (V-4 del dictamen): se muestran los ingresos; no se calcula impuesto en v1 |
-| `primario_pecuario`, `no_afiliado` | Según su familia | Ingresos | Igual que el anterior |
+| `general` | `FACT`, `FCAM`, `NCRE`, `NDEB`, `NABN`, `RECI`, `RDON` | Gravadas bienes, gravadas servicios, exentas, exportación (bienes y servicios), IVA débito, total; anexo de notas de abono | 12 % incluido en el total de lo gravado |
+| `pequeno_contribuyente` | `FPEQ`, `FCAP`, notas | Ingresos del mes (sin débito) | No hay; el impuesto es 5 % de ingresos (SAT-2046) |
+| `pequeno_contribuyente_electronico`, `contribuyente_agropecuario` (**derogados**) | `FAPE`, `FCPE` / `FACA`, `FCCA`, `FAAE`, `FCAE`, notas | Ingresos del mes | **Solo meses anteriores a la derogación** (histórico, sin cálculo; SAT-2241). En un mes de esa fecha en adelante, registrar se **rechaza** con `regimen_derogado` («Ese régimen fue derogado por el Decreto 31-2024; actualice los datos fiscales de la empresa») |
+| `primario_pecuario` | `FARP`, `FCRP`, `FPEC`, `FCPC` (las de compras), notas | Ventas locales y exportaciones (por la clase fiscal de la línea); el margen del intermediario de bovinos, después de VC-P24 (necesita el costo de lo comprado); sin débito | Impuesto a la Confianza Tributaria (ICT): 1.5 % de las ventas brutas, 2 % de ciertas exportaciones, 10 % del margen bovino. En v1 solo las cifras separadas (LV-5); el cálculo, después de VC-P24 (paso LV-7) |
+| `no_afiliado` | `RECI` y la `FESP` que le emite el comprador (§4.5) | Ingresos sin débito | No hay |
 
-El tipo de DTE que no corresponde al régimen del mes se **avisa** (no se bloquea: la SAT ya lo certificó y puede haber un
-cambio de régimen mal cargado). La factura especial recibida del comprador (`FESP`, §4.5) existe en todos.
+**[validación 2026-11-19, V-4]** La derogación se lee de `libro-de-compras.regimenes.fecha_de_derogacion` con
+`LectorDeConfiguracion` (la misma variable de compras, no una copia). Fuera de eso, el tipo de DTE que no corresponde al
+régimen del mes se **avisa** (no se bloquea: la SAT ya lo certificó y puede haber un cambio de régimen mal cargado). La
+factura especial recibida del comprador (`FESP`, §4.5) se registra en todos los regímenes, pero fuera de `no_afiliado`
+lleva aviso (§4.5).
+
+**Libro de cada régimen** **[validación 2026-11-19, V-10]**: en el régimen general son dos libros habilitados (compras y
+ventas) y la foliación propia de ventas es la legal. En **primario y pecuario** el libro legal es el **electrónico de la
+SAT**: el de Arrancar se titula «Auxiliar: el libro legal es el electrónico de la SAT». En el **pequeño contribuyente** el
+libro habilitado es **uno solo** de compras y ventas. Cómo se folia en esos dos regímenes es la pregunta nueva VC-P25
+(choca con la respuesta VC-P23 a); mientras no se responda, rige VC-P23 a (foliación propia) con el título de auxiliar.
 
 ### 3.5 Retenciones recibidas (dictamen §4.3)
 
@@ -219,9 +251,19 @@ El estado que ve el usuario se **deduce** de esas columnas (no se guarda: igual 
 Activos fijos), salvo `vigente`/`anulada`. El libro muestra las retenciones como **columnas informativas**: el débito
 siempre es completo (dictamen §4.3).
 
-**Período de aplicación propuesto** (VC-P8, por validar): IVA del régimen general → mes de la **constancia**; ISR del
-opcional simplificado → mes de la **factura**; IVA del pequeño contribuyente → mes de la constancia. Se puede cambiar
-mientras ese período no esté declarado.
+**Período de aplicación** (VC-P8 a, **validado 2026-11-19, V-2**): IVA de agente (exportador, especial, sector público,
+otro, tarjeta) → mes de la **constancia**; 5 % del pequeño contribuyente → mes de la constancia (se resta en el SAT-2046 de
+ese mes); ISR del opcional simplificado → mes de la **factura**. Se puede cambiar mientras ese período no esté declarado.
+
+- Si el mes de la constancia **ya está declarado**, no se propone el «primer período abierto» (eso es del crédito del
+  art. 20, no de las retenciones): con el control de declarados encendido, registrar la constancia se rechaza con
+  `periodo_de_aplicacion_declarado` («La constancia es de un período declarado: reabra el período para rectificarlo, o
+  elija otro período con su contador»); el usuario puede elegir **a mano** otro período sin declarar, con motivo
+  (auditoría `corregir`). Con el control apagado, solo el aviso.
+- Una retención **esperada** sin constancia tiene período propuesto, pero **no entra** en las cifras de IVA de la
+  declaración (§3.3). Para el ISR del opcional simplificado sí cuenta desde que es esperada (§7.6, V-6).
+- Las retenciones de la factura especial recibida (`origen = 'factura_especial'`) son **definitivas e informativas**: nunca
+  entran en las retenciones acreditables (§4.5).
 
 ### 3.6 Saldo de un cargo (derivado)
 
@@ -248,10 +290,11 @@ distintas (§5.12).
 | Orden `terceros.crear_cliente_desde_dte` | Igual que la del proveedor: por NIT; si el tercero existe le asigna el papel de cliente; `puedeCrearClientes` del usuario (`clientes.crear`); inactivo → `cliente_inactivo`. NIT `CF` no crea nada (responde `null`) |
 | Cliente (pantalla) | Las secciones aportadas en el formulario y la ficha del cliente (como en Proveedores) |
 
-### 4.2 Bancos (paso VC-0b, migración `00xx_cobros_a_clientes`; número al programar, después de CCL-B1)
+### 4.2 Bancos (paso VC-0b, migración `0039_cobros_a_clientes`: la siguiente libre al programar; hoy la última es la `0038`)
 
 **a) Conceptos de sistema nuevos** (en `CONCEPTOS_DE_SISTEMA`, `ClaveDeConceptoDeSistema` y, en las empresas que ya tienen
-catálogo, por `insert`; a uno sin clave con el **mismo nombre** se le pone la clave, como la `0033`):
+catálogo, por `insert`; a uno sin clave con el **mismo nombre normalizado** (`core.nombre_normalizado`) se le pone la clave,
+se le alinea la clasificación y se reactiva, exactamente como la `0037` de CCL-B1; repetible):
 
 | Clave | Nombre | Aplica a | Flujo | Para |
 |---|---|---|---|---|
@@ -268,20 +311,23 @@ mapa `CONCEPTO_QUE_MARCA_PARA_MODULO` (`pago_a_proveedor` → `cuentas-por-pagar
 **ligar** a un cobro (forma `nota_ligada`). `marcadaParaCuentasPorPagar` del DTO pasa a `marcadaParaModulo: string | null`
 (el cliente se ajusta en el mismo paso).
 
-**c) Revisión del módulo de origen para cualquier módulo** (es CCL-B1 c): `ModulosDeOrigen.estaActivo(operador, modulo)`.
-Si CCL-B1 ya está en `main`, VC-0b solo suma las claves; si no, VC-0b lo programa y CCL-B1 lo usa.
+**c) Revisión del módulo de origen para cualquier módulo**: **ya está en `main`** (CCL-B1, `ModulosDeOrigen.estaActivo` y
+`activos`, verificado el 2026-11-19). VC-0b solo suma `cuentas-por-cobrar` a lo que revisa `RevisorDeCambios` (hoy suma
+Cuentas por pagar a mano para la nota marcada: pasa a leer el mapa de b).
 
-**d) Concepto reservado** (generaliza CCL-B1 b): `cobro_a_cliente*` y `devolucion_a_cliente` se eligen a mano en una nota
-**solo** si Cuentas por cobrar no está activo.
+**d) Concepto reservado**: también **ya está en `main`** (`CONCEPTOS_RESERVADOS_POR_MODULO`, `dominio/conceptos-reservados.ts`).
+VC-0b agrega `cobro_a_cliente`, `cobro_a_cliente_de_activo` y `devolucion_a_cliente` → `cuentas-por-cobrar`: se eligen a
+mano en una nota **solo** si Cuentas por cobrar no está activo.
 
 ### 4.3 Libro de compras (paso VC-0c)
 
 | Cambio | Detalle |
 |---|---|
-| Pregunta `libro-de-compras.cifras_para_la_declaracion` | Declarada en `core/contratos/libro-de-compras.contratos.ts`; respuesta `{ modulo, clave, cifras: CifraDeDeclaracion[] } \| null` |
-| Foto de la declaración | `DeclararPeriodo` y `RectificarPeriodo` guardan las respuestas en `foto.ventas` (el check de 1 MB alcanza: son decenas de cifras) |
-| Datos para el SAT-2237 / SAT-2046 | Muestran la sección de ventas cuando hay respuesta; el SAT-2046 calcula el impuesto del mes |
-| Bandeja de recibidos | Una fila `FESP` donde la empresa es el **vendedor** (no el emisor) no es una compra: la bandeja la **bloquea** con el motivo nuevo `factura_especial_de_venta` («Es una venta: regístrela en Libro de ventas») — **por validar** (§18 V-1) antes de programarlo |
+| Pregunta `libro-de-compras.cifras_para_la_declaracion` | Declarada en `core/contratos/libro-de-compras.contratos.ts`; respuesta `{ modulo, clave, cifras: CifraDeDeclaracion[] } \| null` (paso VC-0c1) |
+| Foto de la declaración | `DeclararPeriodo` y `RectificarPeriodo` guardan las respuestas en `foto.ventas` (el check de 1 MB alcanza: son decenas de cifras) (VC-0c1) |
+| Remanente de retenciones **[validación 2026-11-19, V-2]** | La foto guarda `retenciones_del_periodo`, `remanente_de_retenciones_anterior` y `remanente_de_retenciones_al_siguiente`, aparte del remanente de crédito; en el SAT-2046, `constancias_del_periodo`, `saldo_de_constancias_anterior` y `saldo_de_constancias_al_siguiente` (§3.3). El anterior sale de la foto del mes previo o lo escribe el usuario al declarar el primer mes. Viven dentro del `jsonb` de la foto: **sin migración** (paso VC-0c2) |
+| Datos para el SAT-2237 / SAT-2046 | Muestran la sección de ventas cuando hay respuesta; el SAT-2046 calcula el impuesto del mes (5 % de ingresos − constancias del período − saldo anterior) (VC-0c2) |
+| Bandeja de recibidos **[validado 2026-11-19, V-1]** | En la `FESP` el emisor es el comprador y el receptor es el vendedor: toda `FESP` que llega a la bandeja de **recibidos** de la empresa es una **venta**. La bandeja la **bloquea** con el motivo nuevo `factura_especial_de_venta` («Es una venta: regístrela en Libro de ventas»). Migración `0040_factura_especial_de_venta` (la siguiente libre; hoy la última es la `0039`): amplía el check `dte_recibidos_motivo_de_bloqueo_valido` y bloquea las filas `FESP` en `pendiente` (en la base de desarrollo no hay ninguna). Una `FESP` ya **registrada** como compra no se toca: el cuadre de compras la lista como «factura especial de venta registrada como compra» para que el usuario la elimine (VC-0c1) |
 
 ### 4.4 Core
 
@@ -289,15 +335,28 @@ Si CCL-B1 ya está en `main`, VC-0b solo suma las claves; si no, VC-0b lo progra
 |---|---|
 | `core/contratos/libro-de-ventas.contratos.ts` y `cuentas-por-cobrar.contratos.ts` | Órdenes, avisos, preguntas y eventos de §10 |
 | Piezas del PDF (VC-0d) | `pincel-del-pdf`, `tabla-del-pdf`, `monto-del-pdf` y la foliación genérica pasan de `libro-de-compras/infraestructura/pdf` a `core/impresion/pdf` (sin cambiar su comportamiento; las pruebas se mudan con ellas). Así Libro de ventas emite su libro con folios sin importar a compras |
-| Auditoría permanente | Las migraciones `0001` de cada módulo insertan en `core.recursos_de_auditoria_permanente`: `libro-de-ventas.documentos`, `libro-de-ventas.retenciones`, `cuentas-por-cobrar.cobros`, `cuentas-por-cobrar.castigos`, con motivo «Documentos y registros contables: Código Tributario arts. 47, 49 y 50; Código de Comercio art. 382» |
+| Auditoría permanente | Las migraciones `0001` de cada módulo insertan en `core.recursos_de_auditoria_permanente`: `libro-de-ventas.documentos`, `libro-de-ventas.retenciones`, `cuentas-por-cobrar.cobros`, `cuentas-por-cobrar.castigos`, con motivo «Conservación de libros y documentos (Código de Comercio art. 382; Código Tributario, por confirmar)» **[validación 2026-11-19]** |
 
 ### 4.5 Factura especial recibida del comprador (dictamen §4.1 última fila y §4.2 c)
 
 Cuando el comprador emite la `FESP` al vendedor, ese documento **es** la venta y la constancia a la vez. Libro de ventas lo
-registra como tipo `factura_especial_recibida` (manual o desde la bandeja de recibidos, §4.3), con dos retenciones
-recibidas automáticas (`iva_factura_especial` al 100 % del IVA e `isr_factura_especial`) ligadas a una constancia que es el
-mismo documento. Si la empresa además debe declarar ese débito y acreditar la retención es **por validar** (§18 V-1): el
-diseño guarda los montos; el libro los muestra en columnas propias hasta que el contador confirme el trato.
+registra como tipo `factura_especial_recibida` (manual, o desde la fila que la bandeja de recibidos bloqueó: Libro de
+ventas **lee** `libro_de_compras.dte_recibidos`, que es de su `dependeDe`, para proponer los datos; §4.3), con dos retenciones recibidas automáticas (`iva_factura_especial` al 100 % del IVA e
+`isr_factura_especial`) con `origen = 'factura_especial'`, ligadas a una constancia que es el mismo documento
+(`es_el_documento = true`).
+
+**[validación 2026-11-19, V-1]**
+- **Fuera del débito y fuera de las retenciones acreditables.** El comprador ya enteró el 100 % del IVA (SAT-2085); si el
+  vendedor declarara débito y retención, el SAT-2237 quedaría inflado y descuadrado contra lo que prellena la SAT. El
+  documento no suma al débito ni a «cantidad y monto de operaciones» (§3.3), y sus dos retenciones son **definitivas e
+  informativas**. El libro lo muestra en una columna propia, «Ventas con factura especial (IVA retenido en su totalidad)».
+- **Aviso de empresa inscrita**: en todo régimen distinto de `no_afiliado`, «Su empresa está inscrita en el IVA: debe
+  emitir su propia factura (Ley del IVA art. 52). Revise con su contador.» (no bloquea: hay salvedades, como la negativa
+  del vendedor del art. 52).
+- **ISR de la FESP en una empresa sobre utilidades**: se guarda, informativo, **pendiente de confirmar** si se acredita a
+  los pagos trimestrales. No entra en ninguna cifra de ISR.
+- Una nota de crédito sobre una `factura_especial_recibida` es error (`nota_sobre_factura_especial`), como R2-e en compras
+  (V-9).
 
 ## 5. Datos de Libro de ventas (esquema `libro_de_ventas`)
 
@@ -341,7 +400,7 @@ Sin fila = no retiene nada (no se supone). La ficha del cliente lo muestra en «
 |---|---|---|---|
 | `id` | uuid | no | PK |
 | `cuenta_id` | uuid | no | `default deLaTransaccion.cuenta()`; solo para la llave del cliente |
-| `tipo` | text | no | `in ('factura', 'factura_cambiaria', 'factura_pequeno_contribuyente', 'factura_pequeno_contribuyente_electronico', 'factura_contribuyente_agropecuario', 'factura_primario_pecuario', 'factura_especial_recibida', 'nota_de_credito', 'nota_de_debito', 'nota_de_abono', 'recibo')` |
+| `tipo` | text | no | `in ('factura', 'factura_cambiaria', 'factura_pequeno_contribuyente', 'factura_pequeno_contribuyente_electronico', 'factura_contribuyente_agropecuario', 'factura_primario_pecuario', 'factura_especial_recibida', 'nota_de_credito', 'nota_de_debito', 'nota_de_abono', 'recibo')`. Los dos derogados se quedan en el check para los meses anteriores a la derogación; el dominio rechaza (`regimen_derogado`) su uso en un período de `fecha_de_derogacion` en adelante, como compras (§3.4) |
 | `tipo_dte` | text | sí | Código SAT de cuatro letras (`FACT`, `FCAM`, `NABN`, `RECI`…); nulo en papel; check de familia contra `tipo` (como compras) |
 | `origen` | text | no | `in ('manual', 'bandeja_sat', 'fel')` (`fel` reservado para el módulo de emisión) |
 | `dte_emitido_id` | uuid | sí | FK compuesta a `dte_emitidos`; `(origen = 'bandeja_sat') = (dte_emitido_id is not null)`; único parcial |
@@ -392,7 +451,7 @@ nuevas, repetidas, rechazadas, `jsonb` de errores acotado). Solo se agrega.
 | `fila_original` jsonb | La fila sin tocar |
 | `estado_sat in ('vigente', 'anulado')`, `anulado_en_la_sat_el` date | Se actualiza al reimportar |
 | `lote_id`, `primer_lote_id` | FK a `lotes_de_dte` |
-| `estado in ('pendiente', 'registrado', 'descartado', 'bloqueado')`, `motivo_de_bloqueo in ('registrado_en_otra_empresa', 'anterior_a_la_fecha_de_inicio')` | Transiciones como compras |
+| `estado in ('pendiente', 'registrado', 'descartado', 'bloqueado')`, `motivo_de_bloqueo in ('registrado_en_otra_empresa', 'anterior_a_la_fecha_de_inicio', 'factura_especial_de_compra')` | Transiciones como compras. `factura_especial_de_compra`: el espejo de §4.3 (V-1): una `FESP` en los **emitidos** de la empresa la emitió ella como **compradora**; es una compra («Es una compra: regístrela en Libro de compras») |
 | `documento_id` | FK compuesta a `documentos`; `(estado = 'registrado') = (documento_id is not null)` |
 | Borrador: `cliente_id`, `concepto_de_ingreso_id`, `tipo_de_linea`, `clase_fiscal`, `destino`, `documento_afectado_id` | Lo que el usuario completa antes de registrar |
 | `motivo_de_descarte`, `descartado_en`, `descartado_por` | Descartar audita |
@@ -411,14 +470,14 @@ nuevas, repetidas, rechazadas, `jsonb` de errores acotado). Solo se agrega.
 | Columna | Tipo | Nulo | Regla |
 |---|---|---|---|
 | `id` | uuid | no | PK; `retenciones_recibidas_id_empresa_unico (id, empresa_id)` (destino de la llave de la cartera) |
-| `documento_id` | uuid | sí | FK compuesta a `documentos`; nulo solo con `origen = 'saldo_inicial'` |
-| `cliente_id` | uuid | no | FK compuesta; índice (el reporte por cliente) |
-| `regla` | text | no | Las nueve de compras más `iva_tarjeta` (VC-P10); `impuesto = split_part(regla, '_', 1)` (check) |
-| `origen` | text | no | `in ('calculada', 'informada', 'factura_especial', 'saldo_inicial')` |
+| `documento_id` | uuid | sí | FK compuesta a `documentos`; nulo solo con `origen in ('saldo_inicial', 'liquidacion_de_tarjeta')` (check). **[validación 2026-11-19, V-8]**: la adquirente retiene **por liquidación** (lote de vouchers, muchos a consumidor final), no por documento; LV-3 deja el check abierto desde la `0003` |
+| `cliente_id` | uuid | no | FK compuesta; índice (el reporte por cliente). Es **quien retiene**: en `liquidacion_de_tarjeta`, la adquirente registrada con papel de cliente en Terceros (decisión de CXC-5, VC-P27) |
+| `regla` | text | no | Las nueve de compras más `iva_tarjeta` (VC-P10); `impuesto = split_part(regla, '_', 1)` (check); `(origen = 'liquidacion_de_tarjeta') = (regla = 'iva_tarjeta')` (check) |
+| `origen` | text | no | `in ('calculada', 'informada', 'factura_especial', 'saldo_inicial', 'liquidacion_de_tarjeta')`. `liquidacion_de_tarjeta` queda **reservado** (el dominio no lo produce) hasta CXC-5, como el `fel` de `documentos.origen`; CXC-5 agrega, en su migración, `referencia_de_liquidacion` (text 1–60) y `fecha_de_liquidacion` (date), nulas y obligatorias con ese origen. `factura_especial`: definitiva e informativa, nunca acreditable (§4.5) |
 | `referencia_de_saldo_inicial` | text | sí | Serie y número del documento de la cartera de saldo inicial; `(origen = 'saldo_inicial') = (not null)` |
-| `base`, `porcentaje`, `monto_propuesto`, `monto` | numeric | no, sí, no, no | Como compras: `monto between 0 and base`; `monto = monto_propuesto or motivo_del_ajuste is not null` |
+| `base`, `porcentaje`, `monto_propuesto`, `monto` | numeric | no, sí, no, no | Como compras: `monto between 0 and base`; `monto = monto_propuesto or motivo_del_ajuste is not null`. En `iva_tarjeta`, la base es el IVA **contenido en el monto bruto** de los vouchers (lo que pagó el tarjetahabiente), declarada por el usuario, no el neto depositado (V-8) |
 | `motivo_del_ajuste` | text | sí | 1–300 |
-| `es_indebida` | boolean | no | `default false`; la marca el dominio (aviso) |
+| `es_indebida` | boolean | no | `default false`; la marca el dominio (aviso). **No** se marca indebida la de `iva_sector_publico` o `iva_tarjeta` a una empresa agente (V-3, por confirmar: aviso «Verifique si procede: entre agentes no se retiene, salvo excepciones por confirmar») |
 | `constancia_id` | uuid | sí | FK compuesta a `constancias_recibidas`; índice parcial |
 | `periodo_de_aplicacion` | date | no | Primer día del mes (check); propuesto según §3.5 |
 | `descontada_en` | date | sí | Lo pone la cartera; con `cobro_id` |
@@ -432,14 +491,20 @@ and constancia_id is null and descontada_en is not null`** (el reporte diario de
 ### 5.8 Folios del libro
 
 `libro_de_ventas.foliacion_del_libro` y `libro_de_ventas.emisiones_del_libro` iguales a las de compras (una por empresa;
-solo agregar; exclusión de traslapes en migración propia). Foliación **separada** de la de compras (VC-P23).
+solo agregar; exclusión de traslapes en migración propia). Foliación **separada** de la de compras (VC-P23 a), que el
+contador confirmó para el **régimen general** (V-10). Para el pequeño contribuyente (un solo libro habilitado de compras
+y ventas) y el primario y pecuario (libro electrónico de la SAT, sin folios) la corrección del contador choca con VC-P23 a:
+queda como pregunta nueva **VC-P25**; mientras tanto rige VC-P23 a, y el PDF de esos regímenes se titula «Auxiliar» (§3.4).
+`emisiones_del_libro` guarda el régimen del período (`regimen_iva`) para que una respuesta posterior no cambie lo ya
+emitido.
 
 ### 5.9 Migraciones y datos existentes
 
 - `npm run generar -- modulo libro-de-ventas --nombre "Libro de ventas" --descripcion "…" --icono ReceiptText` crea el
   esqueleto y `0000_esquema`. Después: `0001_lv1_conceptos_y_datos_de_cliente` (con la auditoría permanente de §4.4),
-  `0002_lv2_documentos_y_lineas`, `0003_lv3_retenciones_y_constancias`, `0004_lv4_bandeja_de_dte`,
-  `0005_lv5_folios` (con la exclusión de traslapes a mano, `--custom`).
+  `0002_lv2_documentos_y_lineas`, `0003_lv3_retenciones_y_constancias` (con `documento_id` nulo también en
+  `liquidacion_de_tarjeta`, §5.7), `0004_lv4_bandeja_de_dte`, `0005_lv5_folios` (con la exclusión de traslapes a mano,
+  `--custom`), `0006_lv5_isr_mensual` (`pagos_de_isr_mensual`, §7.6).
 - **Sin datos que convertir**. Permisos nuevos: el rol con acceso total los recibe solo; no hay migración «quien tenía X».
 - Orden del migrador: `terceros` (VC-0a, `0010`) → `libro-de-compras` → `libro-de-ventas`.
 
@@ -490,7 +555,7 @@ por vencer), `(empresa_id, origen)`. RLS: empresa.
 | `monto` | numeric(14,2) | no | Dinero recibido: `> 0` salvo en `solo_retenciones` (`= 0`) (check) |
 | `movimiento_id` | uuid | sí | FK `bancos.movimientos (id)`; índice; `(forma in ('deposito', 'nota_ligada', 'tarjeta')) = (movimiento_id is not null)`; único parcial `where forma = 'deposito'` |
 | `referencia` | text | sí | Número de boleta, de cheque del cliente y su banco, de transferencia |
-| `comision` | numeric(14,2) | sí | Solo `tarjeta`: comisión de la adquirente (exenta, H7); `monto` = neto depositado |
+| `comision` | numeric(14,2) | sí | Solo `tarjeta` (CXC-5): comisión de la adquirente, **informativa** (bruto = `monto` + `comision` + retención). **[validación 2026-11-19, V-8]**: no es «exenta siempre»: H7 exime solo a las entidades fiscalizadas por la SIB. Arrancar no supone el trato: la comisión se registra con la FEL de la adquirente en Libro de compras (con crédito, si lo hay); en Bancos solo va el monto |
 | `motivo` | text | sí | Obligatorio en `cuenta_de_apertura` (lo ya cobrado antes del corte, como CxP) |
 | `estado` | text | no | `in ('vigente', 'anulado', 'rechazado')` |
 | `fecha_de_anulacion` + anulación completa | | | Como CxP (CP5): la del inverso en Bancos o la del día |
@@ -542,8 +607,11 @@ ajuste lo dice en su ayuda.
 anulación completa. Índice `(empresa_id, fecha)`, `(cargo_id)`.
 
 `recuperaciones`: `castigo_id`, `fecha`, `monto > 0` (Σ ≤ castigo), `motivo`, anulación completa. Una recuperación
-**reabre** saldo por su monto para que el cobro se aplique como cualquier otro; Contabilidad la ve como ingreso (renta
-gravada, dictamen §6).
+**reabre** saldo por su monto para que el cobro se aplique como cualquier otro. **[validación 2026-11-19, V-12]**: es renta
+gravada **del período en que se recupera** solo si el castigo se dedujo (régimen `utilidades` copiado en el castigo); en el
+opcional simplificado no tiene efecto fiscal (la venta ya tributó). No genera débito de IVA. Asiento que sugiere el
+contador: cobro Bancos / Clientes; recuperación Clientes / «Recuperación de cuentas castigadas» (otros ingresos) o contra
+la estimación si se usó reserva (NIIF para las Pymes 11.26).
 
 ### 6.10 Reservadas para después
 
@@ -577,12 +645,30 @@ avisos).
 2. `fecha_emision >= fecha de inicio` (si la hay): si no, `documento_anterior_a_la_fecha_de_inicio` («cárguelo como saldo
    inicial en Cuentas por cobrar»). Si la fecha de inicio no es día 1, aviso: «el libro de ese mes queda incompleto».
 3. Período declarado → `periodo_declarado` (o aviso con el control apagado).
-4. Familia del tipo contra el régimen del mes → aviso si no coincide.
+4. Régimen derogado (`pequeno_contribuyente_electronico` o `contribuyente_agropecuario`, o su familia de documento) en un
+   período de `libro-de-compras.regimenes.fecha_de_derogacion` en adelante → `regimen_derogado` (V-4). Fuera de eso,
+   familia del tipo contra el régimen del mes → aviso si no coincide.
 5. Líneas: suma = total; el IVA del documento es el del DTE (si viene de la bandeja) y se reparte en las líneas gravadas
    en proporción (centavos al final); gravada con IVA = `round(base × tasa)` ± 1 centavo por línea.
 6. Notas: con documento afectado del mismo cliente, vigente, emitido antes; una nota de crédito no pasa del total de su
    factura menos las notas anteriores (como compras). Sin documento afectado → datos de la factura anterior.
-7. Retenciones esperadas (§7.3) y, en `factura_especial_recibida`, las dos de §4.5 con su constancia.
+   **[validación 2026-11-19, V-9 y V-5]**:
+   - Nota de crédito emitida en o después del día en que se cumplen **dos meses** desde la fecha de su factura (la misma
+     regla «vence la víspera» de compras): aviso, sin bloqueo, «Fuera del plazo del art. 17: la SAT podría rechazar la
+     rebaja del débito». Rebaja el débito **del mes de la nota**, sin rectificar el mes de la factura.
+   - Nota de crédito sobre una `factura_especial_recibida` → `nota_sobre_factura_especial`.
+   - Retenciones de la factura afectada por una **nota de crédito**: las que **no** tienen constancia ni están descontadas
+     se **ajustan en proporción** (`monto_propuesto` y `monto` = original × (total de la factura − Σ notas de crédito
+     vigentes) ÷ total, redondeado al centavo; queda en el motivo del ajuste «Ajuste por la nota de crédito serie-número»),
+     como compras. Las que ya tienen constancia **no se tocan**: lo que se devuelve de más queda como saldo a favor del
+     cliente (lo produce solo la cartera). Las descontadas sin constancia tampoco se tocan, con aviso «El cliente ya
+     descontó esa retención: pídale la constancia por el monto descontado» **[opinión del arquitecto, V-13 en §18]**.
+     Anular la nota recalcula la proporción.
+   - `nota_de_abono`: aviso «Si es un descuento o una devolución, use nota de crédito: la nota de abono no rebaja el IVA
+     (art. 17)». No toca el débito ni las retenciones; en el libro va en un **anexo**, fuera de los totales y de la cantidad
+     y el monto de operaciones.
+7. Retenciones esperadas (§7.3) y, en `factura_especial_recibida`, las dos de §4.5 con su constancia y el aviso de empresa
+   inscrita.
 8. Destino: `cuentas-por-cobrar` si la cartera está activa y el documento tiene cliente (o según configuración); manda
    `cuentas-por-cobrar.recibir_documento` en la misma transacción (si responde con error, se deshace todo).
 9. Evento `libro-de-ventas.documento_registrado` después de confirmar.
@@ -594,6 +680,13 @@ avisos).
   cargo). Las retenciones del documento se anulan con él; una ya **con constancia** queda «por resolver» (como compras:
   `resolucion` pendiente) — la constancia existe y el cliente la tiene que anular. Período declarado → aviso de
   rectificación. Auditoría `anular` con el DTO.
+- **Plazo de anulación en la SAT** **[validación 2026-11-19, V-11]**: desde el 1-09-2023 un DTE solo se anula en la SAT
+  hasta el **vencimiento de la declaración mensual del IVA** de su período; después solo cabe la nota de crédito. Hoy no
+  hay en el código un cálculo de ese vencimiento (compras solo lo menciona en un aviso de períodos): LV-2 lo agrega en el
+  dominio de ventas como el último día del mes siguiente al período, corrido al siguiente día hábil con
+  `core/calendario` (Ley del IVA art. 40, **por confirmar** con el contador en §18 V-14). Al anular con causa `error_de_captura` un
+  documento que sigue vigente en la SAT (o sin dato de la SAT) y cuyo plazo pasó: aviso «Ya no se puede anular en la SAT:
+  emita una nota de crédito». Solo avisa; no bloquea.
 - **Eliminar** (`documentos.eliminar`): solo sin `procesado_en_destino_en`, período sin declarar, sin retenciones con
   constancia; avisa `…_por_eliminar`. Auditoría `eliminar`. Si vino de la bandeja, su fila vuelve a `pendiente`.
 
@@ -601,13 +694,17 @@ avisos).
 
 | Régimen de la empresa en el mes | Dato del cliente | Regla | Base y monto | Mínimo |
 |---|---|---|---|---|
+| Cualquiera | Documento `nota_de_debito` | **Ninguna propuesta** (espejo de compras, hasta confirmarlo en Retenciones Web); se puede **informar** | — | — |
+| Cualquiera | Documento `nota_de_credito` o `nota_de_abono` | Ninguna propia; la nota de crédito ajusta en proporción las de su factura (§7.1 paso 6) | — | — |
 | IVA general | `agente_de_retencion_iva = 'exportador'` y `exporta_productos_agropecuarios`, línea de bien | `iva_exportador_agropecuario` | IVA de esas líneas × 65 % | Total ≥ `libro-de-compras.retenciones_iva.minimo` |
 | IVA general | `exportador` (resto) / `contribuyente_especial` / `otro` | `iva_exportador` / `iva_contribuyente_especial` / `iva_otro_agente` | IVA × 15 % | Ídem |
 | IVA general | `sector_publico` | `iva_sector_publico` | IVA × 25 % | Total ≥ `…minimo_sector_publico` |
 | Pequeño contribuyente (y electrónico) | Agente de IVA y `retiene_iva_a_pequeno_contribuyente` | `iva_pequeno_contribuyente` | Total × 5 % | Total > `…umbral_pequeno_contribuyente` |
 | ISR opcional simplificado | `retiene_isr` | `isr_opcional_simplificado` | Base sin IVA: 5 % hasta el límite del tramo y 7 % del excedente | Base > `…retenciones_isr.minimo` |
-| Empresa agente de retención de IVA | Cualquiera | Ninguna de IVA (Decreto 20-2006 art. 9) | — | **Por validar** si el sector público retiene igual (§18 V-3) |
-| Agropecuario, primario, no afiliado | — | Ninguna propuesta | El usuario puede informar | §18 V-4 |
+| Empresa agente de retención de IVA | Cualquiera | Ninguna de IVA (Decreto 20-2006 art. 9) | — | **Pendiente** (V-3) si el sector público o la tarjeta retienen igual: regla provisional, se puede **informar** sin marca de indebida y con el aviso «Verifique si procede: entre agentes no se retiene, salvo excepciones por confirmar» |
+| Primario y pecuario (ICT) | — | Ninguna propuesta (el comprador no retiene, salvo quien emite la FEPE afiliado al ICT) | El usuario puede informar | V-4 |
+| No afiliado | — | Ninguna propuesta; las de la `FESP` son las de §4.5 | El usuario puede informar | V-1 |
+| Derogados (agropecuario, pequeño contribuyente electrónico) | — | Ninguna (solo histórico, antes de la derogación) | — | V-4 |
 
 Las tasas y mínimos **son las mismas claves** de Libro de compras (`libro-de-compras.iva.tasa`,
 `libro-de-compras.retenciones_iva.*`, `libro-de-compras.retenciones_isr.*`), leídas con `LectorDeConfiguracion` por su
@@ -644,15 +741,34 @@ clave: la ley es una sola y soporte la cambia en un lugar (VC-P9). Solo `iva_tar
 ### 7.6 Libro, cuadre y declaración
 
 - **Libro del período** (`libro.ver`, `libro.exportar`, `libro.emitir`): una fila por documento (vigentes y anulados en
-  cero), columnas de §3.4, notas con signo, retenciones informativas, totales; tipo de libro según el régimen del mes.
-  Emitir con folios igual que compras (PDF de `core/impresion`, emisión que solo se agrega, huella de datos).
+  cero), columnas de §3.4, notas de crédito y de débito con signo, retenciones informativas, totales; tipo de libro según
+  el régimen del mes. Emitir con folios igual que compras (PDF de `core/impresion`, emisión que solo se agrega, huella de
+  datos). **[validación 2026-11-19]**: las **notas de abono** van en un anexo fuera de los totales (V-5); las **facturas
+  especiales recibidas**, en la columna «Ventas con factura especial (IVA retenido en su totalidad)», fuera del débito
+  (V-1); en primario y pecuario y en el pequeño contribuyente el PDF se titula «Auxiliar» (§3.4, VC-P25).
 - **Cuadre SAT contra libro** (`libro.ver`): con lo importado del mes: DTE de la SAT sin registrar, registrados que la SAT
-  no tiene (manuales), anulados en la SAT y vigentes en el libro, montos distintos. Recomendado por el dictamen §2.
+  no tiene (manuales), anulados en la SAT y vigentes en el libro, montos distintos. Recomendado por el dictamen §2. Un DTE
+  anulado en la SAT de un mes **ya declarado** lleva «hay que rectificar ese mes» (V-11); un archivo importado antes del
+  vencimiento de la declaración no es definitivo (aviso, como L4 en compras).
 - **Cifras para la declaración** (pregunta de §3.3): débito por rubro, exentas, exportaciones, cantidad y monto de
-  operaciones (con notas, dictamen §5), retenciones de IVA aplicadas al período. Para el pequeño contribuyente: ingresos
-  del mes y constancias del período. Para el opcional simplificado (pantalla propia «Datos para el ISR mensual»): ingresos
-  sin IVA del mes, retenciones de ISR recibidas de facturas del mes y la parte no retenida (que la empresa paga directo) —
-  **por validar** el cálculo (§18 V-6).
+  operaciones (con notas de crédito y de débito; sin notas de abono ni facturas especiales recibidas), retenciones de IVA
+  **con constancia** aplicadas al período (sin `factura_especial`). Para el pequeño contribuyente: ingresos del mes y
+  constancias del período. Para `primario_pecuario`: ventas locales y exportaciones por separado (V-4); el margen bovino y
+  el cálculo del ICT con `libro-de-ventas.ict.*`, en LV-7 si VC-P24 lo pide.
+- **Datos para el ISR mensual** del opcional simplificado (pantalla propia) **[validación 2026-11-19, V-6, corrige la
+  regla]**: por cada factura (y nota) del **mes de emisión**, base sin IVA. La factura es **«sujeta a retención»** si tiene
+  una retención `isr_opcional_simplificado` **vigente** (esperada, informada o con constancia; **no** importa si ya se
+  descontó) **y** su base pasa de `libro-de-compras.retenciones_isr.minimo`; las demás van a **«pago directo»**. El
+  impuesto del pago directo = 5 % de la suma del mes hasta el tramo y 7 % del excedente, **sobre el total mensual** (lo que
+  hace el SAT-1311; el contador pide confirmarlo con una captura, VC-P29). Muestra también rentas totales, exentas y con
+  retención (lo que informa el SAT-1311) y el vencimiento (10 días hábiles del mes siguiente, `core/calendario`). Avisos:
+  - factura de un cliente que retiene sin constancia al cierre: «Si el cliente no retiene, usted debe pagar ese ISR (con
+    multa e intereses si ya venció)»;
+  - retención informada o constancia nueva sobre una factura de un mes cuyo ISR ya se pagó como pago directo: «Posible
+    pago doble: rectifique o pida la devolución». Para saberlo, la pantalla permite **marcar el mes como pagado**: tabla
+    `libro_de_ventas.pagos_de_isr_mensual` (`periodo`, `pagado_en`, `foto jsonb` con la clasificación de cada factura,
+    `numero_de_formulario` text nulo, anulación completa; único `(empresa_id, periodo) where vigente`; RLS empresa;
+    migración `0006_lv5_isr_mensual`). Sin esa marca, el aviso no se puede dar.
 - **Límite anual del pequeño contribuyente**: aviso en la lista de documentos y en el libro cuando las ventas del año
   pasan del 80 % y del 100 % del límite del año (`libro-de-ventas.pequeno_contribuyente.limites_anuales`).
 - **Venta de activo fijo**: las líneas con el concepto de sistema `venta_de_activo_fijo` alimentan el concepto de Bancos
@@ -685,7 +801,11 @@ cuando el cargo recibe su primera aplicación (antes se puede eliminar en el lib
    `solo_retenciones`: sin movimiento. Forma `cuenta_de_apertura`: solo sobre cargos de saldo inicial, con motivo y permiso
    propio (`cobros.aplicar-a-apertura`), como CxP.
 3. Σ aplicaciones ≤ monto; lo que sobra queda como **saldo a favor** con aviso («quedan Q x a favor del cliente»). Con la
-   configuración de anticipos en `aviso` (VC-P13), si el cliente no tenía cargos, el aviso recuerda el trato del IVA.
+   configuración de anticipos en `aviso` (VC-P13 a), si el cliente no tenía cargos, el aviso dice **[validación
+   2026-11-19]**: «Si es un anticipo por **servicios**, el IVA nace al recibirlo: debe emitir la factura (Ley del IVA arts.
+   4 y 29). Si es por **bienes**, lo prudente es facturarlo también. Revise con su contador.» Con `factura_obligatoria`,
+   el cobro sin cargos se rechaza (`anticipo_sin_factura`) salvo que se aplique a un documento ya registrado. Qué empresas
+   llevan `factura_obligatoria` por omisión es la pregunta nueva VC-P26.
 4. Cada retención aplicada: orden `libro-de-ventas.marcar_retencion_descontada` (pone `descontada_en` y `cobro_id`).
 5. Diferencia menor (opcional): un ajuste `diferencia_menor` hasta el tope de la configuración.
 6. Recibo de cobro numerado (imprimible, sin efecto fiscal: «Este recibo no sustituye la factura»).
@@ -702,7 +822,9 @@ Rechaza si de su saldo a favor ya salió una devolución vigente. Auditoría `an
 
 Solo `medio = 'cheque'`, vigente. Orden `bancos.registrar_nota_de_origen` (débito, misma cuenta, `cheque_rechazado`, la
 fecha del banco). Las aplicaciones **de dinero** pasan a `false` (el cargo vuelve a deber); las **retenciones aplicadas se
-quedan** (la constancia ya existe) — por validar (§18 V-7). Estado `rechazado`. El recargo al cliente, si se cobra, es una
+quedan** (validado 2026-11-19, V-7: la retención nace al pagar o acreditar, no al cobrar el cheque; el cliente solo debe
+el neto). Una retención solo esperada también se queda; si el cliente después dice que no retendrá, el usuario la quita
+con la acción que ya existe (auditoría `quitar`). Estado `rechazado`. El recargo al cliente, si se cobra, es una
 **nota de débito** que se emite y se registra en Libro de ventas (VC-P11), no un ajuste. Auditoría `anular` con causa
 «rechazo». El cargo bancario por el rechazo (comisión) lo registra Bancos aparte.
 
@@ -717,8 +839,12 @@ quedan** (la constancia ya existe) — por validar (§18 V-7). Estado `rechazado
 
 Castigo sobre el saldo de un cargo con causa, motivo, respaldo y archivo (aviso si falta el respaldo, no bloqueo). Muestra
 el aviso del dictamen: «El IVA de esta factura no se recupera; el castigo no toca el Libro de ventas» y, según el régimen
-de ISR copiado, «Puede ser deducible (ISR art. 21) si…» o «No tiene efecto fiscal en su régimen». Recuperar reabre saldo.
-Auditoría `anular` del castigo con el DTO.
+de ISR copiado, «Puede ser deducible (ISR art. 21) si: es del giro habitual, hubo gestión de cobro o un procedimiento
+judicial iniciado **antes de la prescripción** (dos años para el comerciante) y el método no cambió sin autorización de la
+SAT» o «No tiene efecto fiscal en su régimen» **[validación 2026-11-19, V-12]**. Recuperar reabre saldo, con el aviso
+«Lo recuperado es renta gravada de este período (ISR art. 21 num. 20)» solo si el castigo es de régimen `utilidades`, y
+«No tiene efecto fiscal en su régimen» en los demás; en ninguno genera débito de IVA. Auditoría `anular` del castigo con el
+DTO.
 
 ### 8.8 Avisos de otros módulos
 
@@ -808,6 +934,7 @@ Auditoría `anular` del castigo con el DTO.
 | Documentos | `libro-de-ventas.documentos.ver`, `.crear`, `.anular`, `.eliminar`, `.importar` (bandeja de la SAT y Excel); `libro-de-ventas.dte-emitidos.descartar` |
 | Retenciones | `libro-de-ventas.retenciones.ver`, `.crear`, `.ajustar`, `.anular`, `.constancias`, `.exportar` |
 | Libro | `libro-de-ventas.libro.ver`, `.exportar`, `.emitir` |
+| ISR mensual | `libro-de-ventas.isr-mensual.pagar` (marcar y anular la marca de «pagado», §7.6); verlo va con `libro.ver` |
 | Reportes | `libro-de-ventas.reportes.ver`, `.exportar` |
 | Documentos de la cartera | `cuentas-por-cobrar.documentos.ver`, `.editar` (vencimiento y contraseña del cliente) |
 | Cobros | `cuentas-por-cobrar.cobros.ver`, `.crear`, `.anular`, `.rechazar`, `.aplicar` (saldo a favor), `.aplicar-a-apertura` |
@@ -830,6 +957,9 @@ Los datos fiscales del cliente y sus condiciones se guardan con el permiso del f
 | Descartar, restaurar DTE | `libro-de-ventas.dte-emitidos` | `descartar` / `devolver` | La fila |
 | Ajustar, anular retención; cambiar período | `libro-de-ventas.retenciones` | `ajustar` / `anular` / `corregir` | DTO |
 | Anular constancia | `libro-de-ventas.constancias` | `anular` | DTO con sus retenciones |
+| Ajuste proporcional por nota de crédito (y su recálculo al anularla) | `libro-de-ventas.retenciones` | `ajustar` | DTO de la retención antes del ajuste |
+| Período de aplicación elegido a mano por constancia de un mes declarado | `libro-de-ventas.retenciones` | `corregir` | DTO con el período propuesto |
+| Anular la marca de ISR mensual pagado | `libro-de-ventas.isr-mensual` | `anular` | La marca con su foto |
 | Cambiar vencimiento | `cuentas-por-cobrar.documentos` | `corregir` | Vencimiento anterior |
 | Anular, rechazar cobro | `cuentas-por-cobrar.cobros` | `anular` (con `causa`: `anulacion` o `rechazo`) | DTO con aplicaciones |
 | Quitar una aplicación de saldo a favor | `cuentas-por-cobrar.aplicaciones` | `quitar` | La aplicación |
@@ -845,10 +975,14 @@ Permanentes (§4.4): `libro-de-ventas.documentos`, `libro-de-ventas.retenciones`
 
 | Clave | Nivel | Por omisión | Para qué |
 |---|---|---|---|
-| `libro-de-ventas.retenciones_iva.tarjeta` | instalación | 15 | Retención de IVA de la operadora de tarjeta (VC-P10) |
+| `libro-de-ventas.retenciones_iva.tarjeta` | instalación | 15 | Retención de IVA de la operadora de tarjeta (VC-P10), sobre el IVA contenido en el bruto de los vouchers (V-8). Se declara en CXC-5 |
+| `libro-de-ventas.retenciones_iva.tarjeta_combustibles` | instalación | 1.5 | La misma en ventas de combustibles (V-8). Del 1-10 al 31-12-2026 está **suspendida** (Decreto 22-2026): como las tasas no tienen vigencia (VC-P9 a), soporte la pone en 0 ese trimestre si CXC-5 entra antes. Se declara en CXC-5 |
+| `libro-de-ventas.ict.tasa_general` | instalación | 1.5 | ICT sobre ventas brutas del primario y pecuario (V-4); se declara en LV-1 aunque el cálculo llegue en LV-7 |
+| `libro-de-ventas.ict.tasa_exportacion` | instalación | 2 | ICT de ciertas exportaciones (V-4) |
+| `libro-de-ventas.ict.tasa_margen_bovino` | instalación | 10 | ICT sobre el margen del intermediario de bovinos (V-4) |
 | `libro-de-ventas.pequeno_contribuyente.limites_anuales` | instalación | `{ "2026": 500285 }` | Límite por año (P-8); un año sin valor toma el último |
 | `libro-de-ventas.destino.consumidor_final` | empresa, instalación | `sin_cartera` | VC-P5 |
-| `libro-de-ventas.anticipos.tratamiento` | empresa | `aviso` | `aviso` o `factura_obligatoria` (VC-P13): solo cambia el aviso al cobrar sin cargos |
+| `libro-de-ventas.anticipos.tratamiento` | empresa | `aviso` | `aviso` o `factura_obligatoria` (VC-P13 a). `aviso`: el texto de §8.3 paso 3 (servicios exige factura); `factura_obligatoria`: el cobro sin cargos se rechaza. El valor por omisión en empresas de servicios es la pregunta nueva VC-P26 |
 | `cuentas-por-cobrar.vencimientos.meses_por_omision` | empresa, instalación | 1 | Plazo del cliente sin días (como CxP) |
 | `cuentas-por-cobrar.antiguedad.tramos` | empresa | `[30, 60, 90]` | Tramos del reporte (dictamen §6) |
 | `cuentas-por-cobrar.ajustes.tope_diferencia_menor` | empresa, instalación | 1.00 | Diferencia menor que se puede ajustar al cobrar |
@@ -868,7 +1002,9 @@ tasa no reescribe el pasado; la vigencia en configuración sería un cambio del 
 `cargo_sin_saldo`, `aplicacion_excede_el_saldo`, `aplicacion_excede_el_cobro`, `monedas_distintas`,
 `nota_no_marcada_para_cobros`, `nota_ya_ligada`, `cobro_con_devoluciones`, `cobro_no_es_cheque`,
 `diferencia_menor_sobre_el_tope`, `castigo_excede_el_saldo`, `recuperacion_excede_el_castigo`, `carga_inicial_cerrada`,
-`saldos_con_fecha_fuera_de_la_carga`, `solo_quetzales_por_ahora`.
+`saldos_con_fecha_fuera_de_la_carga`, `solo_quetzales_por_ahora`. **[validación 2026-11-19]**: `regimen_derogado` (V-4),
+`nota_sobre_factura_especial` (V-9), `anticipo_sin_factura` (VC-P13, con `factura_obligatoria`), `isr_mensual_ya_pagado`
+(marcar dos veces el mismo mes).
 
 ## 12. API (todas con `proteger({ permiso })`; dinero como texto)
 
@@ -883,6 +1019,7 @@ tasa no reescribe el pasado; la vigencia en configuración sería un cambio del 
 | `GET/POST /libro-de-ventas/constancias`, `POST …/:id/anular`, `POST …/:id/archivo`, `GET …/:id/archivo` | `retenciones.constancias` / `.ver` |
 | `GET /libro-de-ventas/libro/:periodo`, `…/exportar`, `POST …/emitir`, `GET …/emisiones` | `libro.*` |
 | `GET /libro-de-ventas/cuadre-sat/:periodo`, `GET /libro-de-ventas/isr-mensual/:periodo` | `libro.ver` |
+| `POST /libro-de-ventas/isr-mensual/:periodo/pagado`, `POST …/pagado/anular` | `isr-mensual.pagar` |
 | `GET /libro-de-ventas/reportes/<reporte>` y `…/exportar` | `reportes.*` |
 | `GET /cuentas-por-cobrar/clientes/:clienteId/condiciones`, `GET …/estado-de-cuenta` | `terceros.ver` / `documentos.ver` |
 | `GET /cuentas-por-cobrar/documentos`, `GET …/:id`, `POST …/:id/vencimiento`, `POST …/contrasena` (varios) | `documentos.*` |
@@ -970,49 +1107,68 @@ Todos «a una fecha de corte» usan la fecha de cada hecho (emisión, cobro, anu
 
 ## 16. Pasos (un commit cada uno; servidor y cliente por separado, con pruebas)
 
-| Paso | Qué | Quién | Depende de |
-|---|---|---|---|
-| **VC-0a** | Terceros: `clientes_id_cuenta_unico`, aviso `cliente_guardado` con secciones, orden `crear_cliente_desde_dte`; pruebas de la llave entre cuentas y del aviso | backend | — |
-| VC-0a-c | Secciones aportadas en el formulario y la ficha de Clientes | frontend | VC-0a |
-| **VC-0b** | Bancos: conceptos de sistema de cobro, nota marcada por módulo, concepto reservado, revisión de origen para cualquier módulo; pruebas | backend | CCL-B1 (o lo trae) |
-| **VC-0c** | Libro de compras: pregunta `cifras_para_la_declaracion`, foto con ventas, SAT-2046 con cálculo; pruebas con un doble que responde | backend | — |
-| **VC-0d** | Core: piezas del PDF y foliación genérica a `core/impresion/pdf` (sin cambio de comportamiento; mudar pruebas) | backend | — |
-| **LV-1** | Esqueleto, `0001`, auditoría permanente, configuración, conceptos de ingreso (semilla, Excel), datos fiscales de cliente (sección); pruebas de tablas y API | backend | VC-0a |
-| LV-1c | Conceptos de ingreso; sección «Datos fiscales (ventas)» | frontend | LV-1, VC-0a-c |
-| **LV-2** | Documentos y líneas: registrar, anular, eliminar; régimen del mes, período declarado, notas, fecha de inicio; avisos a la cartera (sin escucha aún); pruebas de dominio (cálculo de líneas, familias contra régimen) e integración | backend | LV-1 |
-| LV-2c | Lista, formulario y ficha de documentos | frontend | LV-2 |
-| **LV-3** | Retenciones esperadas (dominio puro con la tabla de §7.3), informadas, ajustes, constancias con archivo, período de aplicación, órdenes de §10.1; pruebas por régimen y regla | backend | LV-2 |
-| LV-3c | Retenciones recibidas y constancias | frontend | LV-3 |
-| **LV-4** | Bandeja de DTE emitidos (lote, lector del core, borrador, registrar, descartar, bloqueados, anulados en la SAT); pruebas con `xls-de-prueba.ts` | backend | LV-2; un archivo real de «DTE emitidos» (VC-P3) |
-| LV-4c | Bandeja | frontend | LV-4 |
-| **LV-5** | Libro del período, PDF con folios, cuadre SAT, cifras para la declaración (respuesta), datos del ISR mensual, límite del pequeño contribuyente | backend | LV-3, VC-0c, VC-0d |
-| LV-5c | Libro, cuadre y datos para la declaración | frontend | LV-5 |
-| **LV-6** | Reportes de §14.1 | backend | LV-5 |
-| LV-6c | Pantallas de reportes | frontend | LV-6 |
-| **CXC-1** | Esqueleto, `0001`, condiciones (sección), `recibir_documento`, documentos, vencimiento, contraseña del cliente, avisos de anular/eliminar; pruebas | backend | LV-2 |
-| CXC-1c | Por cobrar, estado de cuenta, sección del cliente | frontend | CXC-1 |
-| **CXC-2** | Abonos (NCRE y NABN), aplicación automática y manual, saldos derivados; pruebas de saldo con fechas de corte | backend | CXC-1 |
-| **CXC-3** | Cobros: depósito, nota ligada, solo retenciones; aplicaciones, retenciones aplicadas, recibo, anular; escucha de Bancos; pruebas de concurrencia (dos cobros al mismo cargo) | backend | CXC-2, LV-3, VC-0b |
-| CXC-3c | Cobrar, cobros, recibo imprimible | frontend | CXC-3 |
-| **CXC-4** | Saldo a favor: aplicar, quitar, devolver; ajustes de diferencia menor | backend | CXC-3 |
-| CXC-4c | Acciones de saldo a favor y devolución | frontend | CXC-4 |
-| **CXC-5** | Cheque rechazado (y tarjeta si VC-P10 es sí) | backend | CXC-3 |
-| CXC-5c | Acción de rechazo (y forma tarjeta) | frontend | CXC-5 |
-| **CXC-6** | Saldos iniciales, cuenta de apertura, pregunta de EM-2, aviso de fecha de inicio, Excel | backend | CXC-3 |
-| CXC-6c | Saldos iniciales de clientes | frontend | CXC-6 |
-| **CXC-7** | Reportes de §14.2 | backend | CXC-4 |
-| CXC-7c | Pantallas de reportes | frontend | CXC-7 |
-| **CXC-8** | Castigos y recuperaciones con archivo | backend | CXC-3 |
-| CXC-8c | Castigos | frontend | CXC-8 |
-| VC-QA | Punta a punta: importar DTE emitidos → registrar → retención esperada → cobrar con depósito y retención → constancia → libro y declaración → cheque rechazado → saldo inicial y cierre de la carga; con la cartera apagada | pruebas-qa | Todo lo anterior |
-| CXC-9 | (Después, si se aprueba VC-P14) Estimación de incobrables | backend y frontend | CXC-8 |
-| VC-10 | (Después) Respuesta a Multimoneda, quitar `solo_quetzales_por_ahora` | backend | MM en `main` |
-| VC-11 | (Después) Enviar recibo y estado de cuenta por correo | backend y frontend | correo pasos 2 y 4 |
+**Lista para programar (2026-11-19).** Todas las dependencias de la columna «Depende de» son pasos de esta tabla o cosas
+que ya están en `main` (CCL-B1, EM-2, el lector de `core/intercambio`). La última columna dice qué **dato del usuario**
+falta; un paso sin nada ahí se puede programar en cuanto entren sus dependencias. **El primer paso es VC-0a**: no depende
+de nada ni espera ningún dato. Números de migración: los de hoy (siguiente libre); si otro paso ocupa uno antes, se toma el
+siguiente al programar.
 
-**En paralelo:** VC-0a, VC-0c y VC-0d no dependen entre sí; LV-1 empieza en cuanto entra VC-0a. Los pasos `c` corren
-detrás de su paso de servidor. CXC-1 puede ir en paralelo con LV-3/LV-4.
+| Paso | Qué | Quién | Depende de | Espera del usuario |
+|---|---|---|---|---|
+| **VC-0a** | Terceros, migración `0010_clientes_para_ventas`: único `clientes_id_cuenta_unico (id, cuenta_id)`, aviso `terceros.cliente_guardado` con secciones, orden `terceros.crear_cliente_desde_dte` (§4.1); pruebas de la llave entre cuentas, del aviso y de la orden (CF no crea nada) | backend | — | — |
+| VC-0a-c | Secciones aportadas en el formulario y la ficha de Clientes | frontend | VC-0a | — |
+| **VC-0b** | Bancos, migración `0039_cobros_a_clientes`: conceptos de sistema de cobro (como la `0037`), mapa de nota marcada por módulo (`marcadaParaModulo`), conceptos reservados de `cuentas-por-cobrar`, `RevisorDeCambios` con el mapa (§4.2); pruebas | backend | — (CCL-B1 ya está en `main`) | — |
+| VC-0b-c | `marcadaParaModulo` en las pantallas de Bancos (etiqueta «Para Cuentas por cobrar») | frontend | VC-0b | — |
+| **VC-0c1** | Libro de compras: pregunta `cifras_para_la_declaracion` y `foto.ventas` (§3.3, §4.3); migración `0040_factura_especial_de_venta` (bloqueo de toda `FESP` en recibidos, y las pendientes que ya estén); la `FESP` registrada como compra en el cuadre; pruebas con un doble que responde | backend | — | — |
+| **VC-0c2** | Libro de compras: remanente de retenciones del SAT-2237 y saldo de constancias del SAT-2046 en la foto (sin migración), el anterior escrito por el usuario en el primer mes, cálculo del impuesto del SAT-2046; pruebas de varios meses seguidos y de la rectificación | backend | VC-0c1 | La casilla exacta sale de la captura (VC-P29), pero **no bloquea**: las cifras se guardan igual y la casilla se ajusta después |
+| VC-0c-c | Sección de ventas y remanentes en «Datos para el SAT-2237 / SAT-2046»; campo del remanente anterior al declarar | frontend | VC-0c2 | — |
+| **VC-0d** | Core: piezas del PDF y foliación genérica a `core/impresion/pdf` (sin cambiar el comportamiento; mudar las pruebas) | backend | — | — |
+| **LV-1** | Esqueleto, `0001` (auditoría permanente con el motivo corregido), configuración (incluidas las tres `libro-de-ventas.ict.*`), conceptos de ingreso (semilla, Excel), datos fiscales de cliente (sección); pruebas de tablas y API | backend | VC-0a | — |
+| LV-1c | Conceptos de ingreso; sección «Datos fiscales (ventas)» | frontend | LV-1, VC-0a-c | — |
+| **LV-2** | Documentos y líneas: registrar, anular, eliminar; régimen del mes y **`regimen_derogado`**, período declarado, notas (plazo de dos meses, nota sobre FESP, aviso de NABN), fecha de inicio, plazo de anulación en la SAT, `factura_especial_recibida` con el aviso de empresa inscrita; avisos a la cartera (sin escucha aún); pruebas de dominio (cálculo de líneas, familias contra régimen, derogación con la fecha de la configuración, vencimiento de la declaración) e integración | backend | LV-1 | — |
+| LV-2c | Lista, formulario y ficha de documentos | frontend | LV-2 | — |
+| **LV-3** | Retenciones esperadas (dominio puro con §7.3, sin propuesta en nota de débito), informadas (regla provisional V-3), ajustes, **ajuste proporcional por nota de crédito**, las dos de la FESP (`origen = 'factura_especial'`), constancias con archivo, período de aplicación con la regla del mes declarado, órdenes de §10.1; `0003` con el check de `documento_id` abierto a `liquidacion_de_tarjeta`; pruebas por régimen y regla. Pide revisión de `seguridad` del archivo de constancias antes de unir | backend | LV-2 | — |
+| LV-3c | Retenciones recibidas y constancias | frontend | LV-3 | — |
+| **LV-4** | Bandeja de DTE emitidos (lote, lector del core, borrador, registrar, descartar, bloqueados incluido `factura_especial_de_compra`, anulados en la SAT); pruebas con `xls-de-prueba.ts` | backend | LV-2 | **Sí: archivo real de «DTE emitidos» (VC-P3)** |
+| LV-4c | Bandeja | frontend | LV-4 | — |
+| **LV-5** | Libro del período (anexo de NABN, columna de FESP, título de auxiliar según el régimen), PDF con folios, cifras para la declaración (respuesta), datos del ISR mensual con la regla de V-6 y `0006` (marca de pagado), límite del pequeño contribuyente, cifras separadas del primario y pecuario | backend | LV-3, VC-0c2, VC-0d | — (el tramo mensual del ISR se confirma con VC-P29 sin bloquear) |
+| LV-5c | Libro y datos para la declaración y el ISR mensual | frontend | LV-5 | — |
+| **LV-5b** | Cuadre SAT contra libro (con el «rectifique ese mes» de V-11) | backend y frontend | LV-4, LV-5 | Lo de LV-4 |
+| **LV-6** | Reportes de §14.1 | backend | LV-5 | — |
+| LV-6c | Pantallas de reportes | frontend | LV-6 | — |
+| LV-7 | (Solo si VC-P24 dice que sí) ICT: cálculo con `libro-de-ventas.ict.*`, margen del intermediario de bovinos | backend y frontend | LV-5 | **Sí: VC-P24** |
+| LV-8 | (Solo si VC-P25 elige la foliación única) Libro único de compras y ventas del pequeño contribuyente | backend y frontend | LV-5 | **Sí: VC-P25** |
+| **CXC-1** | Esqueleto, `0001`, condiciones (sección), `recibir_documento`, documentos, vencimiento, contraseña del cliente, avisos de anular/eliminar; pruebas | backend | LV-2 | — |
+| CXC-1c | Por cobrar, estado de cuenta, sección del cliente | frontend | CXC-1 | — |
+| **CXC-2** | Abonos (NCRE y NABN), aplicación automática y manual, saldos derivados; pruebas de saldo con fechas de corte | backend | CXC-1 | — |
+| **CXC-3** | Cobros: depósito, nota ligada, solo retenciones; aplicaciones, retenciones aplicadas, recibo, anular; aviso de anticipo de §8.3 paso 3; escucha de Bancos; pruebas de concurrencia (dos cobros al mismo cargo) | backend | CXC-2, LV-3, VC-0b | — |
+| CXC-3c | Cobrar, cobros, recibo imprimible | frontend | CXC-3 | — |
+| **CXC-4** | Saldo a favor: aplicar, quitar, devolver; ajustes de diferencia menor | backend | CXC-3 | — |
+| CXC-4c | Acciones de saldo a favor y devolución | frontend | CXC-4 | — |
+| **CXC-5** | Cheque rechazado (las retenciones se quedan, V-7) | backend | CXC-3 | — |
+| CXC-5c | Acción de rechazo | frontend | CXC-5 | — |
+| CXC-5t | (Solo si VC-P27 dice que alguien cobra con POS) Forma `tarjeta`, retención `iva_tarjeta` por liquidación (columnas de §5.7), comisión informativa, configuración de la tarjeta | backend y frontend | CXC-5 | **Sí: VC-P27 (liquidación y constancia reales)** |
+| **CXC-6** | Saldos iniciales, cuenta de apertura, pregunta de EM-2, aviso de fecha de inicio, Excel | backend | CXC-3 | — |
+| CXC-6c | Saldos iniciales de clientes | frontend | CXC-6 | — |
+| **CXC-7** | Reportes de §14.2 | backend | CXC-4 | — |
+| CXC-7c | Pantallas de reportes | frontend | CXC-7 | — |
+| **CXC-8** | Castigos y recuperaciones con archivo y los avisos de V-12; revisión de `seguridad` del archivo antes de unir | backend | CXC-3 | — |
+| CXC-8c | Castigos | frontend | CXC-8 | — |
+| VC-QA | Punta a punta: importar DTE emitidos → registrar → retención esperada → nota de crédito con ajuste proporcional → cobrar con depósito y retención → constancia → libro y declaración con remanente → ISR mensual → cheque rechazado → saldo inicial y cierre de la carga; con la cartera apagada | pruebas-qa | Todo lo anterior | — |
+| CXC-9 | (Después, VC-P14 a) Estimación de incobrables | backend y frontend | CXC-8 | — |
+| VC-10 | (Después) Respuesta a Multimoneda, quitar `solo_quetzales_por_ahora` | backend | MM en `main` | — |
+| VC-11 | (Después) Enviar recibo y estado de cuenta por correo | backend y frontend | correo pasos 2 y 4 | — |
+
+**En paralelo desde ya:** VC-0a, VC-0b, VC-0c1 y VC-0d no dependen de nada ni entre sí (tocan módulos distintos:
+Terceros, Bancos, Libro de compras y core), pero **dos migraciones del mismo módulo no van en paralelo** (VC-0c1 y VC-0c2
+en fila). LV-1 empieza en cuanto entra VC-0a. Los pasos `c` corren detrás de su paso de servidor. CXC-1 puede ir en
+paralelo con LV-3 y LV-4. Lo único que espera datos del usuario es LV-4 (y LV-5b), LV-7, LV-8 y CXC-5t: el resto del
+camino crítico (VC-0a → LV-1 → LV-2 → LV-3 → LV-5 y CXC-1 → CXC-3 → …) no se detiene.
 
 ## 17. Preguntas para el usuario
+
+**Respondidas el 2026-11-19:** el usuario aceptó todas las recomendaciones (ver «Respuestas del usuario (2026-11-19)» al
+final). Quedan datos por mandar en VC-P3, VC-P4, VC-P22 y VC-P24; la tabla se conserva como estaba al preguntar.
 
 | # | Pregunta | Opciones | Recomendación |
 |---|---|---|---|
@@ -1043,6 +1199,10 @@ detrás de su paso de servidor. CXC-1 puede ir en paralelo con LV-3/LV-4.
 
 ## 18. Para validar antes de programar
 
+**Validado el 2026-11-19** por `contador-guatemala` (`dictamen-cuentas-por-cobrar-y-ventas-validacion-2026-11-19.md`):
+V-1 a V-12 con su dictamen en «Validación del contador (2026-11-19)» al final. Quedan **dos puntos nuevos** del arquitecto
+(V-13 y V-14, al final de la tabla), que no bloquean ningún paso. La tabla se conserva como estaba al preguntar.
+
 Con `contador-guatemala`:
 
 | # | Punto | Propuesta del diseño |
@@ -1059,6 +1219,8 @@ Con `contador-guatemala`:
 | V-10 | Libro de ventas: uno o dos libros habilitados (VC-P23) y el artículo del AG 5-2013 | Dos, con foliación propia |
 | V-11 | Plazo para anular un DTE en la SAT (dictamen, pendiente) | Solo informa en el aviso de §7.4 |
 | V-12 | Recuperación de un castigo: renta gravada y su asiento | §6.9 |
+| V-13 (nuevo, 2026-11-19) | Nota de crédito sobre una factura cuya retención el cliente ya **descontó sin constancia**: ¿se ajusta en proporción o se deja y se pide la constancia por lo descontado? | §7.1 paso 6: no se toca, con aviso [opinión del arquitecto]. Validar antes de LV-3; si cambia, es una regla del dominio sin migración |
+| V-14 (nuevo, 2026-11-19) | Vencimiento de la declaración mensual del IVA (para el plazo de anulación de V-11): ¿último día del mes siguiente, corrido al hábil siguiente? | §7.2: Ley del IVA art. 40, por confirmar. Validar antes de LV-2; es solo un aviso |
 
 Con `seguridad`: archivos de constancias y castigos (`core.archivos`, qpdf, `recurso_dueno`), el lector de la bandeja con
 archivos de la SAT (mismos controles que recibidos), y la futura guarda de credenciales del certificador FEL (fuera de v1).
@@ -1086,5 +1248,59 @@ archivos de la SAT (mismos controles que recibidos), y la futura guarda de crede
 - Activos fijos: cruzar su venta con la línea de Libro de ventas (por autorización FEL) cuando los dos estén activos.
 - Ganadería, Cultivos e Inventario: cómo mandan sus ventas al libro (orden `libro-de-ventas.registrar_documento` a definir
   con ellos).
-- `docs/HOJA-DE-RUTA.md`: mover «Cuentas por cobrar / Ventas» de «falta planificar» a «diseño propuesto» cuando el
-  usuario responda.
+- `docs/HOJA-DE-RUTA.md`: «Cuentas por cobrar / Ventas» marcado como planificado (hecho el 2026-11-19).
+
+## Respuestas del usuario (2026-11-19)
+
+- **VC-P1 a VC-P24:** el usuario aceptó **todas las recomendaciones** de §17: a (VC-P1), a (VC-P2), a + b (VC-P3), c
+  (VC-P5), a (VC-P6, VC-P7, VC-P8, VC-P9), v1 con depósito, transferencia y cheque al día y tarjeta solo si alguien la usa
+  (VC-P10), b opcional (VC-P11), a (VC-P12 a VC-P21) y a (VC-P23).
+- **Quedan pendientes los datos del usuario:**
+  - **VC-P3:** un archivo real de «DTE emitidos» de la SAT (sin datos sensibles o de prueba). Bloquea solo **LV-4** (y
+    LV-5b).
+  - **VC-P4:** qué certificador FEL usan. No bloquea nada de v1: es para el futuro módulo `facturacion-fel`.
+  - **VC-P22:** una liquidación y una constancia reales de la venta de tabaco. No bloquea ningún paso: hasta tenerlas, la
+    retención del comprador se **informa** a mano (§7.5).
+  - **VC-P24:** si alguna empresa está en el régimen agropecuario. **El contador corrigió la premisa** (V-4): ese régimen
+    está derogado desde el 2025-07-09, así que la pregunta útil pasa a ser «¿alguna empresa está o pasará al régimen
+    **primario o pecuario** (ICT)? ¿Alguna es intermediaria de bovinos?». Bloquea solo **LV-7**.
+- **Lo que la validación del contador corrige sin contradecir ninguna respuesta** ya está en el texto (sección siguiente).
+  Lo que **sí** choca con una respuesta no se cambió: va en «Preguntas nuevas (2026-11-19)» (VC-P25 y VC-P26).
+
+## Validación del contador (2026-11-19)
+
+Dictamen completo: `dictamen-cuentas-por-cobrar-y-ventas-validacion-2026-11-19.md`. Veredicto: **correcto con ajustes**;
+la estructura (libro fiscal aparte de la cartera, retención como medio de cobro, una declaración por mes) se sostiene.
+
+| # | Dictamen | Qué cambió en el diseño | Pendiente |
+|---|---|---|---|
+| V-1 FESP recibida | Corregir | §4.3 bloqueo validado (toda `FESP` en recibidos es venta; migración `0040` de compras); §4.5 fuera del débito y de las retenciones acreditables, columna propia, aviso de empresa inscrita; §5.5 espejo `factura_especial_de_compra` en emitidos | ISR de la FESP en empresa sobre utilidades (informativo); VC-P28 |
+| V-2 Mes de aplicación | Correcto con ajustes | §3.3 solo retenciones con constancia, remanente de retenciones aparte (y saldo de constancias del 2046); §3.5 constancia de un mes declarado: rechazo o período a mano con motivo, nunca el «primer abierto» | Casilla del SAT-2237 (VC-P29) |
+| V-3 Agente de IVA | Pendiente | §7.3 y §5.7: regla provisional (informada sin marca de indebida, con aviso) | Texto del Decreto 20-2006 y AG 425-2006, o la liquidación de VC-P27 |
+| V-4 Regímenes | Corregir | §1, §3.4, §5.3, §7.1 paso 4: derogados solo antes de `fecha_de_derogacion` (error `regimen_derogado`); primario y pecuario con ICT (configuración `libro-de-ventas.ict.*`, cifras separadas en LV-5, cálculo en LV-7); no afiliado con RECI y FESP | VC-P24 (reformulada) |
+| V-5 NABN | Correcto con ajustes | §7.1 paso 6 aviso; anexo del libro; fuera de cantidad y monto de operaciones (§3.3, §7.6) | Confirmar con la captura (VC-P29) |
+| V-6 ISR mensual | Corregir la regla | §7.6: «sujeta a retención» por retención ISR **vigente** (no la descontada); 5 %/7 % sobre el total mensual del pago directo; avisos; marca de pagado (`pagos_de_isr_mensual`, `0006`) | Tramo mensual o por factura (VC-P29) |
+| V-7 Cheque rechazado | Correcto | §8.5 sin cambio de regla | — |
+| V-8 Tarjeta | Corregir | §5.7 `documento_id` nulo con `origen = 'liquidacion_de_tarjeta'` (reservado desde la `0003`), base = IVA del bruto; §6.3 comisión informativa y no «exenta siempre»; §11.3 tasa de combustibles | VC-P27; paso CXC-5t |
+| V-9 NCRE de mes declarado | Correcto con ajustes | §7.1 paso 6: aviso del plazo de dos meses, ajuste proporcional de las esperadas, nota sobre FESP es error | V-13 (nuevo, §18) |
+| V-10 Libros | Corregir (fuera del general) | §3.4 y §5.8: general con foliación propia (confirmado); título «Auxiliar» en primario y pecuario y en pequeño contribuyente | VC-P25 (choca con VC-P23 a) |
+| V-11 Anular un DTE | Correcto con ajustes | §7.2 aviso «emita una nota de crédito»; §7.6 cuadre «rectifique ese mes» | V-14 (nuevo, §18): vencimiento de la declaración |
+| V-12 Recuperación | Correcto con ajustes | §6.9 y §8.7: renta gravada solo con castigo de régimen `utilidades`; sin débito; requisitos del castigo deducible en el aviso | — |
+| VC-P13 anticipos | Correcto con ajustes | §8.3 paso 3 aviso corregido (servicios exige factura) | VC-P26 (choca con el valor por omisión) |
+| Nota de débito | Hallazgo | §7.3: sin retención propuesta, se puede informar | — |
+| Auditoría permanente | Hallazgo | §4.4 motivo «Conservación de libros y documentos (Código de Comercio art. 382; Código Tributario, por confirmar)» | Artículos del Código Tributario |
+
+**Lo que el contador pide antes de LV-3** (modelo de la tarjeta y de la FESP; regímenes derogados y ICT) y **antes de
+LV-5** (regla del ISR mensual, libros fuera del general, remanente de retenciones) ya está en el diseño y en §16. Lo único
+que queda abierto antes de LV-5 es la foliación fuera del general (VC-P25); mientras no se responda, rige VC-P23 a y LV-5
+no se detiene.
+
+## Preguntas nuevas (2026-11-19)
+
+| # | Pregunta | Opciones | Recomendación |
+|---|---|---|---|
+| VC-P25 | **Choca con VC-P23 a.** El contador dice que la foliación propia de ventas solo vale para el régimen general: el **pequeño contribuyente** tiene **un solo libro habilitado** de compras y ventas, y el **primario y pecuario** lleva el **libro electrónico de la SAT** (el de Arrancar es auxiliar, sin folios). ¿Qué hacemos en esos dos regímenes? Y, para el pequeño contribuyente: ¿imprimen el libro habilitado desde Arrancar? | a) Dejar VC-P23 a para todos (foliación propia; el PDF fuera del general dice «Auxiliar»); b) primario y pecuario sin folios, y pequeño contribuyente con **una sola foliación** de compras y ventas (paso LV-8: lo emite Libro de compras, que le pide a Libro de ventas sus filas con una pregunta, porque compras no puede leer ventas); c) primario y pecuario sin folios, y pequeño contribuyente con dos PDF auxiliares («su libro habilitado es uno solo») | **c** si el pequeño contribuyente **no** imprime su libro habilitado desde Arrancar; **b** si lo imprime. En los dos casos, primario y pecuario **sin folios**: foliar un libro que no es el legal confunde. Mientras no responda, rige a |
+| VC-P26 | **Choca con el valor por omisión de VC-P13 a.** El contador dice que en **servicios** el IVA nace al recibir el anticipo, así que facturarlo no es opción del contador, y recomienda `factura_obligatoria` por omisión en las empresas de servicios. Arrancar no sabe qué empresa vende servicios. ¿Cómo queda el valor por omisión? ¿Qué empresas venden servicios con anticipo? | a) `aviso` por omisión en todas (lo aceptado), con el aviso ya corregido, y usted o su contador ponen `factura_obligatoria` en la empresa que venda servicios con anticipo; b) `factura_obligatoria` por omisión en todas; c) `factura_obligatoria` por omisión si la empresa tiene conceptos de ingreso de servicio activos | **a**: no cambia lo aceptado, el aviso ya dice que en servicios es obligatorio, y basta con decirnos qué empresas venden servicios con anticipo para dejarlas en `factura_obligatoria`. La c adivina con un dato que no es para eso (una empresa de bienes puede tener un concepto de servicio) |
+| VC-P27 | ¿Alguna empresa cobra con **tarjeta (POS)**? (VC-P10 lo dejó para «si alguien la usa») | Sí (cuál) / No. Si sí: mande una liquidación real de la adquirente y una constancia de su retención (sin datos sensibles), y confirme que la adquirente se registre como **cliente** en Terceros (es quien retiene y quien liquida) | Si nadie la usa, CXC-5t no se programa; el modelo ya queda abierto desde la `0003`. La liquidación cierra también V-3 |
+| VC-P28 | ¿Alguna empresa recibe **facturas especiales** de sus compradores? ¿Está inscrita en el IVA o es una persona individual sin inscripción? | Sí (cuál y régimen) / No | Es informativa: el diseño ya cubre los dos casos (aviso si está inscrita). Sirve para probar con un caso real |
+| VC-P29 | Pendiente desde L5: una **captura** del SAT-2237 y del SAT-1311 vigentes | — | Con ellas se fijan la casilla del remanente de retenciones, si la nota de abono cuenta en las operaciones y si el tramo de Q30,000 del ISR mensual es del total del mes. No bloquea: VC-0c2 y LV-5 guardan las cifras y se ajusta la casilla después |
