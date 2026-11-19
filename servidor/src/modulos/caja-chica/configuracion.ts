@@ -38,4 +38,13 @@ export const configuracionDeCajaChica: readonly DefinicionConfiguracion[] = [
     niveles: ['instalacion', 'empresa'],
     publica: false,
   }),
+  definirConfiguracion({
+    clave: 'caja-chica.arqueos.dias_para_avisar',
+    descripcion:
+      'Días sin arquear un fondo para que el sistema lo avise (el arqueo es opcional). Con 0 no se avisa nunca.',
+    esquema: z.number().int().min(0).max(365),
+    predeterminado: 30,
+    niveles: ['instalacion', 'empresa'],
+    publica: false,
+  }),
 ];

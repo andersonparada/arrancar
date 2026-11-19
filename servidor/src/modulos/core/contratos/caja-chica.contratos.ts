@@ -139,6 +139,34 @@ declare module '../eventos/bus-eventos.js' {
       anulacionEnBancos: 'sin_inverso' | 'con_inverso' | null;
       lineas: LineaDeReposicionEmitida[];
     };
+    /**
+     * Se registró un arqueo. `diferenciaCentavos` es contado más valores por cambiar menos lo esperado (negativa =
+     * faltante, con `destinoDelFaltante`; positiva = sobrante); con diferencia nace un comprobante `comprobanteId`.
+     */
+    'caja-chica.arqueo_registrado': {
+      empresaId: string;
+      fondoId: string;
+      arqueoId: string;
+      numero: number;
+      fecha: string;
+      efectivoContadoCentavos: number;
+      efectivoEsperadoCentavos: number;
+      diferenciaCentavos: number;
+      destinoDelFaltante: 'perdida' | 'cobrar_al_custodio' | null;
+      comprobanteId: string | null;
+    };
+    /** Se anuló un arqueo (y su faltante o sobrante). `fechaDeAnulacion` es la fecha contable. */
+    'caja-chica.arqueo_anulado': {
+      empresaId: string;
+      fondoId: string;
+      arqueoId: string;
+      numero: number;
+      fecha: string;
+      fechaDeAnulacion: string;
+      diferenciaCentavos: number;
+      destinoDelFaltante: 'perdida' | 'cobrar_al_custodio' | null;
+      comprobanteId: string | null;
+    };
   }
 }
 

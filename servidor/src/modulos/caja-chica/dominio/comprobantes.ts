@@ -39,6 +39,8 @@ export interface Comprobante {
   sobreElTope: boolean;
   motivoSobreElTope: string | null;
   sinBancarizar: boolean;
+  /** Solo en el faltante de un arqueo: qué se hace con él. */
+  destinoDelFaltante: 'perdida' | 'cobrar_al_custodio' | null;
   numero: number | null;
   anioDeNumero: number;
   descripcion: string | null;
