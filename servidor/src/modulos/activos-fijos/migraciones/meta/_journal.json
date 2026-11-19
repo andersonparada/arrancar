@@ -50,6 +50,13 @@
       "when": 1795093575700,
       "tag": "0006_af6_saldos_iniciales",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795097559976,
+      "tag": "0007_af7_mejoras",
+      "breakpoints": true
     }
   ]
 }

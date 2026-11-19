@@ -2,12 +2,14 @@ import { sql } from 'drizzle-orm';
 import { check, foreignKey, index, uniqueIndex, type AnyPgColumn, type ExtraConfigColumn } from 'drizzle-orm/pg-core';
 import { CAUSAS_DE_TRAMO } from '../../dominio/depreciacion/tramo.js';
 import { activos } from './activos.tablas.js';
+import { mejoras } from './mejoras.tablas.js';
 
 type Columnas = Record<
   | 'empresaId'
   | 'activoId'
   | 'libro'
   | 'causa'
+  | 'mejoraId'
   | 'porDepreciar'
   | 'valorResidual'
   | 'meses'
@@ -30,6 +32,11 @@ export function llavesDeTramo(t: Columnas) {
       columns: [t.activoId, t.empresaId],
       foreignColumns: [activos.id, activos.empresaId],
     }),
+    foreignKey({
+      name: 'tramos_mejora_fk',
+      columns: [t.mejoraId, t.empresaId],
+      foreignColumns: [mejoras.id, mejoras.empresaId],
+    }),
   ];
 }
 
@@ -42,6 +49,9 @@ export function indicesDeTramo(t: Columnas) {
     index('tramos_activo_libro_idx')
       .on(t.activoId, t.libro, t.desdePeriodo.desc())
       .where(sql`${t.vigente}`),
+    index('tramos_mejora_idx')
+      .on(t.mejoraId)
+      .where(sql`${t.mejoraId} is not null`),
   ];
 }
 
@@ -51,6 +61,7 @@ export function reglasDeTramo(t: Columnas) {
     check('tramos_libro', sql`${t.libro} in ('contable', 'fiscal')`),
     check('tramos_causa', sql`${t.causa} in (${enSql(CAUSAS_DE_TRAMO)})`),
     check('tramos_causa_de_matricula_fiscal', sql`${t.causa} <> 'cambio_de_matricula' or ${t.libro} = 'fiscal'`),
+    check('tramos_de_mejora', sql`(${t.causa} in ('mejora', 'costo_posterior')) = (${t.mejoraId} is not null)`),
     check('tramos_primer_dia', sql`extract(day from ${t.desdePeriodo}) = 1`),
     check(
       'tramos_montos',

@@ -24,6 +24,7 @@ export const costos = esquemaActivosFijos.table(
     claseDeCosto: text().$type<ClaseDeCosto>().notNull(),
     documentoDeCompraId: uuid(),
     lineaDeDocumentoId: uuid(),
+    mejoraId: uuid(),
     fecha: date({ mode: 'string' }).notNull(),
     monto: numeric({ precision: 14, scale: 2 }).notNull(),
     aplicaAlLibroFiscal: boolean().default(true).notNull(),

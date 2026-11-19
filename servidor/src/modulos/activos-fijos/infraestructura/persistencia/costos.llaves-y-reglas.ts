@@ -3,6 +3,7 @@ import { check, foreignKey, index, uniqueIndex, type AnyPgColumn } from 'drizzle
 import { lineasDeDocumento } from '../../../libro-de-compras/infraestructura/persistencia/lineas-de-documento.tablas.js';
 import { CLASES_DE_COSTO_ELEGIBLES, ESTADOS_DE_COSTO, ORIGENES_DE_COSTO } from '../../dominio/tipos-de-costo.js';
 import { activos } from './activos.tablas.js';
+import { mejoras } from './mejoras.tablas.js';
 
 type Columnas = Record<
   | 'id'
@@ -12,6 +13,7 @@ type Columnas = Record<
   | 'claseDeCosto'
   | 'documentoDeCompraId'
   | 'lineaDeDocumentoId'
+  | 'mejoraId'
   | 'monto'
   | 'aplicaAlLibroFiscal'
   | 'motivoFueraDelLibroFiscal'
@@ -40,6 +42,11 @@ export function llavesDeCosto(t: Columnas) {
       columns: [t.lineaDeDocumentoId, t.documentoDeCompraId, t.empresaId],
       foreignColumns: [lineasDeDocumento.id, lineasDeDocumento.documentoId, lineasDeDocumento.empresaId],
     }),
+    foreignKey({
+      name: 'costos_mejora_fk',
+      columns: [t.mejoraId, t.empresaId],
+      foreignColumns: [mejoras.id, mejoras.empresaId],
+    }),
   ];
 }
 
@@ -49,6 +56,7 @@ export function indicesDeCosto(t: Columnas) {
   return [
     index('costos_activo_estado_idx').on(t.activoId, t.estado),
     index('costos_linea_idx').on(t.lineaDeDocumentoId).where(con(t.lineaDeDocumentoId)),
+    index('costos_mejora_idx').on(t.mejoraId).where(con(t.mejoraId)),
     index('costos_documento_idx').on(t.documentoDeCompraId).where(con(t.documentoDeCompraId)),
     uniqueIndex('costos_archivo_unico').on(t.archivoId).where(con(t.archivoId)),
     uniqueIndex('costos_saldo_inicial_unico')
