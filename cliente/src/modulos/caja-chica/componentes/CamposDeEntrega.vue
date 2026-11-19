@@ -20,6 +20,8 @@ const props = defineProps<{
   errores: Record<string, string>;
   /** El nombre que irá en el cheque si no se escribe otro beneficiario (el custodio). */
   beneficiarioPropuesto: string;
+  /** Sin el campo del monto (reponer: el monto lo calcula el servidor con lo que se repone). */
+  sinMonto?: boolean;
 }>();
 const edicion = defineModel<EdicionDeEntrega>({ required: true });
 
@@ -96,7 +98,15 @@ function elegirForma(forma: FormaDeEntrega): void {
     />
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <CampoTexto v-model="edicion.monto" etiqueta="Monto" tipo="number" paso="any" requerido :error="errores.monto" />
+      <CampoTexto
+        v-if="!sinMonto"
+        v-model="edicion.monto"
+        etiqueta="Monto"
+        tipo="number"
+        paso="any"
+        requerido
+        :error="errores.monto"
+      />
       <CampoTexto
         v-model="edicion.fecha"
         etiqueta="Fecha"
