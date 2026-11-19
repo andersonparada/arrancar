@@ -5,22 +5,22 @@ import {
   RelojFijo,
   UnidadDeTrabajoEnMemoria,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
-import type { EvaluacionDeBancarizacion } from '../../../../core/contratos/libro-de-compras.contratos.js';
 import type { Comprobante } from '../../../dominio/comprobantes.js';
 import { efectoEnLoPendiente } from '../../../dominio/reglas-de-comprobantes.js';
 import type {
   AnulacionDelComprobante,
   AsignacionDeComprobante,
-  BancarizacionDelLibro,
   ConsultasDeComprobantes,
   DocumentoRecibido,
-  PedidoDeEvaluacion,
   RepositorioDeComprobantes,
   ValeDeGastoNuevo,
 } from '../../puertos/puertos-de-comprobantes.js';
 import type { ConsultasDeFondos } from '../../puertos/puertos-de-fondos.js';
+import { BancarizacionFalsa } from './dobles-de-bancarizacion.soporte.js';
 import { FondosEnMemoria } from '../fondos/dobles-de-fondos.soporte.js';
 import type { DependenciasDeComprobantes } from './dependencias-de-comprobantes.js';
+
+export { BancarizacionFalsa };
 
 export const HOY = '2026-11-18';
 /** El fondo de los escenarios: con forma de uuid, como el que manda el libro en la referencia de destino. */
@@ -53,6 +53,8 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
       sobreElTope: false,
       motivoSobreElTope: null,
       sinBancarizar: false,
+      valeProvisionalId: null,
+      destinoDelFaltante: null,
       numero: null,
       anioDeNumero: 0,
       descripcion: null,
@@ -111,6 +113,7 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
       anioDeNumero: nuevo.anioDeNumero,
       asignadoEn: HOY,
       asignadoPor: nuevo.asignadoPor,
+      valeProvisionalId: nuevo.valeProvisionalId ?? null,
     });
     return id;
   }
@@ -179,18 +182,6 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
   }
 }
 
-/** La bancarización que dice el libro: se cambia `resultado` y se anota lo que se le pidió. */
-export class BancarizacionFalsa implements BancarizacionDelLibro {
-  resultado: EvaluacionDeBancarizacion['resultado'] = 'libre';
-  pedidos: PedidoDeEvaluacion[] = [];
-
-  async evaluar(_operador: unknown, pedido: PedidoDeEvaluacion): Promise<EvaluacionDeBancarizacion> {
-    this.pedidos.push(pedido);
-    const mensaje = this.resultado === 'libre' ? null : 'Bancarización: pasa del umbral.';
-    return { resultado: this.resultado, mensaje, efecto: null, pagadoEnElMesCentavos: 0 };
-  }
-}
-
 export interface EscenarioEnMemoria {
   dependencias: DependenciasDeComprobantes;
   comprobantes: ComprobantesEnMemoria;
@@ -235,6 +226,7 @@ export async function armarEscenario(montoDelFondoCentavos = 100_000): Promise<E
             montoCentavos: montoDelFondoCentavos,
             pendienteCentavos: comprobantes.pendienteDe(id),
             valesCentavos: 0,
+            valeMasViejo: null,
             ultimoArqueo: null,
             aperturaAnulada: false,
           },

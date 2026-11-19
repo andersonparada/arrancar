@@ -9,6 +9,7 @@ import {
   FacturaConNotasEnElFondo,
   SoloUnDocumentoVuelveALaBandeja,
 } from '../../../dominio/errores-de-comprobantes.js';
+import { ComprobanteDeUnVale } from '../../../dominio/errores-de-vales-provisionales.js';
 import { exigirQueAlcanceElEfectivo, efectoEnLoPendiente } from '../../../dominio/reglas-de-comprobantes.js';
 import { exigirFondoAbierto } from '../../../dominio/reglas-del-fondo.js';
 import type { ComprobanteDto } from '../../dto/comprobantes.dto.js';
@@ -36,7 +37,7 @@ export class DevolverALaBandeja {
 
   /**
    * @throws RecursoNoEncontrado, DocumentoYaEstaEnLaBandeja, SoloUnDocumentoVuelveALaBandeja, ComprobanteRepuesto,
-   * ComprobanteConReposicionAnulada, FacturaConNotasEnElFondo, FondoNoDisponible, ComprobantesMayoresQueElEfectivo
+   * ComprobanteConReposicionAnulada, ComprobanteDeUnVale, FacturaConNotasEnElFondo, FondoNoDisponible, ComprobantesMayoresQueElEfectivo
    */
   async ejecutar(operador: Operador, pedido: PeticionDeDevolver): Promise<ComprobanteDto> {
     const { unidadDeTrabajo, publicadorEventos } = this.dependencias;
@@ -70,6 +71,7 @@ export class DevolverALaBandeja {
   private async exigirDevolvible(comprobante: Comprobante): Promise<void> {
     if (comprobante.clase !== 'documento') throw new SoloUnDocumentoVuelveALaBandeja();
     if (comprobante.estado === 'anulado') throw new ComprobanteYaAnulado();
+    if (comprobante.valeProvisionalId !== null) throw new ComprobanteDeUnVale(etiquetaDelComprobante(comprobante));
     if (comprobante.reposicionNumero !== null) throw new ComprobanteRepuesto(comprobante.reposicionNumero);
     const { comprobantes, consultasDeFondos } = this.dependencias;
     if (await comprobantes.tuvoReposicionAnulada(comprobante.id)) throw new ComprobanteConReposicionAnulada();

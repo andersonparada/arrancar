@@ -6,6 +6,7 @@ import {
   ComprobanteEnFondoNoAsignado,
   ComprobanteRepuesto,
 } from '../../../dominio/errores-de-comprobantes.js';
+import { exigirFondoAbierto } from '../../../dominio/reglas-del-fondo.js';
 import { LectorDelFondo } from '../fondos/lector-del-fondo.js';
 import { AnuladorDeComprobantes } from './anulador-de-comprobantes.js';
 import { comprobanteDto } from './armado-del-comprobante.js';
@@ -26,7 +27,9 @@ export interface AvisoDeBajaDelLibro {
  * Busca el comprobante del documento y, si está en un fondo, lo bloquea antes (fondo primero, §13.2 del diseño).
  * Todo documento con destino Caja chica crea su comprobante al recibirse: si no se ve, es que está en un fondo que el
  * usuario no tiene asignado (RLS por alcance) y se rechaza, en vez de dejar al libro dar de baja el documento a medias.
- * @throws ComprobanteEnFondoNoAsignado
+ * Un comprobante vigente sin reponer de un fondo cerrado (lo que dejó el cierre cuando lo pendiente sumaba cero o menos)
+ * no se da de baja: `fondo_no_disponible`.
+ * @throws ComprobanteEnFondoNoAsignado, FondoNoDisponible
  */
 async function bloquearElDelDocumento(
   dependencias: DependenciasDeComprobantes,
@@ -35,10 +38,13 @@ async function bloquearElDelDocumento(
   const { comprobantes, fondos, consultasDeFondos } = dependencias;
   const visto = await comprobantes.buscarDelDocumento(documentoId);
   if (!visto) throw new ComprobanteEnFondoNoAsignado();
-  if (visto.fondoId !== null)
-    await new LectorDelFondo({ fondos, consultas: consultasDeFondos }).bloquear(visto.fondoId);
+  const fondo =
+    visto.fondoId === null
+      ? null
+      : await new LectorDelFondo({ fondos, consultas: consultasDeFondos }).bloquear(visto.fondoId);
   const bloqueado = await comprobantes.bloquear(visto.id);
   if (!bloqueado) throw new ComprobanteEnFondoNoAsignado();
+  if (fondo && bloqueado.estado === 'vigente' && bloqueado.reposicionNumero === null) exigirFondoAbierto(fondo);
   return bloqueado;
 }
 

@@ -164,3 +164,25 @@ export class AnulacionDejaElFondoSinMonto extends ReglaDeNegocioInfringida {
     );
   }
 }
+
+/** Un vale provisional abierto es efectivo fuera de la caja: se liquida o se anula antes de cerrar el fondo. */
+export class FondoConValesAbiertos extends ReglaDeNegocioInfringida {
+  readonly codigo = 'fondo_con_vales_abiertos';
+
+  constructor(valesCentavos: number) {
+    super(
+      `El fondo tiene vales provisionales abiertos por ${enQuetzales(valesCentavos)}: liquídelos o anúlelos antes de cerrarlo.`,
+    );
+  }
+}
+
+/** Gastado más de lo que tenía el fondo: no hay efectivo que depositar; se arquea o se repone antes de cerrar. */
+export class EfectivoNegativoAlCerrar extends ReglaDeNegocioInfringida {
+  readonly codigo = 'efectivo_negativo_al_cerrar';
+
+  constructor(esperadoCentavos: number) {
+    super(
+      `El efectivo esperado es ${enQuetzales(esperadoCentavos)}: lo pendiente supera el dinero del fondo. Haga un arqueo o reponga antes de cerrarlo.`,
+    );
+  }
+}

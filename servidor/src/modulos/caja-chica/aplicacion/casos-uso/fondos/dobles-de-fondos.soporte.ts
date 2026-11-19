@@ -8,6 +8,7 @@ import type {
 } from '../../puertos/puertos-de-bancos.js';
 import type {
   CambioNuevo,
+  CierreDelFondo,
   ConsultasDeFondos,
   DatosDeLectura,
   FondoNuevo,
@@ -48,7 +49,15 @@ export class FondosEnMemoria implements RepositorioDeFondos {
     this.fondos.set(id, { ...this.fondos.get(id)!, ...cambios });
   }
 
-  async cerrar(): Promise<void> {}
+  async cerrar(id: string, cierre: CierreDelFondo): Promise<void> {
+    const fondo = this.fondos.get(id)!;
+    this.fondos.set(id, {
+      ...fondo,
+      estado: 'cerrado',
+      fechaDeCierre: cierre.fecha,
+      motivoDeCierre: cierre.motivo,
+    });
+  }
 
   async existeElNombre(nombre: string, exceptoId?: string): Promise<boolean> {
     return [...this.fondos.values()].some((f) => f.id !== exceptoId && f.nombre.toLowerCase() === nombre.toLowerCase());
@@ -98,6 +107,7 @@ export const consultas = (cifras: Partial<DatosDeLectura> = {}): ConsultasDeFond
           montoCentavos: 100_000,
           pendienteCentavos: 0,
           valesCentavos: 0,
+          valeMasViejo: null,
           ultimoArqueo: null,
           aperturaAnulada: false,
           ...cifras,

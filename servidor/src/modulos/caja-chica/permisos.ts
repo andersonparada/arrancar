@@ -32,7 +32,10 @@ export const PERMISOS_DE_CAJA_CHICA: DefinicionPermiso[] = [
     descripcion: 'Asignar a un fondo un documento con retención (excepción), con motivo; queda en la auditoría',
   },
   { clave: 'caja-chica.vales.crear', descripcion: 'Entregar vales provisionales' },
-  { clave: 'caja-chica.vales.liquidar', descripcion: 'Liquidar vales provisionales' },
+  {
+    clave: 'caja-chica.vales.liquidar',
+    descripcion: 'Liquidar vales provisionales (asigna sus documentos y registra sus vales de gasto)',
+  },
   { clave: 'caja-chica.vales.anular', descripcion: 'Anular vales provisionales' },
   { clave: 'caja-chica.reposiciones.crear', descripcion: 'Reponer el fondo (genera el cheque o la nota en Bancos)' },
   { clave: 'caja-chica.reposiciones.anular', descripcion: 'Anular reposiciones' },

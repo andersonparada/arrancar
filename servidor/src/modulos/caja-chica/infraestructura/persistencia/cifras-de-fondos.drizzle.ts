@@ -70,6 +70,17 @@ export async function valesAbiertosDe(ids: readonly string[]): Promise<TotalesPo
   return aTotales(filas);
 }
 
+/** La fecha del vale provisional abierto más viejo de cada fondo. */
+export async function valesMasViejosDe(ids: readonly string[]): Promise<Map<string, string>> {
+  const fecha = sql<string>`min(${valesProvisionales.fecha})::text`;
+  const filas = await transaccionEnCurso()
+    .select({ fondoId: valesProvisionales.fondoId, fecha })
+    .from(valesProvisionales)
+    .where(and(inArray(valesProvisionales.fondoId, [...ids]), eq(valesProvisionales.estado, 'abierto')))
+    .groupBy(valesProvisionales.fondoId);
+  return new Map(filas.map((fila) => [fila.fondoId, fila.fecha]));
+}
+
 /** El último arqueo vigente de cada fondo, como fecha y hora ISO. */
 export async function ultimosArqueosDe(ids: readonly string[]): Promise<Map<string, string>> {
   const ultimo = sql<string>`to_char(max(${arqueos.realizadoEn}) at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`;

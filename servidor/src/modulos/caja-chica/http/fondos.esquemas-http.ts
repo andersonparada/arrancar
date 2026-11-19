@@ -80,6 +80,14 @@ export const esquemaCustodio = z.object({
 /** Anular la apertura: el motivo y, si Bancos hace un inverso, su fecha (por omisión la decide Bancos). */
 export const esquemaAnularApertura = z.object({ motivo, fecha: fecha.optional() });
 
+/** Cerrar: el motivo, la fecha y, si queda efectivo, la cuenta del depósito (por omisión la del fondo) y su referencia. */
+export const esquemaCierre = z.object({
+  motivo,
+  fecha: fecha.optional(),
+  cuentaBancariaId: z.uuid().nullable().optional(),
+  referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
+});
+
 export const esquemaParamsDeFondo = z.object({ id: z.uuid() });
 
 /** La lista: por omisión los fondos abiertos. */
@@ -98,3 +106,4 @@ export type DisminucionSolicitada = z.infer<typeof esquemaDisminucion>;
 export type EdicionSolicitada = z.infer<typeof esquemaEdicion>;
 export type CustodioSolicitado = z.infer<typeof esquemaCustodio>;
 export type AnularAperturaSolicitada = z.infer<typeof esquemaAnularApertura>;
+export type CierreSolicitado = z.infer<typeof esquemaCierre>;

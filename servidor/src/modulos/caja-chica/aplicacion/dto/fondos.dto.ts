@@ -36,6 +36,8 @@ export interface FondoResumenDto {
   efectivoEsperado: string;
   pendienteDeReponer: string;
   valesAbiertos: string;
+  /** La fecha del vale provisional abierto más viejo, si hay alguno. */
+  valeMasViejo: string | null;
   ultimoArqueo: string | null;
   avisos: string[];
 }

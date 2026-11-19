@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { efectivoEsperado, montoDelFondo } from './monto-del-fondo.js';
 import {
   beneficiarioDelFondo,
+  depositoAlCerrar,
   descripcionDelUso,
   exigirAperturaVigente,
   exigirDisminucionPosible,
@@ -104,5 +105,24 @@ describe('anular la apertura', () => {
     );
     expect(fechaDeAnulacionDelCambio({ ...base, enBancos: null })).toBe('2026-11-18');
     expect(fechaDeAnulacionDelCambio({ ...base, enBancos: null, hoy: '2026-11-01' })).toBe('2026-11-10');
+  });
+});
+
+describe('cerrar el fondo', () => {
+  it('el depósito es el efectivo esperado: lo pendiente se liquida aparte', () => {
+    expect(depositoAlCerrar({ montoCentavos: 100_000, pendienteCentavos: 30_000, valesCentavos: 0 })).toBe(70_000);
+    expect(depositoAlCerrar({ montoCentavos: 100_000, pendienteCentavos: 100_000, valesCentavos: 0 })).toBe(0);
+  });
+
+  it('con vales provisionales abiertos se rechaza', () => {
+    expect(() => depositoAlCerrar({ montoCentavos: 100_000, pendienteCentavos: 0, valesCentavos: 5_000 })).toThrow(
+      /vales provisionales abiertos por Q\s?50\.00/,
+    );
+  });
+
+  it('con el efectivo esperado negativo se rechaza', () => {
+    expect(() => depositoAlCerrar({ montoCentavos: 100_000, pendienteCentavos: 120_000, valesCentavos: 0 })).toThrow(
+      /efectivo esperado es/,
+    );
   });
 });

@@ -68,7 +68,7 @@ function atenderAlMediador(dependencias: DependenciasDeComprobantes): void {
   mediador.responder(MODULO, 'libro-de-compras.pagado_al_proveedor_en_el_mes', (datos) => responder.ejecutar(datos));
 }
 
-function dependenciasDeComprobantes(): DependenciasDeComprobantes {
+export function dependenciasDeComprobantes(): DependenciasDeComprobantes {
   const compartidas = dependenciasCompartidas();
   return {
     unidadDeTrabajo: compartidas.unidadDeTrabajo,

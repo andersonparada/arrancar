@@ -590,6 +590,13 @@ pagado (la bancarización mide pagos, no saldos; **por validar**, V-12). Usa `co
 - Aviso «vale viejo» a los `caja-chica.vales_provisionales.dias_para_avisar` (5 por omisión) en la ficha, la lista y el
   arqueo.
 
+**Como se programó (CC-6).** Liquidar es **un solo paso**: el cuerpo trae los `documentos` de la bandeja (como asignar) y los
+`valesDeGasto` nuevos; el vale se libera primero (deja de contar como abierto) y cada comprobante nace o pasa al fondo ya atado
+al vale (`vale_provisional_id`) con las reglas de siempre, todo o nada. Por eso un vale abierto nunca tiene comprobantes y no
+hay doble cuenta en el efectivo esperado; la ruta de vales de gasto no lleva `valeProvisionalId`. Quien liquida no necesita
+`comprobantes.crear`. Rutas: `GET/POST /fondos/:id/vales-provisionales`, `GET /vales-provisionales/:id`, `POST
+/vales-provisionales/:id/liquidar` y `/anular`.
+
 ### 5.6 Reponer (`RegistrarReposicion`, `reposiciones.crear`; CC-j: un paso)
 
 1. Fondo abierto, bloqueado. El usuario elige los comprobantes pendientes (por omisión todos los vigentes asignados,
@@ -1022,9 +1029,9 @@ uno por módulo a la vez.
 | **CC-2** (fondos) | Abrir, custodio, aumentar, disminuir, editar, anular apertura, lista, ficha, accesos, manejador de Bancos, eventos | CC-1 y CCL-B1 |
 | **CC-3** (comprobantes) — **hecho 2026-11-19 (servidor; corregido: baja del libro con fondo no asignado se rechaza)** | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención y su auditoría `autorizar`, §5.4 g), devolver, vales de gasto, tope, ecuación con el neto, avisos del libro, bancarización y su respuesta con `monto + monto_retenido` (función `security definer`, §5.4 h). Pruebas: factura con retención desde la ficha (queda en la bandeja), asignarla sin permiso (403, sigue en la bandeja), con permiso sin motivo (rechazo), con los dos (asignada, `asignado_por` y auditoría), devolverla y reasignar (pide otra vez), la suma del mes con una factura con retención (cuenta el total) | CC-2, CCL-L1 y CCL-BZ |
 | **CC-4** (reposiciones) — **hecho 2026-11-19 (servidor)** | Reponer con desglose, anular (aquí y por aviso), `marcar_procesado`, datos de las impresiones | CC-3 |
-| **CC-5** (arqueos) | Propuesta, registrar con diferencia (faltante o sobrante), anular, avisos | CC-3 |
-| **CC-6** (vales provisionales) | Entregar, liquidar, anular, aviso de vale viejo | CC-3 |
-| **CC-7** (cierre) | Cerrar con reposición compensada y depósito | CC-4, CC-5 y CC-6 |
+| **CC-5** (arqueos) — **hecho 2026-11-19 (servidor; corregido: el día del conteo sale de la zona de la empresa)** | Propuesta, registrar con diferencia (faltante o sobrante), anular, avisos | CC-3 |
+| **CC-6** (vales provisionales) — **hecho 2026-11-19 (servidor)** | Entregar, liquidar, anular, aviso de vale viejo | CC-3 |
+| **CC-7** (cierre) — **hecho 2026-11-19 (servidor)** | Cerrar con reposición compensada y depósito | CC-4, CC-5 y CC-6 |
 | **CC-8 / CC-9** (cliente) | 8: fondos, ficha, bandeja, comprobantes, vales de gasto, Ingreso con referencia. 9: reposición, arqueo, vales provisionales, cierre, impresiones | CC-4 (8) y CC-7 (9) |
 | **CC-10** (reportes, servidor y cliente) | CC-R1 a R5 | CC-7 |
 | **CC-11** (QA) | Abrir con cheque no negociable; factura desde la ficha; factura con retención (queda en la bandeja; la asigna quien tiene el permiso, con motivo); vale sobre el tope (permiso); reponer (desglose en Bancos); arqueo con faltante; custodio que repone (aviso); usuario sin el fondo asignado (no lo ve); bancarización con una factura de caja chica y un cheque de Cuentas por pagar al mismo proveedor; cerrar; celular | CC-9 y CC-10 |

@@ -11,6 +11,7 @@ import {
   ultimosArqueosDe,
   usoDe,
   valesAbiertosDe,
+  valesMasViejosDe,
 } from './cifras-de-fondos.drizzle.js';
 import { fondos } from './fondos.tablas.js';
 import { aFondo } from './repositorio-de-fondos.drizzle.js';
@@ -20,6 +21,7 @@ interface Fuentes {
   anuladas: Set<string>;
   pendientes: Map<string, number>;
   vales: Map<string, number>;
+  valesViejos: Map<string, string>;
   arqueados: Map<string, string>;
   custodios: Awaited<ReturnType<typeof custodiosVigentesDe>>;
   nombres: Map<string, string>;
@@ -37,6 +39,7 @@ function datosDe(id: string, fuentes: Fuentes): DatosDeLectura {
     montoCentavos: total(fuentes.montos, id),
     pendienteCentavos: total(fuentes.pendientes, id),
     valesCentavos: total(fuentes.vales, id),
+    valeMasViejo: fuentes.valesViejos.get(id) ?? null,
     ultimoArqueo: fuentes.arqueados.get(id) ?? null,
     aperturaAnulada: fuentes.anuladas.has(id),
   };
@@ -70,6 +73,7 @@ export class ConsultasDeFondosDrizzle implements ConsultasDeFondos {
       anuladas: await aperturasAnuladasDe(ids),
       pendientes: await pendientesDe(ids),
       vales: await valesAbiertosDe(ids),
+      valesViejos: await valesMasViejosDe(ids),
       arqueados: await ultimosArqueosDe(ids),
       custodios: await custodiosVigentesDe(ids),
       nombres: await this.nombresDeLocalidad(ids),

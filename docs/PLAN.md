@@ -3652,6 +3652,82 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   borrarlo (aviso `documento_por_eliminar` del libro) fallaba con 23503. Decisión: se conserva el historial y se rechaza
   con el error propio `comprobante_con_reposicion_anulada` (422) en `DevolverALaBandeja` y `EliminarPorAviso`
   (puerto nuevo `tuvoReposicionAnulada`); lo que sí cabe es anular el documento. Sin migración. Pruebas de API de ambos flujos.
+- **2026-11-19 (CC-5, Caja chica, arqueos, servidor)**: arqueos del fondo, sin migraciones (las tablas `arqueos` y el
+  faltante/sobrante como comprobante ya venían de CC-1). Rutas (`/api/caja-chica`): `GET /fondos/:id/arqueos` (lista) y
+  `GET /arqueos/:id` (acta: conteo por denominación con subtotales, cifras que decía el sistema, motivo, destino y el
+  comprobante del ajuste), con `fondos.ver`; `GET /fondos/:id/arqueos/propuesta` (monto, pendiente, vales, efectivo
+  esperado, denominaciones y pendientes por ver) y `POST /fondos/:id/arqueos` con `arqueos.crear`; `POST /arqueos/:id/anular`
+  con `arqueos.anular`. *Registrar*: fondo abierto y bloqueado; conteo `[{ denominacionCentavos, cantidad }]` validado en el
+  dominio (denominaciones de Q200 a Q0.01, sin repetir, cantidades enteras; `conteo_invalido`); `realizadoEn` opcional con zona,
+  ni futuro ni anterior a la apertura (`fecha_del_arqueo_invalida`); `diferencia = contado + valoresPorCambiar - esperado`.
+  Con diferencia: `motivoDeDiferencia` obligatorio y, con faltante, `destinoDelFaltante` (`perdida` o `cobrar_al_custodio`,
+  C10); sin diferencia o con sobrante no se admiten motivo ni destino que no aplican (`dato_de_diferencia_que_no_aplica`).
+  Con diferencia nace el comprobante `faltante` (monto positivo) o `sobrante` (resta) del mismo fondo con `arqueo_id`, y se
+  audita `ajustar` (recurso `caja-chica.arqueos`, `anterior` = `FondoDto` antes del ajuste, motivo); sin diferencia no hay
+  auditoría. Número `caja-chica.arqueos`. CC-k: si quien arquea es el custodio vigente, la variable
+  `caja-chica.control.separacion_de_funciones` avisa (queda `lo_hizo_el_custodio`) o bloquea
+  (`separacion_de_funciones_en_el_arqueo`). *Anular*: fondo abierto, arqueo vigente, su faltante o sobrante no repuesto
+  (`arqueo_con_comprobante_repuesto`: primero se anula la reposición) y, si era un sobrante, el efectivo esperado no queda
+  negativo; anula el arqueo y su comprobante, audita `anular` con el `ArqueoDto` y publica `arqueo_anulado`. Aviso «sin arqueo»
+  (CC-l, opcional): variable nueva `caja-chica.arqueos.dias_para_avisar` (30; 0 = sin aviso; empresa e instalación); la lista,
+  la ficha del fondo y la propuesta lo agregan a `avisos` si pasaron más días desde el último arqueo vigente (o desde la
+  apertura si nunca se arqueó). Eventos `caja-chica.arqueo_registrado` (con diferencia y destino) y `arqueo_anulado`
+  (contrato en `caja-chica.contratos.ts`). `Comprobante` y `ComprobanteDto` ganan `destinoDelFaltante`. Decisiones:
+  (1) el día contable del arqueo es el de `realizadoEn` tal como se escribió (primeros diez caracteres), no el de UTC;
+  (2) el arqueo no guarda el destino: vive solo en el comprobante del faltante; (3) el arqueo no pide `comprobantes.anular`
+  para anular su ajuste: lo cubre `arqueos.anular` y su entrada de auditoría; (4) la propuesta pide `arqueos.crear`.
+- **2026-11-19 (CC-5, corrección)**: el día contable de un conteo sale siempre de la zona horaria de la empresa
+  (`fechaLocalEn` con `PoliticaDeZonaHoraria`, en `dia-del-arqueo.ts`), no de los caracteres de `realizadoEn` ni de UTC: una
+  hora con `Z` ya no se rechaza como futura ni se fecha un día después, y la anulación de un arqueo cuadrado de la noche dice
+  el mismo día que `arqueo_registrado`. `DependenciasDeArqueos` agrega `zonaHoraria`.
+- **2026-11-19 (CC-6, Caja chica, vales provisionales, servidor)**: sin migraciones (la tabla `vales_provisionales` y la llave
+  `vale_provisional_id` ya venían de CC-1). Rutas (`/api/caja-chica`): `GET /fondos/:id/vales-provisionales` (lista) y `GET
+  /vales-provisionales/:id` (ficha con sus comprobantes, lo gastado y lo devuelto), con `fondos.ver`; `POST
+  /fondos/:id/vales-provisionales` (`vales.crear`), `POST /vales-provisionales/:id/liquidar` (`vales.liquidar`) y `POST
+  /vales-provisionales/:id/anular` (`vales.anular`). *Entregar*: fondo abierto y bloqueado; `entregadoA` (nombre) o
+  `entregadoAUsuarioId` (usuario activo de la empresa, que da el nombre); monto positivo que no pase del efectivo esperado
+  (`vale_mayor_que_el_efectivo`); fecha ni futura ni anterior a la apertura (`fecha_del_vale_invalida`); número del talonario
+  `caja-chica.vales`, compartido con los vales de gasto; sin auditoría ni evento (no hay partida). *Liquidar*: un solo paso
+  todo o nada con `documentos` de la bandeja y `valesDeGasto` nuevos (puede ir sin ninguno: se devuelve todo); el vale se libera
+  primero y cada comprobante entra al fondo atado al vale con las reglas de siempre (tope, retención con su auditoría
+  `autorizar`, bancarización y que el efectivo alcance; `AsignadorDeDocumentos` y `RegistradorDeValesDeGasto`, extraídos de
+  `AsignarDocumentos` y `RegistrarValeDeGasto`); `devuelto = max(0, monto - gastado)` con las notas de crédito restando; fecha de
+  liquidación entre la entrega y hoy. Publica `comprobante_asignado` por cada uno. *Anular*: vale abierto, sin comprobantes,
+  fondo abierto; audita `anular` (recurso `caja-chica.vales-provisionales`, `anterior` = `ValeProvisionalDto`, motivo).
+  Un comprobante con el que se liquidó un vale no vuelve a la bandeja (`comprobante_de_un_vale`). Aviso «vale viejo»: variable
+  nueva `caja-chica.vales_provisionales.dias_para_avisar` (5; 0 = sin aviso; empresa e instalación); lo agregan a `avisos` la
+  lista de vales, la ficha y la lista de fondos (`valeMasViejo` nuevo en `FondoResumenDto`) y la propuesta de arqueo.
+  `Comprobante` y `ComprobanteDto` ganan `valeProvisionalId`. Decisiones: (1) liquidar es un paso y no se agrega
+  `valeProvisionalId` a la ruta de vales de gasto (con comprobantes atados a un vale abierto el efectivo esperado contaría dos
+  veces); (2) quien liquida no necesita `comprobantes.crear` (como abrir un fondo no pide permisos de Bancos); los permisos de
+  excepción (`sobre-el-tope`, `con-retencion`) sí cuentan; (3) la anulación de un comprobante de un vale ya liquidado no cambia
+  el `devuelto` (el arqueo lo absorbe); (4) `ConfiguracionDeArqueos` lleva también `diasParaAvisarDeVales` para no sumar una
+  dependencia más a fondos y arqueos.
+- **2026-11-19 (CC-6, corrección de la revisión)**: liquidar un vale cuyas notas de crédito superan lo gastado (la factura ya estaba
+  en el fondo, no en el vale) daba `devuelto > monto` y un 500 por el check `vales_devuelto_valido`. Ahora se rechaza antes con
+  `notas_de_credito_sin_gasto` (`exigirGastoNoNegativo`): la nota debe llegar con su factura en la misma liquidación.
+- **2026-11-19 (CC-7, Caja chica, cierre del fondo, servidor):** sin migraciones (la forma `compensada_al_cerrar`, el cambio
+  `cierre` y las columnas de cierre ya estaban en CC-1). `CerrarFondo` (`POST /caja-chica/fondos/:id/cerrar`, `fondos.cerrar`,
+  cuerpo `{ motivo, fecha?, cuentaBancariaId?, referencia? }`, responde el `FondoDto`): fondo abierto y bloqueado; rechaza con
+  vales provisionales abiertos (`fondo_con_vales_abiertos`) y con efectivo esperado negativo (`efectivo_negativo_al_cerrar`);
+  `ReponedorAlCerrar` liquida todos los comprobantes pendientes en una reposición `compensada_al_cerrar` (sin movimiento,
+  mismo correlativo `caja-chica.reposiciones`, documentos del libro a `marcar_procesado`); el efectivo esperado se deposita con
+  una nota de crédito de `devolucion_de_fondo_de_caja_chica` (origen = el fondo; cuenta del cuerpo o la del fondo, si no
+  `cuenta_del_deposito_obligatoria`) y el cambio `cierre` (`nota_de_credito`); sin efectivo, `sin_deposito` con monto 0 y sin
+  nota. Deja el fondo `cerrado` con motivo y fecha, audita `cerrar` (`anterior` = `FondoDto`) en la misma transacción y publica
+  `caja-chica.fondo_cerrado` (con el depósito y la reposición compensada: líneas y desglose). Decisiones: (1) «si hay diferencia
+  con lo contado, se pide antes un arqueo» no se valida en el servidor (el cierre no recibe el conteo): el arqueo previo mete su
+  faltante o sobrante en lo pendiente y el cliente (CC-9) lo sugiere; (2) si lo pendiente suma cero o menos (solo notas de crédito
+  o sobrantes) no se crea reposición compensada (el check exige monto > 0), esos comprobantes quedan sin reponer y su efectivo
+  entra al depósito; (3) un fondo cerrado rechaza todo con `fondo_no_disponible` (incluido anular la compensada o la apertura);
+  el depósito del cierre se corrige solo desde Caja chica: Bancos rechaza `movimiento_de_caja_chica`.
+- **2026-11-19 (CC-7, correcciones de la revisión, servidor):** (1) `AtenderMovimientoDeFondoPorCambiar` exige el fondo
+  abierto: Bancos ya no anula el cheque o la nota de un aumento de un fondo cerrado (`fondo_no_disponible`, el depósito del
+  cierre ya contó ese monto). (2) Lo pendiente que suma cero o menos al cerrar (caso mixto: factura y sobrante) sigue sin
+  reposición compensada (el check `monto > 0` no cambia, sin migración); para que no se pierda el control, `AnularPorAviso` y
+  `EliminarPorAviso` rechazan con `fondo_no_disponible` un comprobante vigente y sin reponer de un fondo cerrado, y la ficha de
+  un fondo cerrado muestra `pendienteDeReponer` en 0. Queda para el contador y el arquitecto de datos decidir si esos
+  comprobantes deben liquidarse (compensada con monto ≤ 0) y cómo los trata CC-R1.
 - **2026-11-19 (CL-3, Cuentas por liquidar, servidor):** gastos de los anticipos, sin migraciones nuevas (la tabla `gastos` ya
   estaba en CL-1 y CL-1c). `RecibirDocumento` atiende `cuentas-por-liquidar.recibir_documento` (contrato nuevo): guarda el
   documento en la bandeja con `monto = total − retenciones` y `monto_retenido`; **no rechaza por retención** (queda en la

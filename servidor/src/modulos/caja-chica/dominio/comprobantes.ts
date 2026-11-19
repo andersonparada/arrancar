@@ -39,6 +39,10 @@ export interface Comprobante {
   sobreElTope: boolean;
   motivoSobreElTope: string | null;
   sinBancarizar: boolean;
+  /** El vale provisional que se liquidó con este comprobante, si lo hubo. */
+  valeProvisionalId: string | null;
+  /** Solo en el faltante de un arqueo: qué se hace con él. */
+  destinoDelFaltante: 'perdida' | 'cobrar_al_custodio' | null;
   numero: number | null;
   anioDeNumero: number;
   descripcion: string | null;
