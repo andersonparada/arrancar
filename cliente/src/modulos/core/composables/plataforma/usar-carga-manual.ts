@@ -1,6 +1,10 @@
 import { reactive } from 'vue';
+import { usarAvisos } from '../../almacenes/avisos';
 import { apiTiposDeCambio, type ResumenDeCarga } from '../../servicios/tipos-de-cambio.api';
 import { usarFormulario } from '../usar-formulario';
+import { esperarElFinDeLaCarga, resumenesDeLaCarga } from './seguimiento-de-la-carga';
+
+const MAXIMO_DE_CONSULTAS = 200;
 
 export interface FormularioDeCarga {
   abierta: boolean;
@@ -17,10 +21,13 @@ export function errorDelRango(desde: string, hasta: string): string | null {
 }
 
 /**
- * La ventana «Cargar ahora»: pide al Banguat un rango (por omisión, hoy) para todas las monedas activas con código y
- * muestra qué dejó cada una. Si otra carga corre, el servidor responde 409 y el aviso dice que espere.
+ * La ventana «Cargar ahora»: pide al Banguat un rango (por omisión, hoy) para todas las monedas activas con código. El
+ * servidor responde enseguida y la carga sigue en segundo plano: se pregunta cada 2 segundos hasta que termine y
+ * entonces se muestra qué dejó cada moneda (aunque se cierre la ventana, la bitácora se actualiza y se avisa). Si otra
+ * carga corre, el servidor responde 409 y el aviso dice que espere.
  */
 export function usarCargaManual(hoy: () => string, alCargar: () => Promise<unknown>) {
+  const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
   const carga = reactive<FormularioDeCarga>({ abierta: false, desde: '', hasta: '', resultados: null });
 
@@ -29,13 +36,21 @@ export function usarCargaManual(hoy: () => string, alCargar: () => Promise<unkno
     Object.assign(carga, { abierta: true, desde: hoy(), hasta: hoy(), resultados: null });
   }
 
+  /** Pide la carga, espera su fin y deja en `resultados` lo que hizo cada moneda, tomado de la bitácora. */
+  async function cargarYEsperar(): Promise<void> {
+    const { iniciadaEn } = await apiTiposDeCambio.cargarAhora(carga.desde, carga.hasta);
+    const estado = await esperarElFinDeLaCarga({
+      pedirEstado: () => apiTiposDeCambio.estadoDeLaCarga(MAXIMO_DE_CONSULTAS),
+    });
+    carga.resultados = resumenesDeLaCarga(estado.consultas, iniciadaEn);
+    if (!carga.abierta) avisos.exito('La carga del Banguat terminó; el detalle está en la bitácora.');
+  }
+
   async function cargar(): Promise<void> {
     const error = errorDelRango(carga.desde, carga.hasta);
     errores.value = error ? { desde: error } : {};
     if (error) return;
-    const hecho = await enviar(
-      async () => (carga.resultados = await apiTiposDeCambio.cargarAhora(carga.desde, carga.hasta)),
-    );
+    const hecho = await enviar(cargarYEsperar);
     if (hecho) await alCargar();
   }
 

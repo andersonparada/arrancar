@@ -53,9 +53,10 @@ export interface ConsultaDeLaLista {
   hechaEn: string;
 }
 
-export interface ListaActualizada {
-  consulta: ConsultaDeLaLista;
-  lista: OpcionDelBanguat[];
+/** La respuesta al iniciar «Cargar ahora» o «Actualizar lista»: siguen en segundo plano; `iniciadaEn` es la hora del servidor. */
+export interface CargaIniciada {
+  enCurso: boolean;
+  iniciadaEn: string;
 }
 
 /** Un día de la muestra: lo publicado, el dólar de ese día y lo que da en quetzales. Los decimales viajan como texto. */
@@ -110,7 +111,7 @@ export class ApiMonedas {
   }
 
   actualizarLista() {
-    return this.http.crear<ListaActualizada>('/monedas/banguat/actualizar');
+    return this.http.crear<CargaIniciada>('/monedas/banguat/actualizar');
   }
 
   muestra(codigoBanguat: number, moneda?: string) {

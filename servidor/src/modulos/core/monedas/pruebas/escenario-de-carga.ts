@@ -47,10 +47,10 @@ export function armar() {
   const ahora = () => reloj.ahora();
   const fuentes = { dolar: new FuenteConReintentos(fuente, { esperar }), demas: fuente };
   const consultar = new ConsultarAlBanguat({ fuentes, cargas, ahora });
-  const lista = new ActualizarMonedasDelBanguat({ fuente, cargas, cerrojo, ahora });
+  const lista = new ActualizarMonedasDelBanguat({ fuente, cargas, cerrojo, ahora, alFallar: () => {} });
   const vueltas = new VueltasDeCarga({ consultar, cargas, esperar, alFallar: () => {} });
   const alGuardar = () => void guardados.veces++;
-  const carga = new CargarTiposDeCambio({ cerrojo, cargas, vueltas, lista, reloj, alGuardar });
+  const carga = new CargarTiposDeCambio({ cerrojo, cargas, vueltas, lista, reloj, alGuardar, alFallar: () => {} });
   return { carga, cargas, fuente, reloj, cerrojo, guardados, lista };
 }
 

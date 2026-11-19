@@ -5,6 +5,15 @@ export class RangoDeCargaInvalido extends DatoInvalido {
   readonly codigo = 'rango_de_carga_invalido';
 }
 
+/** El tipo manual lleva una fecha que aún no llega: el tipo de un día se ingresa cuando el día ya es hoy o pasó. */
+export class FechaDeTipoFutura extends DatoInvalido {
+  readonly codigo = 'fecha_de_tipo_futura';
+
+  constructor() {
+    super('La fecha del tipo de cambio no puede ser posterior a hoy.');
+  }
+}
+
 /** El servicio del Banco de Guatemala no respondió a tiempo, respondió con error o no se pudo leer. Vale reintentar. */
 export class FuenteNoDisponible extends ErrorEsperado {
   readonly codigo = 'FUENTE_DE_TIPOS_DE_CAMBIO_NO_DISPONIBLE';

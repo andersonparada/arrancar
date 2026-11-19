@@ -39,8 +39,14 @@ export class TiposDeCambioControlador {
   consultas = ({ query }: FastifyRequest<{ Querystring: ConsultasDeLaCarga }>) =>
     this.casosDeUso.estadoDeLaCarga.ejecutar(query);
 
-  cargar = (solicitud: FastifyRequest<{ Body: CargaManual }>) =>
-    this.casosDeUso.cargar.cargarAhora({ ...solicitud.body, usuarioId: operadorDe(solicitud).usuarioId });
+  /** Responde 202 enseguida: la carga sigue en segundo plano y la pantalla consulta el estado. */
+  cargar = async (solicitud: FastifyRequest<{ Body: CargaManual }>, respuesta: FastifyReply) => {
+    const iniciadaEn = await this.casosDeUso.cargar.iniciarCargaAhora({
+      ...solicitud.body,
+      usuarioId: operadorDe(solicitud).usuarioId,
+    });
+    return respuesta.status(202).send({ enCurso: true, iniciadaEn });
+  };
 
   registrar = async (solicitud: FastifyRequest<{ Body: TipoManual }>, respuesta: FastifyReply) => {
     const creado = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), solicitud.body);

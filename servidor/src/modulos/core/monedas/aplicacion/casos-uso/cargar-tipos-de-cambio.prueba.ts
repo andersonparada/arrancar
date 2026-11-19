@@ -252,6 +252,32 @@ describe('una sola carga a la vez y «Cargar ahora»', () => {
     expect(guardados.veces).toBe(1);
   });
 
+  it('«Cargar ahora» sin esperar: responde con el instante en que arrancó y la carga termina en segundo plano', async () => {
+    const { carga, cargas, fuente, cerrojo, guardados } = armar();
+    fuente.publicaciones.push(publicacion('USD', '2026-11-17', '7.65'));
+
+    const iniciadaEn = await carga.iniciarCargaAhora({ usuarioId: 'u1', desde: '2026-11-16', hasta: '2026-11-18' });
+    while (cerrojo.ocupado) await new Promise((seguir) => setImmediate(seguir));
+
+    expect(iniciadaEn).toEqual(new Date('2026-11-18T06:00:00-06:00'));
+    expect(cargas.consultas.every((c) => c.vuelta === 'manual' && c.disparadaPor === 'u1')).toBe(true);
+    expect(cargas.consultas.length).toBeGreaterThan(0);
+    expect(guardados.veces).toBe(1);
+  });
+
+  it('«Cargar ahora» sin esperar da 409 si otra carga corre y revisa el rango antes de tomar el cerrojo', async () => {
+    const { carga, cerrojo, fuente } = armar();
+    await expect(
+      carga.iniciarCargaAhora({ usuarioId: 'u', desde: '2026-11-18', hasta: '2026-11-10' }),
+    ).rejects.toMatchObject({
+      codigo: 'rango_de_carga_invalido',
+    });
+    cerrojo.ocupado = true;
+
+    await expect(carga.iniciarCargaAhora({ usuarioId: 'u' })).rejects.toBeInstanceOf(CargaDelBanguatEnCurso);
+    expect(fuente.consultas).toBe(0);
+  });
+
   it('rechaza un rango al revés, de más de 366 días o más allá de mañana', async () => {
     const { carga, fuente } = armar();
 

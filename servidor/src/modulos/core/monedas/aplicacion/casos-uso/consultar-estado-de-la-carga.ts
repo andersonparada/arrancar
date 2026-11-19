@@ -4,11 +4,13 @@ import type {
   ConsultaGuardada,
   MonedaConCodigoDelBanguat,
 } from '../puertos/bitacora-del-banguat.js';
+import type { CerrojoDeCarga } from '../puertos/cargas-de-tipos.js';
 import type { HoyDeLaInstalacion } from '../tipos-de-cambio.js';
 
 interface Dependencias {
   bitacora: BitacoraDelBanguat;
   reloj: HoyDeLaInstalacion;
+  cerrojo: Pick<CerrojoDeCarga, 'estaTomado'>;
 }
 
 /** El estado de la serie de una moneda con código del Banguat. */
@@ -26,6 +28,8 @@ export interface EstadoDeLaSerie {
 
 export interface EstadoDeLaCarga {
   hoy: string;
+  /** Una carga o la actualización de la lista corre ahora mismo (en esta u otra instancia). */
+  enCurso: boolean;
   series: EstadoDeLaSerie[];
   consultas: ConsultaGuardada[];
 }
@@ -40,12 +44,16 @@ export class ConsultarEstadoDeLaCarga {
   constructor(private readonly dependencias: Dependencias) {}
 
   async ejecutar(opciones: { limite: number; moneda?: string | undefined }): Promise<EstadoDeLaCarga> {
-    const { bitacora, reloj } = this.dependencias;
+    const { bitacora, reloj, cerrojo } = this.dependencias;
     const hoy = await reloj.hoy();
-    const [monedas, consultas] = await Promise.all([bitacora.monedasConCodigo(), bitacora.ultimasConsultas(opciones)]);
+    const [monedas, consultas, enCurso] = await Promise.all([
+      bitacora.monedasConCodigo(),
+      bitacora.ultimasConsultas(opciones),
+      cerrojo.estaTomado(),
+    ]);
     const series: EstadoDeLaSerie[] = [];
     for (const moneda of monedas) series.push(await this.estadoDe(moneda, hoy));
-    return { hoy, series, consultas };
+    return { hoy, enCurso, series, consultas };
   }
 
   private async estadoDe(moneda: MonedaConCodigoDelBanguat, hoy: string): Promise<EstadoDeLaSerie> {

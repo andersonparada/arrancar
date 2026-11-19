@@ -8,6 +8,7 @@ import {
   CatalogoDeMonedasEnMemoria,
   MonedasDelBanguatEnMemoria,
 } from '../../pruebas/catalogo-de-monedas-en-memoria.js';
+import { CerrojoDeCargaEnMemoria } from '../../pruebas/cargas-de-tipos-en-memoria.js';
 import { armar, completar, fallo, publicacion } from '../../pruebas/escenario-de-carga.js';
 import type { BitacoraDelBanguat, MonedaConCodigoDelBanguat } from '../puertos/bitacora-del-banguat.js';
 import { ConsultarEstadoDeLaCarga } from './consultar-estado-de-la-carga.js';
@@ -115,6 +116,7 @@ describe('ConsultarEstadoDeLaCarga', () => {
     const caso = new ConsultarEstadoDeLaCarga({
       bitacora,
       reloj: { hoy: async () => '2026-11-18' },
+      cerrojo: new CerrojoDeCargaEnMemoria(),
     });
     return (await caso.ejecutar({ limite: 50 })).series;
   }
@@ -182,6 +184,19 @@ describe('rellenar una moneda recién lista', () => {
 });
 
 describe('«Actualizar lista» devuelve la consulta hecha', () => {
+  it('sin esperar: responde con el instante de arranque, deja la constancia después y da 409 si otra carga corre', async () => {
+    const { lista, fuente, cargas, cerrojo } = armar();
+    fuente.monedasDelBanguat.push({ codigo: 24, descripcion: 'Euro' });
+
+    const iniciadaEn = await lista.iniciarAPedido('u1');
+    while (cerrojo.ocupado) await new Promise((seguir) => setImmediate(seguir));
+    cerrojo.ocupado = true;
+
+    expect(iniciadaEn).toBeInstanceOf(Date);
+    expect(cargas.consultas.map((c) => [c.vuelta, c.resultado, c.disparadaPor])).toEqual([['lista', 'exito', 'u1']]);
+    await expect(lista.iniciarAPedido('u1')).rejects.toMatchObject({ codigo: 'carga_del_banguat_en_curso' });
+  });
+
   it('con lista, dice cuántas monedas llegaron; con error o vacía, no toca nada y dice por qué', async () => {
     const { lista, fuente } = armar();
     fuente.monedasDelBanguat.push({ codigo: 24, descripcion: 'Euro' });

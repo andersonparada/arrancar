@@ -31,6 +31,11 @@ import { MonedasDrizzle } from './infraestructura/persistencia/monedas.drizzle.j
 import { TiposDeCambioDrizzle } from './infraestructura/persistencia/tipos-de-cambio.drizzle.js';
 import { RelojDeLaInstalacion } from './infraestructura/reloj-de-la-instalacion.js';
 
+const alFallar = (mensaje: string, error: unknown) =>
+  process.stderr.write(
+    `${JSON.stringify({ nivel: 'error', msg: mensaje, detalle: error instanceof Error ? error.message : String(error) })}\n`,
+  );
+
 const catalogo = new MonedasDrizzle(bd);
 const delBanguat = new MonedasDelBanguatDrizzle(bd);
 const guardados = new TiposDeCambioDrizzle(bd);
@@ -57,6 +62,7 @@ const listaDelBanguat = new ActualizarMonedasDelBanguat({
   cargas,
   cerrojo,
   ahora: () => reloj.ahora(),
+  alFallar,
 });
 
 /**
@@ -67,11 +73,6 @@ export const cargaAutomaticaEncendida = entorno.CARGAR_TIPOS_DE_CAMBIO ?? false;
 
 /** El catálogo de monedas para los módulos que lo leen (Multimoneda): el mismo caso de uso de la API. */
 export const listarMonedas = new ListarMonedas({ catalogo });
-
-const alFallar = (mensaje: string, error: unknown) =>
-  process.stderr.write(
-    `${JSON.stringify({ nivel: 'error', msg: mensaje, detalle: error instanceof Error ? error.message : String(error) })}\n`,
-  );
 
 /**
  * La carga de tipos de cambio del Banguat (vueltas, relleno y «Cargar ahora»). La programa `principal.ts`; es una sola
@@ -88,11 +89,13 @@ export const cargaDeTiposDeCambio = new CargarTiposDeCambio({
   lista: listaDelBanguat,
   reloj,
   alGuardar: () => tiposDeCambio.invalidar(),
+  alFallar,
 });
 
 const estadoDeLaCarga = new ConsultarEstadoDeLaCarga({
   bitacora: new BitacoraDelBanguatDrizzle(bd),
   reloj,
+  cerrojo,
 });
 
 /** Al unir un código a una moneda activa se trae su serie en segundo plano; con la carga apagada no se llama al Banguat. */
@@ -115,7 +118,7 @@ export function componerMonedas({ unidadDeTrabajo, auditoria }: DependenciasComp
     serie: new ListarSerieDeTipos({ tiposDeCambio }),
     vigente: new ConsultarTipoVigente({ tiposDeCambio }),
     versiones: new ListarVersionesDeTipo({ guardados }),
-    registrar: new RegistrarTipoDeCambio({ unidadDeTrabajo, guardados, catalogo, tiposDeCambio }),
+    registrar: new RegistrarTipoDeCambio({ unidadDeTrabajo, guardados, catalogo, tiposDeCambio, reloj }),
     cargar: cargaDeTiposDeCambio,
     estadoDeLaCarga,
   });

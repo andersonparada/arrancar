@@ -21,7 +21,7 @@ const diasDeLaLista = computed(() => props.mes.dias.filter((dia) => !dia.futuro 
 
 function etiquetaDelDia(dia: DiaDelCalendario): string {
   const valor = dia.tipo
-    ? `${formatearTipoDeCambio(dia.tipo.referencia)} quetzales, ${origenDelTipo(dia.tipo)}`
+    ? `Q ${formatearTipoDeCambio(dia.tipo.referencia)} por unidad, ${origenDelTipo(dia.tipo)}`
     : 'sin tipo de cambio';
   return `Día ${dia.dia}: ${valor}. Abrir para ingresar o corregir.`;
 }
@@ -42,9 +42,7 @@ const clasesDelDia = (dia: DiaDelCalendario) => [
         aria-label="Mes anterior"
         @click="emit('mover', -1)"
       />
-      <h2 id="titulo-calendario" class="text-center font-semibold capitalize" aria-live="polite">
-        {{ moneda }} · {{ nombre }}
-      </h2>
+      <h2 id="titulo-calendario" class="text-center font-semibold" aria-live="polite">{{ moneda }} · {{ nombre }}</h2>
       <BotonBase
         variante="secundario"
         pequeno
@@ -106,10 +104,12 @@ const clasesDelDia = (dia: DiaDelCalendario) => [
     </ul>
 
     <p class="mt-3 text-sm text-tierra-600 dark:text-tierra-300">
-      {{ resumen.conTipo }} días con tipo ({{ resumen.manuales }} a mano).
+      {{ resumen.conTipo }} {{ resumen.conTipo === 1 ? 'día con tipo' : 'días con tipo' }} ({{ resumen.manuales }} a
+      mano).
       <template v-if="resumen.sinTipoEntreSemana">
-        {{ resumen.sinTipoEntreSemana }} días hábiles sin tipo: las monedas que no son el dólar no se publican en fines
-        de semana ni asuetos.
+        {{ resumen.sinTipoEntreSemana }}
+        {{ resumen.sinTipoEntreSemana === 1 ? 'día hábil sin tipo' : 'días hábiles sin tipo' }}: las monedas que no son
+        el dólar no se publican en fines de semana ni asuetos.
       </template>
       Toque un día para ingresar o corregir su valor. Fuente: Banco de Guatemala.
     </p>

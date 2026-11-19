@@ -83,6 +83,10 @@ export class CargasDeTiposEnMemoria implements CargasDeTipos {
 export class CerrojoDeCargaEnMemoria implements CerrojoDeCarga {
   ocupado = false;
 
+  async estaTomado(): Promise<boolean> {
+    return this.ocupado;
+  }
+
   async ejecutarSiLibre<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado | null> {
     if (this.ocupado) return null;
     this.ocupado = true;

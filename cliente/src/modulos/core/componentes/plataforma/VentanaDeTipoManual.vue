@@ -41,7 +41,7 @@ const vigente = computed(() => vigenteDelDia(tipo.value));
         requerido
         placeholder="Ej. 7.64489"
         autocompletar="off"
-        :ayuda="`Quetzales por una unidad de ${tipo.moneda}, con punto y hasta 8 decimales.`"
+        :ayuda="`Quetzales por una unidad de ${tipo.moneda} (ya convertido: no el cruce publicado en dólares), con punto y hasta 8 decimales.`"
         :error="errores.referencia"
       />
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

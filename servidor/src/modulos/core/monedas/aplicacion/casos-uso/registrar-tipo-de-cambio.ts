@@ -2,16 +2,18 @@ import { RecursoNoEncontrado } from '../../../compartido/aplicacion/errores.js';
 import type { Operador } from '../../../compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../compartido/aplicacion/unidad-de-trabajo.js';
 import { TipoDeCambio } from '../../../compartido/dominio/tipo-de-cambio.js';
+import { FechaDeTipoFutura } from '../../dominio/errores.js';
 import { exigirMonedaExtranjera } from '../../dominio/moneda.js';
 import type { CatalogoDeMonedas } from '../puertos/monedas.js';
 import type { TipoDeCambioDto, TiposDeCambioGuardados } from '../puertos/tipos-de-cambio-guardados.js';
-import type { TiposDeCambio } from '../tipos-de-cambio.js';
+import type { HoyDeLaInstalacion, TiposDeCambio } from '../tipos-de-cambio.js';
 
 interface Dependencias {
   unidadDeTrabajo: UnidadDeTrabajo;
   guardados: TiposDeCambioGuardados;
   catalogo: CatalogoDeMonedas;
   tiposDeCambio: Pick<TiposDeCambio, 'invalidar'>;
+  reloj: HoyDeLaInstalacion;
 }
 
 /** Lo que soporte escribe: el tipo, su día y el motivo (compra y venta, si el comprobante las trae). */
@@ -36,11 +38,13 @@ export class RegistrarTipoDeCambio {
   /**
    * @throws TipoDeCambioDelQuetzal si la moneda es el quetzal.
    * @throws TipoDeCambioInvalido si un valor no es un decimal positivo de hasta 8 decimales.
+   * @throws FechaDeTipoFutura si la fecha es posterior a hoy en la zona de la instalación.
    * @throws RecursoNoEncontrado si la moneda no existe.
    */
   async ejecutar(operador: Operador, solicitud: SolicitudDeTipoManual): Promise<TipoDeCambioDto> {
-    const { unidadDeTrabajo, guardados, catalogo, tiposDeCambio } = this.dependencias;
+    const { unidadDeTrabajo, guardados, catalogo, tiposDeCambio, reloj } = this.dependencias;
     exigirMonedaExtranjera(solicitud.moneda);
+    if (solicitud.fecha > (await reloj.hoy())) throw new FechaDeTipoFutura();
     const nuevo = {
       moneda: solicitud.moneda,
       fecha: solicitud.fecha,

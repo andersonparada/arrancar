@@ -883,7 +883,7 @@ que cambia MM-3a′:
 
 | Pieza de MM-3a | Hoy | Cambio |
 |---|---|---|
-| `MONEDAS_POR_CODIGO_BANGUAT` (extractor) | Mapa fijo `2 → USD` | Se quita. Las operaciones reciben las monedas a pedir como argumento (`{ moneda: 'EUR', codigoBanguat: 28 }[]`), que salen de `core.monedas` en MM-3b. Un código que llega sin haberse pedido se ignora |
+| `MONEDAS_POR_CODIGO_BANGUAT` (extractor) | Mapa fijo `2 → USD` | Se quita. Las operaciones reciben las monedas a pedir como argumento (`{ moneda: 'EUR', codigoBanguat: 24 }[]`), que salen de `core.monedas` en MM-3b. Un código que llega sin haberse pedido se ignora |
 | Puerto `FuenteDeTiposDeCambio` | `tipoDelDia`, `tiposDelRango` (solo USD) | Suma `tiposDeLaMoneda({ hoy, desde, hasta, moneda, codigoBanguat })` (`TipoCambioRangoMoneda`) y `monedasDisponibles()` (`VariablesDisponibles` → `{ codigo, descripcion }[]`). `tipoDelDia` lee también `CambioDia/Var` si viene, solo de las monedas pedidas |
 | `PublicacionDeTipoDeCambio` | `moneda`, `fecha`, `referencia` | Suma `codigoBanguat`, `compra` y `venta` (texto; se guardan en `core.tipos_de_cambio`) |
 | Rechazo `sin_referencia` | Escribe `moneda: 'USD'` fijo | Se renombra `valor_ambiguo` (dictamen A-6) y lleva la moneda real de la fila |
@@ -927,7 +927,7 @@ escribe la tarea, sin usuario).
   las 09:30; y con «Actualizar lista» (soporte).
 - **Qué ofrece el selector:** las `disponible`, menos las de `CODIGOS_DEL_BANGUAT_EXCLUIDOS` (constante del dominio que se
   llena con C-1 según D-2: DEG, los bolívares retirados y el colón salvadoreño), y las asignadas a otra moneda se muestran
-  deshabilitadas («Euro (28), ya es de EUR»). Si una moneda ya tiene un código que luego quedó excluido o no disponible,
+  deshabilitadas («Euro (24), ya es de EUR»). Si una moneda ya tiene un código que luego quedó excluido o no disponible,
   se sigue mostrando, marcado.
 
 ### A.4 `core.monedas` (cambia lo dicho en §6.1)
@@ -1109,7 +1109,7 @@ selector ofrece toda moneda con serie, activa o no.
 
 `PlataformaMonedas.vue` (la página solo arma) con `usarMonedasDePlataforma` y la lógica pura `edicion-de-moneda.ts` (con
 pruebas):
-- Lista: código, nombre, símbolo, decimales, **activa**, **moneda del Banguat** («Euro (28)» o «—»), última fecha cargada y
+- Lista: código, nombre, símbolo, decimales, **activa**, **moneda del Banguat** («Euro (24)» o «—»), última fecha cargada y
   aviso de atraso (A.6). Filtros «Con código» y «Activas».
 - Ventana de edición (`v-model`; emite `guardar` y `cerrar`): interruptor **Activa** (deshabilitado si los decimales no
   son 2, con el porqué); **selector «Moneda del Banguat»** con las opciones de `GET /api/monedas/banguat` (descripción y
@@ -1654,6 +1654,7 @@ no puede pasar es encender `CARGAR_TIPOS_DE_CAMBIO` antes de MM-3c (P-B8).
 | **MM-3a″** (servidor, dominio, sin base) **HECHO 2026-11-19** | `CODIGOS_DEL_BANGUAT_EXCLUIDOS`; URL; 28 → 24 en `main`; grabaciones reales; `validarPublicacion` sin `valor_ambiguo` por `compra ≠ venta` (solo diferencial > 3 %); `promedioPublicado`, `normalizarAQuetzales`, `inversionProbable`, `esDiaDePublicacionDeCruces`; se quita `cruceImplicito` | Los cinco ejemplos de B.3 dan exactamente esos valores; promedio con un decimal más (ARS); el CRC del 18/11 da 0.01710630 (promedio del cruce y luego conversión) y no 0.01710669 (B.5); diferencial de 3.01 % rechazado; `venta < compra` inválido; EUR invertido → inversión; CHF ±2 % y ARS +87 % no; jueves santo y 25/12 son días de publicación, el sábado no | MM-1b (tipos) o ninguno si se programa sin base |
 | **MM-3c** (servidor, carga; sobre la rama de MM-3b integrada) **HECHO 2026-11-19** | `ConsultarAlBanguat` normaliza con el USD `banguat` de la fecha y guarda `convencion` y `dolar_usado_id`; comprobaciones de B.6 en orden; `monedasACargar` solo con convención y el USD primero; días de B.9; reintentos de la noche; `vigente` con `dia_sin_calculo` solo en fin de semana; `muestra` con el valor en quetzales; `CodigoDelDolarNecesario`; 28 → 24 en las pruebas de la rama; columnas del reporte (MM-5) | Con reloj fijo: EUR del lunes con el USD del lunes; EUR sin USD → `sin_dolar_del_dia` y se rellena al llegar el USD; EUR de un asueto con el USD repetido; EUR invertido → `convencion_dudosa`; un sábado no es hueco y un asueto sí; `vigente` del EUR un sábado (`dia_sin_calculo`) y un 20 de octubre sin fila (`falta_publicacion`); quitar el código del USD con el EUR unido → 422; la referencia guardada se rehace con su fila | MM-1b, MM-3a″, rama de MM-3b integrada |
 | **MM-4** (cliente, Plataforma) **HECHO 2026-11-19** (QA en el navegador pendiente) | Como A.14, más B.10 | Unitarias de `edicion-de-moneda.ts` (solo `ofrecida`; texto de la convención); QA con el servidor falso devolviendo cruces | MM-3c |
+| **MM-QA1** (servidor y cliente, corrección de la QA) **HECHO 2026-11-19** | E-1 (textos de la muestra, el ingreso manual, el calendario y la ayuda de la moneda; euro = 24), E-2 (fecha futura en el ingreso manual), E-5 («Cargar ahora» y «Actualizar lista» en segundo plano: 202, `enCurso` en el estado y avance en pantalla) y E-6 (singulares) | `fecha_de_tipo_futura`; `iniciarCargaAhora` e `iniciarAPedido` (409 con el candado tomado, la constancia queda en la bitácora); `estado.enCurso` con el candado tomado por otra conexión; `seguimiento-de-la-carga.prueba.ts` | MM-3c, MM-4 |
 | **MM-3d** (operación, sin código) | **Antes de encender:** C-5 (la consulta pública del Banguat, ¿muestra quetzales para las demás monedas?; si sí, ajustar B.5) y, si hay clientes en CRC, DOP o HNL (Q-1), C-6. Luego `curl` desde producción a la URL de B.9; encender `CARGAR_TIPOS_DE_CAMBIO`; revisar la bitácora la primera semana (horas de B.9) | C-5: comparar en 3 a 5 fechas la consulta pública con la fórmula de B.3 | MM-3c, MM-4, P-B8, C-5 (C-6 según Q-1) |
 
 ### B.13 Validación de `contador-guatemala` (dictamen de cruces)

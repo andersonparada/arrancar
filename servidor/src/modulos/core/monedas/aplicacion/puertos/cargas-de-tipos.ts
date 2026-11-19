@@ -112,4 +112,6 @@ export interface CargasDeTipos {
 export interface CerrojoDeCarga {
   /** Corre el trabajo si nadie más carga; si el cerrojo está tomado devuelve `null` sin hacer nada. */
   ejecutarSiLibre<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado | null>;
+  /** Si alguna instancia (incluida esta) tiene una carga corriendo en este momento. */
+  estaTomado(): Promise<boolean>;
 }

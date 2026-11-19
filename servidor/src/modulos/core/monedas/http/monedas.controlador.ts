@@ -1,4 +1,4 @@
-import type { FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../compartido/http/operador-de-la-solicitud.js';
 import type { ActualizarMonedasDelBanguat } from '../aplicacion/casos-uso/actualizar-monedas-del-banguat.js';
 import type { EditarMoneda } from '../aplicacion/casos-uso/editar-moneda.js';
@@ -22,9 +22,10 @@ export class MonedasControlador {
 
   listarDelBanguat = () => this.casosDeUso.listarDelBanguat.ejecutar();
 
-  actualizarLista = async (solicitud: FastifyRequest) => {
-    const consulta = await this.casosDeUso.actualizarLista.ejecutarAPedido(operadorDe(solicitud).usuarioId);
-    return { consulta, lista: await this.casosDeUso.listarDelBanguat.ejecutar() };
+  /** Responde 202 enseguida: la actualización sigue en segundo plano y la pantalla consulta el estado. */
+  actualizarLista = async (solicitud: FastifyRequest, respuesta: FastifyReply) => {
+    const iniciadaEn = await this.casosDeUso.actualizarLista.iniciarAPedido(operadorDe(solicitud).usuarioId);
+    return respuesta.status(202).send({ enCurso: true, iniciadaEn });
   };
 
   muestra = (solicitud: FastifyRequest<{ Params: ParamsMuestra; Querystring: QueryMuestra }>) =>

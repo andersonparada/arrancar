@@ -36,6 +36,16 @@ const sinMonedas = computed(() => props.monedas.length === 0);
       </p>
     </form>
 
+    <p
+      v-if="enviando"
+      class="mt-4 rounded-lg bg-tierra-50 p-3 text-sm text-tierra-700 ring-1 ring-tierra-200 dark:bg-tierra-800/60 dark:text-tierra-200 dark:ring-tierra-700"
+      role="status"
+      aria-live="polite"
+    >
+      Pidiendo los tipos al Banguat. Puede tardar un par de minutos si el servicio está lento; la carga sigue aunque
+      cierre esta ventana y su resultado queda en la bitácora.
+    </p>
+
     <section v-if="carga.resultados" class="mt-5" aria-live="polite" aria-labelledby="titulo-resultado">
       <h3 id="titulo-resultado" class="text-sm font-semibold">Resultado</h3>
       <ul class="mt-2 divide-y divide-tierra-100 text-sm dark:divide-tierra-700">
@@ -46,8 +56,10 @@ const sinMonedas = computed(() => props.monedas.length === 0);
               {{ resultadoDeLaConsulta(resumen.resultado).texto }}
             </InsigniaBase>
             <span class="text-tierra-600 dark:text-tierra-300">
-              {{ resumen.filasNuevas }} nuevos<template v-if="resumen.filasRechazadas"
-                >, {{ resumen.filasRechazadas }} rechazados</template
+              {{ resumen.filasNuevas }} {{ resumen.filasNuevas === 1 ? 'nuevo' : 'nuevos'
+              }}<template v-if="resumen.filasRechazadas"
+                >, {{ resumen.filasRechazadas }}
+                {{ resumen.filasRechazadas === 1 ? 'rechazado' : 'rechazados' }}</template
               >
             </span>
           </p>

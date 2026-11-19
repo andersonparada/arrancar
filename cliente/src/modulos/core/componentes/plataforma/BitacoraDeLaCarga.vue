@@ -36,8 +36,9 @@ defineProps<{ consultas: ConsultaDeLaCarga[] }>();
       </p>
       <p class="text-xs text-tierra-600 dark:text-tierra-300">
         {{ formatearFechaHora(consulta.iniciadaEn) }} · {{ nombreDeLaVuelta(consulta.vuelta) }} ·
-        {{ consulta.filasNuevas }} nuevos<template v-if="consulta.filasRechazadas">
-          , {{ consulta.filasRechazadas }} rechazados</template
+        {{ consulta.filasNuevas }} {{ consulta.filasNuevas === 1 ? 'nuevo' : 'nuevos'
+        }}<template v-if="consulta.filasRechazadas">
+          , {{ consulta.filasRechazadas }} {{ consulta.filasRechazadas === 1 ? 'rechazado' : 'rechazados' }}</template
         >
       </p>
       <p v-if="quehacerConElResultado(consulta.resultado)" class="text-xs text-tierra-600 dark:text-tierra-300">
