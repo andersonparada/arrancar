@@ -4,6 +4,8 @@ import '../../core/contratos/activos-fijos.contratos.js';
 
 export type DatosDeActivoCapitalizado = EventosDominio['activos-fijos.activo_capitalizado'];
 export type DatosDeCostoAnulado = EventosDominio['activos-fijos.costo_anulado'];
+export type DatosDeDepreciacionCerrada = EventosDominio['activos-fijos.depreciacion_cerrada'];
+export type DatosDeDepreciacionReabierta = EventosDominio['activos-fijos.depreciacion_reabierta'];
 
 /** Se guardaron costos de un activo (lo escuchará Contabilidad, cuando exista). Se publica tras confirmar. */
 export class ActivoCapitalizado extends EventoDominio<DatosDeActivoCapitalizado> {
@@ -19,6 +21,24 @@ export class CostoAnulado extends EventoDominio<DatosDeCostoAnulado> {
   readonly nombre = 'activos-fijos.costo_anulado';
 
   constructor(datos: DatosDeCostoAnulado) {
+    super(datos);
+  }
+}
+
+/** Se cerró un mes de depreciación (lo escuchará Contabilidad, cuando exista). Se publica tras confirmar. */
+export class DepreciacionCerrada extends EventoDominio<DatosDeDepreciacionCerrada> {
+  readonly nombre = 'activos-fijos.depreciacion_cerrada';
+
+  constructor(datos: DatosDeDepreciacionCerrada) {
+    super(datos);
+  }
+}
+
+/** Se reabrió un mes de depreciación: Contabilidad revierte lo del mes. Se publica tras confirmar. */
+export class DepreciacionReabierta extends EventoDominio<DatosDeDepreciacionReabierta> {
+  readonly nombre = 'activos-fijos.depreciacion_reabierta';
+
+  constructor(datos: DatosDeDepreciacionReabierta) {
     super(datos);
   }
 }

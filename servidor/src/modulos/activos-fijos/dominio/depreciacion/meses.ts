@@ -17,3 +17,9 @@ export function primerMesDelTramo(fecha: string, regla: PrimerMes): string {
   const mes = periodoDe(fecha);
   return regla === 'mes_siguiente' ? sumarMeses(mes, 1) : mes;
 }
+
+/** Cuántos meses hay de un período a otro (`aaaa-mm-01`); negativo si el segundo es anterior. */
+export function mesesEntre(desde: string, hasta: string): number {
+  const total = (periodo: string) => Number(periodo.slice(0, 4)) * 12 + Number(periodo.slice(5, 7));
+  return total(hasta) - total(desde);
+}
