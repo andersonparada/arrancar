@@ -20,6 +20,7 @@ export function lineaDesdeSolicitud(linea: LineaDeSolicitudDeDte): LineaEnEdicio
     descripcion: textoDeEdicion(linea.descripcion),
     tipo: linea.tipo ?? 'bien',
     esActivoFijo: linea.esActivoFijo ?? false,
+    esInventario: linea.esInventario ?? false,
     esCombustible: linea.combustibleId !== null,
     combustibleId: linea.combustibleId,
     galones: textoDeEdicion(linea.galones),

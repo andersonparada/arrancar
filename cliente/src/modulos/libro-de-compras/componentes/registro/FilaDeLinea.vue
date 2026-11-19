@@ -8,6 +8,7 @@ import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import {
   aplicarConcepto,
   ajustarTipoDeLinea,
+  elegirDestinoDelCosto,
   type LineaEnEdicion,
 } from '../../composables/documentos/lineas-del-documento';
 import type { Combustible } from '../../servicios/combustibles.api';
@@ -40,11 +41,11 @@ const opcionesDeCombustible = computed(() => [
   { valor: null, texto: 'Elija el combustible' },
   ...props.combustibles.map(({ id, nombre }) => ({ valor: id, texto: nombre })),
 ]);
-const fijaElTipo = computed(() => linea.value.esCombustible);
+const fijaElTipo = computed(() => linea.value.esCombustible || linea.value.esInventario);
 
-// El combustible siempre es un bien; sin combustible no hay galones.
+// El combustible y el inventario siempre son un bien; sin combustible no hay galones.
 watch(
-  () => [linea.value.esActivoFijo, linea.value.esCombustible],
+  () => [linea.value.esActivoFijo, linea.value.esInventario, linea.value.esCombustible],
   () => ajustarTipoDeLinea(linea.value),
 );
 
@@ -118,7 +119,16 @@ function elegirConcepto(id: string | null | undefined): void {
           :error="errores.tipo"
         />
         <div class="flex flex-col justify-end gap-3">
-          <CampoInterruptor v-model="linea.esActivoFijo" etiqueta="Activo fijo (se capitaliza)" />
+          <CampoInterruptor
+            :model-value="linea.esActivoFijo"
+            etiqueta="Activo fijo (se capitaliza)"
+            @update:model-value="elegirDestinoDelCosto(linea, 'activoFijo', $event)"
+          />
+          <CampoInterruptor
+            :model-value="linea.esInventario"
+            etiqueta="Inventario (entra a una bodega)"
+            @update:model-value="elegirDestinoDelCosto(linea, 'inventario', $event)"
+          />
           <CampoInterruptor v-model="linea.esCombustible" etiqueta="Es combustible" />
         </div>
         <template v-if="linea.esCombustible">

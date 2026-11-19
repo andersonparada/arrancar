@@ -12,6 +12,8 @@ export interface LineaEnEdicion {
   descripcion: string;
   tipo: 'bien' | 'servicio';
   esActivoFijo: boolean;
+  /** Entra a una bodega: excluyente con `esActivoFijo` y siempre un bien. */
+  esInventario: boolean;
   esCombustible: boolean;
   combustibleId: string | null;
   galones: Valor;
@@ -33,6 +35,7 @@ export function lineaVacia(): LineaEnEdicion {
     descripcion: '',
     tipo: 'bien',
     esActivoFijo: false,
+    esInventario: false,
     esCombustible: false,
     combustibleId: null,
     galones: '',
@@ -61,12 +64,24 @@ export function aplicarConcepto(linea: LineaEnEdicion, concepto: ConceptoDeGasto
   if (!concepto) return;
   linea.tipo = concepto.tipoPorOmision;
   linea.esActivoFijo = concepto.esActivoFijo;
+  linea.esInventario = concepto.esInventario;
   if (concepto.esActivoFijo) linea.esCombustible = false;
 }
 
-/** El combustible siempre es un bien: marcarlo fija el tipo. Un activo fijo puede ser bien o servicio. */
+/** El costo va a un solo destino: marcar activo fijo desmarca inventario y al revés. */
+export function elegirDestinoDelCosto(
+  linea: LineaEnEdicion,
+  destino: 'activoFijo' | 'inventario',
+  marcado: boolean,
+): void {
+  linea.esActivoFijo = destino === 'activoFijo' ? marcado : linea.esActivoFijo && !marcado;
+  linea.esInventario = destino === 'inventario' ? marcado : linea.esInventario && !marcado;
+  ajustarTipoDeLinea(linea);
+}
+
+/** El combustible y el inventario son siempre un bien: marcarlos fija el tipo. Un activo fijo puede ser bien o servicio. */
 export function ajustarTipoDeLinea(linea: LineaEnEdicion): void {
-  if (linea.esCombustible) linea.tipo = 'bien';
+  if (linea.esCombustible || linea.esInventario) linea.tipo = 'bien';
   if (!linea.esCombustible) {
     linea.combustibleId = null;
     linea.galones = '';
@@ -107,6 +122,7 @@ export function lineaParaElCuerpo(linea: LineaEnEdicion, conMontosExtra = true):
     descripcion: textoONulo(linea.descripcion),
     tipo: linea.tipo,
     esActivoFijo: linea.esActivoFijo,
+    esInventario: linea.esInventario,
     combustibleId: linea.esCombustible ? linea.combustibleId : null,
     galones: linea.esCombustible ? montoEnTexto(linea.galones, 3) : null,
     total,

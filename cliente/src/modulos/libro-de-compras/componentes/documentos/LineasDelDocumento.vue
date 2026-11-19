@@ -18,6 +18,7 @@ defineProps<{ lineas: LineaDeDocumento[]; conceptos: Map<string, string> }>();
           <div class="flex flex-wrap gap-1.5">
             <InsigniaBase>{{ linea.tipo === 'bien' ? 'Bien' : 'Servicio' }}</InsigniaBase>
             <InsigniaBase v-if="linea.esActivoFijo" tono="trigo">Activo fijo</InsigniaBase>
+            <InsigniaBase v-if="linea.esInventario" tono="trigo">Inventario</InsigniaBase>
           </div>
         </div>
         <p v-if="linea.combustible" class="mt-1 text-sm text-tierra-600 dark:text-tierra-300">

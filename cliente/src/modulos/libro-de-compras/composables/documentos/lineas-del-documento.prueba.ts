@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ConceptoDeGasto } from '../../servicios/conceptos-de-gasto.api';
 import {
   ajustarTipoDeLinea,
+  elegirDestinoDelCosto,
   aplicarConcepto,
   erroresLocalesDeLinea,
   lineaCompleta,
@@ -17,6 +18,7 @@ const concepto = (cambios: Partial<ConceptoDeGasto> = {}): ConceptoDeGasto => ({
   tipoPorOmision: 'bien',
   esProductoAgropecuario: false,
   esActivoFijo: false,
+  esInventario: false,
   activo: true,
   ...cambios,
 });
@@ -53,6 +55,29 @@ describe('aplicarConcepto', () => {
     const linea = lineaVacia();
     aplicarConcepto(linea, undefined);
     expect(linea.tipo).toBe('bien');
+  });
+});
+
+describe('destino del costo: activo fijo o inventario', () => {
+  it('marcar inventario desmarca el activo fijo y fija el tipo en bien', () => {
+    const linea = { ...lineaVacia(), tipo: 'servicio' as const, esActivoFijo: true };
+    elegirDestinoDelCosto(linea, 'inventario', true);
+    expect(linea).toMatchObject({ esInventario: true, esActivoFijo: false, tipo: 'bien' });
+  });
+
+  it('marcar activo fijo desmarca el inventario, y desmarcar uno no toca el otro', () => {
+    const linea = { ...lineaVacia(), esInventario: true };
+    elegirDestinoDelCosto(linea, 'activoFijo', true);
+    expect(linea).toMatchObject({ esInventario: false, esActivoFijo: true });
+    elegirDestinoDelCosto(linea, 'inventario', false);
+    expect(linea.esActivoFijo).toBe(true);
+  });
+
+  it('el concepto de inventario propone la marca y viaja en el cuerpo', () => {
+    const linea = { ...lineaVacia(), conceptoId: 'c-1', total: '100' };
+    aplicarConcepto(linea, concepto({ esInventario: true }));
+    expect(linea.esInventario).toBe(true);
+    expect(lineaParaElCuerpo(linea)).toMatchObject({ esInventario: true, esActivoFijo: false });
   });
 });
 
@@ -105,6 +130,7 @@ describe('lineaCompleta y lineaParaElCuerpo', () => {
       descripcion: null,
       tipo: 'bien',
       esActivoFijo: false,
+      esInventario: false,
       combustibleId: 'g-1',
       galones: '8.500',
       total: '100.00',

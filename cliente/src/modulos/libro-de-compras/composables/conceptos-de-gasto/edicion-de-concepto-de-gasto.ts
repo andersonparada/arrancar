@@ -11,6 +11,7 @@ export interface EdicionDeConceptoDeGasto {
   tipoPorOmision: 'bien' | 'servicio';
   esProductoAgropecuario: boolean;
   esActivoFijo: boolean;
+  esInventario: boolean;
   activo: boolean;
 }
 
@@ -19,6 +20,7 @@ const CONCEPTO_DE_GASTO_NUEVO: Omit<EdicionDeConceptoDeGasto, 'abierta' | 'id'> 
   tipoPorOmision: 'bien',
   esProductoAgropecuario: false,
   esActivoFijo: false,
+  esInventario: false,
   activo: true,
 };
 
@@ -32,6 +34,7 @@ export function edicionDe(conceptoDeGasto?: ConceptoDeGasto): EdicionDeConceptoD
     tipoPorOmision: conceptoDeGasto.tipoPorOmision,
     esProductoAgropecuario: conceptoDeGasto.esProductoAgropecuario,
     esActivoFijo: conceptoDeGasto.esActivoFijo,
+    esInventario: conceptoDeGasto.esInventario,
     activo: conceptoDeGasto.activo,
   };
 }
@@ -42,5 +45,6 @@ export const datosDeConceptoDeGasto = (edicion: EdicionDeConceptoDeGasto): Datos
   tipoPorOmision: edicion.tipoPorOmision,
   esProductoAgropecuario: edicion.esProductoAgropecuario,
   esActivoFijo: edicion.esActivoFijo,
+  esInventario: edicion.esInventario,
   activo: edicion.activo,
 });
