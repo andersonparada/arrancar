@@ -3635,3 +3635,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `quetzales_por_unidad` a toda publicación: solo al dólar (código 2); las demás monedas sin convención llegan nulas y el
   check `tipos_de_cambio_banguat_con_convencion` las rechaza hasta MM-3c (así «Cargar ahora» no guarda un cruce crudo
   como referencia en quetzales). Prueba nueva de que un EUR sin convención no se guarda.
+
+- **2026-11-19, Multimoneda MM-3a″ (dominio de los cruces, sin base).** En `core/monedas`: `CODIGOS_DEL_BANGUAT_EXCLUIDOS`
+  con los 15 códigos de B.8 (el selector ya los esconde); `URL_BANGUAT_POR_OMISION` sin `www`; el euro es el 24 (y la
+  libra el 9) en todo el código y las pruebas, servidor y cliente. Dominio nuevo `cruces-del-banguat.ts`:
+  `promedioPublicado` (exacto, con un decimal más), `revisarCompraYVenta` (`venta >= compra > 0`, diferencial de hasta
+  3 %), `normalizarAQuetzales` (`dólar × promedio` o `dólar ÷ promedio`, enteros y un solo redondeo a 8 decimales) e
+  `inversionProbable` (B.6, comprobación 5). `validarPublicacion` ya no rechaza `compra ≠ venta`: toma el promedio y solo
+  da `valor_ambiguo` si el diferencial pasa de 3 %; el dólar sigue exigiendo que sean iguales (una sola referencia). Se
+  quitó `cruceImplicito`. `esDiaDePublicacionDeCruces` y `diasDePublicacionDeCruces`: lunes a viernes, también en
+  asuetos. `valores-decimales.ts` generaliza la escala (9 decimales para lo publicado). Las grabaciones de prueba son
+  recortes de las respuestas reales de B.1 y B.2. **Pendiente:** MM-3c conecta todo a la carga (hoy `referencia` de un
+  cruce sale como el promedio publicado, sin normalizar, y la base lo rechaza sin convención).
