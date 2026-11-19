@@ -1,6 +1,6 @@
 # Módulo `cuentas-por-liquidar` — se muestra como **Cuentas por liquidar**
 
-Estado: **en programación** (CL-1, datos, y CL-2, anticipos del servidor, hechos el 2026-11-18). El diseño aprobado es
+Estado: **en programación** (CL-1, datos, y CL-2, anticipos del servidor, hechos el 2026-11-18; CL-3, gastos del servidor, el 2026-11-19). El diseño aprobado es
 `diseno-caja-chica-y-cuentas-por-liquidar.md` (con el dictamen `dictamen-caja-chica-2026-11-18.md` y las respuestas del
 usuario al final del diseño); lo que sigue de este documento resume lo ya programado.
 
@@ -49,8 +49,25 @@ gasto y la localidad, de la misma empresa.
   antigüedad (al corte o a hoy) y `GET …/anticipos/:id`.
 - Eventos: `cuentas-por-liquidar.anticipo_entregado` y `cuentas-por-liquidar.anticipo_anulado`.
 
+## Gastos (CL-3, servidor)
+
+- **Bandeja:** `GET /api/cuentas-por-liquidar/bandeja` (`anticipos.ver`; `proveedorId`, `desde`, `hasta`, `conRetencion`): los
+  documentos del libro con destino Cuentas por liquidar que aún no tienen anticipo, con `monto` (lo que sale del anticipo),
+  `montoRetenido` y `puedeAsignarConRetencion` (si quien mira tiene `gastos.con-retencion`).
+- **Recibir** (orden `cuentas-por-liquidar.recibir_documento`): el documento llega a la bandeja; con la referencia del anticipo
+  (y sin retención) se asigna solo si se puede. Una factura con retención nunca se rechaza: queda en la bandeja con el aviso.
+- **Asignar** (`POST …/anticipos/:id/gastos/documentos`, `gastos.crear`, `{ documentos: [{ gastoId, fecha?, motivoConRetencion? }] }`):
+  todo o nada. Con retención hace falta `gastos.con-retencion` (403 `retencion_sin_permiso` si falta) y un motivo; queda quién
+  autorizó (`asignado_por`) y la auditoría `autorizar`. Bancarización: avisa y marca `sin_bancarizar`, nunca bloquea.
+- **Sin documento** (`POST …/anticipos/:id/gastos/sin-documento`, `gastos.crear`): solo si
+  `cuentas-por-liquidar.gastos_sin_documento.permitidos` (por omisión sí); no deducible, o renta del trabajo si es empleado.
+- **Quitar** (`POST …/gastos/:id/quitar`, `gastos.anular`, con motivo, anticipo abierto): el documento vuelve a la bandeja
+  (`corregir`); el gasto sin documento se anula (`anular`). `GET …/anticipos/:id/gastos` lista los vigentes.
+- El libro avisa antes de anular o eliminar un documento: se anula o borra su gasto (con auditoría); con el anticipo
+  liquidado se rechaza.
+- Responde a `libro-de-compras.pagado_al_proveedor_en_el_mes` con lo gastado en el mes (`monto + monto_retenido`).
+- Eventos: `cuentas-por-liquidar.gasto_asignado` y `cuentas-por-liquidar.gasto_quitado`.
+
 ## Pendiente (pasos siguientes del diseño §14)
 
-Los gastos (CL-3), liquidar (CL-4), las pantallas (CL-5) y los reportes (CL-6); queda la configuración de gastos sin
-documento (CL-3); la pregunta `libro-de-compras.pagado_al_proveedor_en_el_mes` (CCL-M, CCL-BZ) y la referencia de destino del
-libro (CCL-L1).
+Liquidar (CL-4), las pantallas (CL-5) y los reportes (CL-6).

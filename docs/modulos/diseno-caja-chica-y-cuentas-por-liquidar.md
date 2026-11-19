@@ -1029,7 +1029,7 @@ uno por módulo a la vez.
 | **CC-10** (reportes, servidor y cliente) | CC-R1 a R5 | CC-7 |
 | **CC-11** (QA) | Abrir con cheque no negociable; factura desde la ficha; factura con retención (queda en la bandeja; la asigna quien tiene el permiso, con motivo); vale sobre el tope (permiso); reponer (desglose en Bancos); arqueo con faltante; custodio que repone (aviso); usuario sin el fondo asignado (no lo ve); bancarización con una factura de caja chica y un cheque de Cuentas por pagar al mismo proveedor; cerrar; celular | CC-9 y CC-10 |
 | **CL-2** (anticipos) | Entregar (vencidos, aviso C8), anular, lista con corte, manejador de Bancos, eventos | CL-1 y CCL-B1 |
-| **CL-3** (gastos) | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención, §7.2), sin documento, quitar, bancarización y su respuesta con `monto + monto_retenido` | CL-2, CCL-L1 y CCL-BZ |
+| **CL-3** (gastos) — **hecho el 2026-11-19 (servidor)** | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención, §7.2), sin documento, quitar, bancarización y su respuesta con `monto + monto_retenido` (más los avisos de baja del libro, §7.5, y `GET /anticipos/:id/gastos`) | CL-2, CCL-L1 y CCL-BZ |
 | **CL-4** (liquidar) | Liquidar (devuelto, reembolso, no liquidado), desglose, reabrir, impresión | CL-3 |
 | **CL-5** (cliente) | Pantallas de §11 | CL-4 |
 | **CL-6** (reportes) | CL-R1 y CL-R2 | CL-4 |
