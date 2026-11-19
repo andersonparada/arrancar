@@ -13,7 +13,7 @@ import {
 import { TerceroInactivo } from '../../dominio/errores.js';
 import { VerificadorDeFotosEnMemoria } from '../../../core/archivos/pruebas/dobles-de-archivos.js';
 import {
-  AvisosDeProveedorEnMemoria,
+  AvisosDePapelesEnMemoria,
   CategoriasEnMemoria,
   ContactosEnMemoria,
   TercerosEnMemoria,
@@ -31,7 +31,7 @@ let contactos: ContactosEnMemoria;
 let publicadorEventos: PublicadorEventosEnMemoria;
 let auditoria: AuditoriaEnMemoria;
 let fotos: VerificadorDeFotosEnMemoria;
-let avisos: AvisosDeProveedorEnMemoria;
+let avisos: AvisosDePapelesEnMemoria;
 let operador: Operador;
 let casos: { registrar: RegistrarTercero; actualizar: ActualizarTercero; asignar: AsignarPapel; quitar: QuitarPapel };
 
@@ -66,7 +66,7 @@ beforeEach(() => {
   publicadorEventos = new PublicadorEventosEnMemoria();
   auditoria = new AuditoriaEnMemoria();
   fotos = new VerificadorDeFotosEnMemoria();
-  avisos = new AvisosDeProveedorEnMemoria();
+  avisos = new AvisosDePapelesEnMemoria();
   operador = operadorDePrueba();
   const unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   const avisoDeParecidos = new AvisoDeParecidos(terceros);
@@ -133,13 +133,31 @@ describe('registrar un tercero', () => {
     expect(avisos.avisos).toEqual([{ proveedorId: registrado.id, terceroId: registrado.id, secciones }]);
   });
 
-  it('si entra como cliente o sin papel, no avisa nada de proveedores', async () => {
+  it('si entra como cliente, avisa con las secciones del formulario y no avisa de proveedores', async () => {
     const papel = { tipo: 'cliente' as const, clase: 'directo' as const, activo: true, notas: null };
+    const secciones = { 'libro-de-ventas': { regimenIva: 'general' } };
 
-    await casos.registrar.ejecutar(operador, solicitud({ papel }), { x: {} });
+    const registrado = await casos.registrar.ejecutar(operador, solicitud({ papel }), secciones);
+
+    expect(avisos.avisosDeCliente).toEqual([{ clienteId: registrado.id, terceroId: registrado.id, secciones }]);
+    expect(avisos.avisos).toEqual([]);
+  });
+
+  it('si entra sin papel, no avisa nada', async () => {
     await casos.registrar.ejecutar(operador, solicitud({ nombres: 'Otro' }), { x: {} });
 
     expect(avisos.avisos).toEqual([]);
+    expect(avisos.avisosDeCliente).toEqual([]);
+  });
+
+  it('si un módulo rechaza la sección del cliente, el registro falla y no se publica nada', async () => {
+    avisos.rechazarCon = new Error('sección inválida');
+    const papel = { tipo: 'cliente' as const, clase: 'directo' as const, activo: true, notas: null };
+
+    await expect(casos.registrar.ejecutar(operador, solicitud({ papel }), { x: {} })).rejects.toThrow(
+      'sección inválida',
+    );
+    expect(publicadorEventos.publicados).toEqual([]);
   });
 
   it('si un módulo rechaza su sección, el registro falla y no se publica nada', async () => {
@@ -229,7 +247,7 @@ describe('papeles', () => {
     await expect(asignar).rejects.toThrow(RecursoNoEncontrado);
   });
 
-  it('asignar el papel de proveedor avisa con sus secciones; el de cliente no', async () => {
+  it('asignar el papel de proveedor o de cliente avisa con sus secciones, cada uno por su aviso', async () => {
     const tercero = await casos.registrar.ejecutar(operador, solicitud());
     const secciones = { 'libro-de-compras': { regimenIva: 'pequeno_contribuyente' } };
 
@@ -245,6 +263,7 @@ describe('papeles', () => {
     });
 
     expect(avisos.avisos).toEqual([{ proveedorId: tercero.id, terceroId: tercero.id, secciones }]);
+    expect(avisos.avisosDeCliente).toEqual([{ clienteId: tercero.id, terceroId: tercero.id, secciones }]);
   });
 
   it('no quita un papel que el tercero nunca tuvo', async () => {

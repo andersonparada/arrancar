@@ -48,11 +48,14 @@ export class TercerosControlador {
       solicitud: solicitud.body,
     });
 
-  asignarCliente = (solicitud: ConTercero<PapelDeClienteSolicitado>) =>
-    this.casosDeUso.asignarPapel.ejecutar(operadorDe(solicitud), {
+  asignarCliente = (solicitud: ConTercero<PapelDeClienteSolicitado>) => {
+    const { secciones, ...papel } = solicitud.body;
+    return this.casosDeUso.asignarPapel.ejecutar(operadorDe(solicitud), {
       terceroId: solicitud.params.terceroId,
-      papel: { tipo: 'cliente', ...solicitud.body },
+      papel: { tipo: 'cliente', ...papel },
+      secciones,
     });
+  };
 
   asignarProveedor = (solicitud: ConTercero<PapelDeProveedorSolicitado>) => {
     const { secciones, ...papel } = solicitud.body;

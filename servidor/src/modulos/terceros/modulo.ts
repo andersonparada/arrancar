@@ -16,6 +16,7 @@ import { mediador } from '../core/mediador/contexto.js';
 import { AsignarPapel } from './aplicacion/casos-uso/papeles/asignar-papel.js';
 import { CompletarDpiDeProveedor } from './aplicacion/casos-uso/papeles/completar-dpi-de-proveedor.js';
 import { CompletarNitDeProveedor } from './aplicacion/casos-uso/papeles/completar-nit-de-proveedor.js';
+import { CrearClienteDesdeDte } from './aplicacion/casos-uso/papeles/crear-cliente-desde-dte.js';
 import { CrearProveedorDesdeDte } from './aplicacion/casos-uso/papeles/crear-proveedor-desde-dte.js';
 import { ObtenerCorreosDeProveedor } from './aplicacion/casos-uso/papeles/obtener-correos-de-proveedor.js';
 import { QuitarPapel } from './aplicacion/casos-uso/papeles/quitar-papel.js';
@@ -27,7 +28,7 @@ import { intercambiosDeTerceros } from './composicion/intercambios.js';
 import { CategoriasControlador, ContactosControlador } from './http/contactos-y-categorias.controlador.js';
 import { TercerosControlador } from './http/terceros.controlador.js';
 import { rutasTerceros, type ControladoresDeTerceros } from './http/terceros.rutas.js';
-import { AvisosDeProveedorEnMediador } from './infraestructura/avisos-de-proveedor-en-mediador.js';
+import { AvisosDePapelesEnMediador } from './infraestructura/avisos-de-papeles-en-mediador.js';
 import './infraestructura/catalogo-eventos.js';
 import { BusquedaDeContactosDrizzle } from './infraestructura/persistencia/busqueda-de-contactos.drizzle.js';
 import {
@@ -53,7 +54,7 @@ function crearPiezas() {
     consultasContactos,
     consultasCategorias: new ConsultasCategoriasDrizzle(),
     avisoDeParecidos: new AvisoDeParecidos(consultas),
-    avisos: new AvisosDeProveedorEnMediador(),
+    avisos: new AvisosDePapelesEnMediador(),
   };
 }
 
@@ -81,7 +82,7 @@ function controladorDeTerceros(piezas: Piezas): TercerosControlador {
   });
 }
 
-/** Atiende por el mediador las órdenes sobre proveedores; el permiso lo exige la ruta que origina (o el dato `puedeCrearProveedores`). */
+/** Atiende por el mediador las órdenes sobre proveedores y clientes; el permiso lo exige la ruta que origina (o el dato `puedeCrearProveedores` o `puedeCrearClientes`). */
 function atenderOrdenes({ unidadDeTrabajo, repositorio, consultas, consultasContactos }: Piezas): void {
   const completarNit = new CompletarNitDeProveedor({ unidadDeTrabajo, repositorio, consultas });
   mediador.atender('terceros', 'terceros.completar_nit', (datos, operador) => completarNit.ejecutar(operador, datos));
@@ -99,6 +100,10 @@ function atenderOrdenes({ unidadDeTrabajo, repositorio, consultas, consultasCont
   const crearProveedor = new CrearProveedorDesdeDte({ unidadDeTrabajo, repositorio, consultas });
   mediador.atender('terceros', 'terceros.crear_proveedor_desde_dte', (datos, operador) =>
     crearProveedor.ejecutar(operador, datos),
+  );
+  const crearCliente = new CrearClienteDesdeDte({ unidadDeTrabajo, repositorio, consultas });
+  mediador.atender('terceros', 'terceros.crear_cliente_desde_dte', (datos, operador) =>
+    crearCliente.ejecutar(operador, datos),
   );
 }
 

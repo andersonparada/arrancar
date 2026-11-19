@@ -4159,3 +4159,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Corregido: aviso de vencidos repetido en la ficha, fecha límite propuesta en formato ISO y rótulo «Anulado desde…» repetido en Bancos
   (igual en Cuentas por pagar: pendiente). Prueba `it.fails`: CL-R1 suma con signo un anticipo gastado de más. **Pendiente de decisión
   del usuario:** el beneficiario sale de Clientes y pide `terceros.ver` (un rol con solo `anticipos.crear` no puede escoger a nadie).
+- **2026-11-19 — VC-0a (servidor) hecho: Terceros listo para Libro de ventas y Cuentas por cobrar.** Migración
+  `terceros/0010_clientes_para_ventas`: único `clientes_id_cuenta_unico (id, cuenta_id)` (sin datos que convertir). Aviso
+  `terceros.cliente_guardado` `{ clienteId, terceroId, secciones }`, dentro de la misma transacción, al registrar con papel
+  de cliente y al asignarlo o cambiarlo (`PUT /api/terceros/:id/cliente` y el alta aceptan `secciones`); el puerto
+  `AvisosDeProveedor` pasó a `AvisosDePapeles` (con `proveedorGuardado` y `clienteGuardado`). Orden
+  `terceros.crear_cliente_desde_dte` (`CrearClienteDesdeDte`): por NIT, sin duplicar, asigna el papel si el tercero ya
+  existe, `puedeCrearClientes` (`clientes.crear`), `cliente_inactivo` si el papel está inactivo, y el NIT `CF` no crea nada y
+  responde `null` (aun sin permiso). Decisiones: el cliente nuevo entra con clase `directo` (la clase es obligatoria y el DTE
+  no la trae; se cambia después en Clientes); el `CF` se resuelve antes del permiso porque no hay nada que crear. Pruebas
+  unitarias y de API (llave entre cuentas, aviso, orden). Queda VC-0a-c (formulario y ficha de Clientes con las secciones,
+  frontend).

@@ -5,13 +5,14 @@ import type { VerificadorDeFotos } from '../../../../core/compartido/aplicacion/
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { SeccionesAportadas } from '../../../../core/contratos/secciones.contratos.js';
 import { Contacto } from '../../../dominio/contacto.js';
+import type { TipoDePapel } from '../../../dominio/papeles.js';
 import { Tercero } from '../../../dominio/tercero.js';
 import type { AvisoDeParecidos } from '../../aviso-de-parecidos.js';
 import { datosDeContacto, datosDeTercero } from '../../conversiones.js';
 import type { SolicitudDeContacto } from '../../dto/contacto.dto.js';
 import type { SolicitudDeAltaDeTercero, TerceroDto } from '../../dto/tercero.dto.js';
 import { exigirCategoriaDelPapel } from '../../existentes.js';
-import type { AvisosDeProveedor } from '../../puertos/avisos-de-proveedor.js';
+import type { AvisosDePapeles } from '../../puertos/avisos-de-papeles.js';
 import type { ConsultasTerceros } from '../../puertos/consultas.js';
 import type { RepositorioCategorias, RepositorioContactos, RepositorioTerceros } from '../../puertos/repositorios.js';
 
@@ -24,7 +25,13 @@ interface Dependencias {
   avisoDeParecidos: AvisoDeParecidos;
   publicadorEventos: PublicadorEventos;
   fotos: VerificadorDeFotos;
-  avisos: AvisosDeProveedor;
+  avisos: AvisosDePapeles;
+}
+
+interface PapelNuevo {
+  tercero: Tercero;
+  tipo: TipoDePapel;
+  secciones: SeccionesAportadas;
 }
 
 /** Registra a alguien con sus datos, el papel con que entra y sus contactos, todo o nada. */
@@ -51,18 +58,21 @@ export class RegistrarTercero {
       await avisoDeParecidos.exigirQueNoHaya(tercero, solicitud.confirmarDuplicado);
       await repositorio.agregar(tercero);
       await this.agregarContactos(tercero, solicitud.contactos);
-      if (solicitud.papel?.tipo === 'proveedor') await this.avisarProveedor(operador, tercero, secciones);
+      if (solicitud.papel) await this.avisarPapel(operador, { tercero, tipo: solicitud.papel.tipo, secciones });
       return consultas.obtener(tercero.id.valor);
     });
     await this.dependencias.publicadorEventos.publicar(tercero.extraerEventos());
     return registrado;
   }
 
-  /** Los módulos activos guardan su sección del formulario de proveedores, en esta misma transacción. */
-  private async avisarProveedor(operador: Operador, tercero: Tercero, secciones: SeccionesAportadas): Promise<void> {
-    const terceroId = tercero.id.valor;
-    const proveedor = await this.dependencias.consultas.obtenerPapel(terceroId, 'proveedor');
-    await this.dependencias.avisos.proveedorGuardado(operador, { proveedorId: proveedor.id, terceroId, secciones });
+  /** Los módulos activos guardan su sección del formulario del papel (proveedor o cliente), en esta misma transacción. */
+  private async avisarPapel(operador: Operador, nuevo: PapelNuevo): Promise<void> {
+    const terceroId = nuevo.tercero.id.valor;
+    const { id } = await this.dependencias.consultas.obtenerPapel(terceroId, nuevo.tipo);
+    const { secciones, tipo } = nuevo;
+    const { avisos } = this.dependencias;
+    if (tipo === 'proveedor') await avisos.proveedorGuardado(operador, { proveedorId: id, terceroId, secciones });
+    else await avisos.clienteGuardado(operador, { clienteId: id, terceroId, secciones });
   }
 
   private async agregarContactos(tercero: Tercero, solicitudes: SolicitudDeContacto[]): Promise<void> {

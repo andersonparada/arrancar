@@ -58,12 +58,39 @@ declare module './mediador.contratos.js' {
       respuesta: { proveedorId: string; terceroId: string; creado: boolean; nombre: string };
     };
   }
+  interface OrdenesEntreModulos {
+    /**
+     * Crea el cliente de un DTE emitido que aún no lo tiene (Libro de ventas). Igual que la del proveedor: por NIT,
+     * sin duplicar; si el NIT ya es de un tercero de la cuenta le asigna el papel de cliente, y si ya es cliente
+     * devuelve su id (`creado` es `false` en los dos casos). Un cliente inactivo se rechaza con `cliente_inactivo`.
+     * Quien manda indica con `puedeCrearClientes` si su usuario tiene `clientes.crear`; sin él responde
+     * `sin_permiso`. El NIT `CF` (consumidor final) no crea nada y responde `null`. La identidad pedida se ignora si
+     * el NIT ya es de un tercero. El cliente nuevo entra con clase `directo`. No guarda datos fiscales: los guarda
+     * quien manda.
+     */
+    'terceros.crear_cliente_desde_dte': {
+      datos: {
+        nit: string;
+        tipoDePersona: 'individual' | 'juridica';
+        nombres: string | null;
+        apellidos: string | null;
+        razonSocial: string | null;
+        puedeCrearClientes: boolean;
+      };
+      respuesta: { clienteId: string; terceroId: string; creado: boolean; nombre: string } | null;
+    };
+  }
   interface AvisosEntreModulos {
     /**
      * Se guardó el papel de proveedor de un tercero (al registrarlo con ese papel o al asignárselo o
      * cambiarlo). Cada módulo activo guarda su sección de `secciones`, si trae la suya.
      */
     'terceros.proveedor_guardado': { proveedorId: string; terceroId: string; secciones: SeccionesAportadas };
+    /**
+     * Se guardó el papel de cliente de un tercero (al registrarlo con ese papel o al asignárselo o cambiarlo).
+     * Cada módulo activo guarda su sección de `secciones` (`libro-de-ventas`, `cuentas-por-cobrar`), si trae la suya.
+     */
+    'terceros.cliente_guardado': { clienteId: string; terceroId: string; secciones: SeccionesAportadas };
   }
 }
 

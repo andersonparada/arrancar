@@ -30,6 +30,14 @@ export class ProveedorInactivo extends ReglaDeNegocioInfringida {
   }
 }
 
+export class ClienteInactivo extends ReglaDeNegocioInfringida {
+  readonly codigo = 'cliente_inactivo';
+
+  constructor(nombre: string) {
+    super(`El cliente ${nombre} está inactivo; reactívelo en Clientes antes de seguir.`);
+  }
+}
+
 export class ProveedorYaTieneOtroNit extends ReglaDeNegocioInfringida {
   readonly codigo = 'proveedor_con_otro_nit';
 

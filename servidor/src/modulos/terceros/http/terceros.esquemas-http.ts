@@ -71,6 +71,8 @@ export const esquemaPapelDeCliente = z.object({
   clase: z.enum(CLASES_DE_CLIENTE),
   activo: z.boolean().default(true),
   notas: textoOpcional(500),
+  /** Lo que los módulos activos aportan al formulario (por ejemplo, los datos fiscales de Libro de ventas). */
+  secciones: seccionesAportadas,
 });
 
 export const esquemaPapelDeProveedor = z.object({
@@ -101,7 +103,7 @@ export type ParamsContacto = z.infer<typeof esquemaParamsContacto>;
 export type ParamsCategoria = z.infer<typeof esquemaParamsCategoria>;
 
 const papelAlRegistrar = z.discriminatedUnion('tipo', [
-  esquemaPapelDeCliente.extend({ tipo: z.literal('cliente') }),
+  esquemaPapelDeCliente.omit({ secciones: true }).extend({ tipo: z.literal('cliente') }),
   esquemaPapelDeProveedor.omit({ secciones: true }).extend({ tipo: z.literal('proveedor') }),
 ]);
 
@@ -110,7 +112,7 @@ export const esquemaAltaDeTercero = camposDeTercero
   .extend({
     papel: papelAlRegistrar.nullish().transform((papel) => papel ?? null),
     contactos: z.array(esquemaContacto).max(20).default([]),
-    /** Solo se guardan si entra como proveedor. */
+    /** Solo se guardan si entra con un papel (cliente o proveedor). */
     secciones: seccionesAportadas,
   })
   .refine(tieneNombre, FALTA_EL_NOMBRE);
