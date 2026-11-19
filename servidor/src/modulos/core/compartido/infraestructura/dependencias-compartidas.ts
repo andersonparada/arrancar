@@ -16,15 +16,17 @@ let dependencias: DependenciasCompartidas | undefined;
 
 function crearDependencias(): DependenciasCompartidas {
   const documentos = crearDocumentosProtegidos();
+  const unidadDeTrabajo = new UnidadDeTrabajoPostgres(bd);
+  const auditoria = new AuditoriaPostgres();
   return {
-    unidadDeTrabajo: new UnidadDeTrabajoPostgres(bd),
+    unidadDeTrabajo,
     publicadorEventos: new PublicadorEventosEnBus(busEventos),
-    auditoria: new AuditoriaPostgres(),
+    auditoria,
     correlativos: new CorrelativosPostgres(new PoliticaDeReinicioAnualEnConfiguracion()),
     reloj: new RelojEnZonaHoraria(new PoliticaDeZonaHorariaEnConfiguracion()),
     fotos: new VerificadorDeFotosDrizzle(),
     documentos,
-    bandeja: crearBandejaDeSalida(documentos),
+    bandeja: crearBandejaDeSalida({ documentos, unidadDeTrabajo, auditoria }),
   };
 }
 

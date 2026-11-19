@@ -17,6 +17,7 @@ import { AsignarPapel } from './aplicacion/casos-uso/papeles/asignar-papel.js';
 import { CompletarDpiDeProveedor } from './aplicacion/casos-uso/papeles/completar-dpi-de-proveedor.js';
 import { CompletarNitDeProveedor } from './aplicacion/casos-uso/papeles/completar-nit-de-proveedor.js';
 import { CrearProveedorDesdeDte } from './aplicacion/casos-uso/papeles/crear-proveedor-desde-dte.js';
+import { ObtenerCorreosDeProveedor } from './aplicacion/casos-uso/papeles/obtener-correos-de-proveedor.js';
 import { QuitarPapel } from './aplicacion/casos-uso/papeles/quitar-papel.js';
 import { ActualizarTercero } from './aplicacion/casos-uso/terceros/actualizar-tercero.js';
 import { ListarTerceros } from './aplicacion/casos-uso/terceros/listar-terceros.js';
@@ -81,11 +82,20 @@ function controladorDeTerceros(piezas: Piezas): TercerosControlador {
 }
 
 /** Atiende por el mediador las órdenes sobre proveedores; el permiso lo exige la ruta que origina (o el dato `puedeCrearProveedores`). */
-function atenderOrdenes({ unidadDeTrabajo, repositorio, consultas }: Piezas): void {
+function atenderOrdenes({ unidadDeTrabajo, repositorio, consultas, consultasContactos }: Piezas): void {
   const completarNit = new CompletarNitDeProveedor({ unidadDeTrabajo, repositorio, consultas });
   mediador.atender('terceros', 'terceros.completar_nit', (datos, operador) => completarNit.ejecutar(operador, datos));
   const completarDpi = new CompletarDpiDeProveedor({ unidadDeTrabajo, repositorio, consultas });
   mediador.atender('terceros', 'terceros.completar_dpi', (datos, operador) => completarDpi.ejecutar(operador, datos));
+  const correos = new ObtenerCorreosDeProveedor({
+    unidadDeTrabajo,
+    repositorio,
+    consultas,
+    contactos: consultasContactos,
+  });
+  mediador.atender('terceros', 'terceros.obtener_correos_de_proveedor', (datos, operador) =>
+    correos.ejecutar(operador, datos.proveedorId),
+  );
   const crearProveedor = new CrearProveedorDesdeDte({ unidadDeTrabajo, repositorio, consultas });
   mediador.atender('terceros', 'terceros.crear_proveedor_desde_dte', (datos, operador) =>
     crearProveedor.ejecutar(operador, datos),

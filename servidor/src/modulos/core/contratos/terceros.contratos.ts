@@ -21,6 +21,23 @@ declare module './mediador.contratos.js' {
   }
   interface OrdenesEntreModulos {
     /**
+     * Los correos registrados de un proveedor, para avisarle (p. ej. de un pago): el correo principal del tercero y,
+     * de cada contacto, su correo y si tiene la marca «recibe avisos de pago». Solo lee; las direcciones ya están
+     * registradas (nunca se escriben a mano para enviar). Un proveedor inexistente o de otra cuenta responde
+     * `no_encontrado`.
+     */
+    'terceros.obtener_correos_de_proveedor': {
+      datos: { proveedorId: string };
+      respuesta: {
+        terceroId: string;
+        nombre: string;
+        correo: string | null;
+        contactos: Array<{ id: string; nombre: string; correo: string | null; recibeAvisosDePago: boolean }>;
+      };
+    };
+  }
+  interface OrdenesEntreModulos {
+    /**
      * Crea el proveedor de un DTE recibido que aún no lo tiene (bandeja de la SAT). Si el NIT ya es de un tercero de
      * la cuenta no lo duplica: si ya es proveedor devuelve su id; si no, le asigna el papel (`creado` es `false` en
      * los dos casos). Un proveedor inactivo se rechaza con `proveedor_inactivo`. Quien manda indica con

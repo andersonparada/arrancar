@@ -2733,6 +2733,25 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   del comprobante viniera sin ella). Textos del usuario saneados (controles, marcas de dirección, glifos que Noto Sans no
   tiene), sin enlaces, scripts ni archivos incrustados, una generación a la vez (`Semaforo`). El saneado y el pincel se
   repiten en el módulo (no se importa de Libro de compras). Sin migración.
+- **2026-11-18 (aviso de pago por correo, paso 10: aviso en Cuentas por pagar).** Permiso nuevo
+  `cuentas-por-pagar.pagos.enviar-aviso` (enviar, reenviar y cancelar un aviso pendiente; ver el estado va con
+  `pagos.ver`), sin migración de permisos (nadie lo tenía). Variables `cuentas-por-pagar.avisos_de_pago.*` (instalación y
+  empresa): `envio` (`manual` por omisión, pública), `asunto`, `mensaje`, `adjuntar_comprobante` y `copia_a_la_empresa`;
+  el asunto no admite `{monto}` ni `{documentos}` y un marcador que no existe se rechaza al guardar. Rutas: `GET
+  /cuentas-por-pagar/pagos/:id/aviso` (`pagos.ver`: destinatarios registrados con `utilizable`, `preseleccionado` y su
+  motivo, copia a la empresa, vista previa, avisos enviados y por qué no se puede enviar), `POST …/aviso` (201,
+  destinatarios por id de contacto o de proveedor, 1 a 10, nunca direcciones; límite de 20 por minuto por usuario) y
+  `POST …/aviso/:correoId/cancelar`. Casos de uso `PrepararAvisoDePago`, `EnviarAvisoDePago`, `CancelarAvisoDePago` sobre
+  un `ArmadorDelAviso` común; el PDF sale de `GeneradorPdfkitDelComprobante`. Preselección: los contactos con la marca y,
+  si no hay, el correo principal. Suscriptores (con `suscribirSinRomper`): `pago_registrado` manda el aviso solo si la
+  empresa lo pasó a `automatico` (a los preseleccionados, con la copia que diga la configuración; sin destinatario
+  utilizable no hace nada) y `pago_anulado` cancela los avisos pendientes con el motivo «Pago anulado» (auditado). Para
+  armar el operador de quien registró el pago sin petición, core/identidad suma `operadorDeUsuario`
+  (`ResolverOperadorDeUsuario`: usuario activo, su acceso a la empresa y sus recursos de alcance). Terceros atiende la
+  orden nueva `terceros.obtener_correos_de_proveedor` (correo principal y contactos con su marca). `BandejaDeSalida` suma
+  `cancelarPendientesDe`, `cancelar` y `deRegistro`. Errores: 409 `aviso_no_disponible` (anulado, cuenta de apertura,
+  sin correo), 400 `direccion_no_utilizable`, 404 si el destinatario no es del proveedor del pago o es de otra cuenta, 429
+  `cupo_de_correos_agotado` y `demasiados_avisos_de_pago`. Sin migración en este paso.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la

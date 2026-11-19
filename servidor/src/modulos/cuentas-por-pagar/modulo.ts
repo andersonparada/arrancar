@@ -2,6 +2,7 @@ import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeAccionesComponidas } from './composicion/acciones.js';
 import { rutasDeAplicacionesComponidas } from './composicion/aplicaciones.js';
+import { rutasDeAvisosDePagoComponidas } from './composicion/avisos-de-pago.js';
 import { rutasDeAjustesComponidas } from './composicion/ajustes.js';
 import { rutasDeBajasComponidas } from './composicion/bajas.js';
 import { rutasDeCondicionesComponidas } from './composicion/condiciones.js';
@@ -50,6 +51,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeSaldosInicialesComponidas(),
     rutasDeContrasenasComponidas(),
     rutasDePagosComponidas(),
+    rutasDeAvisosDePagoComponidas(),
     rutasDeRetirosComponidas(),
     rutasDeReintegrosComponidas(),
     rutasDeReportesDeSaldosComponidas(),
