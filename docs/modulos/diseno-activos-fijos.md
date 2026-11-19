@@ -1311,8 +1311,8 @@ dos decimales.
 | AF-2c | Lista (etiquetas «En construcción o en tránsito», «Ocioso», «Depreciado contable», «Depreciado fiscal» y «En bodega»), ficha (datos, con el nombre de la localidad de §6.13) y alta manual | frontend | |
 | **AF-3** | `costos` (V-8 con motivo, `no_es_edificacion`, nunca negativos por activo) y `descartes`, bandeja, capitalizar, costos manuales, avisos del libro (R-1), mensaje del error de llave en el libro; prueba de concurrencia de la línea y del total del activo | backend | **Programado, en revisión** (2026-11-19; no se cierra un mes posterior al en curso, `mes_por_llegar`; notas abajo; revisión: capitalizar toma FOR SHARE del documento y la prueba «capitalizar y anular a la vez» lo cubre) |
 | **AFI-2** (con AF-3) | Capitalizar en N unidades, cuadrícula de unidades (códigos, series, placas), destino alta conjunta; pruebas del reparto y del sobrante, de códigos repetidos, del tope de 200 y de la regla de la línea | backend | **Programado, en revisión** (2026-11-19) |
-| AF-3c | Bandeja «Por capitalizar» (aviso de software y suscripciones, V-2) y pestaña Costos | frontend | |
-| AFI-2c (con AF-3c) | Ventana «Capitalizar» con unidades, costo por unidad y cuadrícula | frontend | |
+| AF-3c | Bandeja «Por capitalizar» (aviso de software y suscripciones, V-2) y pestaña Costos | frontend | **Programado** (2026-11-19; notas abajo) |
+| AFI-2c (con AF-3c) | Ventana «Capitalizar» con unidades, costo por unidad y cuadrícula | frontend | **Programado** (2026-11-19) |
 | **AF-4** | Dominio de depreciación (§7, pruebas puras con los ejemplos: tope del inmueble con el mayor y el 70 %, reproductores, ocioso, exceso de nota de crédito por libro), `tramos`, poner en uso y quitar de uso | backend | **Programado, en revisión** (2026-11-19; migración `0004_af4_tramos`) |
 | **AFI-3** (con AF-4) | `PonerEnUsoVarios`, ubicación y «En bodega de activos» al ponerlo disponible, textos de «Disponible para uso» | backend | |
 | **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | **Programado, en revisión** (2026-11-19; migración `0005_af5_cierres_y_cuotas`; faltan los hallazgos de inventario en curso (AF-10) y de bodega (AFI-7)) |
@@ -1375,6 +1375,22 @@ dos decimales.
   (`saldo_con_movimientos_posteriores`) si el activo recibió costos de otro origen o tiene tramos de otra causa.
 - Excel: las filas se crean en orden; el padre se escribe por su código y debe ir antes que su componente o ya estar cargado.
 - Falta para AF-6c: mostrar el saldo inicial (costo fiscal y acumuladas) en la ficha del activo.
+
+**Notas de lo programado en AF-3c y AFI-2c (cliente):**
+
+- «Devolver a la bandeja» solo se ofrece sobre las líneas descartadas en la sesión: el servidor no tiene un listado de
+  descartadas. Si hace falta verlas todas (por ejemplo, otro usuario las descartó), habría que agregar un filtro
+  `descartadas` a `GET /activos-fijos/bandeja` (pendiente de decisión).
+- La cuadrícula de unidades muestra código, serie y placa; la marca y el modelo son los de la asignación para todas
+  (el servidor los copia a cada unidad).
+- Un costo manual se ofrece con `costos.crear` en cualquier activo; si el activo no lo admite (de terceros, en uso antes
+  de AF-7), el servidor lo dice y el mensaje se muestra tal cual.
+- La pestaña Costos se trae junto con la ficha, no al abrir la pestaña.
+- Correcciones de la revisión (2026-11-19): el valor como ganado común acepta el número que entrega el campo; los
+  activos se vuelven a traer cada vez que se abre «Capitalizar» (si no, los recién nacidos no aparecían para costos
+  posteriores); un costo a un edificio que ya existe puede marcarse «No es edificación»; los errores Zod del servidor
+  (`asignaciones.<i>.…`) se ponen en el campo de su parte y matrícula, catastro y ganado común se validan con dos
+  decimales; el costo manual exige monto mayor que cero; el aviso de descarte dice que devolver solo vale sin recargar.
 
 AF-6 puede adelantarse a AF-5 si se quiere cargar saldos antes de cerrar meses. El paso **AF-P22** va antes de AF-2c y
 necesita la revisión de `seguridad` de §6.13. **AFI-1** no es un paso aparte: son columnas de la migración de AF-2. AFI-0

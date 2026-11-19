@@ -4024,3 +4024,24 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (inmuebles sin valores) se puede programar ya**; PA-0b espera PA-20 y PA-21, PA-1 espera PA-23 y los archivos van en
   PA-AR tras la revisión de `seguridad`. Preguntas nuevas PA-20 a PA-23 (§17.1, sin responder); pendientes P-1 a P-4
   (§18.1), ninguno bloquea un paso.
+- **2026-11-19 (AF-3c y AFI-2c, Activos fijos, cliente):** bandeja «Por capitalizar» (`/activos-fijos/por-capitalizar`,
+  permiso `activos-fijos.bandeja.ver`, sección Operación, sin Excel), pestaña Costos de la ficha del activo y ventana
+  «Capitalizar» con unidades. Líneas agrupadas por documento con casillero por línea y por documento, búsqueda por texto,
+  filtros de fechas y de propuesta de clase, barra fija con la cuenta y el total pendiente de lo elegido y el aviso de
+  software y suscripciones (V-2) arriba. Descartar pide motivo y explica R-3; devolver (`bandeja.descartar`) se ofrece sobre
+  las líneas descartadas **en la sesión**, porque el servidor no lista las descartadas. «Capitalizar»: cada línea elegida
+  tiene una o más partes (monto sin signo; la nota de crédito resta sola) con destino activo nuevo, activo existente o
+  compra conjunta; activo nuevo con unidades, cantidad por activo, costo por unidad con el sobrante del redondeo (solo
+  muestra: el servidor reparte), campos del inciso (matrícula y catastro en edificios, valor como ganado común en
+  reproductores, «no es edificación»), aviso de bien de control (I-5) y de programas y licencias, y la cuadrícula de código,
+  serie y placa con los códigos repetidos marcados al escribir y los que el servidor rechaza puestos en su renglón. El
+  resumen de abajo dice cuántos activos se crean y por cuánto antes de confirmar. La ficha gana las pestañas Datos y
+  Costos: costos con su procedencia, registrar costo manual (V-8: motivo si queda fuera del libro fiscal) y anular con
+  motivo y el efecto sobre el costo del activo y la línea. Catálogos de la ventana (clases, activos, ubicaciones) se traen
+  al abrirla. Lógica pura con 57 pruebas nuevas; sin cambios de servidor.
+- **2026-11-19 (correcciones de la revisión de AF-3c y AFI-2c, cliente):** valor como ganado común validado como número
+  o texto (antes lanzaba TypeError); activos recargados al abrir «Capitalizar»; casilla «No es edificación» también
+  para el activo que ya existe de clase Edificios; errores de validación del servidor traducidos a su campo y
+  decimales validados en el cliente; costo manual exige monto mayor que cero; el texto del descarte aclara que
+  devolver solo vale en la sesión. **Pendiente de decisión del usuario:** listar las descartadas en el servidor
+  (filtro `descartadas` de la bandeja) para poder devolverlas tras recargar.

@@ -1,7 +1,7 @@
 import { Landmark } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_ACTIVOS_FIJOS } from './textos';
-import { Package, Shapes } from 'lucide-vue-next';
+import { Inbox, Package, Shapes } from 'lucide-vue-next';
 import { VENTANAS_ACTIVOS_FIJOS } from './textos';
 // generador: importaciones
 
@@ -34,6 +34,12 @@ export const moduloActivosFijos: DefinicionModuloCliente = {
       props: true,
       meta: { permiso: 'activos-fijos.activos.ver', titulo: VENTANAS_ACTIVOS_FIJOS.activos.titulo },
     },
+    {
+      path: '/activos-fijos/por-capitalizar',
+      name: 'activos-fijos.por-capitalizar',
+      component: () => import('./paginas/PorCapitalizar.vue'),
+      meta: { permiso: 'activos-fijos.bandeja.ver', titulo: VENTANAS_ACTIVOS_FIJOS.porCapitalizar.titulo },
+    },
     // generador: rutas
   ],
   menu: [
@@ -48,6 +54,13 @@ export const moduloActivosFijos: DefinicionModuloCliente = {
           icono: Package,
           seccion: 'operacion',
           permiso: 'activos-fijos.activos.ver',
+        },
+        {
+          titulo: VENTANAS_ACTIVOS_FIJOS.porCapitalizar.titulo,
+          ruta: '/activos-fijos/por-capitalizar',
+          icono: Inbox,
+          seccion: 'operacion',
+          permiso: 'activos-fijos.bandeja.ver',
         },
         {
           titulo: VENTANAS_ACTIVOS_FIJOS.clases.titulo,
