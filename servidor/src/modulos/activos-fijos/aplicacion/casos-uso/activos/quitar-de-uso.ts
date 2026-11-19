@@ -1,6 +1,7 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { ActivoConLibrosUsados } from '../../../dominio/errores-de-depreciacion.js';
+import { ActivoConMejoras } from '../../../dominio/errores-de-mejora.js';
 import { ActivoDeSaldoInicial } from '../../../dominio/errores-de-saldo-inicial.js';
 import type { ActivoFichaDto } from '../../dto/activo.dto.js';
 import type { DependenciasDeUso } from './dependencias-de-uso.js';
@@ -14,11 +15,18 @@ export class QuitarDeUso {
    * @throws RecursoNoEncontrado si no existe o no es de la empresa.
    * @throws ActivoDeSaldoInicial si sus tramos son los del saldo inicial (se corrigen en Saldos iniciales).
    * @throws ActivoSinLibros si no es un activo del balance en uso.
+   * @throws ActivoConMejoras si tiene mejoras o costos posteriores sin anular.
    * @throws ActivoConLibrosUsados si un cierre mensual ya usó sus tramos.
    */
   private async conTramosDeSaldoInicial(activoId: string): Promise<boolean> {
     const vigentes = await this.dependencias.tramos.vigentesDeActivo(activoId);
     return vigentes.some((tramo) => tramo.causa === 'saldo_inicial');
+  }
+
+  /** Las mejoras y los costos posteriores se anulan antes: sus costos son del activo y sus tramos, de la mejora. */
+  private async conMejoras(activoId: string): Promise<boolean> {
+    const vigentes = await this.dependencias.tramos.vigentesDeActivo(activoId);
+    return vigentes.some((tramo) => tramo.causa === 'mejora' || tramo.causa === 'costo_posterior');
   }
 
   ejecutar(operador: Operador, activoId: string): Promise<ActivoFichaDto> {
@@ -28,6 +36,7 @@ export class QuitarDeUso {
       const [activo] = await repositorio.buscarBloqueando([activoId]);
       if (!activo) throw new RecursoNoEncontrado('El activo');
       if (await this.conTramosDeSaldoInicial(activoId)) throw new ActivoDeSaldoInicial();
+      if (await this.conMejoras(activoId)) throw new ActivoConMejoras();
       const anterior = await consultas.obtener(activoId);
       if (await cierres.usaronTramosDelActivo(activoId)) throw new ActivoConLibrosUsados();
       activo.quitarDeUso();

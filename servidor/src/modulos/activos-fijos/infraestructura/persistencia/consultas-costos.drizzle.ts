@@ -14,6 +14,7 @@ const columnas = {
   claseDeCosto: costos.claseDeCosto,
   documentoDeCompraId: costos.documentoDeCompraId,
   lineaDeDocumentoId: costos.lineaDeDocumentoId,
+  mejoraId: costos.mejoraId,
   serie: documentos.serie,
   numero: documentos.numero,
   proveedorNombre: documentos.nombreEmisor,

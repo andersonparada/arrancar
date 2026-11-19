@@ -3,6 +3,7 @@ import { transaccionEnCurso } from '../../../core/compartido/infraestructura/uni
 import type { Cierres, ModoDeCandadoDelCierre } from '../../aplicacion/puertos/cierres.js';
 import { cierres } from './cierres.tablas.js';
 import { cuotas } from './cuotas.tablas.js';
+import { tramos } from './tramos.tablas.js';
 
 const CANDADO = {
   compartido: sql`pg_advisory_xact_lock_shared`,
@@ -26,6 +27,16 @@ export class CierresDrizzle implements Cierres {
       .select({ id: cuotas.id })
       .from(cuotas)
       .where(and(eq(cuotas.activoId, activoId), eq(cuotas.vigente, true)))
+      .limit(1);
+    return fila !== undefined;
+  }
+
+  async usaronTramosDeLaMejora(mejoraId: string): Promise<boolean> {
+    const [fila] = await transaccionEnCurso()
+      .select({ id: cuotas.id })
+      .from(cuotas)
+      .innerJoin(tramos, eq(tramos.id, cuotas.tramoId))
+      .where(and(eq(tramos.mejoraId, mejoraId), eq(cuotas.vigente, true)))
       .limit(1);
     return fila !== undefined;
   }

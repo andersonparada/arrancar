@@ -5,6 +5,7 @@ import { rutasDeActivos } from './composicion/activos.js';
 import { rutasDeClases } from './composicion/clases.js';
 import { rutasDeBandeja, rutasDeCostos } from './composicion/costos.js';
 import { rutasDeDepreciacion } from './composicion/depreciacion.js';
+import { rutasDeMejoras } from './composicion/mejoras.js';
 import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 // generador: importaciones
 
@@ -69,6 +70,16 @@ export const moduloActivosFijos: DefinicionModulo = {
       clave: 'activos-fijos.saldos-iniciales.exportar',
       descripcion: 'Exportar saldos iniciales de activos fijos a Excel',
     },
+    {
+      clave: 'activos-fijos.activos.revisar-estimacion',
+      descripcion:
+        'Revisar la estimación contable de un activo en uso y cambiar la matrícula o el catastro de un edificio',
+    },
+    {
+      clave: 'activos-fijos.mejoras.crear',
+      descripcion: 'Registrar mejoras y costos posteriores de los activos en uso',
+    },
+    { clave: 'activos-fijos.mejoras.anular', descripcion: 'Anular mejoras y costos posteriores de los activos en uso' },
     // generador: permisos
   ],
   configuracion: configuracionDeActivosFijos,
@@ -79,6 +90,7 @@ export const moduloActivosFijos: DefinicionModulo = {
     rutasDeCostos(),
     rutasDeDepreciacion(),
     rutasDeSaldosIniciales(),
+    rutasDeMejoras(),
     // generador: rutas
   ]),
 };
