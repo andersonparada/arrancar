@@ -9,6 +9,7 @@ import { MESES_DE_AUDITORIA } from './bitacora/aplicacion/casos-uso/depurar-audi
 import { componerBitacora } from './bitacora/contexto.js';
 import { variablesDeCorreo } from './correo/configuracion.js';
 import { componerCorreo } from './correo/contexto.js';
+import { componerMonedas } from './monedas/contexto.js';
 import { componerConfiguracion } from './configuracion/contexto.js';
 import { variablesRegionales } from './configuracion/variables-regionales.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
@@ -27,6 +28,7 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(componerApariencia());
   await app.register(componerGeografia(dependenciasCompartidas()));
   await app.register(componerCalendario(dependenciasCompartidas()));
+  await app.register(componerMonedas(dependenciasCompartidas()));
   await app.register(componerBitacora());
   await app.register(componerCorreo());
 };
@@ -63,6 +65,16 @@ export const moduloCore: DefinicionModulo = {
     {
       clave: 'configuracion.feriados.eliminar',
       descripcion: 'Quitar asuetos nacionales del calendario de feriados',
+      soloSuperacceso: true,
+    },
+    {
+      clave: 'configuracion.monedas.editar',
+      descripcion: 'Activar y desactivar monedas, unirlas con el código del Banguat y completar sus letras',
+      soloSuperacceso: true,
+    },
+    {
+      clave: 'configuracion.tipos-de-cambio.crear',
+      descripcion: 'Ingresar o corregir a mano el tipo de cambio de un día y revisar sus versiones',
       soloSuperacceso: true,
     },
   ],

@@ -20,6 +20,7 @@ import { conceptosDeGasto } from './conceptos-de-gasto.tablas.js';
 import { documentos } from './documentos.tablas.js';
 import type { lineasDeDocumento } from './lineas-de-documento.tablas.js';
 import { vigenciasDeCombustible } from './vigencias-de-combustible.tablas.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
 
 export interface Escenario {
   usuarioId: string;
@@ -102,7 +103,7 @@ export async function prepararEscenario(nombreDeUsuario: string): Promise<Escena
     .insert(usuarios)
     .values({ usuario: nombreDeUsuario, nombres: nombreDeUsuario, hashContrasena: 'x' })
     .returning();
-  const filas = await bd
+  const filas = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: a!.id, nombre: 'Empresa A1' },

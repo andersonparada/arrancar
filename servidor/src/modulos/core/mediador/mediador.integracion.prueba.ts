@@ -19,6 +19,7 @@ import { usuarios } from '../identidad/infraestructura/persistencia/usuarios.tab
 import { ModuloNoDisponible } from './aplicacion/errores.js';
 import { Mediador } from './aplicacion/mediador.js';
 import { ModulosActivosDeLaCuentaEnRegistro } from './infraestructura/modulos-activos-de-la-cuenta-en-registro.js';
+import { bdPropietario } from '../base-datos/sembrado-de-prueba.soporte.js';
 
 declare module '../contratos/mediador.contratos.js' {
   interface OrdenesEntreModulos {
@@ -63,7 +64,7 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'mediador', nombres: 'Mediador', hashContrasena: 'x' })
     .returning();
-  const [empresa] = await bd
+  const [empresa] = await bdPropietario
     .insert(empresas)
     .values({ cuentaId: cuenta!.id, nombre: 'Empresa del mediador' })
     .returning();

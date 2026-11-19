@@ -14,6 +14,7 @@ import { DepurarArchivosHuerfanos } from '../aplicacion/casos-uso/depurar-archiv
 import { ExploradorDeArchivosLocal, RaizDeArchivosInsegura } from './explorador-de-archivos-local.js';
 import { CerrojoDeDepuracionPostgres } from './persistencia/cerrojo-de-depuracion.drizzle.js';
 import { RegistroDeRutasDrizzle } from './persistencia/registro-de-rutas.drizzle.js';
+import { bdPropietario } from '../../base-datos/sembrado-de-prueba.soporte.js';
 
 const DOS_DIAS_EN_MS = 2 * 24 * 60 * 60 * 1000;
 let propietario: pg.Client;
@@ -53,8 +54,8 @@ beforeAll(async () => {
   await propietario.connect();
   await propietario.query('truncate core.cuentas, core.usuarios cascade');
   const [cuenta] = await bd.insert(cuentas).values({ nombre: 'Cuenta de huérfanos' }).returning();
-  const [a] = await bd.insert(empresas).values({ cuentaId: cuenta!.id, nombre: 'Empresa A' }).returning();
-  const [b] = await bd.insert(empresas).values({ cuentaId: cuenta!.id, nombre: 'Empresa B' }).returning();
+  const [a] = await bdPropietario.insert(empresas).values({ cuentaId: cuenta!.id, nombre: 'Empresa A' }).returning();
+  const [b] = await bdPropietario.insert(empresas).values({ cuentaId: cuenta!.id, nombre: 'Empresa B' }).returning();
   empresaA = a!.id;
   empresaB = b!.id;
 });

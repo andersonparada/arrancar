@@ -15,6 +15,7 @@ import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import type { PoliticaDeReinicioAnual } from '../aplicacion/correlativos.js';
 import { CorrelativosPostgres } from './correlativos-postgres.js';
 import { UnidadDeTrabajoPostgres } from './unidad-de-trabajo-postgres.js';
+import { bdPropietario } from '../../base-datos/sembrado-de-prueba.soporte.js';
 
 const CLAVE = 'bancos.notas_de_credito';
 const unidadDeTrabajo = new UnidadDeTrabajoPostgres(bd);
@@ -54,7 +55,7 @@ async function vaciarComoPropietario(): Promise<void> {
 async function prepararDosEmpresas(): Promise<void> {
   const [cuenta] = await bd.insert(cuentas).values({ nombre: 'Cuenta A' }).returning();
   const [ana] = await bd.insert(usuarios).values({ usuario: 'ana', nombres: 'Ana', hashContrasena: 'x' }).returning();
-  const [a, b] = await bd
+  const [a, b] = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: cuenta!.id, nombre: 'Empresa A' },

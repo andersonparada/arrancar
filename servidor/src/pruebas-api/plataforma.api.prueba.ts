@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { comoPropietario } from './soporte/consultas-de-propietario.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { CONTRASENA_DE_PRUEBA, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
@@ -38,6 +39,26 @@ describe('alta de cuenta', () => {
       empresa: { nombre: 'Finca La Esperanza' },
       propietario: { usuario: 'rramirez', existente: false },
     });
+  });
+
+  it('deja al usuario de soporte como autor de la empresa inicial y del rol del propietario', async () => {
+    const respuesta = await entorno.soporte.post('/api/plataforma/cuentas', {
+      nombreCuenta: 'Autoría del alta',
+      empresa: { nombre: 'Finca Con Autor' },
+      propietario: { nombres: 'Elena', apellidos: 'Autora', contrasena: CONTRASENA_DE_PRUEBA },
+    });
+
+    const [soporte] = await comoPropietario<{ id: string }>('select id from core.usuarios where es_superacceso', []);
+    const [empresa] = await comoPropietario<{ creado_por: string }>(
+      'select creado_por from core.empresas where id = $1',
+      [respuesta.cuerpo.empresa.id],
+    );
+    const roles = await comoPropietario<{ creado_por: string }>(
+      'select creado_por from core.usuario_roles where cuenta_id = $1',
+      [respuesta.cuerpo.cuenta.id],
+    );
+    expect(empresa!.creado_por).toBe(soporte!.id);
+    expect(roles.map((fila) => fila.creado_por)).toEqual([soporte!.id]);
   });
 
   it('exige la contraseña cuando el propietario es nuevo', async () => {

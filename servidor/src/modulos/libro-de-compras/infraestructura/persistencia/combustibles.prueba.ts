@@ -19,6 +19,7 @@ import { usuarios } from '../../../core/identidad/infraestructura/persistencia/u
 import { definicionesModulos } from '../../../indice.js';
 import { combustibles } from './combustibles.tablas.js';
 import { vigenciasDeCombustible } from './vigencias-de-combustible.tablas.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
 
 let usuarioId: string;
 let cuentaA: string;
@@ -81,7 +82,7 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'combustibles', nombres: 'Combustibles', hashContrasena: 'x' })
     .returning();
-  const filas = await bd
+  const filas = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: a!.id, nombre: 'Empresa A1' },

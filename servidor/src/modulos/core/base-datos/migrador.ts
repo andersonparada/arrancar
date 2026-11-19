@@ -5,6 +5,7 @@ import pg from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import type { DefinicionModulo } from '../modulos-sistema/definicion-modulo.js';
+import { sentenciasDeRestriccion } from './privilegios-restringidos.js';
 
 const CARPETA_MODULOS = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ROL_APLICACION = 'arrancar_app';
@@ -16,7 +17,8 @@ export function nombreEsquemaDe(claveModulo: string): string {
 
 /**
  * Da al rol de la aplicación acceso de lectura y escritura a las tablas del esquema.
- * Es idempotente, así que se ejecuta después de cada migración.
+ * Luego quita lo que la aplicación nunca debe hacer (`privilegios-restringidos.ts`), en la misma consulta para que
+ * sea atómico. Es idempotente, así que se ejecuta después de cada migración.
  */
 async function otorgarPermisosAplicacion(conexion: pg.Client, esquema: string): Promise<void> {
   const existe = await conexion.query('select 1 from pg_namespace where nspname = $1', [esquema]);
@@ -26,6 +28,7 @@ async function otorgarPermisosAplicacion(conexion: pg.Client, esquema: string): 
     grant usage on schema ${nombre} to ${ROL_APLICACION};
     grant select, insert, update, delete on all tables in schema ${nombre} to ${ROL_APLICACION};
     grant usage, select on all sequences in schema ${nombre} to ${ROL_APLICACION};
+    ${sentenciasDeRestriccion(esquema, ROL_APLICACION).join('\n')}
   `);
 }
 
