@@ -3618,3 +3618,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   configuración usa su propia conexión, así que no comparte la transacción: si guardar falla, la auditoría se deshace).
   Por decisión de producto, y en coherencia con C9, el asunto y el mensaje rechazan `http:`, `www.`, `@` y dominios con
   terminación común (`.com`, `.gt`…); también rige para la configuración genérica de Soporte. Sin migraciones.
+- **2026-11-19 (CC-8, Caja chica, cliente)**: pantallas de `caja-chica` sobre la API de CC-2 a CC-4, sin cambios de servidor ni
+  migraciones. **Lista de fondos** (`ListaDeFondos.vue`, filtro abiertos/cerrados/todos, tarjeta con monto, efectivo esperado,
+  pendiente, último arqueo y el primer aviso del servidor), **ficha** (`FichaDeFondo.vue`: ecuación tal como la calculó el
+  servidor, sin recalcular; facturas con retención de la bandeja con «Asignar con retención»; comprobantes con filtro por estado,
+  «Agregar factura», «Desde la bandeja», «Vale de gasto», devolver a la bandeja y anular el vale; datos e historial plegado de
+  custodios y cambios de monto), **bandeja** (`BandejaDeCajaChica.vue`: filtros por proveedor, fechas y retención, marcar hasta 100,
+  barra fija con el fondo y «Asignar»; una factura con retención solo se marca con `comprobantes.con-retencion` y, si no, se
+  explica por qué), **ventana de asignar** (resumen de lo que va a pasar; un solo motivo de retención para todas las facturas con
+  retención, obligatorio; motivo del tope opcional para quien tiene `sobre-el-tope`, que el servidor ignora en lo que no pasa del
+  tope), **abrir fondo**, **aumentar**, **disminuir**, **cambiar custodio**, **anular apertura** y **accesos a fondos**. Las acciones
+  solo aparecen con el permiso y si `puede*` del servidor lo dice. **Ingreso de facturas** (libro): lee también `destino` de la
+  consulta, deja ese destino fijo (la referencia solo la entiende su módulo) y, al registrar, vuelve al destino mostrando los avisos
+  que dio (p. ej. «Quedó en la bandeja de Caja chica»). Lo demás de CC-8/CC-9 (reposición, arqueo, vales provisionales, cierre,
+  impresiones) queda para sus pasos. Los catálogos (cuentas y chequeras de Bancos, localidades, conceptos de gasto y usuarios) se
+  leen por sus rutas de API desde `servicios/catalogos.api.ts`: cada uno pide el permiso de ver de su módulo y, si falta, esa lista
+  queda vacía; pendiente un endpoint propio de Caja chica para no depender de esos permisos.
