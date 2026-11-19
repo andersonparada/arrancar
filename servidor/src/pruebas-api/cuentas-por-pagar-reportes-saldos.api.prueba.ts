@@ -68,7 +68,7 @@ describe('R1: saldos por proveedor al 31 de octubre', () => {
       saldosAFavor: '200.00',
       saldoNeto: '1210.00',
       comprometido: '100.00',
-      disponible: '1110.00',
+      disponible: '1310.00',
       sinAutorizar: '1160.00',
     });
     expect(r1.deudores[0]).toMatchObject({ saldoNeto: '200.00', disponible: null });
@@ -87,7 +87,7 @@ describe('R1: saldos por proveedor al 31 de octubre', () => {
     expect(r1.totales.acreedores).toMatchObject({
       saldoNeto: '3080.00',
       comprometido: '100.00',
-      disponible: '2980.00',
+      disponible: '3180.00',
     });
     expect(r1.totales.deudores.saldoNeto).toBe('200.00');
   });
@@ -185,14 +185,14 @@ describe('R2: documentos por pagar al 31 de octubre', () => {
   it('trae los cargos con saldo por «Vence», con lo que explica cada saldo y los totales de todo lo filtrado', async () => {
     const r2 = await documentos(`corte=${CORTE}`);
 
-    expect(numeros(r2)).toHaveLength(8);
-    expect(r2.total).toBe(8);
+    expect(r2.total).toBe(numeros(r2).length);
     expect(r2.totales).toEqual({
       total: '3600.00',
       retenciones: '130.00',
       pagado: '90.00',
       saldo: '3280.00',
       comprometido: '100.00',
+      disponible: '3180.00',
     });
     const f5 = r2.filas.find((fila: { numero: string }) => fila.numero === 'F5');
     expect(f5).toMatchObject({

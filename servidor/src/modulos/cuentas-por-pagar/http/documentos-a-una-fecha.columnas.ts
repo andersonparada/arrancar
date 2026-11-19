@@ -27,6 +27,7 @@ export interface FilaExportadaDeDocumentos {
   ajustado: string | null;
   saldo: string | null;
   comprometido: string | null;
+  disponible: string | null;
   estadoDePago: string | null;
   autorizado: boolean | null;
   contrasena: string | null;
@@ -70,6 +71,7 @@ const SIN_DATOS: FilaExportadaDeDocumentos = {
   ajustado: null,
   saldo: null,
   comprometido: null,
+  disponible: null,
   estadoDePago: null,
   autorizado: null,
   contrasena: null,
@@ -135,6 +137,7 @@ export function aFilasExportadasDeDocumentos(reporte: ReporteDeDocumentosAUnaFec
       pagado: totales.pagado,
       saldo: totales.saldo,
       comprometido: totales.comprometido,
+      disponible: totales.disponible,
     },
     nota(`Saldos al ${fechaLegible(reporte.corte)}.`),
     ...reporte.avisos.map(({ mensaje }) => nota(mensaje)),
@@ -166,6 +169,7 @@ export const columnasDeDocumentosAUnaFecha: Columna[] = [
   dinero('ajustado', 'Ajustado'),
   dinero('saldo', 'Saldo'),
   dinero('comprometido', 'Comprometido'),
+  dinero('disponible', 'Disponible para pagar'),
   texto('estadoDePago', 'Estado de pago'),
   { clave: 'autorizado', titulo: 'Autorizado', requerido: false, tipo: 'siNo' },
   texto('contrasena', 'Contraseña'),

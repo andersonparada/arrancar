@@ -25,7 +25,7 @@ export interface CifrasDeSaldoDto extends TramosDto {
   saldoNeto: string;
   /** Cheques posfechados ya entregados. */
   comprometido: string;
-  /** `saldoNeto - comprometido`; nulo en los deudores, que no se pagan. */
+  /** `totalCargos - comprometido` (como en la ficha del proveedor; lo que está a favor no resta); nulo en los deudores, que no se pagan. */
   disponible: string | null;
   /** La parte de los cargos que todavía no está autorizada. */
   sinAutorizar: string;
@@ -97,6 +97,8 @@ export interface FilaDeDocumentoAlCorteDto {
   ajustado: string;
   saldo: string;
   comprometido: string;
+  /** `saldo - comprometido`: lo que todavía se puede pagar de este cargo. */
+  disponible: string;
   estadoDePago: EstadoDePago;
   autorizado: boolean;
   contrasena: { numero: string; pagoPrometido: string } | null;
@@ -110,6 +112,7 @@ export interface TotalesDeDocumentosAlCorteDto {
   pagado: string;
   saldo: string;
   comprometido: string;
+  disponible: string;
 }
 
 export interface ReporteDeDocumentosAUnaFechaDto {

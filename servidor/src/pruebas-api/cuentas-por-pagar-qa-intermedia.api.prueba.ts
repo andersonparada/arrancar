@@ -6,10 +6,11 @@
  *   comprometido va aparte, nada queda disponible y el estado es «Comprometido».
  */
 
+import ExcelJS from 'exceljs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { EscenarioDePagos, RUTA_DE_PAGOS } from './soporte/cuentas-por-pagar-pagar.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { HOY, haceDias } from './soporte/escenario-de-documentos.js';
+import { HOY, consultar, haceDias } from './soporte/escenario-de-documentos.js';
 import { conceptoGeneral } from './soporte/escenarios-de-bancos.js';
 
 const entorno = usarEntornoApi();
@@ -98,7 +99,12 @@ describe('un cheque posfechado en la ficha y en los reportes', () => {
       disponible: '0.00',
       cargosConSaldo: 1,
     });
-    expect(fila).toMatchObject({ estadoDePago: 'comprometido', saldo: ficha.saldo, comprometido: '1120.00' });
+    expect(fila).toMatchObject({
+      estadoDePago: 'comprometido',
+      saldo: ficha.saldo,
+      comprometido: '1120.00',
+      disponible: '0.00',
+    });
   });
 });
 
@@ -111,5 +117,62 @@ describe('el origen de un cheque de Cuentas por pagar (QA intermedia, error 9)',
     const lista = (await e.propietario().get('/api/bancos/cheques')).cuerpo as { moduloDeOrigen: string | null }[];
 
     expect(lista.some((cheque) => cheque.moduloDeOrigen === 'cuentas-por-pagar')).toBe(true);
+  });
+});
+
+describe('lo disponible para pagar con un saldo a favor y un posfechado por el total', () => {
+  it('da 0.00 en R1, en R2 y en la ficha: lo que está a favor no resta lo disponible', async () => {
+    const { proveedor, cargo } = await e.proveedorConCargo('2240.00');
+    const { documentos } = e.mundo;
+    const datos = { proveedorId: proveedor.proveedorId, nitEmisor: proveedor.nitEmisor };
+    const factura = await documentos.registrar({
+      ...datos,
+      lineas: [{ conceptoId: e.mundo.escenario.conceptoId, total: '1120.00' }],
+    });
+    await consultar('update cuentas_por_pagar.documentos set retenciones = 784 where documento_id = $1', [factura]);
+    await documentos.registrarNota('NCRE', factura, { ...datos, total: '672.00' });
+    const pago = await e.pagar(
+      e.cheque(proveedor.proveedorId, [{ cargoId: cargo, monto: '2240.00' }], { fecha: haceDias(-5) }),
+    );
+    expect(pago.estado, JSON.stringify(pago.cuerpo)).toBe(201);
+
+    const ruta = '/api/cuentas-por-pagar';
+    const r1 = (
+      await e
+        .propietario()
+        .get(`${ruta}/reportes/saldos-por-proveedor?corte=${HOY}&proveedorId=${proveedor.proveedorId}`)
+    ).cuerpo;
+    const r2 = (
+      await e.propietario().get(`${ruta}/reportes/documentos?corte=${HOY}&proveedorId=${proveedor.proveedorId}`)
+    ).cuerpo;
+    const ficha = (await e.propietario().get(`${ruta}/documentos/${cargo}`)).cuerpo;
+    const lista = (await e.propietario().get(`${ruta}/documentos?proveedorId=${proveedor.proveedorId}`)).cuerpo
+      .elementos;
+
+    expect(r1.acreedores[0]).toMatchObject({
+      totalCargos: '2240.00',
+      saldosAFavor: '336.00',
+      comprometido: '2240.00',
+      disponible: '0.00',
+    });
+    expect(r1.totales.acreedores.disponible).toBe('0.00');
+    expect(r2.filas.find((f: { id: string }) => f.id === cargo)).toMatchObject({
+      saldo: '2240.00',
+      disponible: '0.00',
+    });
+    expect(r2.totales).toMatchObject({ saldo: '2240.00', comprometido: '2240.00', disponible: '0.00' });
+    expect(ficha.disponible).toBe('0.00');
+    const excel = await e
+      .propietario()
+      .get(`${ruta}/reportes/documentos/exportar?corte=${HOY}&proveedorId=${proveedor.proveedorId}`);
+    expect(excel.estado).toBe(200);
+    const libro = new ExcelJS.Workbook();
+    await libro.xlsx.load(excel.cuerpo as unknown as ExcelJS.Buffer);
+    const encabezados = (libro.worksheets[0]!.getRow(1).values as unknown[]).map(String);
+    expect(encabezados).toContain('Disponible para pagar');
+    // Invariante 3 de diseno-cp5-reportes §2.5: con corte de hoy, lo disponible de R2 es el de la lista.
+    for (const fila of r2.filas) {
+      expect(lista.find((d: { id: string }) => d.id === fila.id)?.disponible, fila.id).toBe(fila.disponible);
+    }
   });
 });
