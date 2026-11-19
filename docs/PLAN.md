@@ -3413,3 +3413,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   pasos). Decisiones: los puertos y las órdenes a Bancos son propios del módulo (no se importa Cuentas por pagar); la
   devolución y el reembolso aún no existen, así que el aviso de Bancos sobre ellos se rechaza igual (CL-4 los reabrirá);
   `gastos_sin_documento.permitidos` se declara en CL-3, con su caso de uso.
+- **2026-11-19 — Parcelas: respuestas del usuario y validación del contador (docs).** `diseno-parcelas.md`: el usuario
+  aceptó todas las recomendaciones de PA-1 a PA-19 (sección «Respuestas del usuario (2026-11-19)»). El contador validó
+  V-1 a V-7 en `dictamen-parcelas-validacion-2026-11-19.md` («correcto con ajustes») y quedó incorporado: caballería en
+  645,816 varas² (no 64.58 mz); valores del inmueble en **dos series** (`empresas.valores_de_inmueble` con `fuente`
+  matrícula fiscal o catastro municipal; el tope de Activos fijos sigue su §3.5.1, con el 70 % sin cultivos permanentes) y
+  un valor usado en un mes cerrado no se borra (avisos del mediador `empresas.valor_de_inmueble_registrado` y
+  `…_por_eliminar`); `uso_declarado` cambia a `categoria_iusi` (vivienda, residencial, mixto, comercial, otros; Decreto
+  18-2026) por fecha en el valor de matrícula; el aviso de inscripción compara por fecha, sale siempre en el usufructo y
+  pide escritura pública (art. 1576), con `tipo_de_documento` en el contrato; el aviso del INAB sale también desde
+  plantación forestal y conservación, sin citar el art. 46 al pie de la letra; nota fiscal de la renta en especie; citas
+  NIIF corregidas (Secciones 16 y 20 de la NIIF para las Pymes); mensaje de rentas vencidas por moneda y especie. La
+  pregunta del inmueble para Activos fijos pasa a **AF-P23** (AF-P22 ya existía). Hallazgo: AF-2 ya creó
+  `valor_de_matricula`, `valor_catastral` y `valores_del_inmueble_completo` en `activos_fijos.activos`, así que AF-P23
+  necesita una migración nueva de Activos fijos (sin datos que convertir) antes de AF-5; y la `empresas/0013` ya está
+  tomada, así que los inmuebles van en la `0014` y los valores en la `0015`. Tabla de pasos con dependencias: **PA-0a
+  (inmuebles sin valores) se puede programar ya**; PA-0b espera PA-20 y PA-21, PA-1 espera PA-23 y los archivos van en
+  PA-AR tras la revisión de `seguridad`. Preguntas nuevas PA-20 a PA-23 (§17.1, sin responder); pendientes P-1 a P-4
+  (§18.1), ninguno bloquea un paso.
