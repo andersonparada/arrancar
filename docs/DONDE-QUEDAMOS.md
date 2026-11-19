@@ -22,21 +22,28 @@ Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop*
 - **Clientes:** el usuario **no tiene clientes todavía** (2026-11-19). No se frena nada esperando datos reales; lo que solo un
   cliente puede confirmar se revisa con el primero que lo use.
 
-**`main`:** `5fb69af8` (subido). Suite completa en verde: servidor 7355, cliente 1800+, generador 46.
+**`main`:** `2f27499b` (subido). Suite completa en verde: servidor 7853, cliente 2125+, generador 46.
 
 **En `main` desde el 2026-11-18:**
-- **Bancos:** BS-2 a BS-7, BS-9, BS-R1 y BS-R2. Impresión de cheques del servidor, IC-1 a IC-7 (bancos 0038).
-- **Cuentas por pagar:** CP4 y CP5 completos, con las QA CP4-12 y CP5-11 corregidas.
-- **Correo:** pasos 1 a 13, más las correcciones de seguridad (llave en producción, cupos por destinatario en core 0032, PDF
-  sin notas internas) y las de su QA: pantalla «Avisos de pago» con permiso propio, auditoría de los ajustes.
-- **Núcleo:** RLS de escritura R-1 a R-3 (core 0027-0028).
-  - **Ojo:** las pruebas que siembran `core.empresas` o `core.empresa_usuarios` deben usar `bdPropietario`
-    (`core/base-datos/sembrado-de-prueba.soporte.ts`).
-- **Multimoneda:** MM-1, MM-2, MM-3a, MM-3b, MM-4 y MM-5. La carga automática está **apagada por omisión**.
-- **Activos fijos:** AF-1, AF-2 (con AFI-1), AF-3 con AFI-2 y AF-4 (activos-fijos 0000-0004, empresas 0013).
-- **Inventarios:** INV-0 a INV-3 (inventarios 0000-0003).
-- **Caja chica:** CC-1 a CC-4 (caja_chica 0004).
-- **Cuentas por liquidar:** CL-1 a CL-4.
+- **Bancos:**
+  - BS-2 a BS-7, BS-9, BS-R1 y BS-R2.
+  - Impresión de cheques: servidor IC-1 a IC-7 y cliente IC-8 a IC-10. Falta IC-11, QA con papel real.
+  - QA BS-8 hecha; sus correcciones van en la tanda 7.
+- **Cuentas por pagar:** CP4 y CP5 completos, con sus QA corregidas.
+- **Correo:** completo; pendientes de seguridad en core 0034.
+- **Núcleo:** RLS de escritura R-1 a R-3 y de lectura de empresas R-4 (core 0035), con R-5 en CLAUDE.md y en ARQUITECTURA.md.
+  - **Ojo:** las pruebas que siembran `core.empresas` o `core.empresa_usuarios` usan `bdPropietario`.
+- **Multimoneda:**
+  - MM-1 a MM-5 y la Adenda B: MM-1b (core 0033), MM-3a″, MM-3c y MM-4b.
+  - La carga automática sigue **apagada por omisión**. Antes de encenderla falta MM-3d: C-5 y `curl` desde producción.
+- **Activos fijos:**
+  - AF-1 a AF-6: cierres en 0005 y saldos iniciales en 0006.
+  - Cliente: AF-1c, AF-2c, AF-3c y AFI-2c.
+- **Inventarios:** INV-0 a INV-4 (kardex en 0004).
+- **Caja chica:** CC-1 a CC-8.
+- **Cuentas por liquidar:** CL-1 a CL-6.
+- **Diseños validados con las respuestas del usuario:** Cuentas por cobrar y Ventas, Contabilidad, Bancos aprobaciones y tarjeta, y
+  Parcelas.
 
 **Decisiones del usuario del 2026-11-19:**
 - **Adenda B de Multimoneda:** aceptada completa. Promedio del cruce como política contable, sin cargar si compra y venta
@@ -46,22 +53,12 @@ Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop*
   CT-P18), Bancos aprobaciones y tarjeta (§16) y Parcelas (PA-1 a PA-19).
 
 **En curso:**
-- **Workflow `arrancar-tanda-5`** (run `wf_f75d3bef-bba`), todo desde la rama `base-tanda5` (`c89a013c`):
-  - Multimoneda Adenda B, en cadena: MM-1b (core 0033) → MM-3a″ → MM-3c → MM-4b.
-  - Activos fijos AF-5 → AF-6 (saldos iniciales).
-  - Cliente de AF-3 y AFI-2.
-  - Inventarios INV-4 (kardex).
-  - Caja chica CC-5 → CC-6 → CC-7, y su cliente CC-8.
-  - Cuentas por liquidar CL-6 → CL-5.
-- **Workflow `arrancar-tanda-6`** (run `wf_282ace4a-e6e`):
-  - QA en el navegador de BS-8, de Activos fijos con Inventarios y de Multimoneda.
-  - RLS del núcleo R-4 y R-5, con revisión de `seguridad`.
-  - Pendientes bajos del correo (core 0034).
-- **Workflow `arrancar-ic-cliente-con-main`** (run `wf_3641ad96-139`): une `main` al cliente de impresión de cheques
-  (IC-8 a IC-10, rama `worktree-wf_5dc20d6a-c1b-1`), que choca con BS-6 en 10 archivos. Lleva revisión de Opus. Falta
-  IC-11 (QA con papel real).
-- **Workflow `arrancar-aprobar-cuatro-disenos`** (run `wf_e31ffdad-1df`): el contador valida las V de los cuatro diseños y
-  el arquitecto anota las respuestas. Después se programa el primer paso de cada uno.
+- **Workflow `arrancar-tanda-7`** (run `wf_cde8ffed-67d`, desde `base-tanda7`):
+  - Primeros pasos de los diseños nuevos: VC-0a (Terceros), CT-0a (core 0036), AP-0 y PA-0a (Empresas).
+  - Caja chica CC-9 → CC-10.
+  - Activos fijos AF-7 → AF-8.
+  - Correcciones de las QA de BS-8, Multimoneda y Activos fijos con Inventarios.
+- **Workflow `arrancar-tanda-8`** (run `wf_40adf1e3-216`, desde `base-tanda8`): INV-5, cliente AF-5c y AF-6c, y QA CL-7.
 
 **Pendientes anotados:**
 - **CC-4:** un comprobante con una reposición anulada ya no se puede devolver a la bandeja ni eliminar en el libro; da error
