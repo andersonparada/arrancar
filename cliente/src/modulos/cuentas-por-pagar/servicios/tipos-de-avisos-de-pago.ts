@@ -32,6 +32,23 @@ export interface AvisoDePago {
   motivoSinAviso: string | null;
 }
 
+/** Los ajustes de los avisos de pago de la empresa (pantalla «Avisos de pago»). */
+export interface AjustesDelAviso {
+  envio: 'manual' | 'automatico';
+  asunto: string;
+  mensaje: string;
+  adjuntarComprobante: boolean;
+  copiaALaEmpresa: boolean;
+}
+
+/** Los ajustes con los marcadores permitidos y los textos originales, para ayudar a escribirlos. */
+export interface AjustesDelAvisoConAyuda extends AjustesDelAviso {
+  marcadoresDelAsunto: string[];
+  marcadoresDelMensaje: string[];
+  asuntoPorOmision: string;
+  mensajePorOmision: string;
+}
+
 /** Lo que se manda: ids de destinatarios registrados (nunca direcciones) y la copia. */
 export interface SolicitudDeAviso {
   destinatarios: Array<{ origen: OrigenDelDestinatario; origenId: string }>;

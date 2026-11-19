@@ -18,6 +18,11 @@ export interface ConfiguracionDelAviso {
   de(operador: Pick<Operador, 'cuentaId' | 'empresaId'>): Promise<AjustesDelAviso>;
 }
 
+/** Fija los cinco ajustes en el nivel empresa; ya vienen validados con el esquema de cada variable. */
+export interface GuardadorDeAjustesDelAviso {
+  guardar(operador: Operador, ajustes: AjustesDelAviso): Promise<void>;
+}
+
 /** Los correos registrados del proveedor los da Terceros por el mediador: este módulo no lo importa. */
 export interface CorreosDelProveedorDeTerceros {
   obtener(operador: Operador, proveedorId: string): Promise<CorreosDelProveedor>;
