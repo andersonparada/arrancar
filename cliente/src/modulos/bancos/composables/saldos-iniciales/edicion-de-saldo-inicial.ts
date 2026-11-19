@@ -41,3 +41,13 @@ export const datosDeCabecera = (edicion: EdicionDeSaldoInicial): DatosDeCabecera
   saldoSegunLibrosAnteriores: textoONulo(edicion.saldoSegunLibrosAnteriores),
   observaciones: textoONulo(edicion.observaciones),
 });
+
+/** El error del saldo del estado de cuenta si está vacío: dice cómo corregirlo (un banco en cero también se escribe). */
+export function erroresDeCabecera(edicion: EdicionDeSaldoInicial): Record<string, string> {
+  const vacio = String(edicion.saldoSegunEstadoDeCuenta ?? '').trim() === '';
+  return vacio
+    ? {
+        saldoSegunEstadoDeCuenta: 'Escriba el saldo que dice el estado de cuenta; si el banco está en cero, escriba 0.',
+      }
+    : {};
+}

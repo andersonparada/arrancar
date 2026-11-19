@@ -1,7 +1,7 @@
+import { numeroDeChequeOpcional } from './numero-de-cheque.esquema.js';
 import { z } from 'zod';
 import {
   decimalObligatorio,
-  enteroOpcional,
   fechaObligatoria,
   idObligatorio,
   idOpcional,
@@ -78,7 +78,7 @@ export const esquemaDePartidaEnExcel = z
     clase: opcionObligatoria(Object.keys(CLASES) as [ClaseDeExcel, ...ClaseDeExcel[]]),
     fecha: fechaObligatoria(),
     serie: textoOpcional(20),
-    numeroDeCheque: enteroOpcional(),
+    numeroDeCheque: numeroDeChequeOpcional(),
     beneficiario: textoOpcional(150),
     conceptoId: idOpcional(),
     referencia: textoOpcional(150),

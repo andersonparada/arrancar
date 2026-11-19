@@ -51,8 +51,10 @@ export class NoSeEliminaUnMovimientoRevertido extends ReglaDeNegocioInfringida {
 export class MovimientoMarcadoEnConciliacion extends ReglaDeNegocioInfringida {
   readonly codigo = 'movimiento_marcado_en_conciliacion';
 
-  constructor() {
-    super('Este movimiento ya está marcado en una conciliación: no se puede eliminar.');
+  constructor(accion: 'eliminar' | 'anular' | 'corregir' = 'eliminar') {
+    super(
+      `Este movimiento ya está marcado en una conciliación: no se puede ${accion}. Quite la marca en la conciliación y vuelva a intentarlo.`,
+    );
   }
 }
 

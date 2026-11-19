@@ -7,7 +7,13 @@ import { marcaDeReversion } from '../../composables/movimientos/estado-de-revers
 import { RouterLink } from 'vue-router';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { destinoDeOrigenDelPago, textoDeOrigen } from '../../composables/movimientos/origen-y-causa';
-import { creditoDeFila, debitoDeFila, documentoDeFila } from '../../composables/movimientos/fila-del-reporte';
+import {
+  creditoDeFila,
+  debitoDeFila,
+  documentoDeFila,
+  hayPartidasDeLaCarga,
+  LEYENDA_DEL_SALDO_CORRIDO,
+} from '../../composables/movimientos/fila-del-reporte';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import type { FilaDelReporte, ReporteDeMovimientos } from '../../servicios/movimientos.api';
 
@@ -132,4 +138,7 @@ const CLASE_DE_MARCA = {
       </tbody>
     </table>
   </div>
+  <p v-if="conCuenta && hayPartidasDeLaCarga(reporte.filas)" class="mt-2 text-xs text-tierra-600 dark:text-tierra-300">
+    {{ LEYENDA_DEL_SALDO_CORRIDO }}
+  </p>
 </template>

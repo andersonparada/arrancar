@@ -88,6 +88,7 @@ export class AnularCheque {
     const { motivo, fecha, conInversoSiempre } = solicitud;
     const movimiento = await movimientoExistente(this.dependencias.repositorioMovimientos, movimientoId);
     const deLaApertura = movimiento.parteDeApertura === 'cheque_en_circulacion';
+    if (deLaApertura) await this.exigirSinMarca(movimiento, movimientoId);
     const conInverso =
       deLaApertura || conInversoSiempre === true || (await this.estaConciliado(movimiento, movimientoId));
     const fechaDelInverso = conInverso ? await this.fechaDelInverso(operador, { fecha, deLaApertura }) : undefined;
@@ -99,6 +100,12 @@ export class AnularCheque {
     const inverso = await this.revertir(operador, movimiento, { motivo, fecha: fechaDelInverso, deLaApertura });
     if (!deLaApertura) return [];
     return [eventoDeAperturaAnulada(movimiento, inverso, { numeroDeCheque: solicitud.numero, pagador: null })];
+  }
+
+  /** Una partida de la carga marcada en una conciliación no se anula (igual que desde Saldos iniciales): primero se desmarca. */
+  private async exigirSinMarca(movimiento: Movimiento, movimientoId: string): Promise<void> {
+    const { conciliacionId } = await this.dependencias.consultasMovimientos.obtener(movimientoId);
+    movimiento.exigirNoMarcadoEnConciliacion(conciliacionId, 'anular');
   }
 
   /** Si el cheque es de otro módulo o está marcado, ese módulo revisa la anulación antes de hacerla (CP4). */

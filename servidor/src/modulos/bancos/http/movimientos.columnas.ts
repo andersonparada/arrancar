@@ -2,7 +2,7 @@ import type { Columna } from '../../core/intercambio/aplicacion/columnas.js';
 import type { FilaDelReporte } from '../aplicacion/calculo-de-reporte-de-movimientos.js';
 import { mesEnTexto } from './saldos-por-cuenta.columnas.js';
 
-/** Una fila ya lista para su celda en Excel: el débito y el crédito separados, y el tipo y el anulado en texto. */
+/** Una fila ya lista para su celda en Excel: el débito y el crédito separados, y el tipo y el estado en texto. */
 export interface FilaExportadaDelReporte {
   fecha: string;
   cuentaBancariaNombre: string | null;
@@ -16,7 +16,7 @@ export interface FilaExportadaDelReporte {
   credito: string | null;
   saldo: string | null;
   conciliadoEn: string | null;
-  anulado: boolean;
+  estado: string | null;
 }
 
 const TEXTO_DEL_TIPO: Record<FilaDelReporte['tipo'], string> = {
@@ -24,6 +24,17 @@ const TEXTO_DEL_TIPO: Record<FilaDelReporte['tipo'], string> = {
   debito: 'Nota de débito',
   cheque: 'Cheque',
 };
+
+/** Lo mismo que muestra la pantalla: Anulado, Revertido (tiene su inverso) o Reversión (es el inverso); si no, vacío. */
+export function estadoEnTexto({
+  anuladoEn,
+  revertidoEn,
+  revierteAId,
+}: Pick<FilaDelReporte, 'anuladoEn' | 'revertidoEn' | 'revierteAId'>): string | null {
+  if (anuladoEn) return 'Anulado';
+  if (revertidoEn) return 'Revertido';
+  return revierteAId ? 'Reversión' : null;
+}
 
 /** El número del comprobante como se ve en pantalla: `2026-15` si se reinicia por año y `15` si no; `null` si no lleva. */
 export function numeroEnTexto({
@@ -48,7 +59,7 @@ export const aFilaExportadaDelReporte = (fila: FilaDelReporte): FilaExportadaDel
   credito: fila.tipo === 'credito' ? fila.monto : null,
   saldo: fila.saldo,
   conciliadoEn: mesEnTexto(fila.conciliadoEn),
-  anulado: fila.anuladoEn !== null,
+  estado: estadoEnTexto(fila),
 });
 
 /** Las columnas del Excel del reporte de movimientos: solo se exporta, nunca se importa. */
@@ -65,5 +76,5 @@ export const columnasDelReporteDeMovimientos: Columna[] = [
   { clave: 'credito', titulo: 'Crédito', requerido: false, tipo: 'decimal' },
   { clave: 'saldo', titulo: 'Saldo', requerido: false, tipo: 'decimal' },
   { clave: 'conciliadoEn', titulo: 'Conciliado en', requerido: false, tipo: 'texto' },
-  { clave: 'anulado', titulo: 'Anulado', requerido: false, tipo: 'siNo' },
+  { clave: 'estado', titulo: 'Estado', requerido: false, tipo: 'texto' },
 ];

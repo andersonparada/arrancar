@@ -69,7 +69,7 @@ const imprimir = (): void => window.print();
         :banco="conciliacion.cuadratica.banco"
         :saldo-inicial-del-banco="conciliacion.saldoInicialDelBancoDeLaApertura"
       />
-      <div class="grid gap-4 lg:grid-cols-2 lg:items-start print:grid-cols-1">
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start print:grid-cols-1">
         <div class="min-w-0 space-y-4">
           <SaldoDelEstadoDeCuenta :saldo="conciliacion.saldoQueDebeMostrarElEstadoDeCuenta" />
           <PartidasDeConciliacion :partidas="conciliacion.partidas" />

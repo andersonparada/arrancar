@@ -125,7 +125,7 @@ export interface AccionesDeCheque {
 }
 
 /**
- * Un cheque se anula si no está anulado; se blanquea si está emitido y su movimiento está limpio y no es de la carga
+ * Un cheque se anula si no está anulado (el de la carga inicial ya marcado en una conciliación no: primero se desmarca); se blanquea si está emitido y su movimiento está limpio y no es de la carga
  * inicial (no se emitió en Arrancar) y no se imprimió. Se imprime si está emitido en Arrancar y sin imprimir; se
  * reimprime si ya está impreso; solo un impreso con movimiento limpio pasa a otro formulario, y todo impreso de Arrancar se puede declarar extraviado. Los cheques nunca se
  * eliminan: su número ya se consumió.
@@ -135,13 +135,12 @@ export function accionesDeCheque(
   movimiento: HechosDeUnMovimiento | null,
   impreso = false,
 ): AccionesDeCheque {
-  const puedeAnular = estado !== 'anulado';
   if (estado !== 'emitido' || movimiento === null) {
-    return { puedeAnular, puedeBlanquear: false, ...accionesDeImpresion(false, impreso, false) };
+    return { puedeAnular: estado !== 'anulado', puedeBlanquear: false, ...accionesDeImpresion(false, impreso, false) };
   }
   const deArrancar = movimiento.parteDeApertura === null;
   return {
-    puedeAnular,
+    puedeAnular: deArrancar || !movimiento.marcadoEnConciliacion,
     puedeBlanquear: !impreso && deArrancar && estaLimpio(movimiento) && !movimiento.esDeOtroModulo,
     ...accionesDeImpresion(deArrancar, impreso, estaLimpio(movimiento)),
   };

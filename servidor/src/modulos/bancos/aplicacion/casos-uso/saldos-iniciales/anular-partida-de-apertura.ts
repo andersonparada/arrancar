@@ -59,7 +59,7 @@ export class AnularPartidaDeApertura {
     const movimiento = await movimientoExistente(repositorioMovimientos, movimientoId);
     const parte = exigirPartidaQueSeAnula(movimiento.parteDeApertura);
     const base = (await consultas.partidas(cuentaBancariaId)).find((p) => p.movimientoId === movimientoId);
-    movimiento.exigirNoMarcadoEnConciliacion(base?.conciliacionId ?? null);
+    movimiento.exigirNoMarcadoEnConciliacion(base?.conciliacionId ?? null, 'anular');
     const pagador = pagadorDeLaAnulacion(parte, solicitud.pagador);
     const eventos =
       parte === 'cheque_en_circulacion'

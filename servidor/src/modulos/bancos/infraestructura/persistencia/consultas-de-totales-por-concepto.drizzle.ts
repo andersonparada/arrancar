@@ -23,8 +23,18 @@ const montoDeLaLinea = sql`coalesce(${desgloseDeMovimientos.monto}, ${movimiento
 const sumaDe = (condicion: SQL) => sql`coalesce(sum(${montoDeLaLinea}) filter (where ${condicion}), 0)`;
 const cuentaDe = (condicion: SQL) => sql<number>`(count(distinct ${movimientos.id}) filter (where ${condicion}))::int`;
 
-const esOriginal = sql`${movimientos.revierteAId} is null`;
-const esInverso = sql`${movimientos.revierteAId} is not null`;
+/**
+ * El inverso de una partida de la carga inicial que se anuló lleva su propio concepto («Partidas de apertura anuladas»,
+ * sin actividad): no mueve efectivo y no debe contarse como el saldo inicial de su original.
+ */
+const esAnulacionDeApertura = sql`exists (
+  select 1 from ${conceptos} propio
+  where propio.id = ${movimientos.conceptoId} and propio.clave_de_sistema = ${CLAVE_DE_ANULACION_DE_APERTURA}
+)`;
+
+/** Para el reporte, el inverso de una partida de la carga cuenta como un movimiento propio (no resta a su original). */
+const esOriginal = sql`(${movimientos.revierteAId} is null or ${esAnulacionDeApertura})`;
+const esInverso = sql`(${movimientos.revierteAId} is not null and not ${esAnulacionDeApertura})`;
 const esCredito = sql`${movimientos.tipo} = 'credito'`;
 const noEsCredito = sql`${movimientos.tipo} <> 'credito'`;
 
@@ -37,15 +47,6 @@ const salidas = sql<string>`(${sumaDe(sql`${esOriginal} and ${noEsCredito}`)} - 
 const efecto = sql`case when ${esCredito} then ${movimientos.monto} else -${movimientos.monto} end`;
 const saldoHasta = (condicion: SQL) =>
   sql<string>`(coalesce(sum(${efecto}) filter (where ${condicion}), 0))::numeric(14,2)::text`;
-
-/**
- * El inverso de una partida de la carga inicial que se anuló lleva su propio concepto («Partidas de apertura anuladas»,
- * sin actividad): no mueve efectivo y no debe contarse como el saldo inicial de su original.
- */
-const esAnulacionDeApertura = sql`exists (
-  select 1 from ${conceptos} propio
-  where propio.id = ${movimientos.conceptoId} and propio.clave_de_sistema = ${CLAVE_DE_ANULACION_DE_APERTURA}
-)`;
 
 /** El reparto de un inverso es el de su original (salvo la anulación de una partida de apertura). */
 const idDelReparto = sql`case when ${esAnulacionDeApertura} then ${movimientos.id} else coalesce(${original.id}, ${movimientos.id}) end`;

@@ -120,7 +120,7 @@ export function revisionDeCierreDeBancos(
   return {
     nombreDelModulo: 'Bancos',
     resumen: resumenDe(conSaldo.length, saldos.fechaDeCorte),
-    ruta: '/bancos/cuentas-bancarias',
+    ruta: '/bancos/saldos-iniciales',
     hallazgos,
     cifras: [
       cantidad('cuentas_con_saldo_inicial', 'Cuentas con saldo inicial', conSaldo.length),

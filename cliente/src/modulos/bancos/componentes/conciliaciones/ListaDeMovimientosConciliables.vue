@@ -30,7 +30,7 @@ const descripcion = (m: MovimientoConMarca): string =>
     <label
       v-for="movimiento in movimientos"
       :key="movimiento.id"
-      class="flex items-center gap-3 px-4 py-3 text-sm"
+      class="flex items-start gap-3 px-4 py-3 text-sm"
       :class="editable ? 'cursor-pointer hover:bg-tierra-50 dark:hover:bg-tierra-800/50' : ''"
     >
       <input
@@ -40,15 +40,17 @@ const descripcion = (m: MovimientoConMarca): string =>
         :disabled="!editable"
         @change="emit('alternar', movimiento.id)"
       />
-      <span class="w-24 shrink-0 text-tierra-500">{{ formatearFecha(movimiento.fecha) }}</span>
-      <span class="min-w-0 flex-1">
-        <span class="block truncate">{{ descripcion(movimiento) }}</span>
-        <span v-if="posfechados" class="block text-xs text-tierra-600 dark:text-tierra-300">
-          {{ avisoDeCheque(movimiento.fecha) }}
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-start sm:gap-3">
+        <span class="shrink-0 text-xs text-tierra-500 sm:w-24 sm:text-sm">{{ formatearFecha(movimiento.fecha) }}</span>
+        <span class="min-w-0 flex-1 space-y-1">
+          <span class="block break-words">{{ descripcion(movimiento) }}</span>
+          <InsigniaBase v-if="movimiento.parteDeApertura">{{ ROTULO_DE_CARGA_INICIAL }}</InsigniaBase>
+          <span v-if="posfechados && editable" class="block text-xs text-tierra-600 dark:text-tierra-300">
+            {{ avisoDeCheque(movimiento.fecha) }}
+          </span>
         </span>
       </span>
-      <InsigniaBase v-if="movimiento.parteDeApertura" class="shrink-0">{{ ROTULO_DE_CARGA_INICIAL }}</InsigniaBase>
-      <span class="font-semibold" :class="CLASE_DE_TIPO[movimiento.tipo]">
+      <span class="shrink-0 whitespace-nowrap font-semibold" :class="CLASE_DE_TIPO[movimiento.tipo]">
         {{ SIGNO_DE_TIPO[movimiento.tipo] }} {{ formatearMonto(movimiento.monto) }}
       </span>
     </label>

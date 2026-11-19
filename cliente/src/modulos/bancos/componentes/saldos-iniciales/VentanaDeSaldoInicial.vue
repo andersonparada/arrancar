@@ -27,7 +27,7 @@ const titulo = computed(() => {
 
 <template>
   <VentanaModal :abierta="edicion.abierta" :titulo="titulo" @cerrar="emit('cerrar')">
-    <form id="form-saldo-inicial" class="space-y-4" @submit.prevent="emit('guardar')">
+    <form id="form-saldo-inicial" class="space-y-4" novalidate @submit.prevent="emit('guardar')">
       <p v-if="edicion.separando" class="text-sm text-tierra-600 dark:text-tierra-300">{{ AYUDA_DE_SEPARAR }}</p>
       <CampoTexto
         v-model="edicion.saldoSegunEstadoDeCuenta"

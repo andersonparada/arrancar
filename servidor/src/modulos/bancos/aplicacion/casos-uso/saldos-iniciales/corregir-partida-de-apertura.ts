@@ -46,7 +46,7 @@ export class CorregirPartidaDeApertura {
     const { repositorioMovimientos, reglas, armador, auditoria } = this.dependencias;
     const { cuentaBancariaId, movimientoId } = anterior.base;
     const movimiento = await movimientoExistente(repositorioMovimientos, movimientoId);
-    movimiento.exigirNoMarcadoEnConciliacion(anterior.base.conciliacionId);
+    movimiento.exigirNoMarcadoEnConciliacion(anterior.base.conciliacionId, 'corregir');
     await reglas.revisar(operador, { cuentaBancariaId, fechas: [anterior.base.fecha, partida.fecha], diferencia: 0 });
     const conceptoActual = movimiento.instantanea().conceptoId;
     movimiento.corregirPartida(await armador.datos(operador, partida, { corte, conceptoActual }));

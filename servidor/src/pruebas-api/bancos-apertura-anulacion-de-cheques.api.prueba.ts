@@ -160,6 +160,8 @@ describe('el flujo de efectivo con el inverso de una partida de apertura', () =>
       'sin_actividad',
       '100.00',
     ]);
+    const sinActividad = flujo.cuerpo.lineasAparte.find((l: { clave: string }) => l.clave === 'sin_actividad');
+    expect(sinActividad).toMatchObject({ entradas: '100.00', salidas: '0.00', neto: '100.00', cantidad: 1 });
     expect(flujo.cuerpo.actividades.every((a: { lineas: unknown[] }) => a.lineas.length === 0)).toBe(true);
     expect(flujo.cuerpo.control).toMatchObject({
       saldoAlInicio: '900.00',

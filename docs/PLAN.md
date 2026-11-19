@@ -4313,3 +4313,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-19 — AF-8, corrección de la revisión (Activos fijos, servidor).** El historial de la ficha (`TrasladoDto`) no traía
   `grupoId`, `numero`, `anioDeNumero` ni `motivoDeAnulacion`, así que tras crear la boleta no había cómo reimprimirla ni anularla.
   Se agregaron al DTO, a la consulta y al tipo `Traslado` del cliente; la fila de alta los lleva en nulo. Prueba de API ampliada.
+- **2026-11-19 — Bancos: corrección de los hallazgos de la QA BS-8.** BS8-1: el número de cheque de las partidas de la carga
+  (pantalla y Excel) debe ir de 1 al máximo entero de la base (400 con mensaje, antes 500; la `it.fails` pasó a `it`). BS8-2:
+  filas de la conciliación (candidatos y partidas) con fecha, descripción e insignia apiladas en celular y monto sin cortar.
+  BS8-3: un cheque de la carga ya marcado en una conciliación no ofrece «Anular» (`puedeAnular` del servidor) y
+  `AnularCheque` lo rechaza igual que desde Saldos iniciales; el mensaje de `movimiento_marcado_en_conciliacion` nombra la
+  acción (anular, corregir o eliminar) y dice cómo salir. BS8-4/5: el Estado de cuenta no repite documento y concepto, imprime
+  más ancho y, si trae partidas de la carga, rotula «Carga inicial» y avisa que el saldo corrido a su paso puede salir distinto
+  del real (también en Movimientos con cuenta). BS8-6: el Excel de Movimientos trae «Estado» (Anulado, Revertido, Reversión)
+  en lugar de «Anulado» sí/no; el de Saldos por cuenta deja vacías las cifras y «Atrasada» en la nota y en los totales; la
+  revisión de cierre de Bancos lleva a Saldos iniciales. BS8-7: en el flujo de efectivo el inverso de una partida de la carga
+  cuenta como un movimiento propio (entrada 100.00, cantidad 1) en vez de restar a su original; el control no cambia.
+  Observaciones: la conciliación autorizada ya no repite «márquelo solo si el banco ya lo pagó»; el saldo inicial vacío dice
+  cómo corregirse. **No se hizo:** el desplazamiento horizontal de Movimientos en celular (patrón común de tablas) ni cambiar
+  «Fondos insuficientes» de Saldos por cuenta a una fecha anterior al corte (es consistente con las reglas). La verificación
+  visual a 390 px no se repitió en navegador: queda para la QA de regreso.

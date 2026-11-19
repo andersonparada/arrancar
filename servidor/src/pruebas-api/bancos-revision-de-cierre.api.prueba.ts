@@ -46,7 +46,7 @@ describe('revisión de Bancos al cerrar la carga inicial', () => {
     const revision = await revisionDe(cuenta);
     const bancos = revision.modulos.find((modulo) => modulo.nombreDelModulo === 'Bancos')!;
 
-    expect(bancos).toMatchObject({ resumen: null, ruta: '/bancos/cuentas-bancarias' });
+    expect(bancos).toMatchObject({ resumen: null, ruta: '/bancos/saldos-iniciales' });
     expect(bancos.hallazgos).toEqual([
       {
         codigo: 'sin_saldos_iniciales',

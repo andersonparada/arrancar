@@ -1,8 +1,8 @@
+import { numeroDeChequeOpcional } from './numero-de-cheque.esquema.js';
 import { z } from 'zod';
 import {
   decimalObligatorio,
   decimalOpcional,
-  enteroOpcional,
   fechaObligatoria,
   idOpcional,
   opcionObligatoria,
@@ -32,7 +32,7 @@ const camposDeLaPartida = {
   /** Solo en el cheque posfechado: el concepto de egreso con que cuenta en el flujo. */
   conceptoId: idOpcional(),
   serie: textoOpcional(20),
-  numeroDeCheque: enteroOpcional(),
+  numeroDeCheque: numeroDeChequeOpcional(),
   beneficiario: textoOpcional(150),
   referencia: textoOpcional(150),
   observaciones: textoOpcional(500),
