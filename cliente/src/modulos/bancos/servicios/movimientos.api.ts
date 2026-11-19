@@ -1,5 +1,6 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import { intercambioDe } from '@/modulos/core/servicios/intercambio';
+import type { ParteDeApertura } from './tipos-de-saldos-iniciales';
 
 /** Una línea del reparto por concepto de un movimiento (CP4). */
 export interface LineaDeDesglose {
@@ -40,6 +41,8 @@ export interface Movimiento {
   /** El módulo que generó el movimiento y su documento; `null` si nació en Bancos. */
   moduloDeOrigen: string | null;
   documentoDeOrigenId: string | null;
+  /** La parte de la carga inicial que es este movimiento; `null` si no es de la carga inicial. */
+  parteDeApertura: ParteDeApertura | null;
   /** La conciliación donde quedó marcado; si no, `null`. */
   conciliacionId: string | null;
   /** Cuándo se revirtió (se le creó su inverso); `null` si nunca se revirtió. */

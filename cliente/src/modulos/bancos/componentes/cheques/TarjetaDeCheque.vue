@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import { formatearTexto } from '@/modulos/core/utilidades/formato';
+import { detalleDeApertura } from '../../composables/comunes/de-apertura';
+import { insigniaDeCheque } from '../../composables/cheques/insignia-de-cheque';
 import { textoDeCausaDeAnulacion } from '../../composables/movimientos/origen-y-causa';
 import type { Cheque } from '../../servicios/cheques.api';
 
@@ -10,14 +12,12 @@ const props = defineProps<{ registro: Cheque }>();
 /** Un cheque de su chequera. «Anular» y «Blanquear» aparecen solo si el servidor dice que se puede. */
 const emit = defineEmits<{ anular: []; blanquear: [] }>();
 
-const INSIGNIA_DE_ESTADO: Record<Cheque['estado'], string | undefined> = {
-  disponible: undefined,
-  emitido: 'Emitido',
-  anulado: 'Anulado',
-};
-
 const detalles = computed(() => {
-  const base = [{ etiqueta: 'No negociable', valor: props.registro.noNegociable ? 'Sí' : 'No' }];
+  const apertura = detalleDeApertura(props.registro);
+  const base = [
+    { etiqueta: 'No negociable', valor: props.registro.noNegociable ? 'Sí' : 'No' },
+    ...(apertura ? [apertura] : []),
+  ];
   if (!props.registro.anuladoEn) return base;
   const causa = textoDeCausaDeAnulacion(props.registro.causaDeAnulacion);
   const conCausa = causa ? [...base, { etiqueta: 'Causa de anulación', valor: causa }] : base;
@@ -30,7 +30,7 @@ const detalles = computed(() => {
     :titulo="`Cheque No. ${registro.numero}`"
     :detalles="detalles"
     permiso="bancos.cheques.anular"
-    :insignia="INSIGNIA_DE_ESTADO[registro.estado]"
+    :insignia="insigniaDeCheque(registro)"
     sin-editar
   >
     <template #acciones-extra>

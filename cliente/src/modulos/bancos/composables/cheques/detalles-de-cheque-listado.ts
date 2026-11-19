@@ -1,5 +1,6 @@
 import { formatearFecha, formatearTexto } from '@/modulos/core/utilidades/formato';
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
+import { detalleDeApertura } from '../comunes/de-apertura';
 import { textoDeCausaDeAnulacion, textoDeOrigen } from '../movimientos/origen-y-causa';
 import type { ChequeListado } from '../../servicios/cheques.api';
 
@@ -16,6 +17,8 @@ export function detallesDeChequeListado(registro: ChequeListado): DetalleDeRegis
     { etiqueta: 'Referencia', valor: formatearTexto(registro.referencia) },
     { etiqueta: 'No negociable', valor: registro.noNegociable ? 'Sí' : 'No' },
   ];
+  const apertura = detalleDeApertura(registro);
+  if (apertura) detalles.push(apertura);
   const origen = textoDeOrigen(registro);
   if (origen) detalles.push({ etiqueta: 'Origen', valor: origen.replace('Origen: ', '') });
   const causa = textoDeCausaDeAnulacion(registro.causaDeAnulacion);

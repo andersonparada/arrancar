@@ -34,6 +34,7 @@ const nota: Movimiento = {
   revertidoEn: null,
   motivoDeReversion: null,
   revierteAId: null,
+  parteDeApertura: null,
   puedeAnular: true,
   puedeEliminar: true,
   conceptoNombre: 'Concepto de prueba',

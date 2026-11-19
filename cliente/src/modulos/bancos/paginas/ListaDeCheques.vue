@@ -11,11 +11,11 @@ import { usarBajasDeCheque } from '../composables/cheques/usar-bajas-de-cheque';
 import { usarListaDeChequesDeLaEmpresa } from '../composables/cheques/usar-lista-de-cheques-de-la-empresa';
 import type { ChequeListado } from '../servicios/cheques.api';
 import { VENTANAS_BANCOS } from '../textos';
-import { TEXTO_DE_ANULACION, TEXTO_DE_BLANQUEO } from '../composables/cheques/textos-de-baja-de-cheque';
+import { TEXTO_DE_BLANQUEO } from '../composables/cheques/textos-de-baja-de-cheque';
 
 const ventana = VENTANAS_BANCOS.cheques;
 const { cheques, cargando, filtros, opcionesDeCuenta, referencias, emision, cargar } = usarListaDeChequesDeLaEmpresa();
-const { anulacion, blanqueo } = usarBajasDeCheque<ChequeListado>(cargar);
+const { anulacion, blanqueo, anular, textoDeAnulacion, ayudaDeFecha } = usarBajasDeCheque<ChequeListado>(cargar);
 </script>
 
 <template>
@@ -30,11 +30,7 @@ const { anulacion, blanqueo } = usarBajasDeCheque<ChequeListado>(cargar);
     <EstadoVacio v-else-if="!cheques.length" :icono="Inbox" titulo="No hay cheques con ese filtro" />
     <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in cheques" :key="registro.id">
-        <TarjetaDeChequeListado
-          :registro="registro"
-          @anular="anulacion.abrir(registro)"
-          @blanquear="blanqueo.abrir(registro)"
-        />
+        <TarjetaDeChequeListado :registro="registro" @anular="anular(registro)" @blanquear="blanqueo.abrir(registro)" />
       </li>
     </ul>
 
@@ -55,7 +51,8 @@ const { anulacion, blanqueo } = usarBajasDeCheque<ChequeListado>(cargar);
       con-fecha
       :abierta="!!anulacion.registro"
       titulo="Anular cheque"
-      :texto="TEXTO_DE_ANULACION(anulacion.registro?.numero, anulacion.registro?.moduloDeOrigen)"
+      :texto="textoDeAnulacion()"
+      :ayuda-de-fecha="ayudaDeFecha()"
       :errores="anulacion.errores"
       :enviando="anulacion.enviando"
       @cerrar="anulacion.cerrar"

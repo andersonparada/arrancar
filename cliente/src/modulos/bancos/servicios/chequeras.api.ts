@@ -10,6 +10,8 @@ export interface Chequera {
   desde: number;
   hasta: number;
   activa: boolean;
+  /** La chequera de la carga inicial: junta los cheques en circulación al corte; no se emite ni se inactiva. */
+  deApertura: boolean;
   disponibles: number;
   emitidos: number;
   anulados: number;

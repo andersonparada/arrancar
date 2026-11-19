@@ -1,5 +1,6 @@
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import { formatearNumeroDeComprobante } from '../comunes/numero-de-comprobante';
+import { detalleDeApertura } from '../comunes/de-apertura';
 import { motivoDeLaBaja } from '../movimientos/estado-de-reversion';
 import { textoDeOrigen } from '../movimientos/origen-y-causa';
 import { CLASE_DE_TIPO, SIGNO_DE_TIPO } from '../movimientos/estilo-de-tipo';
@@ -21,6 +22,8 @@ export const tituloDeNota = (nota: Pick<Movimiento, 'tipo'>): string =>
 /** De dónde viene la nota si la generó o la marcó otro módulo, y lo que eso implica para corregirla. */
 function detallesDeOrigen(nota: Movimiento, cuentasPorPagarActivo: boolean): DetalleDeRegistro[] {
   const detalles: DetalleDeRegistro[] = [];
+  const apertura = detalleDeApertura(nota);
+  if (apertura) detalles.push(apertura);
   const origen = textoDeOrigen(nota);
   if (origen) detalles.push({ etiqueta: 'Origen', valor: origen.replace('Origen: ', '') });
   const explicacion = explicacionDeOrigen(nota);

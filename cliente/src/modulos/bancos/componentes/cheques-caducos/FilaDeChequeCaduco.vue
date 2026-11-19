@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
+import { INSIGNIA_DE_APERTURA } from '../../composables/comunes/de-apertura';
 import {
   nivelDeAntiguedad,
   numeroDeChequeConSerie,
@@ -48,6 +49,9 @@ const tono = computed(() => TONO[nivelDeAntiguedad(props.cheque.diasDeAntiguedad
         {{ cheque.mesConciliado ? 'Conciliado' : 'Abierto' }}
       </InsigniaBase>
     </td>
-    <td class="px-4 py-2.5 whitespace-nowrap">{{ TEXTO_DEL_ORIGEN[cheque.origen] }}</td>
+    <td class="px-4 py-2.5 whitespace-nowrap">
+      <InsigniaBase v-if="cheque.parteDeApertura" tono="campo">{{ INSIGNIA_DE_APERTURA }}</InsigniaBase>
+      <template v-else>{{ TEXTO_DEL_ORIGEN[cheque.origen] }}</template>
+    </td>
   </tr>
 </template>

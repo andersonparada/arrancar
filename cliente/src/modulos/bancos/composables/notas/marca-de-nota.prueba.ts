@@ -27,6 +27,10 @@ describe('marca de la nota', () => {
     expect(insigniaDeNota({ ...base, marcadaParaCuentasPorPagar: true })).toBe('Para Cuentas por pagar');
     expect(insigniaDeNota({ ...base, marcadaParaCuentasPorPagar: true, revertidoEn: '2026-01-01' })).toBe('Revertido');
     expect(insigniaDeNota(base)).toBeUndefined();
+    expect(insigniaDeNota({ ...base, parteDeApertura: 'error_del_banco' })).toBe('Carga inicial');
+    expect(insigniaDeNota({ ...base, parteDeApertura: 'error_del_banco', anuladoEn: '2026-02-01' })).not.toBe(
+      'Carga inicial',
+    );
   });
 
   it('marcar exige que el servidor lo permita y el módulo activo', () => {
@@ -38,6 +42,7 @@ describe('marca de la nota', () => {
   it('lo de otro módulo no se corrige y se explica', () => {
     expect(sePuedeCorregir(base)).toBe(true);
     expect(sePuedeCorregir({ ...base, moduloDeOrigen: 'cuentas-por-pagar' })).toBe(false);
+    expect(sePuedeCorregir({ ...base, parteDeApertura: 'deposito_en_transito' })).toBe(false);
     expect(explicacionDeOrigen({ moduloDeOrigen: 'cuentas-por-pagar' })).toContain('Cuentas por pagar');
     expect(explicacionDeOrigen({ moduloDeOrigen: null })).toBeNull();
   });
