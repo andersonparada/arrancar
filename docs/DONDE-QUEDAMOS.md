@@ -96,6 +96,12 @@ del Banguat para todas las monedas (MM-3a), correcciones de la QA intermedia.
   disponible, A.7 = igual que la ficha) y QA CP4-12 en el navegador (informe `informe-qa-cp4-12-2026-11-18.md`).
 - **Diseño de Activos fijos** (workflow `arrancar-diseno-activos-fijos`, run `wf_9f5b1891-dae`): contador y arquitecto;
   `diseno-activos-fijos.md` con preguntas para el usuario.
+- **AFI-0 (2026-11-18, docs):** la integración Activos fijos e Inventarios, AF-P22 = b (funciones de Empresas con los
+  nombres de localidades y departamentos, §6.13, **pendiente de `seguridad`** antes del paso AF-P22 y de AF-2c) y la
+  validación del contador de Inventarios (V-1 a V-11) ya están en `diseno-activos-fijos.md` y `diseno-inventarios.md`.
+  `diseno-activos-fijos.md` parte de la versión de `integracion` (con AF-P2 a y la validación del contador): al unir,
+  quedarse con esta. Abiertas para el usuario: P-1, P-3, INV-P14 e INV-A16 de Inventarios; para el contador: VC-1 a VC-4 y
+  VI-1 a VI-4.
 - **En cola (orden de migraciones del core):** correo 2-4-5-6 (en curso) → RLS del núcleo R-1 a R-3 → MM-1.
 - El coordinador está en **/loop** (pedido del usuario el 2026-11-18).
 - **En `main` (2026-11-18, noche):** BS-3, BS-4, BS-5, BS-R1, CP4-D6/D7, AF-0, CCL-L1/CCL-BZ (0038 del libro), correo pasos 2

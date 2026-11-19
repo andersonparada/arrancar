@@ -558,3 +558,10 @@ códigos correlativos propuestos y editables; **I-5** (a) bienes de control como
 **I-6** (a) equipo de reserva y repuestos importantes como activo fijo; **I-7** (a) casilla «En bodega de activos» en el
 traslado; **I-8** (b) se imprime la boleta y se sube el escaneo firmado; **I-11** (a) aviso en Inventarios; **I-10** (a)
 salida a «obra o uso propio»; **I-9** (a) una división se anula en mes abierto sin movimientos posteriores.
+
+**AFI-0 hecho (2026-11-18).** Llevado a `diseno-activos-fijos.md` (marcado **(AFI)**: §0, §2, §3.1 a §3.4, §3.7 a §3.9,
+§3.11 nuevo, §4.2 a §4.5, §5.3, §5.4, §5.8, §5.11, §5.13, §5.14, §5.15 `divisiones`, §5.16 `boletas_firmadas`, §6.2 a
+§6.4, §6.7 a §6.13, §7.6, §8, §9 a §19; pasos AFI-1 a AFI-9 encajados en §16) y a `diseno-inventarios.md` (§2, §3.7, §4.1
+ayuda de las casillas, §4.3 orden del umbral y aviso, §6.3, §6.4, §8, §16 con AFI-9). AF-P22 = b quedó diseñada en
+§6.13 de Activos fijos, para revisión de `seguridad`. Los puntos V-1 a V-4 de §13 siguen pendientes del contador (en
+Activos fijos, VI-1 a VI-4).
