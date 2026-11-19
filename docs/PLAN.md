@@ -3946,3 +3946,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (conciliación con la carga se desborda en celular); el resto, de gravedad baja. Informe:
   `docs/modulos/informe-qa-bancos-carga-inicial-2026-11-19.md`. Sin cambios en el código de la app ni migraciones.
 - **2026-11-19 — QA de punta a punta de Activos fijos e Inventarios (navegador y API).** Informe en `docs/modulos/informe-qa-activos-fijos-inventarios-2026-11-19.md`: clases, activos (alta manual, ficha, filtros), unidades, categorías, artículos con conversiones, lotes y Excel, bodegas y su ventana de asignación (solo API), permisos, aislamiento entre empresas y cuentas, bodegueros, celular y modo oscuro. Sin errores de gravedad alta ni media; cuatro bajos abiertos (valor como ganado común aceptado en clases que no son de reproductores, con prueba `it.fails` en `activos-fijos-qa-hallazgos.api.prueba.ts`; la ficha del ocioso no muestra fecha ni motivo; la ficha de un registro inexistente deja la pantalla en blanco; cambiar la unidad base con conversiones no avisa). Traslados, etiquetas imprimibles y movimientos de inventario aún no existen.
+- **2026-11-19 (QA de Multimoneda MM-1 a MM-5 y MM-4, en el navegador con un Banguat falso):** informe en
+  `docs/modulos/informe-qa-multimoneda-2026-11-19.md`. Sin errores graves; hallazgos: la muestra, el calendario y los textos
+  dan por hecho «quetzales por unidad» y chocan con la Adenda B (cruce contra el dólar, euro = 24); el ingreso manual acepta
+  fechas futuras (distorsiona «Último tipo») y compra mayor que venta; el mismo error de validación no vuelve a verse
+  (`usarErrorDescartable`); «Actualizar lista» y «Cargar ahora» tardan hasta 48 s dentro de la solicitud con el Banguat
+  lento; gramática («1 nuevos», «Noviembre De»). Pruebas `it.fails` agregadas; no se corrigió código de la aplicación.
