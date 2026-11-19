@@ -547,3 +547,14 @@ Con `seguridad`: el escaneo firmado de la boleta (si I-8 b) usa `core.archivos` 
 | R-3 | Alguien marca la línea como inventario porque «lo va a guardar» | Texto de ayuda en el libro; el aviso D5 en Inventarios; descartar en la bandeja de Inventarios y registrar en Activos fijos (el libro no se edita; si importa la casilla del SAT-2237, se anula y se registra de nuevo, V-11 de Activos fijos) |
 | R-4 | Capitalizar 200 unidades en una transacción | Tope de 200; inserción en tandas; el correlativo se pide de una vez por el bloque |
 | R-5 | Anular una división borra un activo | Solo sin movimientos posteriores; auditoría con los dos DTO; la fila de la división queda con el código |
+
+## Respuestas del usuario (2026-11-18)
+
+Todas las recomendaciones: **I-1** (a) el stock de bienes de uso vive en **Activos fijos**, con la bodega como ubicación
+(opción C); **I-2** (a) se deprecia desde que está recibido y listo, en los dos libros; **I-3** (a) el sistema divide el grupo
+al trasladar, dar de baja o contar (cambia AF-P10: ya no es «baja solo total»); **I-12** (a) el mínimo se mide por línea;
+**I-4** (a) una línea de N unidades se capitaliza en N activos con el sobrante del redondeo en el último; **I-13** (a)
+códigos correlativos propuestos y editables; **I-5** (a) bienes de control como gasto también en lo fiscal, con aviso;
+**I-6** (a) equipo de reserva y repuestos importantes como activo fijo; **I-7** (a) casilla «En bodega de activos» en el
+traslado; **I-8** (b) se imprime la boleta y se sube el escaneo firmado; **I-11** (a) aviso en Inventarios; **I-10** (a)
+salida a «obra o uso propio»; **I-9** (a) una división se anula en mes abierto sin movimientos posteriores.

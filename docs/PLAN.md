@@ -2957,3 +2957,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   'bien'`; el servicio capitalizado queda en servicios del SAT-2237. El análisis «Activos fijos comprados» muestra todos y suma la
   columna «Es un» (bien o servicio, también en el Excel). Cliente: ya no se fuerza «Bien» al marcar activo fijo y el texto es
   «Activo fijo (se capitaliza)».
+- **2026-11-18 (respuestas del usuario).** Integración de Activos fijos e Inventarios aprobada (detalle al final de
+  `diseno-integracion-activos-fijos-e-inventarios.md`): el stock de bienes de uso vive en Activos fijos. *AF-P22:* la lista
+  de activos muestra el nombre de la localidad aunque el usuario no tenga acceso a ella (consulta de Empresas solo con id y
+  nombre, revisada por seguridad). Validación del contador de Inventarios guardada en
+  `dictamen-inventarios-validacion-2026-11-18.md` (V-2: la fórmula de absorción con promedio del diseño es incorrecta).
