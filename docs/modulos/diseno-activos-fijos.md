@@ -1315,7 +1315,7 @@ dos decimales.
 | AFI-2c (con AF-3c) | Ventana «Capitalizar» con unidades, costo por unidad y cuadrícula | frontend | |
 | **AF-4** | Dominio de depreciación (§7, pruebas puras con los ejemplos: tope del inmueble con el mayor y el 70 %, reproductores, ocioso, exceso de nota de crédito por libro), `tramos`, poner en uso y quitar de uso | backend | **Programado, en revisión** (2026-11-19; migración `0004_af4_tramos`) |
 | **AFI-3** (con AF-4) | `PonerEnUsoVarios`, ubicación y «En bodega de activos» al ponerlo disponible, textos de «Disponible para uso» | backend | |
-| **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | |
+| **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | **Programado, en revisión** (2026-11-19; migración `0005_af5_cierres_y_cuotas`; faltan los hallazgos de inventario en curso (AF-10) y de bodega (AFI-7)) |
 | AF-5c | Cierre de depreciación y pestaña Depreciación | frontend | |
 | **AF-6** | Saldos iniciales (con costo fiscal, A1; con «Cantidad» y «En bodega», AFI), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | |
 | AF-6c | Saldos iniciales (Administración) | frontend | |

@@ -3449,6 +3449,28 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   porcentaje 0 y sin tramos ni costo; el máximo de ley se valida al poner en uso (el porcentaje de la clase puede ser menor).
   Pendiente: `QuitarDeUso` debe rechazar activos con tramos de otra causa (mejora, saldo inicial) cuando existan (AF-6, AF-7);
   ubicación y «En bodega de activos» al poner disponible son AFI-3.
+- **2026-11-19 — AF-5 (Activos fijos, servidor).** Migración `0005_af5_cierres_y_cuotas`: `activos_fijos.cierres` (§5.9; PK
+  `(empresa_id, periodo)`, nunca se borra) y `activos_fijos.cuotas` (§5.10; único parcial `cuotas_vigente_unica`, llaves
+  compuestas con la empresa a cierre, activo, tramo y centro de costo) y el único `tramos_id_empresa_unico` que sus llaves
+  necesitan. Dominio puro: `cuotaDelTramoEnElMes`, `tramoQueRige` y `calcularCierre` (con el ejemplo de §7.5 mes a mes: 60
+  cuotas contables de 3,750.00 y 59 fiscales de 4,166.67 más la 60.ª de 4,166.47), y los hallazgos de §6.9
+  (`hallazgosDelCierre`). Casos de uso `RevisarCierre`, `CerrarMes`, `ReabrirMes` y `ListarCierres` sobre un `ArmadorDelCierre`
+  común (cerrar vuelve a calcular lo mismo que se revisó, dentro del candado); rutas `GET /activos-fijos/depreciacion`,
+  `GET …/:periodo/revision`, `POST …/:periodo/cerrar` (con `huella` opcional, como EM-2) y `POST …/:periodo/reabrir`, permisos
+  `activos-fijos.depreciacion.ver/.cerrar/.reabrir`. Eventos `activos-fijos.depreciacion_cerrada` y `…_reabierta` tras
+  confirmar; auditoría `cerrar` y `reabrir` (con el cierre por clase y el motivo) en `activos-fijos.cierres`. `CierresDrizzle`
+  ya lee los cierres reales: `PonerEnUso` y `QuitarDeUso` toman antes de nada el candado compartido del cierre y el cierre y la
+  reapertura, el exclusivo (`pg_advisory_xact_lock` por empresa, en ese orden para no cruzarse con los candados de fila).
+  Decisiones: (1) cerrar un mes ya cerrado se **rechaza** (`mes_cerrado`) en vez de devolver el cierre existente: el orden
+  manda y el único parcial garantiza que nunca haya dos cuotas vigentes; (2) una cuota en cero (tramo agotado) no se guarda;
+  (3) «tramos del mes con exceso» son los que **abren** ese mes; (4) un mes posterior al siguiente no se calcula: la revisión
+  trae solo el bloqueo `mes_anterior_sin_cerrar`; (5) `QuitarDeUso` ya no borra los tramos que una cuota de un mes reabierto
+  señala: los deja `vigente = false` (así se conserva lo informado), y `tieneMovimientos` cuenta cualquier cuota; (6) `acumuladaAl`
+  vive en `acumulada-al.ts` (Σ de cuotas vigentes) y es donde AF-6 y AFI-5 sumarán saldo inicial y divisiones; (7) el centro de
+  costo de la cuota es el del activo al cerrar (el historial de traslados llega con AF-8); (8) con `primer_mes = mes_siguiente`
+  se deprecia también a los dados de baja en el mes (§3.6; las bajas llegan con AF-8). Pendientes: los hallazgos «inventario en
+  curso» (AF-10) y «N bienes llevan más de X meses en bodega» (AFI-7, que trae `activos-fijos.bodega.meses_de_aviso`) y el
+  bloqueo de «cerrar el primer mes» por saldos iniciales usa `activos.origen = 'saldo_inicial'` hasta que exista AF-6.
 - **2026-11-19 — INV-2 (Inventarios, servidor).** Bodegas con alcance de registros propio `inventarios.bodegas`: tablas
   `bodegas` y `accesos_a_bodegas` (migración `0003_inv2_bodegas_y_accesos`, con el disparador `asignar_al_creador` del core
   y `asignar_bodega_al_responsable`, que da acceso al responsable que es usuario de la empresa sin pedirle el permiso de
