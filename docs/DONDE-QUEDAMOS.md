@@ -1,6 +1,6 @@
 # Dónde quedamos
 
-Última sesión: **2026-11-14**. Este archivo se reescribe al final de cada paso.
+Última sesión: **2026-11-19**. Este archivo se reescribe al final de cada paso.
 
 Se está implementando `docs/modulos/plan-hallazgos-contables.md` en el orden de su
 sección «Dependencias y orden de implementación» (código con agentes Sonnet;
@@ -8,118 +8,68 @@ decisiones e investigación con Opus).
 
 ## Estado para retomar (se actualiza en cada unión a `main`)
 
-Actualizado: **2026-11-18** (tarde). El usuario pidió retomar la programación. Si otra sesión o cuenta retoma el trabajo, empiece aquí.
+Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop**. Si otra sesión o cuenta retoma, empiece aquí.
 
-**Desde el 2026-11-18 (velocidad):** los agentes corren `npm run revisar` y solo las pruebas de lo que tocan; la suite
-completa la corre el coordinador una vez en el worktree de integración. Un agente prepara las pruebas del servidor en
-paralelo (una base por worker; hoy ~27 min en serie).
+**Cómo se trabaja:**
+- **Agentes:** cada paso lo programa Sonnet (`programador-backend`/`-frontend`) en su worktree, con revisión adversarial de Opus
+  (o de `seguridad`). Luego Sonnet corrige lo alto y lo medio. Los agentes corren `npm run revisar` y solo las pruebas de lo
+  que tocan.
+- **Integración:** el coordinador une en `.claude/worktrees/integracion` (rama `integracion`, `git reset --hard main` y
+  `git merge --no-ff` de cada rama). Los conflictos de código los resuelve a mano; los de `docs/PLAN.md`, conservando las dos
+  entradas. Después corre `npm run revisar` y `BD_PRUEBAS=arrancar_pruebas_int npm run probar`, que tarda unos 10 min y debe
+  dar **0 skipped**. Al final: `git merge --ff-only integracion` en main, `bd:migrar` y `git push origin main`.
+- **Commits** sin Co-Authored-By.
+- **Clientes:** el usuario **no tiene clientes todavía** (2026-11-19). No se frena nada esperando datos reales; lo que solo un
+  cliente puede confirmar se revisa con el primero que lo use.
 
-**Cómo se trabaja:** cada paso lo programa un agente en su propio worktree (`.claude/worktrees/agent-<id>`, rama
-`worktree-agent-<id>`), que parte de `main` con `git reset --hard main`, usa su propia base de pruebas
-(`BD_PRUEBAS=arrancar_pruebas_<algo>`: basta elegir un prefijo propio, las bases se crean solas) y hace un commit sin Co-Authored-By. El coordinador revisa el
-reporte, une con `git merge --no-ff` (los conflictos de `docs/PLAN.md` y `docs/DONDE-QUEDAMOS.md` se resuelven
-conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run revisar` y
-`BD_PRUEBAS=arrancar_pruebas_cxp npm run probar` en el checkout principal y solo sigue con todo en verde. Agentes:
-`programador-backend` (servidor), `programador-frontend` (cliente), `pruebas-qa` (navegador), `arquitecto-de-datos`
-(diseños), `contador-guatemala` (dictámenes fiscales; no escribe archivos: el coordinador guarda su dictamen en
-`docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
-`npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
+**`main`:** `5fb69af8` (subido). Suite completa en verde: servidor 7355, cliente 1800+, generador 46.
 
-**`main`:** `cf7f095` (subido). Suite en paralelo (~5–9 min):
-prefijo, las bases se crean solas). Última suite completa en verde (integración): servidor 5301, cliente 1540, generador 46.
-En `main` además de lo anterior: CP4-9 corregido (tres revisiones), CP4-E5, CP5-9a y CP5-9b (R6 a R11), plazo de crédito
-PC-1 a PC-3, correo pasos 1 y 3, Caja chica y Cuentas por liquidar (datos: CC-1, CL-1, CC-1c), Excel de Terceros y de
-Empresas, selector de empresa con buscador, `ejecutarEnEmpresaNueva`, dependencias seguras (zod 4.6.7, vite 8.3.8), cliente
-del Banguat para todas las monedas (MM-3a), correcciones de la QA intermedia.
+**En `main` desde el 2026-11-18:**
+- **Bancos:** BS-2 a BS-7, BS-9, BS-R1 y BS-R2. Impresión de cheques del servidor, IC-1 a IC-7 (bancos 0038).
+- **Cuentas por pagar:** CP4 y CP5 completos, con las QA CP4-12 y CP5-11 corregidas.
+- **Correo:** pasos 1 a 13, más las correcciones de seguridad (llave en producción, cupos por destinatario en core 0032, PDF
+  sin notas internas) y las de su QA: pantalla «Avisos de pago» con permiso propio, auditoría de los ajustes.
+- **Núcleo:** RLS de escritura R-1 a R-3 (core 0027-0028).
+  - **Ojo:** las pruebas que siembran `core.empresas` o `core.empresa_usuarios` deben usar `bdPropietario`
+    (`core/base-datos/sembrado-de-prueba.soporte.ts`).
+- **Multimoneda:** MM-1, MM-2, MM-3a, MM-3b, MM-4 y MM-5. La carga automática está **apagada por omisión**.
+- **Activos fijos:** AF-1, AF-2 (con AFI-1), AF-3 con AFI-2 y AF-4 (activos-fijos 0000-0004, empresas 0013).
+- **Inventarios:** INV-0 a INV-3 (inventarios 0000-0003).
+- **Caja chica:** CC-1 a CC-4 (caja_chica 0004).
+- **Cuentas por liquidar:** CL-1 a CL-4.
 
-**Agentes en curso (lanzados el 2026-11-18, cada uno en su worktree `.claude/worktrees/agent-<id>` desde `main`):**
-- **BS-2: unido a `main`** (2026-11-18). Rutas heredadas marcadas «HEREDADO» hasta BS-5; anular partidas llega con BS-3.
-  El cambio de fecha de inicio se rechaza solo si el saldo global es **posterior** (el coordinador lo aprobó: en Bancos el
-  saldo inicial puede tener fecha igual a la de inicio).
-- **Workflow `arrancar-bancos-cadena`** (run `wf_b0177bcf-706`): revisión de BS-2 → BS-3 (con las correcciones y los textos
-  legales del dictamen `dictamen-textos-legales-de-bancos-2026-11-18.md`) → BS-4 y BS-R1 desde la rama de BS-3; BS-5 en
-  paralelo. Unir en orden BS-3, BS-4/BS-R1, BS-5.
-- **CP4-E4** (servidor, liquidar y reabrir el retiro, recibo de efectivo): `programador-backend` (Sonnet), base
-  `arrancar_pruebas_cpe4`.
-- **Workflow `arrancar-pasos-independientes`** (run `wf_01c5093b-22c`, reanudable con `resumeFromRunId`):
-  CP4-B3b (+ observaciones menores de la QA de H2, base `arrancar_pruebas_b3b`) y CP5-9a (R6 a R8, cliente, base
-  `arrancar_pruebas_cp59`), cada uno con revisión de Opus y corrección de Sonnet; QA intermedia en el navegador de
-  CP4-B3a, CP5-7, CP5-8, CP5-10 y EM-1 (informe `informe-qa-intermedia-2026-11-18.md`, base `arrancar_pruebas_qa1`);
-  cotejo del contador de los artículos del Código de Comercio (§15.8 de Bancos, segunda parte); diseños cortos de EM-2
-  (`diseno-em2-cierre-de-la-carga.md`) e impresión de cheques (`diseno-impresion-de-cheques.md`).
-- **CP4-E4 y CP4-9: unidos a `main`** (2026-11-18).
-- **Workflow `arrancar-cp4-10-11-cp5-5`** (run `wf_d318640d-7a5`): CP4-10 (base `arrancar_pruebas_cp410`), CP4-11
-  (`arrancar_pruebas_cp411`) y CP5-5 servidor (`arrancar_pruebas_cp55`), con revisión de Opus y corrección de Sonnet.
-- Guarda `skipIf(!hayQpdf)` en las pruebas del libro en PDF: agente Haiku (base `arrancar_pruebas_qpdf`).
-- **Workflow `arrancar-adendas-y-em2`** (run `wf_cb030595-d4b`): el arquitecto incorpora las decisiones del 2026-11-18 a
-  EM-2, impresión de cheques y CP4 (adenda del posfechado: deuda, comprometido y disponible; cinco estados); luego EM-2
-  servidor y cliente (base `arrancar_pruebas_em2`) con revisión. **En cola:** impresión de cheques (después de BS-3, BS-4 y
-  BS-R1 en main) y el arreglo del posfechado (después de CP4-10 y CP4-11 en main).
-- **Worktree de integración** `.claude/worktrees/integracion` (rama `integracion`, base `arrancar_pruebas_integracion`,
-  `node_modules` enlazados al checkout principal): ahí se unen y prueban las ramas terminadas mientras `main` corre otra
-  suite; luego se pasa a `main`. CP4-B3b, CP5-9a y la QA intermedia ya pasaron a `main`; ahora tiene CP4-10, CP4-11 y CP5-5 (`8a0cd15f`) con
-  su suite corriendo.
-- **Workflow `arrancar-cp4e5-cp59b-qa`** (run `wf_2e5dd345-87d`, desde `8a0cd15f`): CP4-E5, CP5-9b (R9 a R11 cliente) y
-  correcciones de la QA intermedia, con revisión.
-- **Aprobados el 2026-11-18:** Multimoneda, Caja chica y Cuentas por liquidar, y aviso de pago por correo (respuestas al
-  final de cada diseño). **Orden de las migraciones del core:** EM-2 (en curso) → correo (pasos 2 y 4) → Multimoneda (MM-1).
-  Caja chica espera `preguntarATodos` de EM-2 (CCL-M) y la migración de Bancos de CCL-B1 (después de BS-R1).
-- **Workflow `arrancar-modulos-nuevos-fase1`** (run `wf_af6cd921-5c2`): correo pasos 1 y 3, CC-1 y CL-1 (datos de los dos
-  módulos nuevos) y MM-3a (cliente del Banguat sin base), con revisión de seguridad o del arquitecto.
-- Integración: falla la preparación de dos pruebas de CP5-5 contra la regla de BS-2 (fecha de inicio); un agente lo corrige en
-  la rama `integracion`. Después entran las decisiones de H2 y la bandeja de DTE.
-- **En integración ahora** (suite corriendo): qpdf en las pruebas del PDF y Excel de Terceros.
-- **Pendiente de diseño (seguridad, defensa en profundidad):** `core.empresas` no tiene RLS ni check/disparador que impida
-  insertar una empresa con otra `cuenta_id` o mover `cuenta_id`/`creado_en` con un UPDATE (hoy lo cumple el código, con
-  pruebas). Paso aparte para `arquitecto-de-datos`: RLS con política por cuenta (lectura por función `security definer`) o
-  disparador; revisar también si `arrancar_app` necesita DELETE.
-- **Listos para integrar** (revisados): Excel de Empresas y selector con buscador (`worktree-wf_f6224bdf-ffe-2`, revisión
-  final de seguridad «unir»), Caja chica y Cuentas por liquidar datos CC-1/CL-1 con CC-1c (`worktree-wf_af6cd921-5c2-2`),
-  CP4-9 corregido (`worktree-wf_0b4d5815-3ec-3`), pruebas en paralelo (`worktree-agent-a4cd39b30a6deca11`), plazo de crédito PC-1 a PC-3 (`worktree-wf_caddab94-389-1`), correo pasos 1 y 3 (`worktree-wf_af6cd921-5c2-1`) y MM-3a, cliente del Banguat
-  (`worktree-wf_af6cd921-5c2-3`). En revisión: CC-1/CL-1 (`worktree-wf_af6cd921-5c2-2`, arquitecto), CP4-9 tercera
-  corrección, empresa nueva (seguridad). En curso: actualización de dependencias con avisos (zod < 4.6.6, vite).
-- **Cola para la próxima integración** (cada rama con su revisión de Opus): corrección de CP4-9
-  (`worktree-wf_0b4d5815-3ec-3`, en revisión), qpdf en las pruebas del PDF (`worktree-agent-a9590755fda19cc8d`), Excel de
-  Terceros (`worktree-wf_f6224bdf-ffe-1`, corregido), Excel de Empresas y selector (`worktree-wf_f6224bdf-ffe-2`: se acota
-  `ejecutarEnOtraEmpresa` a la empresa recién creada, con revisión de seguridad) y pruebas en paralelo
-  (`worktree-agent-a4cd39b30a6deca11`, en revisión). CP4-E4 revisado: bien.
-- Diseño del plazo de crédito: relanzado (el flujo anterior lo descartó por un error del coordinador).
-- **Workflow `arrancar-siguientes`** (run `wf_c2e6b7b7-306`): adenda del posfechado (servidor y cliente), Excel de plazos
-  (PC-4 y PC-5), diseño de RLS de `core` (`diseno-rls-de-core.md`) y preguntas del contador de Caja chica (V-12, V-13, V-8,
-  V-3/V-4). Después: QA CP4-12 (cuando entre el posfechado) y CP5-11.
-- **EM-2 y Excel de plazos: en `main`** (2026-11-18). La migración del core de EM-2 es `0024_auditoria_permanente`.
-- **Workflow `arrancar-correo-fase2`** (run `wf_a34c71c6-cef`): correo pasos 2, 4, 5 y 6 (migraciones del core en esa rama,
-  después de la 0024) y paso 7 (Terceros), con revisión de seguridad. **MM-1 de Multimoneda va después** de que el correo
-  esté en `main` (siguiente migración del core libre).
-- Preguntas pendientes para el usuario: diseño de RLS del core (5) y dictamen de Caja chica (V-12, V-13, V-8, V-3/V-4).
-- **Adenda del posfechado: en `main`.** Workflow `arrancar-cp4-d6-y-qa` (run `wf_a302f831-cea`): CP4-D6 (R1 y R2 con
-  disponible, A.7 = igual que la ficha) y QA CP4-12 en el navegador (informe `informe-qa-cp4-12-2026-11-18.md`).
-- **Diseño de Activos fijos** (workflow `arrancar-diseno-activos-fijos`, run `wf_9f5b1891-dae`): contador y arquitecto;
-  `diseno-activos-fijos.md` con preguntas para el usuario.
-- **AFI-0 (2026-11-18, docs):** la integración Activos fijos e Inventarios, AF-P22 = b (funciones de Empresas con los
-  nombres de localidades y departamentos, §6.13, **pendiente de `seguridad`** antes del paso AF-P22 y de AF-2c) y la
-  validación del contador de Inventarios (V-1 a V-11) ya están en `diseno-activos-fijos.md` y `diseno-inventarios.md`.
-  `diseno-activos-fijos.md` parte de la versión de `integracion` (con AF-P2 a y la validación del contador): al unir,
-  quedarse con esta. Abiertas para el usuario: P-1, P-3, INV-P14 e INV-A16 de Inventarios; para el contador: VC-1 a VC-4 y
-  VI-1 a VI-4.
-- **En cola (orden de migraciones del core):** correo 2-4-5-6 (en curso) → RLS del núcleo R-1 a R-3 → MM-1.
-- El coordinador está en **/loop** (pedido del usuario el 2026-11-18).
-- **En `main` (2026-11-18, noche):** BS-3, BS-4, BS-5, BS-R1, CP4-D6/D7, AF-0, CCL-L1/CCL-BZ (0038 del libro), correo pasos 2
-  a 7, posfechado, EM-2, Excel de plazos, AF-1 y AF-1c (módulo `activos-fijos` con clases).
-- **Diseños aprobados:** Activos fijos (completo), Inventarios, integración AF/INV (stock de bienes de uso en Activos fijos,
-  AF-P22 nombre de localidad sin filtro). **Diseños con preguntas pendientes para el usuario:** Cuentas por cobrar y Ventas
-  (24), Contabilidad (18), Bancos aprobaciones/tarjeta/CP-AP (20), Parcelas (19).
-- **En curso:** workflow `arrancar-cadenas-siguientes` (RLS R-1 a R-3 → MM-1/MM-2; CCL-B1 → impresión de cheques; correo 8 a
-  13; INV-0) y workflow `arrancar-af-inv-ajustes` (AFI-0 y ajustes de Inventarios en los diseños; INV-3 con la fórmula V-2;
-  QA CP4-12 textos). Después: AF-2 en adelante (con AFI), INV-1 en adelante, CC-2 en adelante, QA CP5-11.
-- **Workflow `arrancar-mas-frentes`** (run `wf_c1facbe4-e32`): BS-6, BS-7, BS-R2, BS-9, AF-2 con AFI-1, INV-1, comprobaciones
-  reales del Banguat + MM-3b + MM-5, y QA CP5-11; cada código con revisión de Opus.
-- **En `main` (2026-11-18, noche):** RLS del núcleo R-1 a R-3 (core 0027-0028), Multimoneda MM-1/MM-2 (core 0029), correo 8 a
-  13 (core 0030-0031), CCL-B1 (bancos 0036-0037), INV-0 (libro 0039), INV-3 (motor de costeo), AFI-0 en los diseños, QA CP4-12
-  corregida. Suite: servidor 6190, cliente 1732, generador 46, sin saltadas. **Ojo:** con la máquina cargada, la revisión de
-  qpdf puede fallar y saltar ~20 pruebas sin avisar: en cada integración comprobar que no haya `skipped`.
-- **Workflow `arrancar-caja-chica-y-correo-final`** (run `wf_8950d9e1-c04`): CC-2, CL-2, revisión de seguridad del correo y QA
-  del correo con Mailpit. Impresión de cheques programando sobre la versión vieja de CCL-B1: al unirla, traer `main`.
+**Decisiones del usuario del 2026-11-19:**
+- **Adenda B de Multimoneda:** aceptada completa. Promedio del cruce como política contable, sin cargar si compra y venta
+  difieren más de 3 %. Convención por moneda fijada por migración. Euro = código 24. Dirección `banguat.gob.gt` sin www. Se
+  agrega PLN. Sin consulta a la SAT.
+- **Recomendaciones aceptadas en todos los puntos:** Cuentas por cobrar y Ventas (VC-P1 a VC-P24), Contabilidad (CT-P1 a
+  CT-P18), Bancos aprobaciones y tarjeta (§16) y Parcelas (PA-1 a PA-19).
+
+**En curso:**
+- **Workflow `arrancar-tanda-5`** (run `wf_f75d3bef-bba`), todo desde la rama `base-tanda5` (`c89a013c`):
+  - Multimoneda Adenda B, en cadena: MM-1b (core 0033) → MM-3a″ → MM-3c → MM-4b.
+  - Activos fijos AF-5 → AF-6 (saldos iniciales).
+  - Cliente de AF-3 y AFI-2.
+  - Inventarios INV-4 (kardex).
+  - Caja chica CC-5 → CC-6 → CC-7, y su cliente CC-8.
+  - Cuentas por liquidar CL-6 → CL-5.
+- **Workflow `arrancar-tanda-6`** (run `wf_282ace4a-e6e`):
+  - QA en el navegador de BS-8, de Activos fijos con Inventarios y de Multimoneda.
+  - RLS del núcleo R-4 y R-5, con revisión de `seguridad`.
+  - Pendientes bajos del correo (core 0034).
+- **Workflow `arrancar-ic-cliente-con-main`** (run `wf_3641ad96-139`): une `main` al cliente de impresión de cheques
+  (IC-8 a IC-10, rama `worktree-wf_5dc20d6a-c1b-1`), que choca con BS-6 en 10 archivos. Lleva revisión de Opus. Falta
+  IC-11 (QA con papel real).
+- **Workflow `arrancar-aprobar-cuatro-disenos`** (run `wf_e31ffdad-1df`): el contador valida las V de los cuatro diseños y
+  el arquitecto anota las respuestas. Después se programa el primer paso de cada uno.
+
+**Pendientes anotados:**
+- **CC-4:** un comprobante con una reposición anulada ya no se puede devolver a la bandeja ni eliminar en el libro; da error
+  propio. Revisar si conviene permitirlo conservando el historial.
+- **AF-3:** `descartes_de_lineas` se borra en cascada con su línea, a diferencia de §5.5 del diseño.
+- **Impresión de cheques:** que CP devuelva `chequeId` en el pago y el retiro.
+- **Del usuario, fuera de la app:** frase FEL 9-22 con la SAT; probar el visor de PDF en Firefox y Safari.
+
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
