@@ -3924,6 +3924,25 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (`caja-chica.fondos.editar` y `puedeEditar` del servidor, nuevo en el DTO), ventana con nombre, localidad, tope y cuenta que se
   propone al reponer; el motivo del tope solo se pide si el tope cambia. La ficha muestra la «Cuenta para reponer» con el nombre
   que ahora da el servidor (`cuentaBancariaNombre` en el DTO del fondo).
+- **2026-11-19 (CC-9, Caja chica, cliente)**: reposición, arqueo, vales provisionales, cierre del fondo e impresiones sobre la
+  API de CC-4 a CC-7, sin cambios de servidor ni migraciones. **Reponer** (`ReposicionDeFondo.vue`, ruta `fondos/:id/reponer`,
+  `reposiciones.crear`): lista de lo pendiente con todo marcado por omisión y casilla por comprobante, resumen en vivo (total
+  firmado, notas de crédito, faltantes) con el desglose por concepto del servidor solo cuando se repone todo, forma de salida
+  (cheque o nota de débito, con `CamposDeEntrega` sin monto) y botón «Reponer Q…»; al terminar vuelve a la ficha con el enlace
+  «Imprimir la reposición». **Arquear** (`ArqueoDeFondo.vue`, `arqueos.crear`): conteo por denominación que da el servidor,
+  resultado en vivo con palabras (cuadra, falta, sobra) y la misma fórmula del servidor (contado + por cambiar − esperado);
+  con diferencia pide el motivo y, con faltante, su destino (pérdida o cobrar al custodio); «¿comprobantes completos?» no
+  tiene valor por omisión. **Vales provisionales**: «Entregar vale» (ventana), sección de vales en la ficha (abierta si hay
+  abiertos, con «Abierto hace N días» y el aviso del servidor) y **liquidar** en una página (`LiquidacionDeVale.vue`, `vales.liquidar`):
+  se marcan las facturas de la bandeja, se agregan gastos sin factura (validados en el cliente y enviados juntos), un solo
+  juego de motivos de excepción, cuadro «gastado / regresa al fondo» y confirmación con resumen. **Cerrar el fondo**
+  (`VentanaDeCierre.vue`, `fondos.cerrar`): dice qué pasa con lo pendiente, con el efectivo que se deposita y avisa si hay
+  vales abiertos; el motivo es obligatorio y la cuenta del depósito, solo si se espera efectivo. **Anular** reposición, arqueo y
+  vale con una sola ventana de motivo (la reposición pide fecha del inverso). **Impresiones** (carta, siempre en claro):
+  solicitud de reposición (antes de reponer), reposición, acta de arqueo y vale provisional, con firmas. Las acciones que el
+  DTO del fondo no trae como `puede*` (reponer, arquear, entregar, cerrar, anular movimientos) se muestran con el permiso y el
+  fondo abierto; el servidor decide y explica el rechazo. Pruebas nuevas de la lógica pura en `composables/` (reposiciones,
+  arqueos, vales, movimientos, dinero).
 - **2026-11-19 (correo, pendientes bajos de la revisión de seguridad)**: migración `0034_cupos_con_reintentos` (core).
   (1) Índices `destinatarios_de_correos (cuenta_id, creado_en)` y `(creado_en)` para los conteos por hora y día de
   `core.reservar_cupo_de_correo`. EXPLAIN con 600,000 destinatarios: el conteo de la instalación pasó de
