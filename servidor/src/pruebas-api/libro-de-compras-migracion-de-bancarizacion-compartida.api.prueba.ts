@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { comoPropietario } from './soporte/consultas-de-propietario.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 
-const MIGRACION = new URL('../modulos/libro-de-compras/migraciones/0037_bancarizacion_compartida.sql', import.meta.url);
+const MIGRACION = new URL('../modulos/libro-de-compras/migraciones/0038_bancarizacion_compartida.sql', import.meta.url);
 const VIEJA = 'cuentas-por-pagar.bancarizacion.umbral';
 const NUEVA = 'libro-de-compras.bancarizacion.umbral';
 usarEntornoApi();

@@ -267,6 +267,13 @@
       "when": 1795050708993,
       "tag": "0037_af_servicio_capitalizable",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1795053554631,
+      "tag": "0038_bancarizacion_compartida",
+      "breakpoints": true
     }
   ]
 }
