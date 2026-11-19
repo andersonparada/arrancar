@@ -1650,7 +1650,7 @@ no puede pasar es encender `CARGAR_TIPOS_DE_CAMBIO` antes de MM-3c (P-B8).
 
 | Paso | Qué | Pruebas clave | Depende de |
 |---|---|---|---|
-| **MM-1b** (servidor, datos del núcleo) | Migración `00xx_cruces_del_banguat`: `convencion` en `monedas_del_banguat` con los datos de B.4 y su `revoke`; `convencion`, `dolar_usado_id`, checks e índice en `tipos_de_cambio`; resultados nuevos en `consultas_al_banguat`; guarda de datos existentes; PLN. Tablas Drizzle | La convención sobrevive a `ActualizarMonedasDelBanguat`; un código nuevo nace sin convención; una fila de cruce sin USD, sin compra o con `venta < compra` falla; una `manual` sin convención pasa; la app no puede cambiar `convencion`; PLN existe inactiva; la guarda detiene la migración con una fila `banguat` de otra moneda | Nada (V-14 ya resuelto) |
+| **MM-1b** (servidor, datos del núcleo) **HECHO 2026-11-19** (migración `core/0033_cruces_del_banguat`) | Migración `00xx_cruces_del_banguat`: `convencion` en `monedas_del_banguat` con los datos de B.4 y su `revoke`; `convencion`, `dolar_usado_id`, checks e índice en `tipos_de_cambio`; resultados nuevos en `consultas_al_banguat`; guarda de datos existentes; PLN. Tablas Drizzle | La convención sobrevive a `ActualizarMonedasDelBanguat`; un código nuevo nace sin convención; una fila de cruce sin USD, sin compra o con `venta < compra` falla; una `manual` sin convención pasa; la app no puede cambiar `convencion`; PLN existe inactiva; la guarda detiene la migración con una fila `banguat` de otra moneda | Nada (V-14 ya resuelto) |
 | **MM-3a″** (servidor, dominio, sin base) | `CODIGOS_DEL_BANGUAT_EXCLUIDOS`; URL; 28 → 24 en `main`; grabaciones reales; `validarPublicacion` sin `valor_ambiguo` por `compra ≠ venta` (solo diferencial > 3 %); `promedioPublicado`, `normalizarAQuetzales`, `inversionProbable`, `esDiaDePublicacionDeCruces`; se quita `cruceImplicito` | Los cinco ejemplos de B.3 dan exactamente esos valores; promedio con un decimal más (ARS); el CRC del 18/11 da 0.01710630 (promedio del cruce y luego conversión) y no 0.01710669 (B.5); diferencial de 3.01 % rechazado; `venta < compra` inválido; EUR invertido → inversión; CHF ±2 % y ARS +87 % no; jueves santo y 25/12 son días de publicación, el sábado no | MM-1b (tipos) o ninguno si se programa sin base |
 | **MM-3c** (servidor, carga; sobre la rama de MM-3b integrada) | `ConsultarAlBanguat` normaliza con el USD `banguat` de la fecha y guarda `convencion` y `dolar_usado_id`; comprobaciones de B.6 en orden; `monedasACargar` solo con convención y el USD primero; días de B.9; reintentos de la noche; `vigente` con `dia_sin_calculo` solo en fin de semana; `muestra` con el valor en quetzales; `CodigoDelDolarNecesario`; 28 → 24 en las pruebas de la rama; columnas del reporte (MM-5) | Con reloj fijo: EUR del lunes con el USD del lunes; EUR sin USD → `sin_dolar_del_dia` y se rellena al llegar el USD; EUR de un asueto con el USD repetido; EUR invertido → `convencion_dudosa`; un sábado no es hueco y un asueto sí; `vigente` del EUR un sábado (`dia_sin_calculo`) y un 20 de octubre sin fila (`falta_publicacion`); quitar el código del USD con el EUR unido → 422; la referencia guardada se rehace con su fila | MM-1b, MM-3a″, rama de MM-3b integrada |
 | **MM-4** (cliente, Plataforma) | Como A.14, más B.10 | Unitarias de `edicion-de-moneda.ts` (solo `ofrecida`; texto de la convención); QA con el servidor falso devolviendo cruces | MM-3c |
@@ -1689,3 +1689,24 @@ La primera opción es la recomendada.
 | P-B10 | ¿Agregamos el zloty polaco (PLN), que el Banguat publica y faltó en la lista? | Sí / No | **Sí**, inactivo y sin código, como las demás |
 | Q-1 | ¿Algún cliente factura o compra hoy en colones costarricenses, pesos dominicanos o lempiras (las monedas con más diferencia entre compra y venta)? | a. Sí: hacer C-6 antes de encender la carga de esas monedas; b. No: encender con las demás y dejar C-6 para cuando aparezca uno | Depende del dato; si hay alguno, **a** (en Q100,000 en colones, promedio contra venta mueve unos Q480) |
 | Q-2 | ¿Presentamos una consulta formal a la SAT (Código Tributario, art. 102) sobre el tipo para DTE en monedas distintas del USD? | a. No por ahora: basta con C-5 y C-6; b. Sí, ya | **a**, salvo que un cliente tenga volumen relevante en esas monedas |
+
+### Respuestas del usuario a la Adenda B
+
+_2026-11-19._ P-B1 **A** (calcular al cargar con el dólar del mismo día y guardar lo publicado). P-B2 **a**: promedio del
+cruce publicado como **política contable** de la instalación, sin cargar si el diferencial pasa de 3 %. P-B3 **A**
+(columna `convencion` fijada por migración). P-B4 **a** (lunes a viernes, también en asuetos, sin sábados ni domingos).
+P-B5 **sí** (se excluyen quetzal, monedas europeas retiradas, bolívares, colón salvadoreño, DEG y Unidad de Cuenta del
+BID). P-B6 **a** (se acepta el redondeo a 8 decimales en v1). P-B7 **sí** (la app no cambia la convención). P-B8
+**integrar MM-3b y MM-5 como están y corregir encima** (ya integrado). P-B9 **a** (`banguat.gob.gt` sin `www`). P-B10
+**sí** (zloty polaco). Q-1 **b**: no hay clientes en CRC, DOP ni HNL por ahora, así que C-6 queda para cuando aparezca
+uno. Q-2 **a**: no se consulta a la SAT por ahora; basta con C-5 y C-6.
+
+### MM-1b: lo programado
+
+Migración `core/0033_cruces_del_banguat` (generada con `bd:generar`; la guarda, los datos y el orden de las sentencias, a
+mano): guarda que se detiene con `raise exception` si hay filas `banguat` de otra moneda; `convencion` en
+`core.monedas_del_banguat` con los 40 códigos de C-1 (los 15 excluidos quedan sin convención); `convencion`,
+`dolar_usado_id`, checks e índice en `core.tipos_de_cambio`; resultados `sin_dolar_del_dia`, `convencion_dudosa` y
+`sin_convencion` en `core.consultas_al_banguat`; el zloty polaco (PLN). P-B7 se cumple en `RESTRICCIONES_DE_PRIVILEGIOS`
+(`actualizarSolo` de `core.monedas_del_banguat`: descripción, disponible y vista por última vez), no con un `revoke` suelto
+de la migración, porque el migrador rehace los `grant` en cada corrida. Pruebas: `cruces-de-core.prueba.ts`.

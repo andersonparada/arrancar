@@ -3618,3 +3618,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   configuración usa su propia conexión, así que no comparte la transacción: si guardar falla, la auditoría se deshace).
   Por decisión de producto, y en coherencia con C9, el asunto y el mensaje rechazan `http:`, `www.`, `@` y dominios con
   terminación común (`.com`, `.gt`…); también rige para la configuración genérica de Soporte. Sin migraciones.
+- **2026-11-19, Multimoneda MM-1b (cruces del Banguat, datos del núcleo).** Migración `core/0033_cruces_del_banguat`
+  según la adenda B (B.4, B.7, B.8 y B.12; respuestas del usuario anotadas en `diseno-multimoneda.md`: P-B2 promedio como
+  política contable sin cargar si pasa de 3 %, P-B3 A, P-B7 sí, Q-1 b y Q-2 a): `core.monedas_del_banguat.convencion`
+  con los 40 códigos de C-1 (quetzales por unidad el 2; dólares por unidad el 9 y el 24; unidades por dólar los
+  demás ofrecidos; nula en los 15 excluidos), que la app no puede escribir; `core.tipos_de_cambio` suma `convencion`,
+  `dolar_usado_id` (llave a la misma tabla, `restrict`) y los checks de cruce (dólar, compra y venta con `venta >= compra`,
+  convención obligatoria en `banguat`); `consultas_al_banguat.resultado` suma `sin_dolar_del_dia`, `convencion_dudosa` y
+  `sin_convencion`; PLN inactivo; guarda que detiene la migración si hay filas `banguat` de otra moneda. Las filas del
+  dólar existentes pasan a `quetzales_por_unidad`. `PublicacionDeTipoDeCambio` suma `convencion` y `dolarUsadoId`
+  opcionales (la carga actual del dólar guarda `quetzales_por_unidad`). Las pruebas de base de datos y de API dejan de
+  sembrar y borrar los códigos 28, 29 y 30 (ahora son parte de la semilla) y usan el 24, el 9 y el 3. **Pendiente:**
+  MM-3a″ (dominio), MM-3c (carga), MM-4 (cliente: la bitácora y el selector traducen los resultados nuevos).
+
