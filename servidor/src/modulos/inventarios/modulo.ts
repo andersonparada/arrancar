@@ -4,6 +4,9 @@ import { configuracionDeInventarios } from './configuracion.js';
 import { rutasDeUnidades } from './composicion/unidades.js';
 import { rutasDeCategorias } from './composicion/categorias.js';
 import { rutasDeArticulos } from './composicion/articulos.js';
+import { rutasDeBodegas } from './composicion/bodegas.js';
+import { rutasDeAccesosABodegas } from './composicion/accesos-a-bodegas.js';
+import { ALCANCE_DE_BODEGAS } from './infraestructura/persistencia/accesos-a-bodegas.tablas.js';
 // generador: importaciones
 
 /** Existencias, kardex y costeo de la mercadería, materias primas y suministros de la empresa Ver `docs/modulos/inventarios.md`. */
@@ -40,13 +43,35 @@ export const moduloInventarios: DefinicionModulo = {
       clave: 'inventarios.articulos.eliminar',
       descripcion: 'Eliminar artículos que no se usan',
     },
+    { clave: 'inventarios.bodegas.ver', descripcion: 'Ver las bodegas que se le asignaron' },
+    { clave: 'inventarios.bodegas.ver-todas', descripcion: 'Ver y usar todas las bodegas de la empresa' },
+    { clave: 'inventarios.bodegas.crear', descripcion: 'Registrar bodegas' },
+    { clave: 'inventarios.bodegas.editar', descripcion: 'Editar, inactivar y reactivar bodegas' },
+    { clave: 'inventarios.bodegas.eliminar', descripcion: 'Eliminar bodegas que no se usan' },
+    {
+      clave: 'inventarios.bodegas.asignar',
+      descripcion: 'Dar y quitar a los usuarios el acceso a las bodegas (ve todas en esa ventana)',
+    },
+    { clave: 'inventarios.bodegas.importar', descripcion: 'Importar bodegas desde Excel' },
+    { clave: 'inventarios.bodegas.exportar', descripcion: 'Exportar bodegas a Excel' },
     // generador: permisos
+  ],
+  recursosConAlcance: [
+    {
+      clave: 'inventarios.bodegas',
+      descripcion: 'Bodegas',
+      permisoVerTodos: 'inventarios.bodegas.ver-todas',
+      permisoAsignar: 'inventarios.bodegas.asignar',
+      alcance: ALCANCE_DE_BODEGAS,
+    },
   ],
   configuracion: configuracionDeInventarios,
   rutas: rutasDelModulo([
     rutasDeUnidades(),
     rutasDeCategorias(),
     rutasDeArticulos(),
+    rutasDeBodegas(),
+    rutasDeAccesosABodegas(),
     // generador: rutas
   ]),
 };

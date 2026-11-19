@@ -3449,3 +3449,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   porcentaje 0 y sin tramos ni costo; el máximo de ley se valida al poner en uso (el porcentaje de la clase puede ser menor).
   Pendiente: `QuitarDeUso` debe rechazar activos con tramos de otra causa (mejora, saldo inicial) cuando existan (AF-6, AF-7);
   ubicación y «En bodega de activos» al poner disponible son AFI-3.
+- **2026-11-19 — INV-2 (Inventarios, servidor).** Bodegas con alcance de registros propio `inventarios.bodegas`: tablas
+  `bodegas` y `accesos_a_bodegas` (migración `0003_inv2_bodegas_y_accesos`, con el disparador `asignar_al_creador` del core
+  y `asignar_bodega_al_responsable`, que da acceso al responsable que es usuario de la empresa sin pedirle el permiso de
+  asignar, como el custodio de Caja chica), permisos `ver`, `ver-todas`, `crear`, `editar`, `eliminar`, `asignar`,
+  `importar` y `exportar`, y `recursosConAlcance`. CRUD (`GET/POST/PUT/DELETE /inventarios/bodegas`; inactivar con
+  auditoría), ventana de asignación con `operadorParaAsignar` (`/inventarios/bodegas/accesos/...`, `asignar` y `quitar`
+  auditados en `inventarios.accesos-a-bodegas`, también los del creador y el responsable) y Excel con `sinAsignarAlCrear`
+  (localidad por nombre). Generada con `npm run generar -- recurso inventarios/bodega` (solo la parte del servidor; sus
+  pantallas son de INV-2c). Pruebas: dominio y casos de uso, tablas (checks, únicos, RLS de alcance, disparadores,
+  ventana) y API de aislamiento entre bodegueros. Decisiones: el número de migración es `0003` (el `0002` ya era la
+  búsqueda de artículos); la regla «no se inactiva con existencias, conteos ni traslados en tránsito» y la guardia de
+  eliminar con documentos llegan con las tablas de INV-4 (hoy eliminar solo lo impiden las llaves); el responsable con
+  usuario no va en el Excel (se elige en el formulario); la lista de usuarios de una bodega exige `asignar`.

@@ -638,7 +638,7 @@ completo (con activo fijo, bancos y pasivos) será suyo y esta tabla podrá pasa
 
 - `npm run generar -- modulo inventarios --nombre "Inventarios" --descripcion "…" --icono Warehouse` crea el esqueleto y
   `0000_esquema`. Luego, con `bd:generar -w servidor -- inventarios <nombre>`: `0001_inv1_catalogos` (unidades,
-  categorías, artículos, conversiones, lotes, auditoría permanente), `0002_inv2_bodegas_y_accesos`,
+  categorías, artículos, conversiones, lotes, auditoría permanente), `0003_inv2_bodegas_y_accesos` (el `0002` es el índice de búsqueda de artículos),
   `0003_inv4_kardex` (métodos, documentos, movimientos, existencias, saldos, capas, consumos, recálculos),
   `0004_inv5_recepciones` (repartos, descartes), `0005_inv8_cierres`, `0006_inv9_ajustes`, `0007_inv10_conteos`,
   `0008_inv12_deterioros`, `0009_inv13_autorizaciones_del_libro`. El `check` de clases de `documentos` se amplía en la
@@ -1247,7 +1247,7 @@ texto.
 | INV-0c | Casilla «Inventario» en la línea y en el concepto de gasto (excluyente con «Activo fijo»), con la ayuda «Activo fijo: lo que se va a usar, aunque se guarde; Inventario: lo que se va a vender o consumir» (AFI-9) | frontend |
 | **INV-1** | Esqueleto del módulo, `0001_inv1_catalogos`, auditoría permanente, configuración, semilla perezosa de unidades, artículos con conversiones y lotes, Excel; pruebas de tablas, de API y de conversiones | backend |
 | INV-1c | Unidades, Categorías y Artículos (catálogos con Excel, ficha del artículo sin kardex) | frontend |
-| **INV-2** | Bodegas con alcance, accesos, ventana de asignación, Excel con `sinAsignarAlCrear`; pruebas de aislamiento | backend |
+| **INV-2** | Bodegas con alcance, accesos, ventana de asignación, Excel con `sinAsignarAlCrear`; pruebas de aislamiento | backend — **hecho** (2026-11-19, migración `0003_inv2_bodegas_y_accesos`) |
 | INV-2c | Bodegas y asignación de usuarios | frontend |
 | **INV-3** | Motor de costeo puro (§7: promedio, PEPS, recálculo, redondeo, negativos, costos adicionales con el **factor exacto** de V-2 y su recálculo, **traslados neutros**, devolución PEPS sobre su capa, sobrante de V-5) con todos los ejemplos de §7.6; sin base de datos. **No se programa con la fórmula vieja** (`min(1, C/q)`) | backend |
 | **INV-4** | `0003_inv4_kardex`: métodos de costeo (elegir, con el `check` de `desde` de V-1), documentos, movimientos (con `tipo = 'traslado'` y `movimientos_bodega_idx`), existencias, saldos, capas, recálculos (con las columnas de repartos); entradas manuales (donación con valor razonable, V-10), salidas por consumo (destino `gasto`), anular; candados; kardex por bodega con su propio saldo y sin los saldos de la empresa para quien no ve todas; pruebas de concurrencia, de recálculo, de RLS con dos bodegueros (R-3) y de cuadre | backend |
