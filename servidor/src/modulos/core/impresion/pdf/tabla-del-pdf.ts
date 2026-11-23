@@ -1,9 +1,8 @@
+import { ANCHO_UTIL, MARGEN } from './hoja-con-folio.js';
 import { montoParaElPdf } from './monto-del-pdf.js';
 import type { PaginaConSubtotales } from './paginacion-con-subtotales.js';
 import type { PincelDelPdf } from './pincel-del-pdf.js';
 
-export const MARGEN = 30;
-export const ANCHO_UTIL = 936 - 2 * MARGEN;
 const ALTO_DE_FILA = 12;
 const ALTO_DEL_ENCABEZADO = 28;
 const TAMANO = 6.5;

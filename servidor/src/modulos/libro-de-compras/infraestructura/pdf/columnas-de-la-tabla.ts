@@ -1,4 +1,5 @@
-import { ANCHO_UTIL, MARGEN, type ColumnaDeTabla } from '../../../core/impresion/pdf/tabla-del-pdf.js';
+import { ANCHO_UTIL, MARGEN } from '../../../core/impresion/pdf/hoja-con-folio.js';
+import type { ColumnaDeTabla } from '../../../core/impresion/pdf/tabla-del-pdf.js';
 import {
   COLUMNAS_DEL_LIBRO,
   esCampoDeTexto,

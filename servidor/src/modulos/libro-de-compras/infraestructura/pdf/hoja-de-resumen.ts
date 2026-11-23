@@ -4,7 +4,7 @@ import type { DatosDelPdfDelLibro } from '../../aplicacion/puertos/generador-de-
 import { NOMBRE_DEL_MOTIVO_EN_EL_LIBRO } from '../../dominio/libro/motivos-del-libro.js';
 import { montoParaElPdf } from '../../../core/impresion/pdf/monto-del-pdf.js';
 import type { PincelDelPdf } from '../../../core/impresion/pdf/pincel-del-pdf.js';
-import { MARGEN } from '../../../core/impresion/pdf/tabla-del-pdf.js';
+import { MARGEN } from '../../../core/impresion/pdf/hoja-con-folio.js';
 
 interface LineaDeResumen {
   etiqueta: string;

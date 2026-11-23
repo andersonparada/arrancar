@@ -4355,3 +4355,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `foliosQueGasta` son ahora `paginarConSubtotales` (core, con su prueba); `paginarLibro` de compras es un envoltorio
   con las mismas firmas. El PDF del libro de compras no cambia (sus pruebas pasan sin tocarse). Libro de ventas (LV-5)
   ya puede emitir con folios sin importar a compras.
+  Corrección de la revisión: también subieron a `core/impresion/pdf/hoja-con-folio.ts` el tamaño de hoja, el cálculo del
+  folio por hoja, el sello «Folio N» / «BORRADOR — sin folio» y el pie «Hoja N de M» (sin cambiar los bytes del PDF), y se
+  agregó una prueba de caracterización de la tabla con un pincel doble (columnas de ambos libros, Vienen/Van/Total,
+  ceros omitidos en filas y visibles en subtotales).
