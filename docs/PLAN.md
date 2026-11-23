@@ -4410,3 +4410,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     respuestas); 369 en las carpetas tocadas, en verde. Nota del entorno: el puerto :5433 sigue respondiendo `ECONNRESET`
     al agente; las pruebas se corrieron en un contenedor propio con `SERVIDOR` de `nombres-de-bases.ts` apuntando a su
     puerto, cambio local que no se confirmó.
+- **2026-11-23 (CT-2, correcciones de la revisión)**:
+  - `GuardarEnlace` lee la cuenta con `for no key update` (`buscarParaCambiar`): quien la renombra o inactiva espera y ya no
+    se pierde su cambio ni queda un enlace a una cuenta inactiva. Prueba de dos conexiones en
+    `infraestructura/persistencia/enlace-concurrente.prueba.ts`.
+  - Importar enlaces rechaza en su fila el par rol + llave repetido dentro del archivo (gana la última sin aviso era un
+    error de datos): gancho opcional `revisarLote` del motor de intercambio (sin estado entre solicitudes), con pruebas
+    unitarias y de API.
+  - `saldos_por_regularizar` es rol de auxiliar (§5.3 y prueba del conjunto). Pendiente: que `contador-guatemala` valide la
+    lista de auxiliares, incluido si `retencion_por_pagar` lo es por las retenciones pendientes de saldo inicial (§4.4);
+    por ahora no lo es.
+  - Entorno: el puerto :5433 sigue sin responder al agente; las pruebas corrieron en un contenedor propio (ya borrado).

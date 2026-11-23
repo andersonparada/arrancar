@@ -585,7 +585,7 @@ afecta lo que se contabilice después (se audita, §9.2).
   cómo se llama, si es de auxiliar); los nombres de los roles siguen en `core/contratos/contabilidad.contratos.ts`. Todos los
   roles con llave la admiten **opcional**: sin llave el enlace rige para todo el rol (así lo dice la búsqueda de §3.9).
 - Roles de **auxiliar** (su cuenta queda `es_de_control` al enlazar): `proveedores`, `documentos_por_asignar`,
-  `pagos_por_aplicar`, `efectivo_para_pagos`, `cuenta_bancaria`, `caja_chica`, `anticipos_por_liquidar`,
+  `pagos_por_aplicar`, `saldos_por_regularizar`, `efectivo_para_pagos`, `cuenta_bancaria`, `caja_chica`, `anticipos_por_liquidar`,
   `cuentas_por_cobrar_a_empleados`, `activo_fijo`, `depreciacion_acumulada` y `construcciones_en_curso`. Desmarcarla es
   editar la cuenta (el aviso al desmarcar es de la pantalla, CT-2c).
 - API: `GET /contabilidad/enlaces` (los roles de los módulos activos con sus enlaces), `GET …/llaves/:rol`, `PUT …/:rol`

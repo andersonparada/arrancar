@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { revisarEnlacesRepetidos } from './enlaces-de-excel.js';
 import { EnlaceInvalido } from '../../../dominio/errores.js';
 import { armarEscenarioDeEnlaces, operador } from '../../../pruebas/escenario-de-enlaces.soporte.js';
 
@@ -65,5 +66,32 @@ describe('importar una fila de Excel', () => {
     expect(general.llave).toBeNull();
     expect(error).toBeInstanceOf(EnlaceInvalido);
     expect((error as EnlaceInvalido).detalles).toEqual({ campo: 'llaveNombre' });
+  });
+});
+
+describe('revisar el lote de un Excel', () => {
+  const fila = (numero: number, rol: 'proveedores' | 'iva_credito_fiscal', llaveNombre: string | null) => ({
+    numero,
+    solicitud: { rol, llaveNombre, cuentaId: `cuenta-${numero}` },
+  });
+
+  it('rechaza la segunda fila con el mismo rol y llave, aunque cambie la cuenta o el uso de mayúsculas', () => {
+    const errores = revisarEnlacesRepetidos([
+      fila(2, 'proveedores', 'Insumos'),
+      fila(3, 'iva_credito_fiscal', null),
+      fila(4, 'proveedores', ' insumos '),
+    ]);
+
+    expect(errores).toEqual([expect.objectContaining({ fila: 4, columna: 'Llave' })]);
+  });
+
+  it('acepta el mismo rol con llaves distintas, o una con llave y otra sin ella', () => {
+    expect(
+      revisarEnlacesRepetidos([
+        fila(2, 'proveedores', 'Insumos'),
+        fila(3, 'proveedores', 'Otros'),
+        fila(4, 'proveedores', null),
+      ]),
+    ).toEqual([]);
   });
 });

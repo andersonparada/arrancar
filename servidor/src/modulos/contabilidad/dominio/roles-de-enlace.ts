@@ -48,7 +48,7 @@ export const DEFINICIONES_DE_ROLES: Readonly<Record<RolDeCuenta, DefinicionDeRol
   documentos_por_asignar: rol('Documentos por asignar', [COMPRAS, CAJA, LIQUIDAR], { auxiliar: true }),
   puente_compras_de_activos: rol('Puente de compras de activos', [COMPRAS, ACTIVOS]),
   pagos_por_aplicar: rol('Pagos por aplicar', [BANCOS, PAGAR], { auxiliar: true }),
-  saldos_por_regularizar: rol('Saldos por regularizar', [BANCOS, PAGAR]),
+  saldos_por_regularizar: rol('Saldos por regularizar', [BANCOS, PAGAR], { auxiliar: true }),
   efectivo_para_pagos: rol('Efectivo para pagos', [BANCOS, PAGAR], { auxiliar: true }),
   cuenta_bancaria: rol('Cuenta bancaria', [BANCOS, PAGAR, LIQUIDAR, CAJA], {
     llave: 'Cuenta bancaria',

@@ -87,6 +87,27 @@ describe('Enlace', () => {
 });
 
 describe('catálogo de roles', () => {
+  it('los roles de auxiliar son los de §5.3, con saldos_por_regularizar (su transitoria cuadra con Cuentas por pagar)', () => {
+    const auxiliares = ROLES_DE_CUENTA.filter((rol) => DEFINICIONES_DE_ROLES[rol].esDeAuxiliar);
+
+    expect(auxiliares.sort()).toEqual(
+      [
+        'proveedores',
+        'documentos_por_asignar',
+        'pagos_por_aplicar',
+        'saldos_por_regularizar',
+        'efectivo_para_pagos',
+        'cuenta_bancaria',
+        'caja_chica',
+        'anticipos_por_liquidar',
+        'cuentas_por_cobrar_a_empleados',
+        'activo_fijo',
+        'depreciacion_acumulada',
+        'construcciones_en_curso',
+      ].sort(),
+    );
+  });
+
   it('describe todos los roles del contrato, cada uno con al menos un módulo y un nombre', () => {
     for (const rol of ROLES_DE_CUENTA) {
       const definicion = DEFINICIONES_DE_ROLES[rol];

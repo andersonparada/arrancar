@@ -205,6 +205,17 @@ describe('enlaces contables: Excel y permisos', () => {
     expect(resultado.cuerpo.errores).toEqual([expect.objectContaining({ fila: 2, columna: 'Llave' })]);
   });
 
+  it('un rol y llave repetidos en el archivo se rechazan en la segunda fila, aunque cambie la cuenta', async () => {
+    const contenido = await libroConFilas(cuenta.propietario, RUTA, [
+      { Rol: 'IVA crédito fiscal', Cuenta: '1.1' },
+      { Rol: 'IVA crédito fiscal', Cuenta: '1.3' },
+    ]);
+
+    const ensayo = await importarExcel(cuenta.propietario, RUTA, { contenido, ensayo: true });
+
+    expect(ensayo.cuerpo.errores).toEqual([expect.objectContaining({ fila: 3, columna: 'Llave' })]);
+  });
+
   it('cada acción exige su permiso', async () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Solo',

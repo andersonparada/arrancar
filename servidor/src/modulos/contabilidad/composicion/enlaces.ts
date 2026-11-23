@@ -1,7 +1,11 @@
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { crearIntercambio } from '../../core/intercambio/contexto.js';
 import { validadorDeZod } from '../../core/intercambio/http/rutas-de-intercambio.js';
-import { GuardarEnlaceDeExcel, ListarEnlacesParaExcel } from '../aplicacion/casos-uso/enlaces/enlaces-de-excel.js';
+import {
+  GuardarEnlaceDeExcel,
+  ListarEnlacesParaExcel,
+  revisarEnlacesRepetidos,
+} from '../aplicacion/casos-uso/enlaces/enlaces-de-excel.js';
 import { GuardarEnlace } from '../aplicacion/casos-uso/enlaces/guardar-enlace.js';
 import { ListarEnlaces } from '../aplicacion/casos-uso/enlaces/listar-enlaces.js';
 import { ListarLlavesDeEnlace } from '../aplicacion/casos-uso/enlaces/listar-llaves-de-enlace.js';
@@ -45,6 +49,7 @@ function intercambioDeEnlaces(casos: ReturnType<typeof casosDeUso>, dependencias
     nombre: 'Enlaces contables',
     columnas: columnasDeEnlaces(new ConsultasCuentasDrizzle()),
     validar: validadorDeZod(esquemaEnlaceDeExcel),
+    revisarLote: revisarEnlacesRepetidos,
     listar: (operador) => exportar.ejecutar(operador),
     crear: (operador, solicitud) => importar.ejecutar(operador, solicitud),
   });

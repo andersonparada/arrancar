@@ -1,4 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { RolDeCuenta } from '../../../../core/contratos/contabilidad.contratos.js';
 import type { Cuenta } from '../../../dominio/cuenta.js';
@@ -6,7 +7,6 @@ import { Enlace, type DatosDeEnlace } from '../../../dominio/enlace.js';
 import { EnlaceInvalido } from '../../../dominio/errores.js';
 import { DEFINICIONES_DE_ROLES } from '../../../dominio/roles-de-enlace.js';
 import type { EnlaceDto, SolicitudDeEnlace } from '../../dto/enlace.dto.js';
-import { cuentaExistente } from '../cuentas/dependencias-de-cuentas.js';
 import type { DependenciasDeEnlaces } from './dependencias-de-enlaces.js';
 
 interface CambioDeEnlace {
@@ -27,7 +27,7 @@ export class GuardarEnlace {
   ejecutar(operador: Operador, { rol, solicitud }: CambioDeEnlace): Promise<EnlaceDto> {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      const cuenta = await cuentaExistente(this.dependencias.cuentas, solicitud.cuentaId);
+      const cuenta = await this.cuentaBloqueada(solicitud.cuentaId);
       const datos = { rol, cuenta, llave: await this.llaveDe(operador, rol, solicitud.llave) };
       const existente = await repositorio.buscarParaCambiar(rol, solicitud.llave);
       const id = existente
@@ -36,6 +36,16 @@ export class GuardarEnlace {
       await this.marcarCuentaDeControl(rol, cuenta);
       return consultas.obtener(id);
     });
+  }
+
+  /**
+   * La cuenta se lee con `for no key update`: quien la renombra o inactiva (`ActualizarCuenta`) espera a este enlace y
+   * ve su resultado, y este no reescribe la fila con una lectura vieja.
+   */
+  private async cuentaBloqueada(id: string): Promise<Cuenta> {
+    const cuenta = await this.dependencias.cuentas.buscarParaCambiar(Identificador.desde(id));
+    if (!cuenta) throw new RecursoNoEncontrado('La cuenta');
+    return cuenta;
   }
 
   private async crear(empresaId: Identificador<'Empresa'>, datos: DatosDeEnlace): Promise<string> {

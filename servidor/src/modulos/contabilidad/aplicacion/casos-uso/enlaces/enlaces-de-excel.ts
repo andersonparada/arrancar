@@ -2,6 +2,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import { normalizar } from '../../../../core/intercambio/aplicacion/columnas.js';
 import { EnlaceInvalido } from '../../../dominio/errores.js';
 import type { EnlaceDto, SolicitudDeEnlaceDeExcel } from '../../dto/enlace.dto.js';
+import type { ErrorDeImportacion } from '../../../../core/intercambio/aplicacion/lectura-de-filas.js';
 import type { DependenciasDeEnlaces } from './dependencias-de-enlaces.js';
 import type { GuardarEnlace } from './guardar-enlace.js';
 import type { ListarLlavesDeEnlace } from './listar-llaves-de-enlace.js';
@@ -37,4 +38,27 @@ export class GuardarEnlaceDeExcel {
     if (!elegida) throw new EnlaceInvalido(`«${nombre}» no está entre las llaves de este rol.`, 'llaveNombre');
     return elegida.llave;
   }
+}
+
+/**
+ * Revisa el lote entero: un mismo rol y llave dos veces en el archivo es un error de la segunda fila, porque
+ * decidiría en silencio en qué cuenta se contabiliza (gana la última). Sin estado entre solicitudes.
+ */
+export function revisarEnlacesRepetidos(
+  filas: { numero: number; solicitud: SolicitudDeEnlaceDeExcel }[],
+): ErrorDeImportacion[] {
+  const vistos = new Set<string>();
+  const errores: ErrorDeImportacion[] = [];
+  for (const { numero, solicitud } of filas) {
+    const par = `${solicitud.rol}|${normalizar(solicitud.llaveNombre ?? '')}`;
+    if (vistos.has(par)) {
+      errores.push({
+        fila: numero,
+        columna: 'Llave',
+        mensaje: 'Este rol y llave ya están en una fila anterior del archivo.',
+      });
+    }
+    vistos.add(par);
+  }
+  return errores;
 }

@@ -39,6 +39,11 @@ export interface DatosDelRecurso<Registro, Solicitud, Filtro = void> {
    */
   columnasSoloAlExportar?: Columna[];
   validar: Validador<Solicitud>;
+  /**
+   * Opcional: revisa todo el lote ya validado (por ejemplo, filas que se pisan entre sí). Devuelve los problemas por
+   * fila; sin estado entre solicitudes, solo mira las filas que recibe.
+   */
+  revisarLote?: (filas: { numero: number; solicitud: Solicitud }[]) => ErrorDeImportacion[];
   listar: (operador: Operador, filtro?: Filtro) => Promise<Registro[]>;
   crear: (operador: Operador, solicitud: Solicitud) => Promise<unknown>;
   /**
@@ -132,6 +137,7 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
    */
   private async importarEnTransaccion(operador: Operador, hoja: HojaLeida, ensayo: boolean) {
     const { listas, errores } = await this.prepararFilas(hoja);
+    errores.push(...(this.dependencias.revisarLote?.(listas) ?? []));
     const avisos: AvisoDeImportacion[] = [];
     for (const fila of listas) {
       const problema = await this.crearFila(operador, fila, avisos);
