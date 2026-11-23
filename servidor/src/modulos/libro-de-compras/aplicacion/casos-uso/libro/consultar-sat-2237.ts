@@ -5,7 +5,9 @@ import { formularioDelRegimen, type FormularioDelRegimen } from '../../../domini
 import { dtoDelSat2237, dtoSinSat2237, type Sat2237Dto, type Sat2237SinFormularioDto } from '../../dto/sat-2237.dto.js';
 import type { ConsultasDelLibro, IdentidadDeLaEmpresa } from '../../puertos/consultas-del-libro.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
-import { periodoDelLibro } from './consultar-libro.js';
+import { esFormularioConRemanente } from '../../../dominio/periodos/remanentes-de-retenciones.js';
+import { armarLibro, periodoDelLibro } from './consultar-libro.js';
+import { ventasDelFormulario, type DependenciasDeVentasDelFormulario } from './ventas-del-sat-2237.js';
 
 export interface DependenciasDelSat2237 {
   unidadDeTrabajo: UnidadDeTrabajo;
@@ -41,17 +43,35 @@ export async function armarSat2237(
     : { ...encabezado, datos: null, forma };
 }
 
-/** Los datos para llenar el SAT-2237 de un período; si el régimen no lo usa, dice cuál es su formulario. */
+export interface DependenciasDeConsultarSat2237 extends DependenciasDelSat2237, DependenciasDeVentasDelFormulario {}
+
+/**
+ * Los datos para llenar el SAT-2237 de un período; si el régimen no lo usa, dice cuál es su formulario. Trae la sección
+ * de ventas (cifras y remanente de retenciones) cuando algún módulo de ventas responde; en el SAT-2046, las constancias.
+ */
 export class ConsultarSat2237 {
-  constructor(private readonly dependencias: DependenciasDelSat2237) {}
+  constructor(private readonly dependencias: DependenciasDeConsultarSat2237) {}
 
   ejecutar(operador: Operador, periodo: string): Promise<Sat2237Dto | Sat2237SinFormularioDto> {
     return this.dependencias.unidadDeTrabajo.ejecutar(operador, async () => {
       const armado = await armarSat2237(this.dependencias, operador, periodoDelLibro(periodo));
       const { periodo: primerDia, empresa } = armado;
+      const ventas = await this.ventas(operador, armado);
       return armado.datos
-        ? dtoDelSat2237(armado.datos, { periodo: primerDia, empresa })
-        : dtoSinSat2237(armado.forma, { periodo: primerDia, empresa });
+        ? dtoDelSat2237(armado.datos, { periodo: primerDia, empresa, ...ventas })
+        : dtoSinSat2237(armado.forma, { periodo: primerDia, empresa, ...ventas });
+    });
+  }
+
+  private async ventas(operador: Operador, armado: Sat2237Armado) {
+    const formulario = armado.datos ? 'SAT-2237' : armado.forma.formulario;
+    const credito = armado.datos
+      ? (await armarLibro(this.dependencias, operador, armado.periodo)).libro.resumen.creditoFiscalDelPeriodo
+      : 0;
+    return ventasDelFormulario(this.dependencias, operador, {
+      periodo: armado.periodo,
+      formulario: esFormularioConRemanente(formulario) ? formulario : null,
+      creditoCentavos: credito,
     });
   }
 }

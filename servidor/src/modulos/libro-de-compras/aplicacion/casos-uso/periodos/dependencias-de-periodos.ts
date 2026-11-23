@@ -3,6 +3,10 @@ import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/p
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import type { FotoDelPeriodo } from '../../../dominio/periodos/foto-del-periodo.js';
+import {
+  calcularRemanentesDeRetenciones,
+  type FormularioConRemanente,
+} from '../../../dominio/periodos/remanentes-de-retenciones.js';
 import { huellaDelLibro } from '../libro/libro-para-imprimir.js';
 import { dtoDelLibro } from '../../dto/libro.dto.js';
 import type {
@@ -37,13 +41,32 @@ export function fotoDelLibro(armado: LibroArmado): FotoDelPeriodo {
   };
 }
 
-/** La foto del período con el libro de hoy y las cifras de ventas que responden los módulos de ventas. */
+export interface PedidoDeFoto {
+  /** `AAAA-MM-01`. */
+  periodo: string;
+  /** Con el formulario y el remanente anterior (centavos), la foto trae el remanente de retenciones. */
+  remanentes?: { formulario: FormularioConRemanente; anteriorCentavos: number } | undefined;
+}
+
+/**
+ * La foto del período con el libro de hoy, las cifras de ventas que responden los módulos de ventas y, si se pide, el
+ * remanente de retenciones (necesita el crédito del libro y el débito de ventas).
+ */
 export async function fotoDelPeriodoDeHoy(
   dependencias: DependenciasDePeriodos,
   operador: Operador,
-  periodo: string,
+  pedido: PedidoDeFoto,
 ): Promise<FotoDelPeriodo> {
-  const foto = fotoDelLibro(await armarLibro(dependencias, operador, periodo));
-  const ventas = await dependencias.cifrasDeVentas.delPeriodo(operador, periodo);
-  return ventas.length > 0 ? { ...foto, ventas } : foto;
+  const armado = await armarLibro(dependencias, operador, pedido.periodo);
+  const foto = fotoDelLibro(armado);
+  const ventas = await dependencias.cifrasDeVentas.delPeriodo(operador, pedido.periodo);
+  if (ventas.length === 0) return foto;
+  const remanentes = pedido.remanentes
+    ? calcularRemanentesDeRetenciones({
+        ...pedido.remanentes,
+        ventas,
+        creditoCentavos: armado.libro.resumen.creditoFiscalDelPeriodo,
+      })
+    : null;
+  return { ...foto, ventas, ...(remanentes ? { remanentes } : {}) };
 }

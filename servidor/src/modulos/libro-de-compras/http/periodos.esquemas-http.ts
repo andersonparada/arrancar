@@ -16,6 +16,11 @@ export const esquemaDeclaracion = z.object({
   formulario: z.enum(FORMULARIOS_DE_DECLARACION).optional(),
   numeroDeFormulario: z.string().trim().max(60, 'El número del formulario es muy largo.').optional(),
   fechaDePresentacion: z.iso.date().optional(),
+  remanenteDeRetencionesAnterior: z
+    .string()
+    .trim()
+    .regex(/^\d{1,12}(\.\d{1,2})?$/, 'Escriba el remanente en quetzales, por ejemplo 125.50.')
+    .optional(),
 });
 export type DeclaracionSolicitada = z.infer<typeof esquemaDeclaracion>;
 

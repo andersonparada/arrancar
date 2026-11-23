@@ -1,5 +1,6 @@
 import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { TipoDeLibro } from '../libro/tipo-de-libro.js';
+import type { RemanentesDeRetenciones } from './remanentes-de-retenciones.js';
 
 /**
  * Los totales del libro del período en el momento de declararlo. Los montos son texto con dos decimales; la huella es
@@ -14,6 +15,8 @@ export interface FotoDelPeriodo {
   resumen: Record<string, unknown>;
   /** Las cifras de ventas que respondieron los módulos de ventas (vacío o ausente si no hay ninguno activo). */
   ventas?: CifrasDeVentasEnLaFoto[];
+  /** El remanente de retenciones (SAT-2237) o de constancias (SAT-2046); ausente si no hay ventas que lo calculen. */
+  remanentes?: RemanentesDeRetenciones;
 }
 
 /** Una cifra de ventas tal como se guarda en la foto. */
@@ -67,9 +70,10 @@ function modulosEnComun(anterior: FotoDelPeriodo, actual: FotoDelPeriodo): Set<s
   return new Set((actual.ventas ?? []).map((v) => v.modulo).filter((modulo) => delAnterior.has(modulo)));
 }
 
-function cifrasDe(foto: FotoDelPeriodo, modulos: Set<string>): Map<string, string> {
+function cifrasDe(foto: FotoDelPeriodo, modulos: Set<string>, conRemanentes: boolean): Map<string, string> {
   const cifras = new Map<string, string>([['documentos', String(foto.documentos)]]);
   aplanar(foto.resumen, 'resumen', cifras);
+  if (conRemanentes) aplanar(foto.remanentes, 'remanentes', cifras);
   for (const { modulo, clave, cifras: deVentas } of foto.ventas ?? []) {
     if (!modulos.has(modulo)) continue;
     for (const cifra of deVentas) cifras.set(`${clave}[${modulo}].${cifra.clave}`, cifra.valor);
@@ -91,8 +95,9 @@ const cero = (referencia: string): string => (esMonto(referencia) ? '0.00' : '0'
  */
 export function diferenciaDeFotos(anterior: FotoDelPeriodo, actual: FotoDelPeriodo): DiferenciaDeFotos {
   const modulos = modulosEnComun(anterior, actual);
-  const antes = cifrasDe(anterior, modulos);
-  const ahora = cifrasDe(actual, modulos);
+  const conRemanentes = anterior.remanentes !== undefined && actual.remanentes !== undefined;
+  const antes = cifrasDe(anterior, modulos, conRemanentes);
+  const ahora = cifrasDe(actual, modulos, conRemanentes);
   const claves = [...new Set([...antes.keys(), ...ahora.keys()])].sort();
   const cambios: CambioDeLaFoto[] = [];
   for (const clave of claves) {

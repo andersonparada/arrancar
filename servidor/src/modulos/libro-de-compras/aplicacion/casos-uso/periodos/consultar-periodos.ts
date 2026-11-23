@@ -1,4 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import { diferenciaDeFotos } from '../../../dominio/periodos/foto-del-periodo.js';
 import {
   dtoDeDeclaracion,
@@ -64,7 +65,11 @@ export class ObtenerPeriodo {
 
   /** El libro de hoy contra la foto de la última declaración: «cambió después de declarar». */
   private async cambios(operador: Operador, ultima: DeclaracionGuardada): Promise<CambioDesdeLaDeclaracionDto> {
-    const actual = await fotoDelPeriodoDeHoy(this.dependencias, operador, ultima.periodo);
+    const previos = ultima.foto?.remanentes;
+    const remanentes = previos
+      ? { formulario: previos.formulario, anteriorCentavos: aCentavos(previos.remanenteAnterior) }
+      : undefined;
+    const actual = await fotoDelPeriodoDeHoy(this.dependencias, operador, { periodo: ultima.periodo, remanentes });
     return {
       contraLaSecuencia: ultima.secuencia,
       ...diferenciaDeFotos(ultima.foto!, actual),

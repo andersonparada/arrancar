@@ -65,7 +65,8 @@ describe('las cifras de ventas en la foto de la declaración', () => {
     respuesta = ventas('150.00', '4');
 
     const { cambioDesdeLaDeclaracion: cambio } = await detalleDe(propietario(), P);
-    expect(cambio.cambios).toEqual([
+    const deVentas = cambio.cambios.filter((c: { clave: string }) => c.clave.startsWith('ventas['));
+    expect(deVentas).toEqual([
       { clave: 'ventas[terceros].debito', anterior: '120.00', actual: '150.00', cambio: '30.00' },
       { clave: 'ventas[terceros].operaciones', anterior: '3', actual: '4', cambio: '1' },
     ]);

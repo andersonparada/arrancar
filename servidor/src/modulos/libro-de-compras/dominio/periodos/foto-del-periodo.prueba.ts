@@ -112,3 +112,29 @@ describe('diferencia de las cifras de ventas de la foto', () => {
     expect(diferenciaDeFotos(foto(ventas('10.00', '2')), foto(ventas('10.00', '2'))).cambios).toEqual([]);
   });
 });
+
+describe('diferencia del remanente de retenciones de la foto', () => {
+  const remanentes = (alSiguiente: string): Partial<FotoDelPeriodo> => ({
+    remanentes: {
+      formulario: 'SAT-2237',
+      retencionesDelPeriodo: '100.00',
+      remanenteAnterior: '0.00',
+      impuestoDelMes: '0.00',
+      impuestoAPagar: '0.00',
+      remanenteAlSiguiente: alSiguiente,
+    },
+  });
+
+  it('compara el remanente cuando las dos fotos lo traen', () => {
+    const { cambios } = diferenciaDeFotos(foto(remanentes('100.00')), foto(remanentes('70.00')));
+
+    expect(cambios).toEqual([
+      { clave: 'remanentes.remanenteAlSiguiente', anterior: '100.00', actual: '70.00', cambio: '-30.00' },
+    ]);
+  });
+
+  it('sin remanente en alguna de las dos no hay punto de comparación', () => {
+    expect(diferenciaDeFotos(foto(), foto(remanentes('70.00'))).cambios).toEqual([]);
+    expect(diferenciaDeFotos(foto(remanentes('70.00')), foto()).cambios).toEqual([]);
+  });
+});
