@@ -93,6 +93,7 @@ describe('catálogo de roles', () => {
     expect(auxiliares.sort()).toEqual(
       [
         'proveedores',
+        'retencion_por_pagar',
         'documentos_por_asignar',
         'pagos_por_aplicar',
         'saldos_por_regularizar',

@@ -25,6 +25,10 @@ export class EnlacesEnMemoria implements RepositorioEnlaces, ConsultasEnlaces {
     return [...this.registros.values()].find(coincide) ?? null;
   }
 
+  async buscarParaQuitar(id: EnlaceId): Promise<Enlace | null> {
+    return this.registros.get(id.valor) ?? null;
+  }
+
   async agregar(enlace: Enlace): Promise<void> {
     this.registros.set(enlace.id.valor, enlace);
     this.cuentas.conEnlaces.add(enlace.cuentaId.valor);

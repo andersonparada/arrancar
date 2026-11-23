@@ -23,6 +23,11 @@ export class RepositorioEnlacesDrizzle implements RepositorioEnlaces {
     return fila ? mapeadorDeEnlace.aEntidad(fila) : null;
   }
 
+  async buscarParaQuitar(id: EnlaceId): Promise<Enlace | null> {
+    const [fila] = await transaccionEnCurso().select().from(enlaces).where(eq(enlaces.id, id.valor)).for('update');
+    return fila ? mapeadorDeEnlace.aEntidad(fila) : null;
+  }
+
   async agregar(enlace: Enlace): Promise<void> {
     await transaccionEnCurso().insert(enlaces).values(mapeadorDeEnlace.aFila(enlace));
   }

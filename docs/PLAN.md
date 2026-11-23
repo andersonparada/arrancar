@@ -4410,6 +4410,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     respuestas); 369 en las carpetas tocadas, en verde. Nota del entorno: el puerto :5433 sigue respondiendo `ECONNRESET`
     al agente; las pruebas se corrieron en un contenedor propio con `SERVIDOR` de `nombres-de-bases.ts` apuntando a su
     puerto, cambio local que no se confirmó.
+- **2026-11-23 (CT-2, segunda ronda de correcciones)**:
+  - `QuitarEnlace` lee el enlace con `for update` por id (`buscarParaQuitar`): si otra transacción lo cambia o lo quita, espera
+    y audita lo que de verdad borra (antes podía dejar `anterior` viejo o un segundo `quitar` falso). Pruebas de dos
+    conexiones en `enlace-concurrente.prueba.ts` (cambio de cuenta contra quitar; dos quitar a la vez; ambas fallan sin el cambio).
+  - `retencion_por_pagar` es rol de auxiliar (§5.3 y prueba del conjunto): el dictamen del contador
+    (`dictamen-contabilidad-2026-11-18.md` §8: «Retenciones por pagar: mayor = constancias pendientes»; cuentas de control) y §4.4
+    (Cuentas por pagar responde las retenciones pendientes de saldo inicial) la ponen entre las cuentas que cuadran con un auxiliar.
+    Decisión del programador con ese dictamen ya vigente: no se pudo consultar de nuevo a `contador-guatemala` desde este paso.
+    **Pendiente para el contador:** si `iva_credito_fiscal` (cuadra con el libro) y los puentes
+    (`puente_compras_de_activos`, `puente_de_apertura`), que el §8 de su dictamen también cuadra, deben ser de control.
 - **2026-11-23 (CT-2, correcciones de la revisión)**:
   - `GuardarEnlace` lee la cuenta con `for no key update` (`buscarParaCambiar`): quien la renombra o inactiva espera y ya no
     se pierde su cambio ni queda un enlace a una cuenta inactiva. Prueba de dos conexiones en

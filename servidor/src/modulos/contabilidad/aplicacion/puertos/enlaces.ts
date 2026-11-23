@@ -8,6 +8,8 @@ export interface RepositorioEnlaces {
   buscar(id: EnlaceId): Promise<Enlace | null>;
   /** El enlace del rol con esa llave (nula = el del rol sin llave), bloqueado hasta el fin de la transacción. */
   buscarParaCambiar(rol: RolDeCuenta, llave: string | null): Promise<Enlace | null>;
+  /** El enlace por su id, bloqueado hasta el fin de la transacción: quien lo quita audita lo que de verdad borra. */
+  buscarParaQuitar(id: EnlaceId): Promise<Enlace | null>;
   agregar(enlace: Enlace): Promise<void>;
   guardar(enlace: Enlace): Promise<void>;
   eliminar(enlace: Enlace): Promise<void>;

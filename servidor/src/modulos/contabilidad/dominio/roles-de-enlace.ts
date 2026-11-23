@@ -43,7 +43,10 @@ export const DEFINICIONES_DE_ROLES: Readonly<Record<RolDeCuenta, DefinicionDeRol
   proveedores: rol('Proveedores', [COMPRAS, PAGAR], { llave: 'Categoría de proveedor', auxiliar: true }),
   iva_credito_fiscal: rol('IVA crédito fiscal', [COMPRAS]),
   iva_no_acreditable: rol('IVA no acreditable', [COMPRAS]),
-  retencion_por_pagar: rol('Retención por pagar', [COMPRAS, CAJA], { llave: 'Regla de retención' }),
+  retencion_por_pagar: rol('Retención por pagar', [COMPRAS, CAJA], {
+    llave: 'Regla de retención',
+    auxiliar: true,
+  }),
   gasto_por_concepto: rol('Gasto por concepto del libro', [COMPRAS], { llave: 'Concepto de gasto' }),
   documentos_por_asignar: rol('Documentos por asignar', [COMPRAS, CAJA, LIQUIDAR], { auxiliar: true }),
   puente_compras_de_activos: rol('Puente de compras de activos', [COMPRAS, ACTIVOS]),

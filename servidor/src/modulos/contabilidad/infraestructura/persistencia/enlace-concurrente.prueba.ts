@@ -15,11 +15,14 @@ import { enTransaccionSegura } from '../../../core/compartido/pruebas/en-transac
 import { cuentas as cuentasDeSuscriptor } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
+import { auditoria } from '../../../core/compartido/infraestructura/persistencia/auditoria.tablas.js';
 import { definicionesModulos } from '../../../indice.js';
+import { QuitarEnlace } from '../../aplicacion/casos-uso/enlaces/quitar-enlace.js';
 import { GuardarEnlace } from '../../aplicacion/casos-uso/enlaces/guardar-enlace.js';
 import { CuentaInactiva } from '../../dominio/errores.js';
 import { ConsultasEnlacesDrizzle } from './consultas-enlaces.drizzle.js';
 import { cuentas } from './cuentas.tablas.js';
+import { enlaces } from './enlaces.tablas.js';
 import { RepositorioCuentasDrizzle } from './repositorio-cuentas.drizzle.js';
 import { RepositorioEnlacesDrizzle } from './repositorio-enlaces.drizzle.js';
 
@@ -28,16 +31,17 @@ let cuentaId: string;
 
 const espera = (milisegundos: number) => new Promise((resolver) => setTimeout(resolver, milisegundos));
 
-const guardarEnlace = () =>
-  new GuardarEnlace({
-    unidadDeTrabajo: dependenciasCompartidas().unidadDeTrabajo,
-    auditoria: dependenciasCompartidas().auditoria,
-    repositorio: new RepositorioEnlacesDrizzle(),
-    consultas: new ConsultasEnlacesDrizzle(),
-    cuentas: new RepositorioCuentasDrizzle(),
-    llaves: { de: async () => [] },
-    modulosActivos: { de: async () => new Set<string>() },
-  });
+const dependencias = () => ({
+  unidadDeTrabajo: dependenciasCompartidas().unidadDeTrabajo,
+  auditoria: dependenciasCompartidas().auditoria,
+  repositorio: new RepositorioEnlacesDrizzle(),
+  consultas: new ConsultasEnlacesDrizzle(),
+  cuentas: new RepositorioCuentasDrizzle(),
+  llaves: { de: async () => [] },
+  modulosActivos: { de: async () => new Set<string>() },
+});
+
+const guardarEnlace = () => new GuardarEnlace(dependencias());
 
 beforeAll(async () => {
   await migrarModulos(configuracion.DATABASE_URL_PROPIETARIO!, definicionesModulos);
@@ -102,5 +106,80 @@ describe('GuardarEnlace con otra transacción sobre la misma cuenta', () => {
     await inactivacion;
 
     expect(await enlace).toBeInstanceOf(CuentaInactiva);
+  });
+});
+
+describe('QuitarEnlace con otra transacción sobre el mismo enlace', () => {
+  const nuevaCuenta = async (codigo: string): Promise<string> => {
+    const [fila] = await enTransaccionSegura(operador, (tx) =>
+      tx
+        .insert(cuentas)
+        .values({
+          empresaId: operador.empresaId,
+          codigo,
+          nombre: `Cuenta ${codigo}`,
+          nivel: 1,
+          naturaleza: 'deudora',
+          tipo: 'balance',
+          esDeDetalle: true,
+          rubro: 'efectivo',
+          claseDeFlujo: 'efectivo',
+        })
+        .returning(),
+    );
+    return fila!.id;
+  };
+
+  it('espera al cambio de cuenta y audita la cuenta que de verdad borra', async () => {
+    const [cuentaA, cuentaB] = [await nuevaCuenta('2'), await nuevaCuenta('3')];
+    const [enlace] = await enTransaccionSegura(operador, (tx) =>
+      tx
+        .insert(enlaces)
+        .values({ empresaId: operador.empresaId, rol: 'iva_credito_fiscal', cuentaId: cuentaA! })
+        .returning(),
+    );
+    let soltar!: () => void;
+    const puerta = new Promise<void>((resolver) => (soltar = resolver));
+    const cambio = enTransaccionSegura(operador, async (tx) => {
+      await tx.select().from(enlaces).where(eq(enlaces.id, enlace!.id)).for('update');
+      await tx.update(enlaces).set({ cuentaId: cuentaB! }).where(eq(enlaces.id, enlace!.id));
+      await puerta;
+    });
+    await espera(300);
+    let terminado = false;
+    const quitar = new QuitarEnlace(dependencias()).ejecutar(operador, enlace!.id).finally(() => (terminado = true));
+    await espera(500);
+    expect(terminado).toBe(false);
+    soltar();
+    await cambio;
+    await quitar;
+
+    const [entrada] = await enTransaccionSegura(operador, (tx) =>
+      tx.select().from(auditoria).where(eq(auditoria.registroId, enlace!.id)),
+    );
+    expect(entrada).toMatchObject({ accion: 'quitar', anterior: { cuentaId: cuentaB } });
+  });
+
+  it('dos quitar a la vez: el segundo no encuentra el enlace y no audita otro', async () => {
+    const cuenta = await nuevaCuenta('4');
+    const [enlace] = await enTransaccionSegura(operador, (tx) =>
+      tx
+        .insert(enlaces)
+        .values({ empresaId: operador.empresaId, rol: 'iva_no_acreditable', cuentaId: cuenta })
+        .returning(),
+    );
+    const quitar = () =>
+      new QuitarEnlace(dependencias()).ejecutar(operador, enlace!.id).then(
+        () => 'ok',
+        () => 'error',
+      );
+
+    const resultados = await Promise.all([quitar(), quitar()]);
+
+    expect(resultados.sort()).toEqual(['error', 'ok']);
+    const entradas = await enTransaccionSegura(operador, (tx) =>
+      tx.select().from(auditoria).where(eq(auditoria.registroId, enlace!.id)),
+    );
+    expect(entradas).toHaveLength(1);
   });
 });
