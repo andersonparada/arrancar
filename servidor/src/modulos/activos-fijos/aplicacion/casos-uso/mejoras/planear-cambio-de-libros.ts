@@ -41,7 +41,11 @@ export interface CambioPlaneado {
   desdePeriodo: string;
 }
 
-async function cargarEstado(dependencias: DependenciasDeCambioDeLibros, activoId: string): Promise<EstadoDeLosLibros> {
+/** Lo depreciado del activo hasta su último mes cerrado, con sus tramos vigentes. */
+export async function cargarEstado(
+  dependencias: DependenciasDeCambioDeLibros,
+  activoId: string,
+): Promise<EstadoDeLosLibros> {
   const { tramos, historial, cierres } = dependencias;
   const delHistorial = await historial.deActivo(activoId);
   return {

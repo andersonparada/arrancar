@@ -24,6 +24,7 @@ function aFicha(activo: Activo): ActivoFichaDto {
     departamentoNombre: null,
     traslados: [],
     tramos: [],
+    baja: null,
   };
 }
 

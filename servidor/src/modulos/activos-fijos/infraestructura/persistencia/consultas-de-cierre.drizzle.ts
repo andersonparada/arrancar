@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, isNull, lt, lte, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, gte, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { datosFiscalesDeEmpresa } from '../../../libro-de-compras/infraestructura/persistencia/datos-fiscales.tablas.js';
@@ -18,15 +18,17 @@ import { hallazgosDeActivos } from './hallazgos-de-activos.drizzle.js';
 import { mapeadorDeTramo } from './tramo.mapeador.js';
 import { tramos } from './tramos.tablas.js';
 
-/** Los activos del balance en uso y, si la regla lo pide, los que se dieron de baja en el mes. */
+/**
+ * Los activos del balance que se depreciaron en el mes: los que están en uso y los que se dieron de baja después de él
+ * (todavía estaban en uso). Con `conBajasDelMes` (primer mes `mes_siguiente`) también los dados de baja en el propio mes.
+ */
 function seDeprecianEn(periodo: string, conBajasDelMes: boolean): SQL {
   const enUso = eq(activos.estado, 'en_uso');
-  const bajaDelMes = and(
+  const bajaDespues = and(
     eq(activos.estado, 'dado_de_baja'),
-    gte(activos.fechaDeBaja, periodo),
-    lt(activos.fechaDeBaja, sumarMeses(periodo, 1)),
+    gte(activos.fechaDeBaja, conBajasDelMes ? periodo : sumarMeses(periodo, 1)),
   );
-  return and(eq(activos.tipoDeRegistro, 'activo'), conBajasDelMes ? or(enUso, bajaDelMes) : enUso)!;
+  return and(eq(activos.tipoDeRegistro, 'activo'), or(enUso, bajaDespues))!;
 }
 
 /** Los tramos vigentes que ya empezaron, agrupados por activo. */

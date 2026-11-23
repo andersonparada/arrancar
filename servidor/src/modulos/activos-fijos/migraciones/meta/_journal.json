@@ -64,6 +64,13 @@
       "when": 1795472505427,
       "tag": "0008_af8_boletas_firmadas",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795476922606,
+      "tag": "0009_af9_bajas",
+      "breakpoints": true
     }
   ]
 }
