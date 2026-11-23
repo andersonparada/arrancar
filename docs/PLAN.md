@@ -4348,3 +4348,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+- **2026-11-23 — VC-0b y VC-0b-c: Bancos listo para Cuentas por cobrar.** Migración `0039_cobros_a_clientes` (como la
+  `0037`: por nombre normalizado, alinea, reactiva, inserta y es repetible) con los conceptos de sistema `cobro_a_cliente`,
+  `cobro_a_cliente_de_activo`, `devolucion_a_cliente` y `cheque_rechazado` (este ya existía como sugerido y pasa a
+  sistema; conserva su bandera de cargo bancario). Nota marcada por módulo: `CONCEPTO_QUE_MARCA_PARA_MODULO`
+  (`pago_a_proveedor` → `cuentas-por-pagar`, `cobro_a_cliente` → `cuentas-por-cobrar`); `marcadaParaCuentasPorPagar`
+  pasa a `marcadaParaModulo: string | null` (servidor y cliente); los hechos del movimiento traen la clave del concepto en
+  vez de `conceptoEsDePago`; `RevisorDeCambios` lee el mapa; una nota de crédito suelta también puede estar marcada
+  (`desmarcar` y corregir respetan su tipo). Reservados de `cuentas-por-cobrar`: `cobro_a_cliente_de_activo` y
+  `devolucion_a_cliente`. **Decisión:** `cobro_a_cliente` no se elige a mano en una nota aunque Cuentas por cobrar esté
+  inactivo (como `pago_a_proveedor`): al ser la marca, la nota quedaría sin módulo activo que revise sus cambios; se pone
+  solo al marcarla. Cliente: etiqueta «Para Cuentas por cobrar», bloqueo por el módulo marcado inactivo, y la lista de
+  notas marcadas de la conciliación sigue siendo solo de Cuentas por pagar. La ventana de desmarcar ofrece
+  conceptos del tipo de la nota. Pendiente para CXC-3: el marcado de una nota de crédito (`marcar`).
