@@ -52,8 +52,8 @@ type Marcas = Pick<DteRecibidoDto, 'anteriorALaFechaDeInicio' | 'enPlazoDeCredit
  * una venta no es una compra con crédito fiscal posible: no se marca.
  */
 function marcas(dte: DteRecibido, fechaDeInicio: string | null): Marcas {
-  const { fechaEmision, motivoDeBloqueo } = dte.instantanea();
-  if (motivoDeBloqueo === 'factura_especial_de_venta') {
+  const { fechaEmision, tipoDte } = dte.instantanea();
+  if (tipoDte === 'FESP') {
     return { anteriorALaFechaDeInicio: false, enPlazoDeCredito: false };
   }
   return {

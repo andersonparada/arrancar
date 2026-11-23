@@ -53,14 +53,13 @@ function claveDeLaFilaConDocumento(
 }
 
 /** Una fila vigente que Arrancar no tiene; una anulada o una factura especial (es una venta) no son un faltante. */
-const esFaltante = (fila: FilaConciliable): boolean =>
-  fila.estadoSat !== 'anulado' && fila.motivoDeBloqueo !== 'factura_especial_de_venta';
+const esFaltante = (fila: FilaConciliable): boolean => fila.estadoSat !== 'anulado' && fila.tipoDte !== 'FESP';
 
 /** Una compra (no una venta ni una anulada que nadie registró) emitida antes de la fecha de inicio. */
 function esDeUnaCompraAnterior(fila: FilaConciliable, fechaDeInicio: string | null): boolean {
   return (
     esAnteriorALaFechaDeInicio(fila.fechaEmision, fechaDeInicio) &&
-    fila.motivoDeBloqueo !== 'factura_especial_de_venta' &&
+    fila.tipoDte !== 'FESP' &&
     (fila.estado === 'descartado' || fila.estadoSat !== 'anulado')
   );
 }

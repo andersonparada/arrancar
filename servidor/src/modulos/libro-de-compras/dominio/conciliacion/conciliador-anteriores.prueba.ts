@@ -109,4 +109,20 @@ describe('conciliar con fecha de inicio', () => {
     expect(resultado.anterioresALaFechaDeInicio).toHaveLength(0);
     expect(resultado.enLaSatYNoEnArrancar).toHaveLength(0);
   });
+
+  it('una factura especial descartada no sale como compra anterior y se queda en descartado', () => {
+    const fesp = fila({ tipoDte: 'FESP', estado: 'descartado', motivoDeDescarte: 'no_aplica' });
+    const resultado = conciliar(entrada([fesp], '2026-04-01'));
+
+    expect(resultado.anterioresALaFechaDeInicio).toHaveLength(0);
+    expect(resultado.descartado).toHaveLength(1);
+  });
+
+  it('una factura especial bloqueada por otra empresa tampoco sale como compra anterior ni faltante', () => {
+    const fesp = fila({ tipoDte: 'FESP', estado: 'bloqueado', motivoDeBloqueo: 'registrado_en_otra_empresa' });
+    const resultado = conciliar(entrada([fesp], '2026-04-01'));
+
+    expect(resultado.anterioresALaFechaDeInicio).toHaveLength(0);
+    expect(resultado.enLaSatYNoEnArrancar).toHaveLength(0);
+  });
 });

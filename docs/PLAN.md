@@ -4364,3 +4364,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   cifras de ventas de un módulo solo si las dos fotos traen respuesta de ese módulo; sin respuesta no hay punto de
   comparación (antes se tomaba como cero y desactivar Libro de ventas inventaba «cambió después de declarar»).
   Pendiente: informar aparte en la pantalla que un módulo de ventas no tiene punto de comparación.
+- **2026-11-23 — VC-0c1, segunda corrección de revisión.** La exclusión de la factura especial (FESP) en la conciliación
+  y en las marcas de la bandeja se decide por `tipoDte === 'FESP'` y no por el motivo de bloqueo: descartar limpia el
+  motivo y un bloqueo previo `registrado_en_otra_empresa` tampoco lo tenía, y así una venta salía como compra con crédito
+  posible. Una FESP descartada sigue en el grupo `descartado` para poder restaurarla. Con pruebas de ambos casos.

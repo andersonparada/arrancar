@@ -41,4 +41,13 @@ describe('marcas de anterioridad en la bandeja', () => {
     expect(dto.enPlazoDeCredito).toBe(false);
     expect(dto.anteriorALaFechaDeInicio).toBe(false);
   });
+
+  it('una factura especial con otro motivo de bloqueo tampoco se marca', () => {
+    const fila = filaDe({});
+    fila.bloquear('registrado_en_otra_empresa');
+    const dto = dtoDeDteRecibido(fila, null, '2026-04-01');
+
+    expect(dto.enPlazoDeCredito).toBe(false);
+    expect(dto.anteriorALaFechaDeInicio).toBe(false);
+  });
 });
