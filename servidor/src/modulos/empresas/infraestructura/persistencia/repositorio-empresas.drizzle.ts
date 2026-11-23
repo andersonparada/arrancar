@@ -12,11 +12,13 @@ import { mapeadorDeEmpresa } from './empresa.mapeador.js';
  * `security definer`.
  */
 export class RepositorioEmpresasDrizzle implements RepositorioEmpresas {
+  /** Bloquea la fila hasta el final de la transacción: quien la edita decide sobre datos que nadie más cambia a la vez. */
   async buscarEnCuenta(id: EmpresaId, cuentaId: CuentaId): Promise<Empresa | null> {
     const [fila] = await transaccionEnCurso()
       .select()
       .from(empresas)
-      .where(and(eq(empresas.id, id.valor), eq(empresas.cuentaId, cuentaId.valor)));
+      .where(and(eq(empresas.id, id.valor), eq(empresas.cuentaId, cuentaId.valor)))
+      .for('update');
     return fila ? mapeadorDeEmpresa.aEntidad(fila) : null;
   }
 

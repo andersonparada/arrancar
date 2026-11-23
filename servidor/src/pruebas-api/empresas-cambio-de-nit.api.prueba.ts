@@ -11,6 +11,17 @@ const OTRO_NIT = '1000002-K';
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let editor: ClienteApi;
+let editorId: string;
+const empresasDelEditor: string[] = [];
+
+/** El editor solo entra a las empresas que se le dan: se le suma la que acaba de crearse. */
+async function darleAccesoAlEditor(empresaId: string): Promise<void> {
+  empresasDelEditor.push(empresaId);
+  const respuesta = await cuenta.propietario.patch(`/api/usuarios/${editorId}`, {
+    empresaIds: [cuenta.empresaId, ...empresasDelEditor],
+  });
+  expect(respuesta.estado).toBe(204);
+}
 
 async function rastros(empresaId: string) {
   const conexion = new pg.Client({ connectionString: configuracion.DATABASE_URL_PROPIETARIO });
@@ -25,6 +36,7 @@ async function rastros(empresaId: string) {
 
 async function empresaConNit(): Promise<string> {
   const creada = await cuenta.propietario.post('/api/empresas', { nombre: `Con NIT ${Math.random()}`, nit: NIT });
+  await darleAccesoAlEditor(creada.cuerpo.id);
   return creada.cuerpo.id as string;
 }
 
@@ -35,11 +47,14 @@ beforeAll(async () => {
     apellidos: 'Sinnit',
     permisos: ['empresas.ver', 'empresas.editar'],
   });
+  editorId = (await editor.get('/api/sesion')).cuerpo.usuario.id;
 });
 
 describe('cambiar el NIT de una empresa (A-10)', () => {
   it('agregar un NIT a una empresa sin NIT no pide motivo y deja rastro', async () => {
     const sinNit = await cuenta.propietario.post('/api/empresas', { nombre: 'Sin NIT todavía' });
+
+    await darleAccesoAlEditor(sinNit.cuerpo.id);
 
     const respuesta = await editor.put(`/api/empresas/${sinNit.cuerpo.id}`, { nombre: 'Sin NIT todavía', nit: NIT });
 
@@ -89,5 +104,23 @@ describe('cambiar el NIT de una empresa (A-10)', () => {
 
     expect(respuesta.estado).toBe(200);
     expect(await rastros(id)).toEqual([]);
+  });
+
+  it('dos ediciones a la vez no deshacen una corrección de NIT sin permiso ni rastro', async () => {
+    for (let vuelta = 0; vuelta < 5; vuelta++) {
+      const id = await empresaConNit();
+
+      await Promise.all([
+        editor.put(`/api/empresas/${id}`, { nombre: 'Otro nombre', nit: NIT }),
+        cuenta.propietario.put(`/api/empresas/${id}`, {
+          nombre: 'Con NIT',
+          nit: OTRO_NIT,
+          motivoDelNit: 'Se digitó mal',
+        }),
+      ]);
+
+      expect((await cuenta.propietario.get(`/api/empresas/${id}`)).cuerpo.nit).toBe('1000002K');
+      expect(await rastros(id)).toHaveLength(1);
+    }
   });
 });
