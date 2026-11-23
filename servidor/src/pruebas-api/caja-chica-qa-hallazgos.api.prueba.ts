@@ -64,6 +64,19 @@ describe('comprobantes de un vale provisional ya liquidado', () => {
     expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(422);
     expect(await v.ficha(fondo.id)).toMatchObject({ efectivoEsperado: '2650.00', pendienteDeReponer: '350.00' });
   });
+
+  it('eliminar en el libro la factura de un vale liquidado se rechaza y no toca el vale', async () => {
+    const { fondo, vale, documentoId } = await valeLiquidado(
+      'Caja del vale liquidado con factura eliminada en el libro',
+    );
+
+    const respuesta = await e.propietario().delete(`${RUTA_DOCUMENTOS}/${documentoId}`);
+
+    // Antes respondía 200: el efectivo esperado subía a 2950.00 y el vale quedaba sin su factura.
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(422);
+    expect(await valeEnBase(vale.id)).toMatchObject({ estado: 'liquidado', devuelto: '150.00' });
+    expect(await v.ficha(fondo.id)).toMatchObject({ efectivoEsperado: '2650.00', pendienteDeReponer: '350.00' });
+  });
 });
 
 describe('arqueo: el acta nombra a quien lo hizo (error abierto)', () => {

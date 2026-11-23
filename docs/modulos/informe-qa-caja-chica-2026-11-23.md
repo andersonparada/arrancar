@@ -65,8 +65,8 @@ decir faltan Q 70.00 o Q 350.00 que nadie justifica, y el efectivo esperado del 
 a 750.00): el próximo arqueo mostrará un faltante falso. Con la reposición anulada y el arqueo, el fondo cuadra por la ecuación pero
 no por el vale.
 
-Corrección: `AnuladorDeComprobantes` (lo usan «Anular vale» y el aviso del libro) rechaza con `comprobante_de_un_vale_no_se_anula` (422) el comprobante de un vale provisional, la ficha oculta «Anular vale» en esos gastos y las dos pruebas ya no llevan `it.fails`. Gravedad: media (descuadra dinero y no se ve; hay camino de recuperación anulando el vale, pero no se avisa). Prueba con `it.fails`:
-`servidor/src/pruebas-api/caja-chica-qa-hallazgos.api.prueba.ts`, dos casos. Sugerencia: la misma guardia de
+Corrección: `AnuladorDeComprobantes` (lo usan «Anular vale» y el aviso del libro) rechaza con `comprobante_de_un_vale_no_se_anula` (422) el comprobante de un vale provisional (también `EliminarPorAviso`, cuando el libro elimina el documento), la ficha oculta «Anular vale» en esos gastos y las dos pruebas ya no llevan `it.fails`. Gravedad: media (descuadra dinero y no se ve; no había camino de recuperación: un vale liquidado no se puede anular ni reabrir, y «Anular vale» solo acepta vales abiertos sin comprobantes). Prueba con `it.fails`:
+`servidor/src/pruebas-api/caja-chica-qa-hallazgos.api.prueba.ts`, tres casos. Pendiente de decisión con `contador-guatemala`: una factura de un vale liquidado que su emisor anula en la SAT queda vigente en el libro (el rechazo es permanente) y falta un camino, p. ej. reabrir o revertir la liquidación con auditoría. Sugerencia: la misma guardia de
 `devolver-a-la-bandeja.ts` (`valeProvisionalId !== null`) en `anular-comprobante.ts` y en `atender-avisos-del-libro.ts`, y esconder
 «Anular vale» en esos gastos.
 

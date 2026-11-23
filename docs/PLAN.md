@@ -4375,5 +4375,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   **Corrección posterior:** el error medio ya no existe: el anulador compartido rechaza (`comprobante_de_un_vale_no_se_anula`, 422) el comprobante
   de un vale provisional, tanto desde «Anular vale» como desde el aviso de anulación del libro; la ficha oculta el botón en esos gastos y las dos
   pruebas pasaron de `it.fails` a normales (el efectivo esperado tras liquidar es Q2,650.00, no Q2,800.00).
+  **Segunda corrección (revisión):** `EliminarPorAviso` también rechaza (`comprobante_de_un_vale_no_se_anula`) la factura de un vale liquidado cuando el
+  libro la elimina (antes respondía 200 y el efectivo esperado subía de Q2,650.00 a Q2,950.00); prueba nueva. Queda **pendiente de decidir con
+  `contador-guatemala`** el camino para una factura de un vale liquidado que el emisor anula en la SAT (hoy el libro responde 422 y la factura sigue
+  vigente): por ejemplo reabrir o revertir la liquidación del vale con auditoría. Se corrigió el informe, que decía que anular el vale era la salida.
   Entorno: el puerto 5433 del PostgreSQL de desarrollo no se alcanzaba desde el equipo (puente de Docker viejo con la misma red 172.19.0.0/16
   que `arrancar-dev_default`): la QA usó un PostgreSQL propio y desechable.
