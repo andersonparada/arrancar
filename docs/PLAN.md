@@ -4367,3 +4367,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   traslado con boleta y valida mes abierto. (2) Con `ubicacion`, un componente cuyo principal no va en el lote se rechaza con
   `componente_se_traslada_con_su_principal`. (3) La fecha de uso debe caer en un mes abierto (`MesCerrado`) para todos los
   activos, aunque el primer mes de depreciación sea el siguiente.
+- **2026-11-23 — AFI-3, segunda corrección de la revisión.** `UbicadorAlPonerEnUso` decide **por familia** (principal y sus
+  componentes): si alguno necesita boleta, todos los que cambian de lugar van en la misma boleta y ninguna fila de alta se
+  reescribe; solo si ninguno la necesita se mueve la alta. Así anular la boleta devuelve a la familia entera (§6.7). Pruebas
+  de anulación de ambos casos en `poner-en-uso-componentes.prueba.ts`.

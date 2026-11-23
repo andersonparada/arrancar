@@ -38,6 +38,11 @@ function comoUbicacion({ aBodega, ...resto }: DestinoDeTraslado): UbicacionDeAct
   return { ...resto, enBodega: aBodega };
 }
 
+/** La familia es el principal: él mismo, o el padre del componente. */
+function familiaDe(activo: Activo): string {
+  return activo.instantanea().activoPadreId ?? activo.id.valor;
+}
+
 function sinCambio(activo: Activo, destino: DestinoDeTraslado): boolean {
   const { localidadId, departamentoId, responsable, enBodega } = activo.instantanea();
   return (
@@ -65,10 +70,10 @@ export class UbicadorAlPonerEnUso {
     const destino = destinoDe(pedido.ubicacion);
     const eventos: EventoDominio[] = [];
     let boleta: BoletaDeTraslado | null = null;
-    const propios = new Set(pedido.activos.map((activo) => activo.id.valor));
-    for (const activo of await this.conComponentes(pedido.activos)) {
-      if (sinCambio(activo, destino)) continue;
-      if (await this.sinMovimientoPrevio(activo, propios)) {
+    const cambian = (await this.conComponentes(pedido.activos)).filter((activo) => !sinCambio(activo, destino));
+    const conBoleta = await this.familiasConBoleta(cambian, pedido);
+    for (const activo of cambian) {
+      if (!conBoleta.has(familiaDe(activo))) {
         await this.moverAlta(activo, destino);
         continue;
       }
@@ -76,6 +81,16 @@ export class UbicadorAlPonerEnUso {
       eventos.push(await this.trasladar(activo, { pedido, destino, boleta }));
     }
     return eventos;
+  }
+
+  /** Si un miembro de la familia necesita boleta, todos los que cambian de lugar van en ella (§6.7). */
+  private async familiasConBoleta(cambian: readonly Activo[], pedido: PedidoDeUbicar): Promise<Set<string>> {
+    const propios = new Set(pedido.activos.map((activo) => activo.id.valor));
+    const familias = new Set<string>();
+    for (const activo of cambian) {
+      if (!(await this.sinMovimientoPrevio(activo, propios))) familias.add(familiaDe(activo));
+    }
+    return familias;
   }
 
   private async conComponentes(activos: readonly Activo[]): Promise<Activo[]> {
