@@ -2,7 +2,7 @@ import { computed, type Ref } from 'vue';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiAccesosABodegas, type UsuarioParaAccesos } from '../../servicios/accesos-a-bodegas.api';
-import { apiBodegas, type LocalidadParaBodega } from '../../servicios/bodegas.api';
+import { apiUbicaciones, type LocalidadParaElegir } from '../../servicios/ubicaciones.api';
 import { opcionesDeLocalidades, opcionesDeResponsables } from './opciones-de-bodega';
 
 /**
@@ -14,8 +14,8 @@ export function usarReferenciasDeBodega(edicion: Ref<{ localidadId: string | nul
   const puedeElegirLocalidad = sesion.puede('empresas.localidades.ver');
   const puedeElegirResponsable = sesion.puede('inventarios.bodegas.asignar');
   const { datos: localidades } = usarCarga(
-    async () => (puedeElegirLocalidad ? apiBodegas.localidades() : []),
-    [] as LocalidadParaBodega[],
+    async () => (puedeElegirLocalidad ? apiUbicaciones.localidades() : []),
+    [] as LocalidadParaElegir[],
     'No se pudieron cargar las localidades.',
   );
   const { datos: usuarios } = usarCarga(

@@ -1,13 +1,13 @@
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { UsuarioParaAccesos } from '../../servicios/accesos-a-bodegas.api';
-import type { LocalidadParaBodega } from '../../servicios/bodegas.api';
+import type { LocalidadParaElegir } from '../../servicios/ubicaciones.api';
 import { nombreDeUsuario } from './edicion-de-accesos';
 
 const SIN_ELEGIR: OpcionDeRegistro = { valor: null, texto: 'Sin elegir' };
 const porTexto = (a: OpcionDeRegistro, b: OpcionDeRegistro) => a.texto.localeCompare(b.texto, 'es');
 
 /** Las localidades activas por nombre; la que ya tiene la bodega se conserva aunque esté inactiva. */
-export function opcionesDeLocalidades(localidades: LocalidadParaBodega[], actualId: string | null): OpcionDeRegistro[] {
+export function opcionesDeLocalidades(localidades: LocalidadParaElegir[], actualId: string | null): OpcionDeRegistro[] {
   const opciones = localidades
     .filter((localidad) => localidad.activo || localidad.id === actualId)
     .map((localidad) => ({

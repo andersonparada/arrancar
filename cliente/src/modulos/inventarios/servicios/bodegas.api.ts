@@ -16,14 +16,6 @@ export interface Bodega {
 
 export type DatosBodega = Omit<Bodega, 'id' | 'localidadNombre'>;
 
-/** Una localidad para elegirla en la bodega (la lista de Empresas, que filtra por lo que el usuario ve). */
-export interface LocalidadParaBodega {
-  id: string;
-  codigo: string;
-  nombre: string;
-  activo: boolean;
-}
-
 const RUTA = '/inventarios/bodegas';
 
 export class ApiBodegas {
@@ -53,10 +45,6 @@ export class ApiBodegas {
   /** Falla con 409 si la bodega ya tiene documentos; en ese caso se inactiva. */
   eliminar(id: string) {
     return this.http.eliminar(`${RUTA}/${id}`);
-  }
-
-  localidades() {
-    return this.http.obtener<LocalidadParaBodega[]>('/empresas/localidades');
   }
 }
 

@@ -27,5 +27,25 @@ export const VENTANAS_INVENTARIOS = {
     nuevo: 'Nueva bodega',
     editar: 'Editar bodega',
   },
+  existencias: {
+    titulo: 'Existencias',
+    descripcion: 'Lo que hay de cada artículo, por bodega.',
+  },
+  movimientos: {
+    titulo: 'Movimientos',
+    descripcion: 'Entradas, salidas, recepciones y devoluciones del inventario.',
+  },
+  entrada: {
+    titulo: 'Nueva entrada',
+    descripcion: 'Mercadería que entra sin pasar por una compra: producción propia, donación o aporte.',
+  },
+  salida: {
+    titulo: 'Nueva salida',
+    descripcion: 'Mercadería que sale de una bodega para consumirse como gasto.',
+  },
+  politicaDeCosteo: {
+    titulo: 'Política de costeo',
+    descripcion: 'Cómo se calcula el costo de lo que sale del inventario.',
+  },
   // generador: ventanas
 } as const;
