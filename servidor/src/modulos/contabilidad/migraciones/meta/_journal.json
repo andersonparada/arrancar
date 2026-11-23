@@ -22,6 +22,20 @@
       "when": 1795472571518,
       "tag": "0002_bloqueo_del_padre_en_hoja_de_detalle",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795474888240,
+      "tag": "0003_ct2_enlaces",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795474897118,
+      "tag": "0004_ct2_auditoria_permanente_de_enlaces",
+      "breakpoints": true
     }
   ]
 }

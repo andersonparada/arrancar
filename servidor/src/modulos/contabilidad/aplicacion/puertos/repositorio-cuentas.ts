@@ -13,6 +13,8 @@ export interface RepositorioCuentas {
   buscarPorCodigoParaCompartir(codigo: string): Promise<Cuenta | null>;
   /** Si la cuenta tiene cuentas inferiores. */
   tieneHijas(id: CuentaId): Promise<boolean>;
+  /** Si algún rol de sistema está enlazado a la cuenta. */
+  tieneEnlaces(id: CuentaId): Promise<boolean>;
   /** ¿Hay alguna cuenta en la empresa? La máscara de códigos no cambia desde la primera. */
   hayCuentas(): Promise<boolean>;
   agregar(cuenta: Cuenta): Promise<void>;

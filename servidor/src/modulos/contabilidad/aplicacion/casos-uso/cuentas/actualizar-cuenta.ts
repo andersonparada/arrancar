@@ -3,7 +3,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Cuenta } from '../../../dominio/cuenta.js';
-import { CuentaConHijas, CuentaInvalida } from '../../../dominio/errores.js';
+import { CuentaConEnlaces, CuentaConHijas, CuentaInvalida } from '../../../dominio/errores.js';
 import { datosDeCuenta } from '../../datos-de-cuenta.js';
 import type { CuentaDto, SolicitudDeCuenta } from '../../dto/cuenta.dto.js';
 import { ubicacionDeCuentaExistente, type DependenciasDeCuentas } from './dependencias-de-cuentas.js';
@@ -21,6 +21,7 @@ export class ActualizarCuenta {
    * @throws RecursoNoEncontrado si no existe o no es de la empresa.
    * @throws CuentaInvalida si cambia el código o el tipo de una cuenta que ya tiene cuentas inferiores.
    * @throws CuentaConHijas si pasa a ser de detalle teniendo cuentas inferiores.
+   * @throws CuentaConEnlaces si está enlazada a un rol y se inactiva o deja de ser de detalle.
    */
   ejecutar(operador: Operador, { cuentaId, solicitud }: CambioDeCuenta): Promise<CuentaDto> {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
@@ -29,6 +30,7 @@ export class ActualizarCuenta {
       if (!cuenta) throw new RecursoNoEncontrado('La cuenta');
       const anterior = await consultas.obtener(cuentaId);
       await this.exigirHijasCoherentes(cuenta, solicitud);
+      await this.exigirSinEnlaces(cuenta, solicitud);
       cuenta.cambiarDatos(datosDeCuenta(solicitud), await ubicacionDeCuentaExistente(this.dependencias, cuenta));
       await repositorio.guardar(cuenta);
       await auditarCambioDeEstado(this.dependencias.auditoria, {
@@ -40,6 +42,14 @@ export class ActualizarCuenta {
       });
       return consultas.obtener(cuentaId);
     });
+  }
+
+  /** Una cuenta enlazada a un rol de sistema sigue siendo de detalle y activa. */
+  private async exigirSinEnlaces(cuenta: Cuenta, solicitud: SolicitudDeCuenta): Promise<void> {
+    const pierdeElDetalle = cuenta.esDeDetalle && !solicitud.esDeDetalle;
+    const seInactiva = cuenta.activo && !solicitud.activo;
+    if (!pierdeElDetalle && !seInactiva) return;
+    if (await this.dependencias.repositorio.tieneEnlaces(cuenta.id)) throw new CuentaConEnlaces();
   }
 
   /** Con cuentas inferiores no se vuelve de detalle ni cambia de tipo (los hijos serían de otro). */

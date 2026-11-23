@@ -24,8 +24,10 @@ export class InicioInvalido extends DatoInvalido {
 export class CuentaNoEsDeDetalle extends ReglaDeNegocioInfringida {
   readonly codigo = 'cuenta_no_es_de_detalle';
 
-  constructor() {
-    super('La cuenta superior es de detalle: solo las cuentas de mayor pueden tener cuentas inferiores.');
+  constructor(
+    mensaje = 'La cuenta superior es de detalle: solo las cuentas de mayor pueden tener cuentas inferiores.',
+  ) {
+    super(mensaje);
   }
 }
 
@@ -62,5 +64,33 @@ export class CargaInicialAbierta extends ReglaDeNegocioInfringida {
 
   constructor() {
     super('Cierre la carga inicial de la empresa antes de iniciar la contabilidad desde una fecha posterior.');
+  }
+}
+
+/** Un enlace de rol no cumple sus reglas (la llave no corresponde al rol, o no existe). */
+export class EnlaceInvalido extends DatoInvalido {
+  readonly codigo = 'enlace_invalido';
+
+  /** `campo` dice a qué dato del formulario o columna del Excel se refiere. */
+  constructor(mensaje: string, campo?: string) {
+    super(mensaje, campo ? { campo } : undefined);
+  }
+}
+
+/** Una cuenta inactiva no recibe enlaces ni movimientos. */
+export class CuentaInactiva extends ReglaDeNegocioInfringida {
+  readonly codigo = 'cuenta_inactiva';
+
+  constructor() {
+    super('La cuenta está inactiva: reactívela o elija otra.');
+  }
+}
+
+/** La cuenta está enlazada a un rol de sistema: quítele el enlace antes de inactivarla o de volverla de mayor. */
+export class CuentaConEnlaces extends ReglaDeNegocioInfringida {
+  readonly codigo = 'cuenta_con_enlaces';
+
+  constructor() {
+    super('La cuenta está enlazada a un rol de sistema. Quite sus enlaces contables antes de inactivarla o cambiarla.');
   }
 }

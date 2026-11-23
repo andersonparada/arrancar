@@ -1,6 +1,7 @@
 import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo.js';
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeCuentas } from './composicion/cuentas.js';
+import { rutasDeEnlaces } from './composicion/enlaces.js';
 import { rutasDeInicio } from './composicion/inicio.js';
 // generador: importaciones
 
@@ -25,11 +26,19 @@ export const moduloContabilidad: DefinicionModulo = {
     { clave: 'contabilidad.cuentas.eliminar', descripcion: 'Eliminar cuentas contables que no se usan' },
     { clave: 'contabilidad.cuentas.importar', descripcion: 'Importar la nomenclatura desde Excel' },
     { clave: 'contabilidad.cuentas.exportar', descripcion: 'Exportar la nomenclatura a Excel' },
+    { clave: 'contabilidad.enlaces.ver', descripcion: 'Ver los enlaces contables (qué cuenta cumple cada rol)' },
+    {
+      clave: 'contabilidad.enlaces.editar',
+      descripcion: 'Enlazar los roles del sistema a cuentas contables, cambiar o quitar un enlace',
+    },
+    { clave: 'contabilidad.enlaces.importar', descripcion: 'Importar los enlaces contables desde Excel' },
+    { clave: 'contabilidad.enlaces.exportar', descripcion: 'Exportar los enlaces contables a Excel' },
     // generador: permisos
   ],
   rutas: rutasDelModulo([
     rutasDeInicio(),
     rutasDeCuentas(),
+    rutasDeEnlaces(),
     // generador: rutas
   ]),
 };

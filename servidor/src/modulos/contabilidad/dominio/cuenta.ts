@@ -61,6 +61,17 @@ export class Cuenta extends Entidad<CuentaId> {
     return this.propiedades.esDeDetalle;
   }
 
+  get activo(): boolean {
+    return this.propiedades.activo;
+  }
+
+  /** Las cuentas de los roles de auxiliar quedan de control; devuelve si hubo que marcarla. */
+  marcarDeControl(): boolean {
+    if (this.propiedades.esDeControl) return false;
+    this.propiedades = { ...this.propiedades, esDeControl: true };
+    return true;
+  }
+
   get codigo(): string {
     return this.propiedades.codigo;
   }

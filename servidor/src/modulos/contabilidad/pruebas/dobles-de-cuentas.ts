@@ -28,6 +28,13 @@ export class CuentasEnMemoria implements RepositorioCuentas, ConsultasCuentas {
     return [...this.registros.values()].some((cuenta) => cuenta.instantanea().padreId?.valor === id.valor);
   }
 
+  /** Los dobles de prueba de enlaces avisan aquí qué cuentas tienen enlaces. */
+  readonly conEnlaces = new Set<string>();
+
+  async tieneEnlaces(id: CuentaId): Promise<boolean> {
+    return this.conEnlaces.has(id.valor);
+  }
+
   async hayCuentas(): Promise<boolean> {
     return this.registros.size > 0;
   }

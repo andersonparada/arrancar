@@ -4,6 +4,7 @@ import type { RepositorioCuentas } from '../../aplicacion/puertos/repositorio-cu
 import type { Cuenta, CuentaId } from '../../dominio/cuenta.js';
 import { mapeadorDeCuenta } from './cuenta.mapeador.js';
 import { cuentas } from './cuentas.tablas.js';
+import { enlaces } from './enlaces.tablas.js';
 
 /** La tabla tiene seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
 export class RepositorioCuentasDrizzle implements RepositorioCuentas {
@@ -36,6 +37,14 @@ export class RepositorioCuentasDrizzle implements RepositorioCuentas {
       .select({ total: count() })
       .from(cuentas)
       .where(eq(cuentas.padreId, id.valor));
+    return (fila?.total ?? 0) > 0;
+  }
+
+  async tieneEnlaces(id: CuentaId): Promise<boolean> {
+    const [fila] = await transaccionEnCurso()
+      .select({ total: count() })
+      .from(enlaces)
+      .where(eq(enlaces.cuentaId, id.valor));
     return (fila?.total ?? 0) > 0;
   }
 
