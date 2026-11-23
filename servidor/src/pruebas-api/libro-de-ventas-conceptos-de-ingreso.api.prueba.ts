@@ -82,6 +82,29 @@ describe('conceptos de ingreso por API', () => {
     expect(cambiado.cuerpo.nombre).toBe('Registro cambiado');
   });
 
+  it('crear antes de abrir el catálogo deja el concepto de sistema, una sola vez', async () => {
+    const lista = (await cuenta.propietario.get(RUTA)).cuerpo as { claveDeSistema: string | null }[];
+
+    expect(lista.filter((c) => c.claveDeSistema === 'venta_de_activo_fijo')).toHaveLength(1);
+  });
+
+  it('un concepto manual que ya tiene el nombre del de sistema le cede el nombre', async () => {
+    const heredada = await darDeAltaCuenta(entorno, {
+      nombre: 'Heredada',
+      usuario: 'propietarioheredado',
+      modulos: ['terceros', 'libro-de-compras', 'libro-de-ventas'],
+    });
+    await comoPropietario(
+      `insert into libro_de_ventas.conceptos_de_ingreso (empresa_id, nombre, tipo) values ($1, 'venta de ACTIVO fijo', 'bien')`,
+      [heredada.empresaId],
+    );
+
+    const lista = (await heredada.propietario.get(RUTA)).cuerpo as { nombre: string; claveDeSistema: string | null }[];
+
+    expect(lista.map((c) => c.nombre).sort()).toEqual(['Venta de activo fijo', 'venta de ACTIVO fijo (manual)']);
+    expect(lista.filter((c) => c.claveDeSistema === 'venta_de_activo_fijo')).toHaveLength(1);
+  });
+
   it('el nombre no se repite en la empresa, sin mayúsculas ni acentos', async () => {
     await cuenta.propietario.post(RUTA, datos({ nombre: 'Venta de ganado' }));
 

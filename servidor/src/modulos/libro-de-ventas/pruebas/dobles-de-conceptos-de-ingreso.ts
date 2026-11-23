@@ -2,7 +2,7 @@ import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js
 import type { ConceptoDeIngresoDto } from '../aplicacion/dto/concepto-de-ingreso.dto.js';
 import type { ConsultasConceptosDeIngreso } from '../aplicacion/puertos/consultas-conceptos-de-ingreso.js';
 import type { RepositorioConceptosDeIngreso } from '../aplicacion/puertos/repositorio-conceptos-de-ingreso.js';
-import type { ConceptoDeIngreso, ConceptoDeIngresoId } from '../dominio/concepto-de-ingreso.js';
+import { ConceptoDeIngreso, type ConceptoDeIngresoId } from '../dominio/concepto-de-ingreso.js';
 
 function aDto(conceptoDeIngreso: ConceptoDeIngreso): ConceptoDeIngresoDto {
   const { id, empresaId, ...datos } = conceptoDeIngreso.instantanea();
@@ -38,6 +38,23 @@ export class ConceptosDeIngresoEnMemoria implements RepositorioConceptosDeIngres
 
   async hayAlguno(): Promise<boolean> {
     return this.registros.size > 0;
+  }
+
+  async asegurarDeSistema(conceptoDeSistema: ConceptoDeIngreso): Promise<void> {
+    const { claveDeSistema, nombre } = conceptoDeSistema.instantanea();
+    const todos = [...this.registros.values()];
+    if (todos.some((c) => c.instantanea().claveDeSistema === claveDeSistema)) return;
+    const normalizar = (texto: string) => texto.trim().toLowerCase();
+    for (const manual of todos) {
+      const { claveDeSistema: clave, nombre: suyo } = manual.instantanea();
+      if (clave === null && normalizar(suyo) === normalizar(nombre)) {
+        this.registros.set(
+          manual.id.valor,
+          ConceptoDeIngreso.reconstruir({ ...manual.instantanea(), nombre: `${suyo} (manual)` }),
+        );
+      }
+    }
+    this.registros.set(conceptoDeSistema.id.valor, conceptoDeSistema);
   }
 
   async sembrar(nuevos: readonly ConceptoDeIngreso[]): Promise<void> {

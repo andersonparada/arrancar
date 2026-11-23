@@ -10,5 +10,10 @@ export interface RepositorioConceptosDeIngreso {
   enUso(id: ConceptoDeIngresoId): Promise<boolean>;
   hayAlguno(): Promise<boolean>;
   /** Agrega los sugeridos; si una carrera ya los puso, no repite. */
+  /**
+   * Deja el concepto de sistema en la empresa si falta. Si ya hay uno manual con ese nombre normalizado, lo renombra
+   * («… (manual)») para ceder el nombre; si ya está el de sistema, no hace nada.
+   */
+  asegurarDeSistema(conceptoDeSistema: ConceptoDeIngreso): Promise<void>;
   sembrar(nuevos: readonly ConceptoDeIngreso[]): Promise<void>;
 }

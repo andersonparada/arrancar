@@ -147,12 +147,8 @@
           "tableFrom": "conceptos_de_ingreso",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -162,10 +158,7 @@
         "conceptos_de_ingreso_id_empresa_unico": {
           "name": "conceptos_de_ingreso_id_empresa_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "empresa_id"
-          ]
+          "columns": ["id", "empresa_id"]
         }
       },
       "policies": {
@@ -173,9 +166,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -297,12 +288,8 @@
           "tableFrom": "datos_fiscales_de_cliente",
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -311,14 +298,8 @@
           "tableFrom": "datos_fiscales_de_cliente",
           "tableTo": "clientes",
           "schemaTo": "terceros",
-          "columnsFrom": [
-            "cliente_id",
-            "cuenta_id"
-          ],
-          "columnsTo": [
-            "id",
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cliente_id", "cuenta_id"],
+          "columnsTo": ["id", "cuenta_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -330,9 +311,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }

@@ -6,7 +6,12 @@ import {
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
-import { ConceptoDeIngresoDeSistema, ConceptoDeIngresoInvalido } from '../../../dominio/concepto-de-ingreso.js';
+import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import {
+  ConceptoDeIngreso,
+  ConceptoDeIngresoDeSistema,
+  ConceptoDeIngresoInvalido,
+} from '../../../dominio/concepto-de-ingreso.js';
 import { ConceptoDeIngresoEnUso } from '../../../dominio/errores.js';
 import { ConceptosDeIngresoEnMemoria } from '../../../pruebas/dobles-de-conceptos-de-ingreso.js';
 import type { SolicitudDeConceptoDeIngreso } from '../../dto/concepto-de-ingreso.dto.js';
@@ -56,7 +61,7 @@ describe('conceptos de ingreso', () => {
   it('registra un concepto de ingreso y aparece en la lista', async () => {
     const creado = await casos.crear.ejecutar(operador, solicitud());
 
-    expect(await casos.listar.ejecutar(operador)).toEqual([creado]);
+    expect(await casos.listar.ejecutar(operador)).toContainEqual(creado);
   });
 
   it('la primera vez que se lista una empresa vacía se le siembran los cuatro conceptos, y no se repiten', async () => {
@@ -76,7 +81,34 @@ describe('conceptos de ingreso', () => {
   it('una empresa que ya tiene conceptos no recibe la semilla', async () => {
     await casos.crear.ejecutar(operador, solicitud({ nombre: 'Venta de ganado' }));
 
-    expect((await casos.listar.ejecutar(operador)).map((c) => c.nombre)).toEqual(['Venta de ganado']);
+    expect((await casos.listar.ejecutar(operador)).map((c) => c.nombre)).toEqual([
+      'Venta de activo fijo',
+      'Venta de ganado',
+    ]);
+  });
+
+  it('crear antes de la primera lista deja igual el concepto de sistema, una sola vez', async () => {
+    await casos.crear.ejecutar(operador, solicitud({ nombre: 'Venta de ganado' }));
+    await casos.crear.ejecutar(operador, solicitud({ nombre: 'Venta de cosecha' }));
+
+    const lista = await casos.listar.ejecutar(operador);
+
+    expect(lista.filter((c) => c.claveDeSistema === 'venta_de_activo_fijo')).toHaveLength(1);
+    expect(lista).toHaveLength(3);
+  });
+
+  it('si ya había un concepto manual con el nombre del de sistema, lo renombra y crea el de sistema', async () => {
+    const manual = ConceptoDeIngreso.crear(Identificador.desde(operador.empresaId), {
+      nombre: 'venta de activo fijo',
+      tipo: 'bien',
+      activo: true,
+    });
+    await registros.agregar(manual);
+
+    const lista = await casos.listar.ejecutar(operador);
+
+    expect(lista.map((c) => c.nombre)).toEqual(['Venta de activo fijo', 'venta de activo fijo (manual)']);
+    expect(lista.filter((c) => c.claveDeSistema === 'venta_de_activo_fijo')).toHaveLength(1);
   });
 
   it('cambia sus datos', async () => {

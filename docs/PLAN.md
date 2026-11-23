@@ -4374,3 +4374,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   concepto revisa «líneas de documentos» recién en LV-2 (`enUso` devuelve falso mientras no exista la tabla); el cliente
   generado de conceptos de ingreso (lista y ventana) ya está; LV-1c le suma el eliminar y la sección «Datos fiscales
   (ventas)» de Clientes.
+- **2026-11-23 — LV-1: corrección de la semilla de conceptos de ingreso.** El concepto de sistema
+  `venta_de_activo_fijo` ya no depende de que alguien liste primero: `AsegurarConceptosDeSistema` lo deja en la empresa
+  al crear o importar (que no exigen `.ver`) y al listar con el catálogo ya sembrado. Si la empresa traía un concepto
+  manual con ese nombre normalizado, este cede el nombre y pasa a «… (manual)». La lista sugerida sigue sembrándose solo
+  con el catálogo vacío. Pruebas: casos de uso (crear antes de listar, renombrado) y API (crear antes de abrir; datos
+  heredados).

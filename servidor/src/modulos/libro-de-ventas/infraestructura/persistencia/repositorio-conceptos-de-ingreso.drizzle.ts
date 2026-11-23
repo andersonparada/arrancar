@@ -1,7 +1,8 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { RepositorioConceptosDeIngreso } from '../../aplicacion/puertos/repositorio-conceptos-de-ingreso.js';
 import type { ConceptoDeIngreso, ConceptoDeIngresoId } from '../../dominio/concepto-de-ingreso.js';
+import { nombreNormalizado } from '../../../core/base-datos/nombre-normalizado.js';
 import { mapeadorDeConceptoDeIngreso } from './concepto-de-ingreso.mapeador.js';
 import { conceptosDeIngreso } from './conceptos-de-ingreso.tablas.js';
 
@@ -44,5 +45,25 @@ export class RepositorioConceptosDeIngresoDrizzle implements RepositorioConcepto
     if (nuevos.length === 0) return;
     const filas = nuevos.map((concepto) => mapeadorDeConceptoDeIngreso.aFila(concepto));
     await transaccionEnCurso().insert(conceptosDeIngreso).values(filas).onConflictDoNothing();
+  }
+
+  async asegurarDeSistema(conceptoDeSistema: ConceptoDeIngreso): Promise<void> {
+    const { claveDeSistema, nombre } = conceptoDeSistema.instantanea();
+    const tx = transaccionEnCurso();
+    const [existente] = await tx
+      .select({ id: conceptosDeIngreso.id })
+      .from(conceptosDeIngreso)
+      .where(eq(conceptosDeIngreso.claveDeSistema, claveDeSistema!));
+    if (existente) return;
+    await tx
+      .update(conceptosDeIngreso)
+      .set({ nombre: sql`left(${conceptosDeIngreso.nombre}, 70) || ' (manual)'` })
+      .where(
+        and(
+          isNull(conceptosDeIngreso.claveDeSistema),
+          sql`${nombreNormalizado(conceptosDeIngreso.nombre)} = core.nombre_normalizado(${nombre})`,
+        ),
+      );
+    await this.sembrar([conceptoDeSistema]);
   }
 }

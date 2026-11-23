@@ -3,6 +3,7 @@ import { Identificador } from '../../../../core/compartido/dominio/identificador
 import { ConceptoDeIngreso } from '../../../dominio/concepto-de-ingreso.js';
 import { datosDeConceptoDeIngreso } from '../../datos-de-concepto-de-ingreso.js';
 import type { ConceptoDeIngresoDto, SolicitudDeConceptoDeIngreso } from '../../dto/concepto-de-ingreso.dto.js';
+import { AsegurarConceptosDeSistema } from './asegurar-conceptos-de-sistema.js';
 import type { DependenciasDeConceptosDeIngreso } from './dependencias-de-conceptos-de-ingreso.js';
 
 export class CrearConceptoDeIngreso {
@@ -19,6 +20,7 @@ export class CrearConceptoDeIngreso {
       datosDeConceptoDeIngreso(solicitud),
     );
     return unidadDeTrabajo.ejecutar(operador, async () => {
+      await new AsegurarConceptosDeSistema(this.dependencias).ejecutar(operador);
       await repositorio.agregar(conceptoDeIngreso);
       return consultas.obtener(conceptoDeIngreso.id.valor);
     });
