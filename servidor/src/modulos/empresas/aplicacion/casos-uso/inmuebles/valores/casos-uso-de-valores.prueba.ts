@@ -147,7 +147,7 @@ describe('eliminar un valor', () => {
     expect(await casos.listar.ejecutar(operador, inmuebleId)).toEqual([]);
     expect(auditoria.entradas).toEqual([
       expect.objectContaining({
-        recurso: 'empresas.valores_de_inmueble',
+        recurso: 'empresas.inmuebles',
         accion: 'eliminar',
         registroId: creado.id,
         anterior: creado,
