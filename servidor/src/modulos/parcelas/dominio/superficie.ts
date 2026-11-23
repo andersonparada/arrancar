@@ -111,15 +111,28 @@ function conDecimales(escalado: bigint, decimales: number): string {
   return `${digitos.slice(0, -decimales)}.${digitos.slice(-decimales)}`;
 }
 
+/** El destino de una conversión con un número de decimales propio. */
+export interface DestinoConDecimales extends UnidadConCuerda {
+  decimales: number;
+}
+
+/** Centésimas de m² en una unidad con los decimales que se pidan (el Excel lleva los cuatro que admite al importar). */
+export function deCentesimasDeM2ConDecimales(
+  centesimas: number,
+  destino: DestinoConDecimales,
+  factores: FactoresDeSuperficie,
+): string {
+  const porUnidad = metrosCuadradosPorUnidad(destino, factores);
+  const escala = 10n ** BigInt(destino.decimales) * 10n ** 16n;
+  return conDecimales(dividirRedondeando(BigInt(centesimas) * escala, porUnidad), destino.decimales);
+}
+
 /**
  * Convierte centésimas de m² a otra unidad, como texto con los decimales de esa unidad (para mostrar, nunca para
  * guardar).
  */
 export function deCentesimasDeM2(centesimas: number, destino: UnidadConCuerda, factores: FactoresDeSuperficie): string {
-  const decimales = decimalesDe(destino.unidad);
-  const porUnidad = metrosCuadradosPorUnidad(destino, factores);
-  const escalado = dividirRedondeando(BigInt(centesimas) * 10n ** BigInt(decimales) * 10n ** 16n, porUnidad);
-  return conDecimales(escalado, decimales);
+  return deCentesimasDeM2ConDecimales(centesimas, { ...destino, decimales: decimalesDe(destino.unidad) }, factores);
 }
 
 /** Centésimas de m² como texto con dos decimales: `45125564` → `"451255.64"` (es lo que se guarda en `numeric(14,2)`). */

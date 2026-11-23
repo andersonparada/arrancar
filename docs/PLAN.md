@@ -4399,3 +4399,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   medición con fecha futura se rechaza (`medicion_con_fecha_futura`): no hay proceso que active mediciones al llegar su fecha, y
   así la ficha y `obtener_parcela_en_fecha` ven las mismas cifras. Pruebas: dominio, casos de uso y
   `parcelas-limites-y-bloqueos.api.prueba.ts` (el bloqueo se prueba reteniendo la fila desde otra transacción).
+- **2026-11-23 — Parcelas PA-1: útil del Excel con cuatro decimales.** La útil exportada ya no usa los decimales de pantalla (la
+  cuerda muestra 2): se calcula con los cuatro que admite la importación, y si queda en cero o no se puede reimportar se usa la
+  cifra original, así una útil de 0.001 cuerdas ya no impide exportar todas las parcelas. Prueba nueva del caso de uso.

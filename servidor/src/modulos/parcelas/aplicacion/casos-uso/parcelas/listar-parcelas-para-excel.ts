@@ -1,25 +1,48 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import {
   aCentesimasDeM2,
-  deCentesimasDeM2,
+  deCentesimasDeM2ConDecimales,
   textoACentesimas,
   type FactoresDeSuperficie,
+  type UnidadConCuerda,
 } from '../../../dominio/superficie.js';
+import { SuperficieInvalida } from '../../../dominio/errores-de-parcela.js';
 import type { MedicionDto } from '../../dto/medicion.dto.js';
 import type { ParcelaDto } from '../../dto/parcela.dto.js';
 import { celdaDeInmuebles, type FilaDeParcelaEnExcel, type MedicionEnExcel } from '../../parcelas-en-excel.js';
 import type { DependenciasDeParcelas } from './dependencias-de-parcelas.js';
 
+/** Si la cifra se puede volver a importar y no pasa de la superficie total. */
+function seReimporta(
+  cifra: string,
+  destino: UnidadConCuerda,
+  tope: { totalM2: string; factores: FactoresDeSuperficie },
+) {
+  if (Number(cifra) === 0) return false;
+  try {
+    return aCentesimasDeM2(cifra, destino, tope.factores) <= textoACentesimas(tope.totalM2);
+  } catch (error) {
+    if (error instanceof SuperficieInvalida) return false;
+    throw error;
+  }
+}
+
 /**
- * La superficie útil en la unidad en que se escribió la total. Si es igual a la total se repite la cifra original, y
- * si el redondeo la hiciera pasar de la total se deja igual a ella: así el archivo siempre se puede volver a importar.
+ * La superficie útil en la unidad en que se escribió la total, con los cuatro decimales que admite la importación
+ * (no los de pantalla). Si es igual a la total se repite la cifra original, y si el redondeo la dejara en cero o
+ * por encima de la total se usa la cifra original: así el archivo siempre se puede volver a importar.
  */
 function utilEnLaUnidadOriginal(medicion: MedicionDto, factores: FactoresDeSuperficie): string {
   if (medicion.superficieUtilM2 === medicion.superficieTotalM2) return medicion.cantidadOriginal;
   const destino = { unidad: medicion.unidadOriginal, varasPorLadoDeCuerda: medicion.varasPorLadoDeCuerda };
-  const util = deCentesimasDeM2(textoACentesimas(medicion.superficieUtilM2), destino, factores);
-  const pasaDeLaTotal = aCentesimasDeM2(util, destino, factores) > textoACentesimas(medicion.superficieTotalM2);
-  return pasaDeLaTotal ? medicion.cantidadOriginal : util;
+  const util = deCentesimasDeM2ConDecimales(
+    textoACentesimas(medicion.superficieUtilM2),
+    { ...destino, decimales: 4 },
+    factores,
+  );
+  return seReimporta(util, destino, { totalM2: medicion.superficieTotalM2, factores })
+    ? util
+    : medicion.cantidadOriginal;
 }
 
 /** La medición vigente como la lleva el Excel: la cifra original, su unidad, las varas de la cuerda y la útil. */
