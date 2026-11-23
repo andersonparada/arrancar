@@ -214,8 +214,9 @@ reversa en noviembre). Para eso cada fila necesita su **fecha contable de anulac
 **Lo que no se puede reconstruir** (limitación, con leyenda en el reporte): las aplicaciones de notas **quitadas** o
 borradas al anular una contraseña, y las líneas cambiadas al **reaplicar** un pago, se ven como están hoy. Eso solo
 mueve el saldo **entre documentos del mismo proveedor** (antigüedad y saldos a favor), **nunca** el saldo neto del
-proveedor ni el total. Tampoco un documento **eliminado** (solo los no autorizados, que no estaban provisionados) ni una
-**desautorización** (el reporte usa el estado de autorización de hoy). Leyenda: «Las aplicaciones de notas y los pagos
+proveedor ni el total. Tampoco un documento **eliminado** (un documento eliminado **sí** estaba provisionado; eliminarlo
+cancela su partida y solo se puede con el período contable abierto, de modo que un corte de un período cerrado no cambia;
+corrección de CT-0f, dictamen §0.4) ni una **desautorización** (el reporte usa el estado de autorización de hoy). Leyenda: «Las aplicaciones de notas y los pagos
 reaplicados se muestran como están hoy; el saldo neto de cada proveedor no depende de eso.»
 
 Descartada la alternativa A (estado de hoy, sin columnas nuevas). Pendiente para más adelante (dictamen 3, fuera de

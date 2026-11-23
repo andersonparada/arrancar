@@ -27,6 +27,10 @@ export class ReabrirCargaInicial {
 
       const motivoLimpio = carga.reabrir(motivo);
       await repositorioCargas.guardar(carga);
+      await this.dependencias.avisos.cargaPorReabrir(
+        { ...operador, empresaId },
+        { empresaId, fechaDeInicio: carga.instantanea().fechaDeInicio },
+      );
       await auditoria.registrar({
         recurso: 'empresas.cargas-iniciales',
         registroId: empresaId,

@@ -65,6 +65,10 @@ export class CerrarCargaInicial {
 
       carga.cerrar({ cerradaEn: new Date(), cerradaPor: operador.usuarioId });
       await repositorioCargas.guardar(carga);
+      await this.dependencias.avisos.cargaPorCerrar(
+        { ...operador, empresaId },
+        { empresaId, fechaDeInicio: carga.instantanea().fechaDeInicio },
+      );
       await auditoria.registrar({
         recurso: 'empresas.cargas-iniciales',
         registroId: empresaId,

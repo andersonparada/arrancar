@@ -82,6 +82,17 @@ declare module './mediador.contratos.js' {
      * igual o posterior a la nueva; el error deshace el cambio. El operador lleva `empresaId` = la empresa.
      */
     'empresas.fecha_de_inicio_por_cambiar': { empresaId: string; fechaDeInicio: string };
+    /**
+     * La carga inicial se va a cerrar (ya revisada, dentro de la transacción del cierre). Contabilidad arma las
+     * partidas de apertura de los módulos; un error del que escucha deshace el cierre. El operador lleva
+     * `empresaId` = la empresa de la carga.
+     */
+    'empresas.carga_por_cerrar': { empresaId: string; fechaDeInicio: string };
+    /**
+     * La carga inicial se va a reabrir (dentro de la transacción de la reapertura). Contabilidad cancela las partidas
+     * de apertura; si el período ya está cerrado, lanza su error y la reapertura se deshace.
+     */
+    'empresas.carga_por_reabrir': { empresaId: string; fechaDeInicio: string };
   }
 }
 
