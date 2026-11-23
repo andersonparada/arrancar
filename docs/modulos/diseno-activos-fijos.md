@@ -686,7 +686,7 @@ resultado = 'encontrado'`; en un activo de cantidad 1 no se pide). Índice `(inv
   y `0000_esquema`. Cada paso del servidor genera su migración con `bd:generar -w servidor -- activos-fijos <nombre>`:
   `0001_af1_clases` (con la auditoría permanente de §4.2), `0002_af2_activos_y_traslados`, `0003_af3_costos_y_descartes`,
   `0004_af4_tramos`, `0005_af5_cierres_y_cuotas`, `0006_af6_saldos_iniciales`, `0007_af7_mejoras` (la FK de
-  `costos.mejora_id` y `tramos.mejora_id` se agrega aquí), `0008_af9_bajas`, `0009_af12_inventarios`. Si un paso se
+  `costos.mejora_id` y `tramos.mejora_id` se agrega aquí), `0008_af8_boletas_firmadas`, `0009_af9_bajas`, `0010_af12_inventarios`. Si un paso se
   adelanta, cada migración toma el siguiente número libre: los nombres dicen el paso, no el número.
 - **Sin datos que convertir** (módulo nuevo) ni migración de permisos (todos nuevos: el rol con acceso total los recibe
   solo). Los correlativos no necesitan fila previa.
@@ -1330,7 +1330,7 @@ dos decimales.
 | AF-8c | Traslados y boleta imprimible | frontend | |
 | AFI-4c (con AF-8c) | Entregar y devolver; casilla «A la bodega»; selección múltiple; subir la boleta firmada | frontend | |
 | **AFI-5** (después de AF-7 y AF-8) | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl` (y su uso en cierre, ficha y bajas), dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §7.6 y 50 divisiones de 1, y de integración (cierre después de dividir, baja después de dividir, anular) | backend | |
-| **AF-9** | Bajas y ventas con archivos, tipo de acta, costo fiscal y resultados (A1), avisos de donación y reproductor (V-10, V-12) | backend | |
+| **AF-9** | Bajas y ventas con archivos, tipo de acta, costo fiscal y resultados (A1), avisos de donación y reproductor (V-10, V-12) | backend | **Programado** (2026-11-23; migración `0009_af9_bajas`; sin la baja parcial, que es AFI-6; notas abajo) |
 | **AFI-6** (después de AFI-5 y AF-9) | Traslado y baja con cantidad parcial (división automática) | backend | |
 | AF-9c | Baja y venta (ventanas, actas imprimibles) | frontend | |
 | AFI-6c | Dividir y separar en la ficha; cantidad en traslados y bajas | frontend | |
@@ -1365,6 +1365,36 @@ dos decimales.
   correlativo. Las unidades de una asignación comparten `alta_conjunta_id` solo si son más de una.
 - El archivo del costo manual (`archivo_id`) tiene su columna, pero la ruta de subida queda pendiente (revisión de `seguridad`).
 - La lista de costos de un activo y su ficha usan `activos.ver`; la ficha trae `costo` (Σ de los vigentes).
+
+**Notas de lo programado en AF-9 (servidor, migración `0009_af9_bajas`):**
+
+- `POST /activos-fijos/bajas` (`bajas.crear`) elige `DarDeBaja` o `RegistrarVenta` según la causa y devuelve la baja con sus **avisos**
+  (`sin_acta`, `sin_denuncia`, `donacion_con_iva`, `faltante_con_iva`, `con_componentes`, `venta_con_iva`, `ganancia_de_capital` o
+  `perdida_de_capital`, `venta_de_reproductor` y `inmueble_de_persona_individual` desde el 1-ene-2027 si el régimen vigente es de
+  persona individual). Los avisos se calculan al leer (el acta o la denuncia subidas después los quitan). `GET …/bajas/:id` (`activos.ver`)
+  da los datos del acta imprimible; la ficha del activo trae `baja`.
+- **Cifras congeladas**: la acumulada de cada libro es `acumuladaAntesDe` (lo cerrado más lo que darían, mes a mes, los meses
+  abiertos que van antes: el mismo cálculo de las mejoras) y, con `primer_mes = mes_siguiente`, la cuota del propio mes, que queda
+  en `cuota_del_mes_*`. Para que el cierre de esos meses abiertos siga depreciando al activo dado de baja, `activosParaCerrar` ahora
+  incluye a los dados de baja **después** del mes (y en el propio mes solo con `mes_siguiente`).
+- **Costo fiscal** (A1) = Σ costos fiscales (con el del saldo inicial cargado) sin tope del inmueble ni ganado común; la base
+  fiscal usa la misma función de poner en uso. Bienes de control y de terceros llevan los montos en cero; un terreno, costo sin
+  depreciación. Venta: resultado contable `precio − valor en libros`; fiscal `precio − (costo fiscal − acumulada fiscal)`.
+- **Con componentes**: el principal y sus componentes vigentes se dan de baja a la vez, con **una sola acta** (mismo número
+  `activos-fijos.bajas`, una fila por activo). En una venta el precio y el IVA se reparten en proporción al costo de cada activo
+  (sobrante al último; `precio_no_repartible` si a alguno le tocaría menos de un centavo). Un componente se da de baja solo, pero
+  si se dio de baja con su principal solo se anula con el principal (`baja_de_componente_con_su_principal`).
+- **Anular** (`bajas.anular`): mes abierto (`mes_cerrado`), el activo vuelve a `en_uso` y se audita `anular` con la baja como estaba
+  (una entrada por activo). `AnularMejora` rechaza un activo dado de baja (`activo_dado_de_baja`): sus cifras están congeladas.
+- **Acta y denuncia**: `POST …/bajas/:id/acta?tipoDeActa=administrativa|notarial` y `…/denuncia` (multipart, `bajas.crear`,
+  `limitarSubidas`), `GET …/acta` y `…/denuncia` (`activos.ver`); mismo esquema de tres tiempos que la boleta firmada, `FOR UPDATE`
+  sobre la baja, borra el archivo anterior y audita `adjuntar`. El tipo de acta viaja en la dirección porque el lector de
+  documentos solo admite el archivo. Una baja anulada no admite documentos (`baja_anulada`) y sigue mostrando los que tenía.
+- Decisiones: la causa `faltante_de_inventario` se acepta **sin** `inventario_id` hasta AF-12 (la columna existe sin llave ni el check
+  de §5.12); `devuelto_al_dueno` solo vale para bienes de terceros, y un bien de terceros no se vende ni se dona; la baja de solo
+  una parte de un grupo (`cantidad` menor) responde `baja_parcial_no_disponible` hasta AFI-6; `numero` del acta no es único (lo
+  comparten el principal y sus componentes); no se dan de baja activos en construcción (se eliminan o se ponen en uso).
+- Falta para AF-9c: ventanas de baja y venta, acta imprimible, subir acta y denuncia, y mostrar los avisos.
 
 **Notas de lo programado en AF-8 (servidor, sin migración):**
 

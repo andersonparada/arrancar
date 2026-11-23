@@ -4389,3 +4389,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   relee con `FOR SHARE` (`RepositorioTraslados.delGrupoBloqueando`): la anulación en curso gana y la subida responde
   `boleta_inexistente`; la subida en curso hace esperar a la anulación. Prueba de API con la intercalación (falla sin la
   corrección).
+- **2026-11-23 — AF-9 (Activos fijos, servidor): bajas y ventas con acta, denuncia y resultados.** Migración `0009_af9_bajas`
+  (§5.12): `activos_fijos.bajas` con las cifras congeladas (costo, costo fiscal, base fiscal, acumuladas, valor en libros, cuotas
+  del mes), la venta (comprador, NIT, precio, IVA, FEL) y sus resultados contable y fiscal (A1), con los checks de §5.12 y una baja
+  vigente por activo; RLS por empresa. `POST /activos-fijos/bajas` (`bajas.crear`; `DarDeBaja` o `RegistrarVenta` según la causa),
+  `POST …/:id/anular` (`bajas.anular`), `GET …/:id`, y acta (`?tipoDeActa=administrativa|notarial`) y denuncia con subida y
+  apertura (`limitarSubidas`, qpdf fuera de la transacción, `FOR UPDATE`, auditoría `adjuntar`). Los avisos (sin acta, sin
+  denuncia, donación y faltante con IVA, componentes, IVA y ganancia o pérdida de capital en la venta, reproductor V-10 e inmueble de
+  persona individual desde 2027) salen del dominio y se calculan al leer. Un principal se da de baja con sus componentes (una sola
+  acta; en una venta el precio se reparte por costo). Eventos `activo_dado_de_baja`, `activo_vendido` y `baja_anulada`. **Cambios
+  en el cierre**: `activosParaCerrar` incluye a los dados de baja después del mes (antes solo el mes de la baja), para que los
+  meses abiertos anteriores sigan depreciándolos y la acumulada congelada coincida con las cuotas; `AnularMejora` rechaza un activo
+  dado de baja. Decisiones: sin baja parcial (AFI-6); `faltante_de_inventario` sin `inventario_id` hasta AF-12; bienes de terceros
+  solo se devuelven. Pruebas: 40 unitarias de los casos de uso, 13 del dominio y 24 de API (baja, venta, componentes, anular, acta y
+  denuncia, permisos, aislamiento, cierres y concurrencia). Las pruebas con base de datos se corrieron en un PostgreSQL propio (el
+  puerto 5433 reseteaba conexiones). Pendiente: AF-9c (pantallas) y AFI-6.
