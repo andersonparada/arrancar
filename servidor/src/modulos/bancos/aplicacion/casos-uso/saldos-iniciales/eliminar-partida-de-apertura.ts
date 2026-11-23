@@ -14,7 +14,7 @@ export class EliminarPartidaDeApertura {
   constructor(private readonly dependencias: DependenciasDeSaldosIniciales) {}
 
   /**
-   * @throws RecursoNoEncontrado, MotivoDeAnulacionInvalido, MovimientoMarcadoEnConciliacion, MesConciliado,
+   * @throws RecursoNoEncontrado, MotivoDeAnulacionInvalido, MovimientoDeOtroModulo (posfechado ligado), MovimientoMarcadoEnConciliacion, MesConciliado,
    *   SinFechaDeInicio o CargaInicialCerrada.
    */
   ejecutar(
@@ -28,6 +28,7 @@ export class EliminarPartidaDeApertura {
       const { base, dto } = await partidaPorCambiar(this.dependencias, operador, { cuentaBancariaId, movimientoId });
       const movimiento = await movimientoExistente(repositorioMovimientos, movimientoId);
       movimiento.exigirNoMarcadoEnConciliacion(base.conciliacionId);
+      movimiento.exigirSinOrigen();
       await reglas.revisar(operador, { cuentaBancariaId, fechas: [base.fecha], diferencia: 0 });
       await auditoria.registrar({
         recurso: RECURSO_DE_PARTIDAS,

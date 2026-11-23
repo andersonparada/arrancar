@@ -4359,6 +4359,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   programar la forma. Pruebas de checks, único y referido en `pagos.prueba.ts`; la del reparto en
   `pruebas-api/cuentas-por-pagar-migracion-de-permisos-de-cheques-de-apertura.api.prueba.ts`. Sin cambios en Bancos. Corrección de la revisión: esa prueba ahora siembra también un permiso directo `aplicar-a-apertura` y otro ajeno, y comprueba que solo el primero recibe ligar y desligar en `usuario_permisos` (sin duplicados al correr dos veces); además se corrigió el usuario (31 letras, pasaba del máximo de 30) y se activan los módulos de los que depende.
 
+- **2026-11-23, AP-2 (corrección tras la revisión).** Faltaba cumplir §2.7 al corregir y eliminar un posfechado ligado:
+  `Movimiento.exigirSinOrigen` ahora es público y lo llaman `CorregirPartidaDeApertura`, `EliminarPartidaDeApertura` y `EliminarSaldoInicial`
+  (esta revisa todas las partidas antes de borrar); rechazan con `movimiento_de_otro_modulo`. Carrera Ligar/Anular:
+  `movimientoExistente` (usado por todo caso de uso que lee un movimiento para cambiarlo: anular cheque, reclasificar,
+  corregir/eliminar partida, blanquear, etc.) ahora lee con `repositorio.bloquear` (`for update`), así la lectura ve el origen que
+  otro ligó y no lo pisa al guardar. La prueba de API «después de ligado…» manda solicitudes válidas y afirma el código y que
+  monto, fecha y número no cambian (también el saldo inicial completo); nueva prueba de concurrencia anular/ligar (10 intentos).
+
 - **2026-11-23, AP-2 (órdenes de Bancos para cheques de apertura, sin migración).** Órdenes `bancos.ligar_cheque_de_apertura`
   y `bancos.desligar_cheque_de_apertura` (`core/contratos/bancos.contratos.ts`; casos de uso `LigarChequeDeApertura` y
   `DesligarChequeDeApertura`, atendidas en `composicion/ordenes.ts`). Ligar bloquea el movimiento (`RepositorioMovimientos.bloquear`,

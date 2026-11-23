@@ -109,10 +109,9 @@ export class Movimiento extends Entidad<MovimientoId> {
   }
 
   /**
-   * Corrige una partida de la apertura (cualquier parte menos el saldo global de antes): a diferencia de `corregir`,
-   * también acepta un cheque (en circulación o posfechado). La cuenta, la parte y `saldoInicial` no cambian.
-   * @throws NoEsUnSaldoInicial si el movimiento no es una partida; MovimientoAnulado o MovimientoYaRevertido si ya no
-   *   está vigente; MontoInvalido si el monto no es mayor que cero.
+   * Corrige una partida de la apertura (menos el saldo global; acepta un cheque); cuenta, parte y `saldoInicial` fijos.
+   * @throws NoEsUnSaldoInicial si no es una partida; MovimientoAnulado o MovimientoYaRevertido si ya no está vigente;
+   *   MontoInvalido si el monto no es mayor que cero.
    */
   corregirPartida(datos: DatosDeMovimiento): void {
     if (this.propiedades.parteDeApertura === null) throw new NoEsUnSaldoInicial();
@@ -341,7 +340,8 @@ export class Movimiento extends Entidad<MovimientoId> {
     if (this.estaRevertido) throw new MovimientoYaRevertido();
   }
 
-  private exigirSinOrigen(): void {
+  /** @throws MovimientoDeOtroModulo si lo generó o ligó otro módulo. */
+  exigirSinOrigen(): void {
     if (this.propiedades.moduloDeOrigen !== null) throw new MovimientoDeOtroModulo();
   }
 

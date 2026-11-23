@@ -158,21 +158,46 @@ describe('bancos.ligar_cheque_de_apertura', () => {
     expect(sinAviso.avisos).toEqual([]);
   });
 
-  it('después de ligado no se corrige, elimina ni blanquea en Bancos', async () => {
+  it('después de ligado no se corrige, elimina ni blanquea en Bancos y nada cambia', async () => {
     const { cuentaId, movimientoId } = await cuentaConPosfechado(usuario());
     await ligar({ movimientoId });
+    const antes = await movimientoDe(usuario(), movimientoId);
     const ruta = `/api/bancos/saldos-iniciales/${cuentaId}/partidas/${movimientoId}`;
+    const cambios = { monto: '90.00', fecha: '2026-03-15', numeroDeCheque: 9999, conceptoId: antes.conceptoId };
 
-    const corregido = await usuario().put(ruta, partida('cheque_posfechado', { monto: '90.00', numeroDeCheque: 9999 }));
-    const eliminado = await usuario().delete(ruta);
-    const blanqueado = await usuario().post(`/api/bancos/cheques/${await chequeDeLaPartida(movimientoId)}/blanquear`, {
-      motivo: 'Error',
-    });
+    const corregido = await usuario().put(ruta, partida('cheque_posfechado', cambios));
+    const eliminado = await usuario().delete(ruta, { motivo: 'Error de carga' });
+    const saldoEliminado = await usuario().delete(`/api/bancos/saldos-iniciales/${cuentaId}`, { motivo: 'Error' });
+    const chequeId = await chequeDeLaPartida(movimientoId);
+    const blanqueado = await usuario().post(`/api/bancos/cheques/${chequeId}/blanquear`, { motivo: 'Error' });
 
-    expect(corregido.estado).toBeGreaterThanOrEqual(400);
-    expect(eliminado.estado).toBeGreaterThanOrEqual(400);
+    expect(corregido.cuerpo.error.codigo).toBe('movimiento_de_otro_modulo');
+    expect(eliminado.cuerpo.error.codigo).toBe('movimiento_de_otro_modulo');
+    expect(saldoEliminado.cuerpo.error.codigo).toBe('movimiento_de_otro_modulo');
     expect(blanqueado.estado).toBeGreaterThanOrEqual(400);
-    expect((await movimientoDe(usuario(), movimientoId)).moduloDeOrigen).toBe('cuentas-por-pagar');
+    const despues = await movimientoDe(usuario(), movimientoId);
+    expect(despues).toMatchObject({
+      moduloDeOrigen: 'cuentas-por-pagar',
+      monto: antes.monto,
+      fecha: antes.fecha,
+      numeroDeCheque: antes.numeroDeCheque,
+    });
+  });
+
+  it('anular y ligar a la vez nunca dejan un cheque anulado que pierda su origen', async () => {
+    for (let intento = 0; intento < 10; intento++) {
+      const movimientoId = await nuevoPosfechado();
+      const chequeId = await chequeDeLaPartida(movimientoId);
+      const [anulado, ligado] = await Promise.allSettled([
+        usuario().post(`/api/bancos/cheques/${chequeId}/anular`, { motivo: 'Error' }),
+        ligar({ movimientoId }),
+      ]);
+      const despues = await movimientoDe(usuario(), movimientoId);
+      if (ligado.status === 'fulfilled') expect(despues.moduloDeOrigen).toBe('cuentas-por-pagar');
+      if (anulado.status === 'fulfilled' && anulado.value.estado === 200 && ligado.status === 'fulfilled') {
+        expect(despues.moduloDeOrigen).not.toBeNull();
+      }
+    }
   });
 });
 
