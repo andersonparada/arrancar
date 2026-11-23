@@ -23,6 +23,8 @@ export interface ActivoPorTrasladar {
   localidadId?: string | null;
   departamentoId?: string | null;
   responsable?: string | null;
+  /** Si hoy está en la bodega; con un solo activo, el formulario conserva ese estado. */
+  enBodega?: boolean;
 }
 
 /** Los nombres elegidos del destino, para decirlos en la confirmación. */
@@ -33,16 +35,18 @@ export interface DestinoElegido {
 
 function ubicacionActual(activos: ActivoPorTrasladar[]) {
   const unico = activos.length === 1 ? activos[0] : undefined;
+  if (!unico) return { localidadId: null, departamentoId: null, responsable: '', aBodega: false };
   return {
-    localidadId: unico?.localidadId ?? null,
-    departamentoId: unico?.departamentoId ?? null,
-    responsable: unico?.responsable ?? '',
+    localidadId: unico.localidadId ?? null,
+    departamentoId: unico.departamentoId ?? null,
+    responsable: unico.responsable ?? '',
+    aBodega: unico.enBodega === true,
   };
 }
 
 /**
  * El formulario nuevo; `hoy` (`AAAA-MM-DD`) es la fecha que se propone. Con un solo activo parte de su localidad,
- * departamento y responsable actuales: el traslado reemplaza la ubicación completa, así que lo que no se cambia se
+ * departamento, responsable y estado de bodega actuales: el traslado reemplaza la ubicación completa, así que lo que no se cambia se
  * conserva. Con varios, el destino parte vacío y hay que elegirlo.
  */
 export const edicionDeTrasladoNueva = (hoy: string, activos: ActivoPorTrasladar[] = []): EdicionDeTraslado => {
@@ -52,7 +56,6 @@ export const edicionDeTrasladoNueva = (hoy: string, activos: ActivoPorTrasladar[
     ...actual,
     recibidoPor: '',
     motivo: '',
-    aBodega: false,
     marcarOcioso: false,
   };
 };
@@ -107,19 +110,27 @@ const textoDelResponsable = (edicion: EdicionDeTraslado): string =>
     ? `El responsable del bien queda: ${edicion.responsable.trim()}.`
     : 'Queda sin responsable.';
 
+function avisoDeSalidaDeBodega(activos: ActivoPorTrasladar[], edicion: EdicionDeTraslado): string {
+  const sale = activos.length === 1 && activos[0]?.enBodega === true && !edicion.aBodega;
+  return sale ? ' El bien sale de la bodega de activos.' : '';
+}
+
+function descripcionDeLoTrasladado(activos: ActivoPorTrasladar[]): string {
+  if (activos.length !== 1) return `${activos.length} activos (con sus componentes)`;
+  return `${activos[0]?.codigo} · ${activos[0]?.descripcion} (con sus componentes, si los tiene)`;
+}
+
 /** Lo que pasará al trasladar, para confirmar: qué, adónde, quién recibe y qué documento se genera. */
 export function mensajeDeTraslado(
   activos: ActivoPorTrasladar[],
   edicion: EdicionDeTraslado,
   destino: DestinoElegido,
 ): string {
-  const que =
-    activos.length === 1
-      ? `${activos[0]?.codigo} · ${activos[0]?.descripcion} (con sus componentes, si los tiene)`
-      : `${activos.length} activos (con sus componentes)`;
+  const que = descripcionDeLoTrasladado(activos);
+  const salida = avisoDeSalidaDeBodega(activos, edicion);
   const ocio = edicion.aBodega && edicion.marcarOcioso ? ' Quedan marcados como ociosos.' : '';
   return (
     `Se traslada ${que} a ${descripcionDelDestino(edicion, destino)}, con fecha ${formatearFecha(edicion.fecha)}. ` +
-    `${textoDelResponsable(edicion)} Recibe ${edicion.recibidoPor.trim()}.${ocio} Se genera la boleta numerada, lista para imprimir y firmar.`
+    `${textoDelResponsable(edicion)} Recibe ${edicion.recibidoPor.trim()}.${ocio}${salida} Se genera la boleta numerada, lista para imprimir y firmar.`
   );
 }

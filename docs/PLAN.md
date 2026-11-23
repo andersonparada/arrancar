@@ -4359,3 +4359,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   («sin localidad», «sin responsable»); la pestaña Costos se vuelve a traer al registrar o anular una mejora; los avisos de
   mejora ya no prometen el mes de la depreciación (lo decide la regla `primer_mes` de la empresa y los cierres); la sugerencia de
   componente ya no dice que se traslada aparte.
+- **2026-11-23 — Segunda corrección de AF-7c y AF-8c.** La primera apertura de la ventana de traslado ya no borra el
+  departamento actual: el departamento solo se depura contra la localidad cuando las ubicaciones ya cargaron. El traslado
+  de un solo activo conserva si está en la bodega (`enBodega` precarga `aBodega`) y la confirmación avisa si el bien sale de
+  ella. Pruebas del composable con la carga pendiente.
