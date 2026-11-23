@@ -15,6 +15,7 @@ import { ordenDeBancarizacionComponida } from './composicion/bancarizacion.js';
 import { rutasDeLibro } from './composicion/libro.js';
 import { rutasDePeriodosComponidas } from './composicion/periodos.js';
 import { rutasDeConstanciasPendientesComponidas } from './composicion/constancias-pendientes.js';
+import { respuestaDeLlavesDeEnlaceComponida } from './composicion/llaves-de-enlace.js';
 import { rutasDeRetencionesComponidas } from './composicion/retenciones.js';
 // generador: importaciones
 
@@ -36,6 +37,7 @@ function componerRutas() {
     escuchasDeFechaDeInicioComponidas(),
     respuestasDeCierreDeCargaComponidas(),
     ordenDeBancarizacionComponida(),
+    respuestaDeLlavesDeEnlaceComponida(),
     // generador: rutas
   ]);
 }
