@@ -1458,7 +1458,7 @@ Contabilidad escucha los eventos de §13.3 con el mecanismo CT-0 (registro de ev
 
 | Paso | Qué | Quién | Depende de | Espera del usuario |
 |---|---|---|---|---|
-| **VCJ-0a** | Core: `usaTablasDe` en la definición, migrador, verificación y prueba de llaves; pruebas de orden y de activación | backend | — | — |
+| **VCJ-0a** | **Hecho (2026-11-23).** Core: `usaTablasDe` en la definición, migrador, verificación y prueba de llaves; pruebas de orden y de activación | backend | — | — |
 | **VCJ-0b** | Inventarios sin `dependeDe`: rutas de recepción con `requiere_libro_de_compras`, destino `consumo_interno` y su migración, prueba de punta a punta con el libro apagado | backend | VCJ-0a, INV-8 unido | VJ-P3 no bloquea |
 | VCJ-0c | Cliente de Inventarios con el libro apagado (ocultar bandeja y concepto, destino nuevo) | frontend | VCJ-0b, INV-5c | — |
 | **VCJ-0d** | Adendas A-9 (únicos) y A-10 (NIT auditado, permiso y motivo); `inscrita` de §3.9 | backend | VCJ-0a | VJ-P3, VJ-P14 |
