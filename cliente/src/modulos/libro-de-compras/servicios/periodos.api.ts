@@ -92,6 +92,7 @@ export interface DatosDeDeclaracion {
   fechaDePresentacion?: string;
   /** Solo el primer mes que se declara en Arrancar; después sale de la foto del mes anterior. */
   remanenteDeRetencionesAnterior?: string;
+  remanenteDeCreditoAnterior?: string;
 }
 
 export interface ResultadoDeCambioDePeriodo {

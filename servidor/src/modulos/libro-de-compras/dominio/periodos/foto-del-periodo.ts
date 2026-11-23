@@ -1,6 +1,6 @@
 import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { TipoDeLibro } from '../libro/tipo-de-libro.js';
-import type { RemanentesDeRetenciones } from './remanentes-de-retenciones.js';
+import type { FormularioConRemanente, RemanentesDeRetenciones } from './remanentes-de-retenciones.js';
 
 /**
  * Los totales del libro del período en el momento de declararlo. Los montos son texto con dos decimales; la huella es
@@ -17,6 +17,11 @@ export interface FotoDelPeriodo {
   ventas?: CifrasDeVentasEnLaFoto[];
   /** El remanente de retenciones (SAT-2237) o de constancias (SAT-2046); ausente si no hay ventas que lo calculen. */
   remanentes?: RemanentesDeRetenciones;
+  /**
+   * Los saldos con que empezó el período cuando no hubo ventas que calcular el remanente (lo que escribió el usuario
+   * no se pierde y una rectificación posterior lo recupera).
+   */
+  saldosIniciales?: { formulario: FormularioConRemanente; retenciones: string; credito: string };
 }
 
 /** Una cifra de ventas tal como se guarda en la foto. */

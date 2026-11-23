@@ -19,8 +19,17 @@ export function lineasDeRemanente(remanentes: RemanentesDeRetenciones): LineaDeR
   return [
     { etiqueta: nombres.delPeriodo, valor: remanentes.retencionesDelPeriodo, destacada: false },
     { etiqueta: nombres.anterior, valor: remanentes.remanenteAnterior, destacada: false },
+    ...lineaDeCredito(remanentes, 'anterior'),
     { etiqueta: nombres.impuestoDelMes, valor: remanentes.impuestoDelMes, destacada: false },
     { etiqueta: textos.impuestoAPagar, valor: remanentes.impuestoAPagar, destacada: true },
     { etiqueta: nombres.alSiguiente, valor: remanentes.remanenteAlSiguiente, destacada: true },
+    ...lineaDeCredito(remanentes, 'alSiguiente'),
   ];
+}
+
+/** El crédito fiscal solo se muestra en el SAT-2237 y cuando la declaración lo trae. */
+function lineaDeCredito(remanentes: RemanentesDeRetenciones, cual: 'anterior' | 'alSiguiente'): LineaDeRemanente[] {
+  const valor = cual === 'anterior' ? remanentes.creditoAnterior : remanentes.creditoAlSiguiente;
+  if (remanentes.formulario !== 'SAT-2237' || valor === undefined) return [];
+  return [{ etiqueta: textos.credito[cual], valor, destacada: cual === 'alSiguiente' }];
 }

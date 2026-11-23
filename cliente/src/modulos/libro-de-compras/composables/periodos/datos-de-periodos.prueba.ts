@@ -99,6 +99,7 @@ describe('cuerpoDeDeclaracion', () => {
       numero: ' AB12 ',
       fecha: '2026-10-05',
       remanenteAnterior: ' 25.5 ',
+      creditoAnterior: ' 3 ',
     };
 
     expect(cuerpoDeDeclaracion(edicion)).toEqual({
@@ -106,6 +107,7 @@ describe('cuerpoDeDeclaracion', () => {
       numeroDeFormulario: 'AB12',
       fechaDePresentacion: '2026-10-05',
       remanenteDeRetencionesAnterior: '25.5',
+      remanenteDeCreditoAnterior: '3',
     });
   });
 

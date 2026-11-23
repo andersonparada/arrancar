@@ -4383,3 +4383,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   fiscal anterior no se rastrea (lo llena la SAT), así que el impuesto del mes lo ignora; las pruebas de API nuevas
   (`libro-de-compras-periodos-remanentes`) no pudieron correrse en el entorno del agente (la base rechazaba la conexión:
   ECONNRESET): correr con la base de desarrollo levantada.
+- **2026-11-23 — Correcciones de la revisión de VC-0c2 y VC-0c.** (1) El remanente del crédito fiscal sí se rastrea ahora:
+  `foto.remanentes` suma `creditoAnterior` y `creditoAlSiguiente`; el impuesto del SAT-2237 es máx(0, débito − crédito −
+  remanente de crédito anterior) y lo que sobra pasa al mes siguiente (antes se descartaba). El valor inicial del primer mes
+  se escribe en `remanenteDeCreditoAnterior` de `POST …/declarar`. Las fotos viejas sin esos campos cuentan como 0.
+  (2) El impuesto del SAT-2046 no baja de cero (ingresos netos negativos ya no crean saldo a favor). (3) «Cambió después de
+  declarar» recalcula con el remanente vigente del mes previo, no con el de su propia foto: al rectificar un mes, el
+  siguiente ya declarado muestra `remanentes.remanenteAnterior` cambiado. Solo avisa un mes de distancia: el mes de después
+  se avisa cuando se rectifica el intermedio. (4) Sin respuesta de ventas la foto guarda `saldosIniciales` (formulario,
+  retenciones y crédito escritos), y una rectificación con ventas los recupera. (5) Página del SAT-2046: el selector de
+  período siempre se ve, con aviso si el mes no es del SAT-2046 o sin ventas. (6) El pequeño contribuyente electrónico
+  (derogado, SAT-2241) no lleva cálculo de remanentes, ni en pantalla ni en la foto (`llevaCalculoDeRemanente`). Las
+  pruebas de API corrieron con una base propia (la 5433 compartida rechazaba conexiones).

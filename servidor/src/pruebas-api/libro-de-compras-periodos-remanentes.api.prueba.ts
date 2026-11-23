@@ -66,7 +66,9 @@ describe('remanente de retenciones en varios meses seguidos (SAT-2237)', () => {
       formulario: 'SAT-2237',
       retencionesDelPeriodo: '100.00',
       remanenteAnterior: '25.00',
+      creditoAnterior: '0.00',
       impuestoDelMes: '0.00',
+      creditoAlSiguiente: deCentavos(creditoDe(declarada)),
       impuestoAPagar: '0.00',
       remanenteAlSiguiente: '125.00',
     });
@@ -78,10 +80,11 @@ describe('remanente de retenciones en varios meses seguidos (SAT-2237)', () => {
 
     const declarada = await declarar(propietario(), SIGUIENTE, { remanenteDeRetencionesAnterior: '999.00' });
 
-    const impuesto = 100000 - creditoDe(declarada);
+    const impuesto = 100000 - creditoDe(declarada) - credito;
     expect(credito).toBeGreaterThan(0);
     expect(declarada.cuerpo.declaracion.foto.remanentes).toMatchObject({
       remanenteAnterior: '125.00',
+      creditoAnterior: deCentavos(credito),
       impuestoDelMes: deCentavos(impuesto),
       impuestoAPagar: deCentavos(Math.max(0, impuesto - 13500)),
       remanenteAlSiguiente: deCentavos(Math.max(0, 13500 - impuesto)),
@@ -102,9 +105,23 @@ describe('remanente de retenciones en varios meses seguidos (SAT-2237)', () => {
     expect(cambios.find((c) => c.clave === 'remanentes.remanenteAlSiguiente')?.cambio).toBe('50.00');
   });
 
-  it('el detalle del mes siguiente avisa que cambió el remanente del anterior solo cuando se rectifica ese mes', async () => {
+  it('el detalle del mes siguiente avisa que cambió el remanente del anterior cuando se rectifica ese mes', async () => {
     const { cambioDesdeLaDeclaracion: cambio } = await detalleDe(propietario(), SIGUIENTE);
 
+    const remanentes = cambio.cambios.filter((c: { clave: string }) => c.clave.startsWith('remanentes.'));
+    expect(remanentes).toContainEqual({
+      clave: 'remanentes.remanenteAnterior',
+      anterior: '125.00',
+      actual: '175.00',
+      cambio: '50.00',
+    });
+  });
+
+  it('al rectificar también el mes siguiente, el aviso desaparece', async () => {
+    const rectificada = await declarar(propietario(), SIGUIENTE);
+
+    expect(rectificada.cuerpo.declaracion.foto.remanentes.remanenteAnterior).toBe('175.00');
+    const { cambioDesdeLaDeclaracion: cambio } = await detalleDe(propietario(), SIGUIENTE);
     expect(cambio.cambios.filter((c: { clave: string }) => c.clave.startsWith('remanentes.'))).toEqual([]);
   });
 
@@ -134,6 +151,54 @@ describe('datos para el SAT-2237 con ventas', () => {
   });
 });
 
+describe('saldos escritos sin respuesta de ventas', () => {
+  const SIN_VENTAS = mesDe(-6);
+
+  it('se guardan en la foto aunque ningún módulo de ventas responda', async () => {
+    const declarada = await declarar(propietario(), SIN_VENTAS, {
+      remanenteDeRetencionesAnterior: '10.00',
+      remanenteDeCreditoAnterior: '4.00',
+    });
+
+    expect(declarada.estado, JSON.stringify(declarada.cuerpo)).toBe(200);
+    const foto = declarada.cuerpo.declaracion.foto;
+    expect(foto.remanentes).toBeUndefined();
+    expect(foto.saldosIniciales).toEqual({ formulario: 'SAT-2237', retenciones: '10.00', credito: '4.00' });
+  });
+
+  it('una rectificación con ventas ya los usa sin volver a escribirlos', async () => {
+    responder(SIN_VENTAS, { debito: '0.00', retenciones_de_iva: '0.00' });
+
+    const rectificada = await declarar(propietario(), SIN_VENTAS);
+
+    expect(rectificada.cuerpo.declaracion.foto.remanentes).toMatchObject({
+      remanenteAnterior: '10.00',
+      creditoAnterior: '4.00',
+      remanenteAlSiguiente: '10.00',
+      creditoAlSiguiente: '4.00',
+    });
+  });
+});
+
+describe('pequeño contribuyente electrónico (régimen derogado)', () => {
+  it('no lleva cálculo de remanente ni en la pantalla ni en la declaración', async () => {
+    const historico = await prepararEscenario(entorno, 'remaelectronico');
+    await configurarEmpresa(historico.cuenta, {
+      regimenIva: 'pequeno_contribuyente_electronico',
+      agenteDeRetencionIva: 'ninguno',
+    });
+    await registrarEn(historico, ANTERIOR);
+    responder(ANTERIOR, { ingresos: '1000.00', retenciones_de_iva: '80.00' });
+
+    const pantalla = await historico.cuenta.propietario.get(`${RUTA_SAT}?periodo=${ANTERIOR.slice(0, 7)}`);
+    const declarada = await declarar(historico.cuenta.propietario, ANTERIOR);
+
+    expect(pantalla.cuerpo.remanentes).toBeNull();
+    expect(declarada.estado, JSON.stringify(declarada.cuerpo)).toBe(200);
+    expect(declarada.cuerpo.declaracion.foto.remanentes).toBeUndefined();
+  });
+});
+
 describe('saldo de constancias del SAT-2046', () => {
   it('la declaración guarda el 5 % de los ingresos, las constancias y el saldo', async () => {
     responder(ANTERIOR, { ingresos: '1000.00', retenciones_de_iva: '80.00' });
@@ -145,7 +210,9 @@ describe('saldo de constancias del SAT-2046', () => {
       formulario: 'SAT-2046',
       retencionesDelPeriodo: '80.00',
       remanenteAnterior: '0.00',
+      creditoAnterior: '0.00',
       impuestoDelMes: '50.00',
+      creditoAlSiguiente: '0.00',
       impuestoAPagar: '0.00',
       remanenteAlSiguiente: '30.00',
     });

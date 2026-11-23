@@ -37,13 +37,17 @@ export const SECCION_DE_VENTAS = {
   valor: 'Valor',
   remanentesTitulo: 'Retenciones y remanente',
   remanentesAyuda:
-    'El remanente de retenciones va aparte del remanente del crédito fiscal. La casilla exacta del formulario se confirmará con una captura de la SAT: por ahora son cifras de apoyo.',
+    'El remanente de retenciones va aparte del remanente del crédito fiscal, que también pasa de un mes al siguiente. La casilla exacta del formulario se confirmará con una captura de la SAT: por ahora son cifras de apoyo.',
   impuestoAPagar: 'Impuesto por pagar',
   retenciones: {
     delPeriodo: 'Retenciones del período',
     anterior: 'Remanente de retenciones anterior',
-    impuestoDelMes: 'Impuesto del mes (débito menos crédito fiscal)',
+    impuestoDelMes: 'Impuesto del mes (débito menos crédito fiscal y su remanente)',
     alSiguiente: 'Remanente de retenciones para el mes siguiente',
+  },
+  credito: {
+    anterior: 'Remanente de crédito fiscal anterior',
+    alSiguiente: 'Remanente de crédito fiscal para el mes siguiente',
   },
   constancias: {
     delPeriodo: 'Constancias del período',

@@ -1,3 +1,4 @@
+import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
@@ -6,6 +7,7 @@ import type { FotoDelPeriodo } from '../../../dominio/periodos/foto-del-periodo.
 import {
   calcularRemanentesDeRetenciones,
   type FormularioConRemanente,
+  type SaldosAnteriores,
 } from '../../../dominio/periodos/remanentes-de-retenciones.js';
 import { huellaDelLibro } from '../libro/libro-para-imprimir.js';
 import { dtoDelLibro } from '../../dto/libro.dto.js';
@@ -45,7 +47,7 @@ export interface PedidoDeFoto {
   /** `AAAA-MM-01`. */
   periodo: string;
   /** Con el formulario y el remanente anterior (centavos), la foto trae el remanente de retenciones. */
-  remanentes?: { formulario: FormularioConRemanente; anteriorCentavos: number } | undefined;
+  remanentes?: { formulario: FormularioConRemanente; anterior: SaldosAnteriores } | undefined;
 }
 
 /**
@@ -60,13 +62,27 @@ export async function fotoDelPeriodoDeHoy(
   const armado = await armarLibro(dependencias, operador, pedido.periodo);
   const foto = fotoDelLibro(armado);
   const ventas = await dependencias.cifrasDeVentas.delPeriodo(operador, pedido.periodo);
-  if (ventas.length === 0) return foto;
-  const remanentes = pedido.remanentes
+  const { remanentes: pedidos } = pedido;
+  const remanentes = pedidos
     ? calcularRemanentesDeRetenciones({
-        ...pedido.remanentes,
+        ...pedidos,
         ventas,
         creditoCentavos: armado.libro.resumen.creditoFiscalDelPeriodo,
       })
     : null;
-  return { ...foto, ventas, ...(remanentes ? { remanentes } : {}) };
+  return {
+    ...foto,
+    ...(ventas.length > 0 ? { ventas } : {}),
+    ...(remanentes ? { remanentes } : {}),
+    ...(pedidos && !remanentes ? { saldosIniciales: saldosIniciales(pedidos) } : {}),
+  };
+}
+
+/** Sin remanente que calcular, la foto guarda al menos con qué saldos empezó el período. */
+function saldosIniciales({ formulario, anterior }: NonNullable<PedidoDeFoto['remanentes']>) {
+  return {
+    formulario,
+    retenciones: deCentavos(anterior.retencionesCentavos),
+    credito: deCentavos(anterior.creditoCentavos),
+  };
 }

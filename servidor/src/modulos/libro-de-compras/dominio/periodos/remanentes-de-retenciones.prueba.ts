@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { CifrasDeVentasEnLaFoto } from './foto-del-periodo.js';
-import { calcularRemanentesDeRetenciones, esFormularioConRemanente } from './remanentes-de-retenciones.js';
+import {
+  calcularRemanentesDeRetenciones,
+  esFormularioConRemanente,
+  llevaCalculoDeRemanente,
+  type SaldosAnteriores,
+} from './remanentes-de-retenciones.js';
 
 const ventas = (cifras: Record<string, string>): CifrasDeVentasEnLaFoto[] => [
   {
@@ -11,12 +16,20 @@ const ventas = (cifras: Record<string, string>): CifrasDeVentasEnLaFoto[] => [
 ];
 
 describe('remanente de retenciones del SAT-2237', () => {
-  const calcular = (cifras: Record<string, string>, creditoCentavos: number, anteriorCentavos: number) =>
+  const calcular = (
+    cifras: Record<string, string>,
+    creditoCentavos: number,
+    anterior: Partial<SaldosAnteriores> | number,
+  ) =>
     calcularRemanentesDeRetenciones({
       formulario: 'SAT-2237',
       ventas: ventas(cifras),
       creditoCentavos,
-      anteriorCentavos,
+      anterior: {
+        retencionesCentavos: 0,
+        creditoCentavos: 0,
+        ...(typeof anterior === 'number' ? { retencionesCentavos: anterior } : anterior),
+      },
     });
 
   it('las retenciones que pasan del impuesto del mes se trasladan al siguiente', () => {
@@ -26,6 +39,8 @@ describe('remanente de retenciones del SAT-2237', () => {
       formulario: 'SAT-2237',
       retencionesDelPeriodo: '500.00',
       remanenteAnterior: '100.00',
+      creditoAnterior: '0.00',
+      creditoAlSiguiente: '0.00',
       impuestoDelMes: '300.00',
       impuestoAPagar: '0.00',
       remanenteAlSiguiente: '300.00',
@@ -48,6 +63,29 @@ describe('remanente de retenciones del SAT-2237', () => {
     expect(resultado).toMatchObject({ impuestoDelMes: '0.00', impuestoAPagar: '0.00', remanenteAlSiguiente: '40.50' });
   });
 
+  it('el exceso de crédito sobre el débito no se pierde: pasa al mes siguiente y ahí baja el impuesto', () => {
+    const primero = calcular({ debito: '100.00', retenciones_de_iva: '0.00' }, 30000, 0);
+    expect(primero).toMatchObject({ impuestoDelMes: '0.00', creditoAlSiguiente: '200.00' });
+
+    const segundo = calcular({ debito: '150.00', retenciones_de_iva: '40.00' }, 0, { creditoCentavos: 20000 });
+
+    expect(segundo).toMatchObject({
+      creditoAnterior: '200.00',
+      impuestoDelMes: '0.00',
+      impuestoAPagar: '0.00',
+      remanenteAlSiguiente: '40.00',
+      creditoAlSiguiente: '50.00',
+    });
+  });
+
+  it('un remanente de crédito menor que el débito solo lo reduce', () => {
+    expect(calcular({ debito: '150.00', retenciones_de_iva: '0.00' }, 0, { creditoCentavos: 5000 })).toMatchObject({
+      impuestoDelMes: '100.00',
+      impuestoAPagar: '100.00',
+      creditoAlSiguiente: '0.00',
+    });
+  });
+
   it('suma lo que responden varios módulos y no se confunde con otras claves', () => {
     const dos = [...ventas({ debito: '10.00', retenciones_de_iva: '1.10' }), ...ventas({ retenciones_de_iva: '2.20' })];
 
@@ -55,7 +93,7 @@ describe('remanente de retenciones del SAT-2237', () => {
       formulario: 'SAT-2237',
       ventas: dos,
       creditoCentavos: 0,
-      anteriorCentavos: 0,
+      anterior: { retencionesCentavos: 0, creditoCentavos: 0 },
     });
 
     expect(resultado?.retencionesDelPeriodo).toBe('3.30');
@@ -63,7 +101,12 @@ describe('remanente de retenciones del SAT-2237', () => {
 
   it('sin respuesta de ventas no hay remanente', () => {
     expect(
-      calcularRemanentesDeRetenciones({ formulario: 'SAT-2237', ventas: [], creditoCentavos: 0, anteriorCentavos: 0 }),
+      calcularRemanentesDeRetenciones({
+        formulario: 'SAT-2237',
+        ventas: [],
+        creditoCentavos: 0,
+        anterior: { retencionesCentavos: 0, creditoCentavos: 0 },
+      }),
     ).toBeNull();
   });
 });
@@ -74,7 +117,7 @@ describe('saldo de constancias del SAT-2046', () => {
       formulario: 'SAT-2046',
       ventas: ventas(cifras),
       creditoCentavos: 0,
-      anteriorCentavos,
+      anterior: { retencionesCentavos: anteriorCentavos, creditoCentavos: 0 },
     });
 
   it('el impuesto es el 5 % de los ingresos menos las constancias y el saldo anterior', () => {
@@ -82,7 +125,9 @@ describe('saldo de constancias del SAT-2046', () => {
       formulario: 'SAT-2046',
       retencionesDelPeriodo: '200.00',
       remanenteAnterior: '1.00',
+      creditoAnterior: '0.00',
       impuestoDelMes: '500.00',
+      creditoAlSiguiente: '0.00',
       impuestoAPagar: '299.00',
       remanenteAlSiguiente: '0.00',
     });
@@ -94,8 +139,24 @@ describe('saldo de constancias del SAT-2046', () => {
     expect(resultado).toMatchObject({ impuestoDelMes: '50.00', impuestoAPagar: '0.00', remanenteAlSiguiente: '30.00' });
   });
 
+  it('con ingresos netos negativos (notas de crédito) el impuesto es cero y no crea saldo a favor', () => {
+    expect(calcular({ ingresos: '-1000.00', retenciones_de_iva: '0.00' }, 0)).toMatchObject({
+      impuestoDelMes: '0.00',
+      impuestoAPagar: '0.00',
+      remanenteAlSiguiente: '0.00',
+    });
+  });
+
   it('el 5 % se redondea al centavo sin decimales flotantes', () => {
     expect(calcular({ ingresos: '0.30', retenciones_de_iva: '0.00' }, 0)?.impuestoDelMes).toBe('0.02');
+  });
+});
+
+describe('régimen sin cálculo', () => {
+  it('el pequeño contribuyente electrónico (derogado, SAT-2241) no lleva remanente', () => {
+    expect(
+      ['pequeno_contribuyente_electronico', 'pequeno_contribuyente', 'general', null].map(llevaCalculoDeRemanente),
+    ).toEqual([false, true, true, true]);
   });
 });
 

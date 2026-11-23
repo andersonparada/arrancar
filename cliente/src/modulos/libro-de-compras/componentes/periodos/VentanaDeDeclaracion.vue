@@ -62,6 +62,14 @@ const formularios = opcionesDeFormulario();
         tipo="number"
         paso="0.01"
       />
+      <CampoTexto
+        v-model="edicion.creditoAnterior"
+        :etiqueta="textos.credito"
+        :ayuda="textos.creditoAyuda"
+        :error="errores.remanenteDeCreditoAnterior"
+        tipo="number"
+        paso="0.01"
+      />
     </form>
     <template #pie>
       <BotonBase variante="secundario" :deshabilitado="enviando" @click="$emit('cerrar')">Cancelar</BotonBase>

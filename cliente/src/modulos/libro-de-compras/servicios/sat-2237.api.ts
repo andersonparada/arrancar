@@ -81,9 +81,12 @@ export interface RemanentesDeRetenciones {
   formulario: 'SAT-2237' | 'SAT-2046';
   retencionesDelPeriodo: string;
   remanenteAnterior: string;
+  /** El remanente de crédito fiscal que traía el mes y el que deja (SAT-2237); ausentes en declaraciones viejas. */
+  creditoAnterior?: string;
   impuestoDelMes: string;
   impuestoAPagar: string;
   remanenteAlSiguiente: string;
+  creditoAlSiguiente?: string;
 }
 
 interface Encabezado {

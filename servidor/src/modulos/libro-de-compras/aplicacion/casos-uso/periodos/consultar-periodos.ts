@@ -1,5 +1,4 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
-import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import { diferenciaDeFotos } from '../../../dominio/periodos/foto-del-periodo.js';
 import {
   dtoDeDeclaracion,
@@ -12,6 +11,7 @@ import {
 import type { DeclaracionGuardada } from '../../puertos/puertos-de-periodos.js';
 import { periodoDelLibro } from '../libro/consultar-libro.js';
 import { fotoDelPeriodoDeHoy, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
+import { remanenteAnteriorDelPeriodo, saldosDeInicioDeLaFoto } from './remanentes-del-periodo.js';
 import { revisionDelPeriodo } from './revision-del-periodo.js';
 
 const MESES = Array.from({ length: 12 }, (_, indice) => indice + 1);
@@ -63,12 +63,25 @@ export class ObtenerPeriodo {
     });
   }
 
+  /**
+   * Los saldos con que se calcularía hoy el período: los del mes previo tal como está ahora (si se rectificó, el cambio
+   * llega aquí) y, si el previo no tiene remanente, los que ya traía la declaración.
+   */
+  private async remanentesVigentes(ultima: DeclaracionGuardada) {
+    const formulario = ultima.foto?.remanentes?.formulario ?? ultima.foto?.saldosIniciales?.formulario;
+    if (!formulario) return undefined;
+    const propios = saldosDeInicioDeLaFoto(ultima.foto, formulario) ?? undefined;
+    const anterior = await remanenteAnteriorDelPeriodo(this.dependencias.periodos, {
+      periodo: ultima.periodo,
+      formulario,
+      escrito: propios,
+    });
+    return { formulario, anterior };
+  }
+
   /** El libro de hoy contra la foto de la última declaración: «cambió después de declarar». */
   private async cambios(operador: Operador, ultima: DeclaracionGuardada): Promise<CambioDesdeLaDeclaracionDto> {
-    const previos = ultima.foto?.remanentes;
-    const remanentes = previos
-      ? { formulario: previos.formulario, anteriorCentavos: aCentavos(previos.remanenteAnterior) }
-      : undefined;
+    const remanentes = await this.remanentesVigentes(ultima);
     const actual = await fotoDelPeriodoDeHoy(this.dependencias, operador, { periodo: ultima.periodo, remanentes });
     return {
       contraLaSecuencia: ultima.secuencia,

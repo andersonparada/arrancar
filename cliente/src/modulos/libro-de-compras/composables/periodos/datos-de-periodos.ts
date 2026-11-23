@@ -96,6 +96,8 @@ export interface DeclaracionEnEdicion {
   fecha: string;
   /** El remanente de retenciones (o saldo de constancias) del mes anterior, en quetzales. */
   remanenteAnterior: string | number | null;
+  /** El remanente del crédito fiscal del mes anterior (SAT-2237), en quetzales. */
+  creditoAnterior: string | number | null;
 }
 
 export const declaracionVacia = (): DeclaracionEnEdicion => ({
@@ -103,6 +105,7 @@ export const declaracionVacia = (): DeclaracionEnEdicion => ({
   numero: '',
   fecha: '',
   remanenteAnterior: '',
+  creditoAnterior: '',
 });
 
 /** El cuerpo para la API: lo que se dejó vacío no se envía (el servidor propone). */
@@ -113,6 +116,8 @@ export function cuerpoDeDeclaracion(edicion: DeclaracionEnEdicion): DatosDeDecla
   if (edicion.fecha) cuerpo.fechaDePresentacion = edicion.fecha;
   const remanente = String(edicion.remanenteAnterior ?? '').trim();
   if (remanente) cuerpo.remanenteDeRetencionesAnterior = remanente;
+  const credito = String(edicion.creditoAnterior ?? '').trim();
+  if (credito) cuerpo.remanenteDeCreditoAnterior = credito;
   return cuerpo;
 }
 

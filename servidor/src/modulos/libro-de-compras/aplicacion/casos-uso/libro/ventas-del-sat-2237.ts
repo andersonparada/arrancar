@@ -39,10 +39,10 @@ export async function ventasDelFormulario(
   const ventas = await dependencias.cifrasDeVentas.delPeriodo(operador, pedido.periodo);
   const { formulario, creditoCentavos } = pedido;
   if (ventas.length === 0 || formulario === null) return { ventas, remanentes: null };
-  const anteriorCentavos = await remanenteAnteriorDelPeriodo(dependencias.periodos, {
+  const anterior = await remanenteAnteriorDelPeriodo(dependencias.periodos, {
     periodo: pedido.periodo,
     formulario,
   });
-  const entrada = { formulario, ventas, creditoCentavos, anteriorCentavos };
+  const entrada = { formulario, ventas, creditoCentavos, anterior };
   return { ventas, remanentes: calcularRemanentesDeRetenciones(entrada) };
 }

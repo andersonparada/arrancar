@@ -20,6 +20,15 @@ describe('líneas del remanente', () => {
     expect(lineas.filter((linea) => linea.destacada).map((linea) => linea.valor)).toEqual(['0.00', '65.00']);
   });
 
+  it('el SAT-2237 con crédito fiscal muestra lo que traía y lo que pasa al mes siguiente; el SAT-2046 no', () => {
+    const conCredito = { creditoAnterior: '10.00', creditoAlSiguiente: '7.00' };
+
+    const lineas = lineasDeRemanente({ ...remanentes('SAT-2237'), ...conCredito });
+
+    expect(lineas.map((linea) => linea.valor)).toEqual(['100.00', '25.00', '10.00', '60.00', '0.00', '65.00', '7.00']);
+    expect(lineasDeRemanente({ ...remanentes('SAT-2046'), ...conCredito })).toHaveLength(5);
+  });
+
   it('el SAT-2046 habla de constancias', () => {
     const lineas = lineasDeRemanente(remanentes('SAT-2046'));
 

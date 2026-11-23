@@ -1,6 +1,10 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
-import { esFormularioConRemanente } from '../../../dominio/periodos/remanentes-de-retenciones.js';
+import {
+  esFormularioConRemanente,
+  llevaCalculoDeRemanente,
+  type SaldosAnteriores,
+} from '../../../dominio/periodos/remanentes-de-retenciones.js';
 import { PeriodoDeclaradoEnElLibro } from '../../../dominio/eventos.js';
 import { PeriodoYaDeclarado } from '../../../dominio/periodos/errores-de-periodos.js';
 import { diferenciaDeFotos, type FotoDelPeriodo } from '../../../dominio/periodos/foto-del-periodo.js';
@@ -36,12 +40,22 @@ export interface PeticionDeDeclaracion {
    * el mes previo no tiene declaración en Arrancar: el primer mes.
    */
   remanenteDeRetencionesAnterior?: string | undefined;
+  /** El remanente del crédito fiscal del mes anterior, en quetzales; vale en las mismas condiciones que el de retenciones. */
+  remanenteDeCreditoAnterior?: string | undefined;
+}
+
+/** Lo que el usuario escribió como saldos con que empieza el período; sin nada escrito, `undefined`. */
+function saldosEscritos(peticion: PeticionDeDeclaracion): SaldosAnteriores | undefined {
+  const { remanenteDeRetencionesAnterior: retenciones, remanenteDeCreditoAnterior: credito } = peticion;
+  if (retenciones === undefined && credito === undefined) return undefined;
+  return { retencionesCentavos: aCentavos(retenciones ?? '0'), creditoCentavos: aCentavos(credito ?? '0') };
 }
 
 interface EntradaDeGuardado {
   periodo: string;
-  datos: Awaited<ReturnType<DeclararPeriodo['datosDeLaDeclaracion']>>;
-  escritoCentavos: number | undefined;
+  datos: Omit<Awaited<ReturnType<DeclararPeriodo['datosDeLaDeclaracion']>>, 'sinCalculo'>;
+  escrito: SaldosAnteriores | undefined;
+  sinCalculo: boolean;
 }
 
 /**
@@ -78,10 +92,8 @@ export class DeclararPeriodo {
     exigirPeriodoTerminado(periodo, hoy);
     const fila = await periodos.bloquear(operador.empresaId, periodo);
     if (fila.estado === 'declarado' && (await ajuste.encendido())) throw new PeriodoYaDeclarado(periodo);
-    const datos = await this.datosDeLaDeclaracion(operador, { ...peticion, periodo }, hoy);
-    const escrito = peticion.remanenteDeRetencionesAnterior;
-    const escritoCentavos = escrito === undefined ? undefined : aCentavos(escrito);
-    const guardada = await this.guardar(operador, { periodo, datos, escritoCentavos });
+    const { sinCalculo, ...datos } = await this.datosDeLaDeclaracion(operador, { ...peticion, periodo }, hoy);
+    const guardada = await this.guardar(operador, { periodo, datos, escrito: saldosEscritos(peticion), sinCalculo });
     await periodos.marcarDeclarado(operador.empresaId, periodo, operador.usuarioId);
     const declarado = await periodos.buscar(periodo);
     const avisos = (await revisionDelPeriodo(consultasDelPeriodo, periodo)).map((aviso) => aviso.mensaje);
@@ -100,6 +112,7 @@ export class DeclararPeriodo {
     const fecha = peticion.fechaDePresentacion ?? hoy;
     exigirFechaDePresentacion(peticion.periodo, fecha);
     return {
+      sinCalculo: !llevaCalculoDeRemanente(regimen),
       formulario,
       numeroDeFormulario: numeroDeFormularioValido(peticion.numeroDeFormulario, formulario),
       fechaDePresentacion: fecha,
@@ -109,12 +122,12 @@ export class DeclararPeriodo {
   /** Arma la foto con el código del libro, la compara con la declaración anterior y agrega la fila del historial. */
   private async guardar(
     operador: Operador,
-    { periodo, datos, escritoCentavos }: EntradaDeGuardado,
+    { periodo, datos, escrito, sinCalculo }: EntradaDeGuardado,
   ): Promise<DeclaracionGuardada> {
     const { periodos } = this.dependencias;
     const foto = await fotoDelPeriodoDeHoy(this.dependencias, operador, {
       periodo,
-      remanentes: await this.remanentes(periodo, datos.formulario, escritoCentavos),
+      remanentes: sinCalculo ? undefined : await this.remanentes(periodo, datos.formulario, escrito),
     });
     const previas = (await periodos.historial(periodo)).filter((declaracion) => declaracion.evento !== 'reapertura');
     const evento = eventoDeLaDeclaracion(previas.length);
@@ -131,14 +144,10 @@ export class DeclararPeriodo {
   }
 
   /** Solo el SAT-2237 y el SAT-2046 llevan remanente de retenciones; el anterior sale de la foto del mes previo. */
-  private async remanentes(periodo: string, formulario: FormularioDeDeclaracion, escritoCentavos: number | undefined) {
+  private async remanentes(periodo: string, formulario: FormularioDeDeclaracion, escrito?: SaldosAnteriores) {
     if (!esFormularioConRemanente(formulario)) return undefined;
-    const anteriorCentavos = await remanenteAnteriorDelPeriodo(this.dependencias.periodos, {
-      periodo,
-      formulario,
-      escritoCentavos,
-    });
-    return { formulario, anteriorCentavos };
+    const anterior = await remanenteAnteriorDelPeriodo(this.dependencias.periodos, { periodo, formulario, escrito });
+    return { formulario, anterior };
   }
 
   private async diferencia(anterior: DeclaracionGuardada, foto: FotoDelPeriodo) {

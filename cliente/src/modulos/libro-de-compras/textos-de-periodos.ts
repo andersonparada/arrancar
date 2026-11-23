@@ -89,6 +89,9 @@ export const VENTANA_DE_DECLARACION = {
   remanente: 'Remanente de retenciones del mes anterior (opcional)',
   remanenteAyuda:
     'Solo si es el primer mes que declara en Arrancar: lo que le quedó de retenciones (SAT-2237) o de constancias (SAT-2046) a favor. Los meses siguientes se toma solo de la declaración anterior.',
+  credito: 'Remanente de crédito fiscal del mes anterior (opcional)',
+  creditoAyuda:
+    'Solo en el SAT-2237 y solo si es el primer mes que declara en Arrancar: el crédito fiscal que le sobró del mes anterior. Se resta del impuesto de este mes.',
   boton: 'Declarar',
   botonRectificacion: 'Registrar rectificación',
   exito: 'Período declarado.',
