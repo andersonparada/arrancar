@@ -13,6 +13,19 @@ export interface RenglonDeBoletaDto {
   componenteDe: string | null;
 }
 
+/** El escaneo firmado de la boleta, sin la ruta en disco ni su id: solo se abre por la ruta de la boleta. */
+export interface BoletaFirmadaDto {
+  tipoMime: string;
+  tamanoBytes: number;
+  /** Solo los PDF cuentan páginas. */
+  paginas: number | null;
+  sha256: string;
+  /** Como lo llamó quien lo subió (solo para mostrar). */
+  nombreOriginal: string | null;
+  subidoEn: string;
+  subidoPorNombre: string | null;
+}
+
 /** La boleta de traslado (la responsiva): todos los activos que se trasladaron juntos, con su destino. */
 export interface BoletaDto {
   grupoId: string;
@@ -30,6 +43,8 @@ export interface BoletaDto {
   estado: EstadoDeTraslado;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  /** El escaneo firmado, si ya se subió (I-8 b). */
+  firmada: BoletaFirmadaDto | null;
   renglones: RenglonDeBoletaDto[];
 }
 

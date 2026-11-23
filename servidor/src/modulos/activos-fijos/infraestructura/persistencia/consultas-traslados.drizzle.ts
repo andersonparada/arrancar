@@ -5,9 +5,10 @@ import {
   transaccionEnCurso,
 } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { configuracion } from '../../../core/configuracion/contexto.js';
-import type { BoletaDto, RenglonDeBoletaDto } from '../../aplicacion/dto/traslado.dto.js';
+import type { BoletaDto, BoletaFirmadaDto, RenglonDeBoletaDto } from '../../aplicacion/dto/traslado.dto.js';
 import type { ConsultasTraslados } from '../../aplicacion/puertos/consultas-traslados.js';
 import { activos } from './activos.tablas.js';
+import { firmadaDeLaBoleta } from './firmada-de-boleta.consulta.drizzle.js';
 import { nombresDeUbicaciones } from './nombres-de-ubicaciones.js';
 import { traslados } from './traslados.tablas.js';
 import { UbicacionesEnEmpresas } from './ubicaciones-en-empresas.drizzle.js';
@@ -49,8 +50,13 @@ export class ConsultasTrasladosDrizzle implements ConsultasTraslados {
       estado: traslado.estado,
       anuladoEn: traslado.anuladoEn?.toISOString() ?? null,
       motivoDeAnulacion: traslado.motivoDeAnulacion,
+      firmada: await this.firmadaDe(grupoId),
       renglones: filas.map(aRenglon),
     };
+  }
+
+  firmadaDe(grupoId: string): Promise<BoletaFirmadaDto | null> {
+    return firmadaDeLaBoleta(grupoId);
   }
 
   /** El nombre que la empresa le da a la responsiva (`activos-fijos.documentos.nombre_de_responsiva`). */
