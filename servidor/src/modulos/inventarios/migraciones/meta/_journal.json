@@ -43,6 +43,13 @@
       "when": 1795098551628,
       "tag": "0005_inv5_recepciones",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795469180270,
+      "tag": "0006_inv6_traslados",
+      "breakpoints": true
     }
   ]
 }

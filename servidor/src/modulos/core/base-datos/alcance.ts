@@ -63,10 +63,18 @@ export const politicasDelRegistroConAlcance = (alcance: AlcanceDeRegistros) => {
   ];
 };
 
-function politicaSobreColumna(alcance: AlcanceDeRegistros, columna: string, opcional: boolean) {
-  validar(alcance, columna);
-  const condicion = condicionDeAlcance(alcance, columna);
-  const texto = sql.raw(opcional ? `${columna} is null or ${condicion}` : condicion);
+/** El texto de la condición; con una sola columna es el de siempre (cambiarlo reescribiría las políticas de todos). */
+function textoDeLaPolitica(alcance: AlcanceDeRegistros, columnas: readonly string[], opcional: boolean): string {
+  columnas.forEach((columna) => validar(alcance, columna));
+  const [principal, ...otras] = columnas as [string, ...string[]];
+  const propia = condicionDeAlcance(alcance, principal);
+  const alternas = otras.map((columna) => `(${condicionDeAlcance(alcance, columna)})`);
+  const alcanzable = otras.length === 0 ? propia : [`(${propia})`, ...alternas].join('\n    or ');
+  return opcional ? `${principal} is null or ${alcanzable}` : alcanzable;
+}
+
+function politicaSobreColumna(alcance: AlcanceDeRegistros, columnas: readonly string[], opcional: boolean) {
+  const texto = sql.raw(textoDeLaPolitica(alcance, columnas, opcional));
   return pgPolicy(nombreDePolitica(alcance), {
     as: 'restrictive',
     for: 'all',
@@ -81,11 +89,11 @@ function politicaSobreColumna(alcance: AlcanceDeRegistros, columna: string, opci
  * ventas…): solo se ven y escriben filas cuyo `columna` sea un registro asignado al usuario.
  */
 export const politicaPorAlcance = (alcance: AlcanceDeRegistros, columna: string) =>
-  politicaSobreColumna(alcance, columna, false);
+  politicaSobreColumna(alcance, [columna], false);
 
 /** Igual que `politicaPorAlcance`, cuando la columna admite nulo: las filas sin registro se ven siempre. */
 export const politicaPorAlcanceOpcional = (alcance: AlcanceDeRegistros, columna: string) =>
-  politicaSobreColumna(alcance, columna, true);
+  politicaSobreColumna(alcance, [columna], true);
 
 /**
  * Políticas de la tabla de accesos: `aislamiento_por_empresa` y las de escritura, que solo
@@ -109,3 +117,11 @@ export const politicasDeTablaDeAccesos = (alcance: AlcanceDeRegistros) => {
     pgPolicy('quitar_para_asignar', { ...base, for: 'delete', using: condicion }),
   ];
 };
+
+/**
+ * Igual que `politicaPorAlcanceOpcional`, pero la fila también se ve y se escribe con la bodega de una segunda columna
+ * (`otraColumna`, nula casi siempre): la salida de un traslado la ve quien tiene el origen **o** el destino asignado,
+ * porque el destino es quien la recibe.
+ */
+export const politicaPorAlcanceOpcionalOEn = (alcance: AlcanceDeRegistros, columna: string, otraColumna: string) =>
+  politicaSobreColumna(alcance, [columna, otraColumna], true);
