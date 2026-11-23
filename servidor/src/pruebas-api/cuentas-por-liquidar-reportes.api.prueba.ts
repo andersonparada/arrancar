@@ -110,6 +110,7 @@ describe('CL-R1: anticipos por liquidar al corte', () => {
       vencidos: 1,
       monto: '1500.00',
       porJustificar: '1200.00',
+      aReembolsar: '0.00',
       porJustificarVencido: '700.00',
     });
     expect(reporte.porTramo.map((t: { cantidad: number }) => t.cantidad)).toEqual([1, 0, 0, 1, 0]);
@@ -214,7 +215,7 @@ describe('Excel y permisos', () => {
 
     expect(filas.some((f) => f.startsWith('Anticipos|Ana ') && f.includes(`|${vencido.numero}|`))).toBe(true);
     expect(filas.filter((f) => f.startsWith('Por antigüedad|'))).toHaveLength(5);
-    expect(filas.some((f) => f.startsWith('Total|') && f.endsWith('|1500|1200'))).toBe(true);
+    expect(filas.some((f) => f.startsWith('Total|') && f.endsWith('|1500|1200|0'))).toBe(true);
     expect(filas.some((f) => f.startsWith('Nota|') && f.includes('por liquidar al'))).toBe(true);
   });
 

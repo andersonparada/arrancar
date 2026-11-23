@@ -12,3 +12,7 @@ export const fecha = (clave: string, titulo: string): Columna => ({ clave, titul
 export const entero = (clave: string, titulo: string): Columna => ({ clave, titulo, requerido: false, tipo: 'entero' });
 export const siNo = (clave: string, titulo: string): Columna => ({ clave, titulo, requerido: false, tipo: 'siNo' });
 export const seccion: Columna = { clave: 'seccion', titulo: 'Sección', requerido: true, tipo: 'texto' };
+
+/** «1 anticipo», «2 anticipos»: la cantidad con su palabra en singular o plural. */
+export const plural = (cantidad: number, uno: string, varios: string): string =>
+  `${cantidad} ${cantidad === 1 ? uno : varios}`;

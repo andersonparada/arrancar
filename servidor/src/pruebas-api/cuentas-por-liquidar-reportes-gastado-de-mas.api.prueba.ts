@@ -1,7 +1,6 @@
 /**
- * CL-R1 con un anticipo gastado de más (QA de CL-7): el anticipo que la empresa aún debe reembolsar (por justificar negativo)
- * no debería restar de lo que los beneficiarios todavía deben justificar. Hoy el reporte lo suma con signo: el total de
- * «por justificar» y el del beneficiario quedan por debajo de lo real (`it.fails` hasta que se decida cómo mostrarlo).
+ * CL-R1 con un anticipo gastado de más (QA de CL-7): lo que la empresa aún debe reembolsar no resta de lo que los
+ * beneficiarios todavía deben justificar; se muestra aparte como «a reembolsar», por anticipo, beneficiario y total.
  */
 
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -27,9 +26,16 @@ describe('CL-R1 con un anticipo gastado de más', () => {
     expect(respuesta.cuerpo.beneficiarios[0].anticipos).toHaveLength(2);
   });
 
-  it.fails('lo que falta por justificar no se reduce con lo que la empresa debe reembolsar', async () => {
+  it('lo que falta por justificar no se reduce con lo que la empresa debe reembolsar', async () => {
     const respuesta = await e.propietario().get('/api/cuentas-por-liquidar/reportes/anticipos-por-liquidar');
+    const { total, beneficiarios, porTramo } = respuesta.cuerpo;
 
-    expect(respuesta.cuerpo.total.porJustificar).toBe('200.00');
+    expect(total).toMatchObject({ porJustificar: '200.00', aReembolsar: '300.00', porJustificarVencido: '0.00' });
+    expect(beneficiarios[0]).toMatchObject({ porJustificar: '200.00', aReembolsar: '300.00' });
+    expect(beneficiarios[0].anticipos.map((a: { porJustificar: string }) => a.porJustificar).sort()).toEqual([
+      '0.00',
+      '200.00',
+    ]);
+    expect(porTramo.find((t: { tramo: string }) => t.tramo === 'al_dia').porJustificar).toBe('200.00');
   });
 });

@@ -1,7 +1,7 @@
 import type { Columna } from '../../core/intercambio/aplicacion/columnas.js';
 import type { ReporteDeNoLiquidadoDto } from '../aplicacion/dto/reportes.dto.js';
 import { fechaLegible } from '../dominio/fechas.js';
-import { dinero, entero, fecha, seccion, siNo, texto } from './columnas-de-reporte.js';
+import { dinero, entero, fecha, plural, seccion, siNo, texto } from './columnas-de-reporte.js';
 
 /** Una fila del Excel de CL-R2: un anticipo con lo no liquidado, el total de un destino o una nota. */
 export interface FilaExportadaDeNoLiquidado {
@@ -32,6 +32,13 @@ const VACIA: FilaExportadaDeNoLiquidado = {
 
 const nota = (mensaje: string): FilaExportadaDeNoLiquidado => ({ ...VACIA, seccion: 'Nota', destino: mensaje });
 
+const filaDelTotal = (total: ReporteDeNoLiquidadoDto['total']): FilaExportadaDeNoLiquidado => ({
+  ...VACIA,
+  seccion: 'Total',
+  destino: plural(total.cantidad, 'anticipo', 'anticipos'),
+  noLiquidado: total.monto,
+});
+
 /** CL-R2 en filas planas: lo no liquidado por destino, el total y, al final, el período y las leyendas. */
 export function aFilasExportadasDeNoLiquidado(reporte: ReporteDeNoLiquidadoDto): FilaExportadaDeNoLiquidado[] {
   return [
@@ -51,7 +58,7 @@ export function aFilasExportadasDeNoLiquidado(reporte: ReporteDeNoLiquidadoDto):
       })),
       { ...VACIA, seccion: 'Subtotal', destino: `${grupo.titulo}: ${grupo.cantidad}`, noLiquidado: grupo.monto },
     ]),
-    { ...VACIA, seccion: 'Total', destino: `${reporte.total.cantidad} anticipos`, noLiquidado: reporte.total.monto },
+    filaDelTotal(reporte.total),
     nota(`Lo no liquidado del ${fechaLegible(reporte.desde)} al ${fechaLegible(reporte.hasta)}.`),
     ...reporte.leyendas.map(nota),
   ];
