@@ -4,11 +4,11 @@ import { faltaElMotivo, motivoVacio } from './motivo';
 
 /**
  * Una ventana que pide el motivo de una acción (anular, descartar): revisa que haya motivo, ejecuta la acción con él
- * y, si el servidor la acepta, cierra la ventana y avisa con `alTerminar`.
+ * y, si el servidor la acepta, cierra la ventana y avisa con `alTerminar`, que recibe lo que devolvió la acción.
  */
-export function usarVentanaDeMotivo(
-  ejecutar: (motivo: string) => Promise<unknown>,
-  alTerminar: () => Promise<void> | void,
+export function usarVentanaDeMotivo<Resultado>(
+  ejecutar: (motivo: string) => Promise<Resultado>,
+  alTerminar: (resultado: Resultado) => Promise<void> | void,
 ) {
   const { enviando, errores, enviar } = usarFormulario();
   const edicion = ref(motivoVacio());
@@ -21,9 +21,13 @@ export function usarVentanaDeMotivo(
   async function guardar(): Promise<void> {
     errores.value = faltaElMotivo(edicion.value);
     if (Object.keys(errores.value).length) return;
-    if (!(await enviar(() => ejecutar(edicion.value.motivo.trim())))) return;
+    const salida: { resultado?: Resultado } = {};
+    const aceptado = await enviar(async () => {
+      salida.resultado = await ejecutar(edicion.value.motivo.trim());
+    });
+    if (!aceptado) return;
     edicion.value.abierta = false;
-    await alTerminar();
+    await alTerminar(salida.resultado as Resultado);
   }
 
   return { edicion, enviando, errores, abrir, guardar };

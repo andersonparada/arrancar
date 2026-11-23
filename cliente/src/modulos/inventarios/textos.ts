@@ -47,5 +47,13 @@ export const VENTANAS_INVENTARIOS = {
     titulo: 'Política de costeo',
     descripcion: 'Cómo se calcula el costo de lo que sale del inventario.',
   },
+  porRecibir: {
+    titulo: 'Por recibir',
+    descripcion: 'Compras del Libro de compras que todavía no han entrado a una bodega.',
+  },
   // generador: ventanas
 } as const;
+
+/** Lo que se le dice a quien va a descartar una línea (V-8): el efecto en el libro y qué hacer con un bien de uso. */
+export const AVISO_DE_DESCARTE =
+  'La línea dejará de ser inventario en el Libro de compras y volverá a ser gasto con su concepto. Si en realidad es un bien de uso, la marca de activo fijo no se pone desde aquí: se corrige en el libro (anular y registrar de nuevo, si importa la casilla del SAT-2237). Úsela también si la línea ya estaba en el saldo inicial.';

@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Calculator, PackageSearch, Warehouse } from 'lucide-vue-next';
+import { ArrowLeftRight, Calculator, PackageCheck, PackageSearch, Warehouse } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_INVENTARIOS } from './textos';
 import { Ruler } from 'lucide-vue-next';
@@ -119,6 +119,12 @@ export const moduloInventarios: DefinicionModuloCliente = {
       component: () => import('./paginas/PoliticaDeCosteo.vue'),
       meta: { permiso: 'inventarios.metodo-de-costeo.ver', titulo: VENTANAS_INVENTARIOS.politicaDeCosteo.titulo },
     },
+    {
+      path: '/inventarios/por-recibir',
+      name: 'inventarios.por-recibir',
+      component: () => import('./paginas/PorRecibir.vue'),
+      meta: { permiso: 'inventarios.recepciones.ver', titulo: VENTANAS_INVENTARIOS.porRecibir.titulo },
+    },
     // generador: rutas
   ],
   menu: [
@@ -175,6 +181,13 @@ export const moduloInventarios: DefinicionModuloCliente = {
           icono: Calculator,
           seccion: 'administracion',
           permiso: 'inventarios.metodo-de-costeo.ver',
+        },
+        {
+          titulo: VENTANAS_INVENTARIOS.porRecibir.titulo,
+          ruta: '/inventarios/por-recibir',
+          icono: PackageCheck,
+          seccion: 'operacion',
+          permiso: 'inventarios.recepciones.ver',
         },
         // generador: menu
       ],
