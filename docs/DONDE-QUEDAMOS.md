@@ -76,6 +76,11 @@ Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop*
 
 Al terminar: unir la **última rama de cada cadena** en `integracion`, revisar migraciones, correr la suite y pasar a `main`.
 
+**Ventas/Caja (aprobado el 2026-11-23, `docs/modulos/diseno-ventas-y-caja.md`):** no hay módulo Caseta. Ventas/Caja usa **formas de venta**:
+con FEL es formal; sin FEL es de control e informal; una empresa puede tener ambas. Lleva recibos de pago, crédito, turnos, recetas y
+producción (módulo `produccion`). VJ-P1 a VJ-P17 aceptadas con la opción recomendada. **Workflow `arrancar-ventas-caja-1`:** VCJ-0a →
+VCJ-0d → VCJ-1 → VCJ-1c → VCJ-2 → VCJ-2c, desde `base-vcj`. VCJ-0b espera a INV-8 unido.
+
 **Siguientes pasos al retomar** (todo diseñado y aprobado):
 - **Cuentas por liquidar:** corregir los dos medios de la QA CL-7.
 - **Caja chica:** CC-11 (QA).
