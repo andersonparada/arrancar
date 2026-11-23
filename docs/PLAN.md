@@ -4363,3 +4363,23 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     contable abierto» es regla futura con Contabilidad. Leyenda nueva en `LEYENDAS_DE_SALDOS` («Un documento eliminado
     después del corte ya no aparece…»), por validar con el contador. La prueba de API de CT-0e no se pudo correr aquí
     (ECONNRESET a PostgreSQL :5433 desde el entorno del agente): correrla antes de unir.
+
+- **2026-11-23 (CT-1, Contabilidad: esqueleto, inicio y nomenclatura)**:
+  - Módulo `contabilidad` (`dependeDe: ['terceros']`) creado con el generador y registrado en `modulos/indice.ts`; la
+    cuenta salió de `generador/definiciones/contabilidad/cuenta.ts` y se completó a mano (el cliente generado se quitó:
+    las pantallas son de CT-1c). Migraciones `0000_ct1_cuentas_e_inicios` (tablas `inicios` y `cuentas`, RLS por empresa,
+    únicos, `check`, árbol con llave compuesta) y `0001_ct1_hoja_de_detalle_y_auditoria` (disparador
+    `cuentas_hoja_de_detalle` y auditoría permanente de `contabilidad.cuentas` y `contabilidad.inicio`).
+  - Dominio: `MascaraDeCuentas`, `Cuenta` (la cuenta superior y el nivel salen del código; rubros completos de §5.2 en
+    `rubros.ts`), `InicioContable`. Casos de uso: `GuardarInicio` y `ObtenerInicio`; `CrearCuenta`, `ActualizarCuenta`
+    (inactivar y reactivar con auditoría), `EliminarCuenta` (auditoría `eliminar`), `ListarCuentas` y `ObtenerCuenta`. API:
+    `GET/PUT /contabilidad/inicio` y `/contabilidad/cuentas` con Excel (exportar, plantilla e importar todo o nada). La
+    carga inicial se consulta por el mediador (`empresas.obtener_carga_inicial`).
+  - Decisiones: `activo` en vez de `activa`; el código de una cuenta no cambia; `corriente` no nulo; `moneda_codigo`
+    (`char(3)`, FK a `core.monedas`) solo como columna; lo que revisa tablas que aún no existen (saldo cero, enlaces,
+    líneas, partidas contabilizadas) queda para CT-2 y CT-3. Detalle en `diseno-contabilidad.md` §5.2. Sin plantillas
+    (CT-1p espera la del contador).
+  - Pruebas: 101 de Contabilidad (dominio, casos de uso, tablas y disparador contra PostgreSQL, API de inicio y de
+    cuentas con Excel) y 80 de seguridad y registro de módulos. Nota del entorno: desde el entorno del agente el puerto
+    publicado :5433 responde `ECONNRESET`; las pruebas se corrieron en un contenedor que comparte la red de la base de
+    desarrollo (`docker run --network container:arrancar-dev-postgres-1 …` con un reenviador :5433 a :5432).

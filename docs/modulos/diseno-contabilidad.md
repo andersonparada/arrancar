@@ -528,6 +528,27 @@ impresión copia los nombres que tenía: §5.9); no se audita como borrado porqu
 Índices: `cuentas_id_empresa_unico`, `(empresa_id, padre_id)`, `(empresa_id, codigo text_pattern_ops)` (búsqueda por
 prefijo). Eliminar: solo sin líneas, hijas ni enlaces (las llaves `no action` lo hacen cumplir; el error se traduce).
 
+**Lo que se programó en CT-1 (2026-11-23) y difiere de la letra de este diseño:**
+
+- La inactivación usa la columna `activo` (convención del generador y del resto del sistema), no `activa`; se inactiva y
+  reactiva con `PUT …/:id` y `activo`, con auditoría (`auditarCambioDeEstado`), sin rutas `/inactivar` ni `/reactivar`.
+- La **cuenta superior sale del código**: `padre_id` y `nivel` se calculan con la máscara (el código sin su último grupo
+  es el de la cuenta superior, que debe existir). No se escribe `padre_id` ni en el formulario ni en el Excel; las filas
+  del Excel van de arriba hacia abajo. El código no se cambia después de crear la cuenta.
+- `corriente` es `boolean not null default false` (no nulo): el dominio solo admite `true` en rubros de activo y de pasivo.
+- `moneda_codigo char(3)` (FK a `core.monedas.codigo`, que no usa uuid) existe como columna, nula = quetzales; Multimoneda
+  la expone en su paso. No se acepta aún por la API.
+- `nivel`, `cuentas_nivel_sin_padre` y `cuentas_detalle_con_rubro` (detalle sin rubro) son restricciones adicionales de la
+  base. El nombre único es `(empresa_id, coalesce(padre_id, 0), nombreNormalizado(nombre))`: las cuentas de primer nivel
+  también se comparan entre sí.
+- Quedan para los pasos que crean lo que revisan: inactivar «solo con saldo cero y sin enlaces» y «cambiar naturaleza o
+  tipo solo sin líneas» (CT-2 y CT-3), y «cambiar la fecha de inicio solo sin partidas contabilizadas» (CT-3).
+- `iniciada_en`/`iniciada_por` existen en `inicios` y se llenan al armar la apertura (CT-6). La fecha de inicio contable
+  se valida contra la carga inicial por el mediador: «desde la carga» = fecha de inicio de la empresa; «posterior» = después
+  de ella y con la carga cerrada (`carga_inicial_abierta`).
+- La auditoría permanente de `contabilidad.cuentas` y `contabilidad.inicio` entró en `0001` (el resto, en CT-3).
+- `GET /contabilidad/plantillas` y `contabilidad.plantillas.disponibles` son de CT-1p.
+
 **Rubros** (lista completa tras la validación 2026-11-19, V-7; los nuevos en cursiva):
 
 | Tipo | Grupo | Rubros |
@@ -966,7 +987,7 @@ pendiente de un paso solo toca la parte que se dice: lo demás del paso se progr
 | **CT-0d** | Cuentas por pagar: destino del faltante (migración, Zod, dominio, evento); cliente: selector al liquidar con la nota de CT-P8 (§4.4) | backend + frontend chico | CT-0a2 | — |
 | **CT-0e** (**hecho** 2026-11-23) | Empresas: avisos `carga_por_cerrar` y `carga_por_reabrir` | backend | — | — |
 | CT-0f (**hecho** 2026-11-23) | Corregir `diseno-cp5-reportes.md` §2.3 (documentación) | arquitecto | — | — |
-| **CT-1** | Esqueleto del módulo (`dependeDe: ['terceros']`), `inicios` (con firmantes), `cuentas` (rubros completos de §5.2, `tratamiento_fiscal` nuevo), máscara, disparador de hoja, Excel de cuentas; pruebas de tablas, del disparador y de la API. **Sin plantillas** (van en CT-1p) | backend | — | — |
+| **CT-1** (**hecho** 2026-11-23: migraciones `0000_ct1_cuentas_e_inicios` y `0001_ct1_hoja_de_detalle_y_auditoria`; decisiones en §5.2 y en la bitácora de `docs/PLAN.md`) | Esqueleto del módulo (`dependeDe: ['terceros']`), `inicios` (con firmantes), `cuentas` (rubros completos de §5.2, `tratamiento_fiscal` nuevo), máscara, disparador de hoja, Excel de cuentas; pruebas de tablas, del disparador y de la API. **Sin plantillas** (van en CT-1p) | backend | — | — |
 | CT-1c | Inicio (sin la vista previa del caso b) y Nomenclatura (árbol, ventana, Excel) | frontend | CT-1 | — |
 | **CT-2** | `enlaces`, catálogo de roles, pregunta `llaves_de_enlace` (respuestas de Bancos, Libro de compras y Cuentas por pagar), Excel | backend | CT-1, CT-0a | — |
 | CT-2c | Enlaces contables | frontend | CT-2 | — |
