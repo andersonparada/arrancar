@@ -4359,3 +4359,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   folio por hoja, el sello «Folio N» / «BORRADOR — sin folio» y el pie «Hoja N de M» (sin cambiar los bytes del PDF), y se
   agregó una prueba de caracterización de la tabla con un pincel doble (columnas de ambos libros, Vienen/Van/Total,
   ceros omitidos en filas y visibles en subtotales).
+- **2026-11-23 — LV-1 (servidor) hecho: esqueleto del módulo `libro-de-ventas`.** Módulo generado con
+  `dependeDe: ['libro-de-compras']` (trae Terceros). Migraciones `0000_conceptos_de_ingreso` (esquema y tabla, del
+  generador) y `0001_lv1_conceptos_y_datos_de_cliente` (clave de sistema, único por nombre normalizado, `check`s, llave
+  `(id, empresa_id)`, tabla `datos_fiscales_de_cliente` por cuenta con llave compuesta a `terceros.clientes` y la
+  auditoría permanente de `libro-de-ventas.documentos` y `.retenciones` con el motivo corregido). Conceptos de ingreso
+  (recurso generado, con semilla perezosa de cuatro conceptos —uno de sistema, `venta_de_activo_fijo`, que no se edita,
+  inactiva ni elimina—, eliminar con auditoría y Excel). Datos fiscales de cliente: escucha de
+  `terceros.cliente_guardado`, sección `libro-de-ventas` validada por campo, auditoría `corregir` al cambiar y
+  `GET /api/libro-de-ventas/clientes/:clienteId/datos-fiscales` (`terceros.ver`). Configuración declarada: las tres
+  `ict.*`, `pequeno_contribuyente.limites_anuales`, `destino.consumidor_final` y `anticipos.tratamiento` (las de la
+  tarjeta se declaran en CXC-5). Pruebas de tablas (RLS, `check`s, llave compuesta, auditoría permanente), dominio, casos
+  de uso, módulo/configuración y API (permisos, aislamiento entre cuentas, módulo apagado). Pendiente: el eliminar del
+  concepto revisa «líneas de documentos» recién en LV-2 (`enUso` devuelve falso mientras no exista la tabla); el cliente
+  generado de conceptos de ingreso (lista y ventana) ya está; LV-1c le suma el eliminar y la sección «Datos fiscales
+  (ventas)» de Clientes.
