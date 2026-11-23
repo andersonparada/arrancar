@@ -4367,3 +4367,23 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (el rechazo real llega con AF-5). Corrección tras la revisión (§10.2): eliminar un valor audita con el recurso permanente
   `empresas.inmuebles` (su `anterior` trae `inmuebleId`); eliminar, inactivar y reactivar un inmueble dejan en `anterior` el
   DTO con sus valores (las dos series), leídos antes de borrar.
+- **2026-11-23 — Parcelas PA-1: módulo `parcelas` (servidor).** Esqueleto con el generador (`dependeDe: ['terceros']`) y
+  una sola migración `parcelas/0000_pa1_parcelas` (el generador no crea una `0000_esquema` aparte): `tipos_de_parcela`
+  (único normalizado, semilla perezosa al listar, Excel y eliminar), `parcelas` (§5.3: árbol con llave compuesta madre-localidad,
+  nivel, tenencia, superficies como copia de la medición vigente, punto y colindancias; `politicaPorEmpresa` más
+  `politicaPorAlcance(ALCANCE_DE_LOCALIDADES)`, que se importa de `accesos-a-localidades.tablas.js`),
+  `mediciones` (§5.5: cifra y unidad originales, varas de la cuerda, anulación completa, `archivo_id` ya creado para PA-AR) y
+  `parcelas_de_inmuebles` (N:M con la porción; la FK al inmueble es `no action`, así que eliminar un inmueble ligado da
+  `inmueble_en_uso`). La misma migración registra `parcelas.contratos` en `core.recursos_de_auditoria_permanente`. Configuración de §10.4
+  en `configuracion.ts` (la caballería en 645,816 varas²: PA-23 a). Dominio puro `superficie.ts` con `BigInt` (exacto, redondeo al
+  centésimo, mitad hacia arriba), `Parcela` y `Medicion`. Casos de uso: crear (con primera medición e inmuebles), editar (quitar un
+  inmueble audita `quitar`), inactivar y reactivar (hijas activas, madre activa, aviso a los módulos de rubro), eliminar (sin hijas ni
+  mediciones vigentes; las anuladas se van con ella; audita con la ficha), listar con filtros y como árbol, registrar y anular
+  mediciones (anular recalcula la superficie y audita), Excel de parcelas (madre por código, inmuebles por nombre separados con «;»,
+  medición inicial en cifra y unidad, la útil en la misma unidad). Mediador (`core/contratos/parcelas.contratos.ts`): la orden
+  `parcelas.obtener_parcela_en_fecha` (superficie que regía ese día; uso `null` y `cedidaATerceros` falso hasta PA-2) y los avisos
+  `parcela_por_inactivar` y `parcela_por_eliminar` (probados con un escucha que rechaza). Permisos `parcelas.tipos-de-parcela.*`,
+  `parcelas.parcelas.*` y `parcelas.mediciones.crear|anular`. El generador también dejó el catálogo de tipos de parcela del cliente
+  (PA-1c lo completa con árbol, formulario y ficha). **Pendiente:** eventos §9.2 y avisos `superficie_por_cambiar` y `parcela_guardada`
+  (llegan con PA-2 y los módulos de rubro), la suma de hijas contra la madre y de porciones contra el inmueble (avisos de §3.2 y §5.6),
+  el aviso de «Parcelas sin inmueble o sin medición» (PA-5) y la unidad de la útil distinta de la de la total.

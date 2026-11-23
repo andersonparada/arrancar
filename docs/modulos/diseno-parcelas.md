@@ -858,7 +858,7 @@ nulas se crean igual en su tabla).
 | AF-P23d | Llevar AF-P23 a `diseno-activos-fijos.md` (§3.5.1, §5.3, §6.5, pasos AF-5 y AF-7, pregunta AF-P23 respondida por PA-1 c) | arquitecto | — | PA-20 |
 | **AF-P23** | Activos fijos: `00xx_af_p23_inmueble` (`inmueble_id`, quita las tres columnas y sus checks; aborta si hay valores), dominio y DTO, manejadores de los dos avisos (sin cierres aún, no rechazan: el rechazo real llega con AF-5) | backend | PA-0b, AF-P23d | — |
 | AF-P23c | `CamposDeActivo`: selector de inmueble en edificios y terrenos en vez de matrícula y catastro | frontend | AF-P23 | — |
-| **PA-1** | Esqueleto de `parcelas` (`dependeDe: ['terceros']`), configuración (§10.4, caballería en varas²), `tipos_de_parcela` (semilla perezosa, Excel), `parcelas`, `mediciones`, `parcelas_de_inmuebles` (`0001`), `dominio/superficie.ts` con las pruebas de §7, crear/editar/inactivar/eliminar, `parcelas.obtener_parcela_en_fecha` y avisos de inactivar y eliminar en `parcelas.contratos.ts`, Excel de parcelas; pruebas de jerarquía (misma localidad por llave, tope de niveles), aislamiento por localidad y llaves entre esquemas | backend | PA-0a | PA-23 (solo el nombre de una clave) |
+| **PA-1** (hecho 2026-11-23) | Esqueleto de `parcelas` (`dependeDe: ['terceros']`), configuración (§10.4, caballería en varas²), `tipos_de_parcela` (semilla perezosa, Excel), `parcelas`, `mediciones`, `parcelas_de_inmuebles` (`0001`), `dominio/superficie.ts` con las pruebas de §7, crear/editar/inactivar/eliminar, `parcelas.obtener_parcela_en_fecha` y avisos de inactivar y eliminar en `parcelas.contratos.ts`, Excel de parcelas; pruebas de jerarquía (misma localidad por llave, tope de niveles), aislamiento por localidad y llaves entre esquemas | backend | PA-0a | — (PA-23 respondida con la opción a) |
 | PA-1c | Tipos de parcela (catálogo); Parcelas: árbol, formulario con calculadora, ficha (Datos, Mediciones, Inmuebles); `edicion-de-superficie.ts` con las mismas pruebas | frontend | PA-1, PA-0ac | — |
 | **PA-2** | `usos` (`0002`, `0003 --custom`), abrir, cerrar, eliminar, aviso del INAB desde bosque, plantación forestal y conservación (texto sin cita literal, V-5), `uso_por_cerrar` y `superficie_por_cambiar`, importar usos históricos, evento `uso_cambiado`; prueba de la exclusión y de la concurrencia (dos aperturas a la vez) | backend | PA-1 | — |
 | PA-2c | Pestaña Usos (línea de tiempo y cambio de uso) | frontend | PA-2, PA-1c | — |
@@ -975,5 +975,7 @@ del mapa y el límite del GeoJSON.
   texto y sus preguntas son PA-20 a PA-23 (§17.1), **sin responder**.
 - **PA-20 y PA-21 (2026-11-23): se programan con la opción recomendada** (dos series de valores, un valor usado en un mes
   cerrado no se borra; la categoría del IUSI por fecha en el valor de matrícula).
+- **PA-23 (2026-11-23): se programa con la opción recomendada** (`parcelas.unidades.varas_cuadradas_por_caballeria = 645816`,
+  en la misma base que la manzana).
 - La pregunta del inmueble para Activos fijos se renombra **AF-P23** (AF-P22 ya existía); PA-1 c la deja decidida en
   principio y falta llevarla a `diseno-activos-fijos.md` (paso AF-P23d).
