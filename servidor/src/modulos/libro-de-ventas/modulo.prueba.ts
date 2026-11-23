@@ -21,7 +21,7 @@ describe('módulo de Libro de ventas', () => {
     expect(() => new RegistroModulos(definicionesModulos)).not.toThrow();
   });
 
-  it('declara un permiso por acción para los conceptos de ingreso, sin gestionar ni soloSuperacceso', () => {
+  it('declara un permiso por acción para los conceptos de ingreso y los documentos, sin gestionar ni soloSuperacceso', () => {
     const permisos = moduloLibroDeVentas.permisos;
 
     expect(permisos.map((permiso) => permiso.clave)).toEqual([
@@ -31,6 +31,10 @@ describe('módulo de Libro de ventas', () => {
       'libro-de-ventas.conceptos-de-ingreso.eliminar',
       'libro-de-ventas.conceptos-de-ingreso.importar',
       'libro-de-ventas.conceptos-de-ingreso.exportar',
+      'libro-de-ventas.documentos.ver',
+      'libro-de-ventas.documentos.crear',
+      'libro-de-ventas.documentos.anular',
+      'libro-de-ventas.documentos.eliminar',
     ]);
     expect(permisos.some((permiso) => permiso.soloSuperacceso)).toBe(false);
   });

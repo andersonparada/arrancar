@@ -1,6 +1,7 @@
 import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo.js';
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeConceptosDeIngreso } from './composicion/conceptos-de-ingreso.js';
+import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { rutasDeDatosFiscalesDeClienteComponidas } from './composicion/datos-fiscales-de-cliente.js';
 import { configuracionDeLibroDeVentas } from './configuracion.js';
 // generador: importaciones
@@ -27,12 +28,17 @@ export const moduloLibroDeVentas: DefinicionModulo = {
       descripcion: 'Importar conceptos de ingreso desde Excel',
     },
     { clave: 'libro-de-ventas.conceptos-de-ingreso.exportar', descripcion: 'Exportar conceptos de ingreso a Excel' },
+    { clave: 'libro-de-ventas.documentos.ver', descripcion: 'Ver los documentos de venta' },
+    { clave: 'libro-de-ventas.documentos.crear', descripcion: 'Registrar documentos de venta' },
+    { clave: 'libro-de-ventas.documentos.anular', descripcion: 'Anular documentos de venta' },
+    { clave: 'libro-de-ventas.documentos.eliminar', descripcion: 'Eliminar documentos de venta sin cartera ni notas' },
     // generador: permisos
   ],
   configuracion: configuracionDeLibroDeVentas,
   rutas: rutasDelModulo([
     rutasDeConceptosDeIngreso(),
     rutasDeDatosFiscalesDeClienteComponidas(),
+    rutasDeDocumentosComponidas(),
     // generador: rutas
   ]),
 };

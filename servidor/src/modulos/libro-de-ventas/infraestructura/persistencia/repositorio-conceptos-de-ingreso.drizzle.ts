@@ -5,6 +5,7 @@ import type { ConceptoDeIngreso, ConceptoDeIngresoId } from '../../dominio/conce
 import { nombreNormalizado } from '../../../core/base-datos/nombre-normalizado.js';
 import { mapeadorDeConceptoDeIngreso } from './concepto-de-ingreso.mapeador.js';
 import { conceptosDeIngreso } from './conceptos-de-ingreso.tablas.js';
+import { lineasDeDocumento } from './lineas-de-documento.tablas.js';
 
 /** La tabla tiene seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
 export class RepositorioConceptosDeIngresoDrizzle implements RepositorioConceptosDeIngreso {
@@ -31,9 +32,14 @@ export class RepositorioConceptosDeIngresoDrizzle implements RepositorioConcepto
     await transaccionEnCurso().delete(conceptosDeIngreso).where(eq(conceptosDeIngreso.id, conceptoDeIngreso.id.valor));
   }
 
-  /** Aún no hay líneas de documentos (LV-2): sin ellas nada usa el concepto. LV-2 revisa aquí `lineas_de_documento`. */
-  async enUso(_id: ConceptoDeIngresoId): Promise<boolean> {
-    return false;
+  /** Un concepto con líneas de documentos (también de documentos anulados) se inactiva en vez de eliminarse. */
+  async enUso(id: ConceptoDeIngresoId): Promise<boolean> {
+    const [fila] = await transaccionEnCurso()
+      .select({ id: lineasDeDocumento.id })
+      .from(lineasDeDocumento)
+      .where(eq(lineasDeDocumento.conceptoDeIngresoId, id.valor))
+      .limit(1);
+    return fila !== undefined;
   }
 
   async hayAlguno(): Promise<boolean> {
