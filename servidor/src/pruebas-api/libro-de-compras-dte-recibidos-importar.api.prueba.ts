@@ -195,6 +195,22 @@ describe('importar el archivo de la SAT', () => {
     expect(registrada).toMatchObject({ estado: 'registrado', documentoId: documento.cuerpo.documento.id });
   });
 
+  it('una factura especial recibida es una venta: entra bloqueada, no se confirma y se restaura bloqueada', async () => {
+    const especial = fila({ 'Tipo de DTE (nombre)': 'FESP' });
+    const respuesta = await subir(propietario(), xls([especial, fila()]));
+    const filas = await listar(`?loteId=${respuesta.cuerpo.lote.id}`);
+    const venta = filas.find((f) => f.tipoDte === 'FESP');
+
+    expect(venta).toMatchObject({ estado: 'bloqueado', motivoDeBloqueo: 'factura_especial_de_venta' });
+    expect(filas.filter((f) => f.estado === 'pendiente')).toHaveLength(1);
+    expect(respuesta.cuerpo.lote.filasNuevas).toBe(2);
+    const confirmada = await propietario().post(`${RUTA_DTE}/confirmar`, { ids: [venta.id] });
+    expect(confirmada.cuerpo.resultados[0].error).toMatchObject({ codigo: 'dte_es_una_venta' });
+    await propietario().post(`${RUTA_DTE}/descartar`, { ids: [venta.id], motivo: 'La llevo en ventas' });
+    const restaurada = await propietario().post(`${RUTA_DTE}/${venta.id}/restaurar`);
+    expect(restaurada.cuerpo).toMatchObject({ estado: 'bloqueado', motivoDeBloqueo: 'factura_especial_de_venta' });
+  });
+
   it('lee también .xlsx y CSV con punto y coma', async () => {
     const csv = [ENCABEZADOS.join(';'), fila().join(';')].join('\n');
 

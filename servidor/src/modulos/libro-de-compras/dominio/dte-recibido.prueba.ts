@@ -122,3 +122,19 @@ describe('DteRecibido', () => {
     expect(dte.instantanea().motivoDeDescarte).toBeNull();
   });
 });
+
+describe('la factura especial recibida es una venta', () => {
+  it('solo la FESP es una venta, y se bloquea con su motivo', () => {
+    const especial = DteRecibido.crear({
+      empresaId: Identificador.nuevo<'Empresa'>(),
+      loteId: crypto.randomUUID(),
+      datos: { ...nuevo().instantanea(), tipoDte: 'FESP' },
+    });
+
+    especial.bloquear('factura_especial_de_venta');
+
+    expect(nuevo().esVenta).toBe(false);
+    expect(especial.esVenta).toBe(true);
+    expect(especial.instantanea()).toMatchObject({ estado: 'bloqueado', motivoDeBloqueo: 'factura_especial_de_venta' });
+  });
+});

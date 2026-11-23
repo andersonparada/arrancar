@@ -106,3 +106,24 @@ describe('clasificar la carga de la SAT', () => {
     expect(plan.anuladasYaRegistradas).toBe(1);
   });
 });
+
+describe('la factura especial recibida', () => {
+  it('entra bloqueada como venta, aunque no esté en otra empresa', () => {
+    const plan = clasificarCarga([filaDe(datos('a', { tipoDte: 'FESP' })), filaDe(datos('b'))], conocimiento());
+
+    expect(plan.nuevas.map((f) => [f.estado, f.instantanea().motivoDeBloqueo])).toEqual([
+      ['bloqueado', 'factura_especial_de_venta'],
+      ['pendiente', null],
+    ]);
+    expect(plan.bloqueadas).toBe(1);
+  });
+
+  it('si ya está registrada como compra, se queda registrada y no se toca', () => {
+    const plan = clasificarCarga(
+      [filaDe(datos('a', { tipoDte: 'FESP' }))],
+      conocimiento({ documentosVigentes: new Map([['a', 'doc-1']]) }),
+    );
+
+    expect(plan.nuevas[0]?.estado).toBe('registrado');
+  });
+});

@@ -22,6 +22,7 @@ const resumen = (cambios: Partial<Record<ClaveDeResultado, number>> = {}) => ({
     noVaEnElLibro: 0,
     anuladoEnLaSatYVigenteAqui: 0,
     descartado: 0,
+    facturaEspecialDeVentaRegistradaComoCompra: 0,
     anterioresALaFechaDeInicio: 0,
     ...cambios,
   },
@@ -66,6 +67,13 @@ describe('conteos de la conciliación', () => {
     expect(cantidadPorRevisar(datos)).toBe(7);
     // Los de antes de la fecha de inicio son informativos: no cuentan como conciliados.
     expect(cantidadConciliada(datos)).toBe(34);
+  });
+
+  it('una factura especial de venta registrada como compra pide revisión', () => {
+    const datos = resumen({ cuadra: 4, facturaEspecialDeVentaRegistradaComoCompra: 1 });
+
+    expect(cantidadPorRevisar(datos)).toBe(1);
+    expect(grupoInicial(datos)).toBe('facturaEspecialDeVentaRegistradaComoCompra');
   });
 
   it('un mes vacío no tiene nada por revisar ni conciliado', () => {

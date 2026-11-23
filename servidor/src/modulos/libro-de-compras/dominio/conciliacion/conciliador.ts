@@ -21,6 +21,7 @@ function resultadoVacio(): ResultadoDeConciliacion {
     sinDatosDeLaSat: [],
     anuladoEnLaSatYVigenteAqui: [],
     descartado: [],
+    facturaEspecialDeVentaRegistradaComoCompra: [],
     anterioresALaFechaDeInicio: [],
   };
 }
@@ -37,6 +38,7 @@ function clasificarDocumento(
   }
   const item = itemDelDocumento(documento, fila);
   if (fila.estadoSat === 'anulado') return ['anuladoEnLaSatYVigenteAqui', item];
+  if (fila.tipoDte === 'FESP') return ['facturaEspecialDeVentaRegistradaComoCompra', item];
   return [item.diferencias.length > 0 ? 'conDiferencias' : 'cuadra', item];
 }
 
@@ -46,8 +48,13 @@ function claveDeLaFilaConDocumento(
   documento: DocumentoConciliable,
 ): keyof ResultadoDeConciliacion {
   if (fila.estadoSat === 'anulado') return 'anuladoEnLaSatYVigenteAqui';
+  if (fila.tipoDte === 'FESP') return 'facturaEspecialDeVentaRegistradaComoCompra';
   return documento.fueraDelLibro ? 'noVaEnElLibro' : 'registradoEnOtroPeriodo';
 }
+
+/** Una fila vigente que Arrancar no tiene; una anulada o una factura especial (es una venta) no son un faltante. */
+const esFaltante = (fila: FilaConciliable): boolean =>
+  fila.estadoSat !== 'anulado' && fila.motivoDeBloqueo !== 'factura_especial_de_venta';
 
 /** Del lado de la SAT: una fila emitida en el mes que no cruzó con un documento del libro del período. */
 function clasificarFila(
@@ -65,7 +72,7 @@ function clasificarFila(
     return ['anterioresALaFechaDeInicio', { ...item, enPlazoDeCredito }];
   }
   if (fila.estado === 'descartado') return ['descartado', item];
-  return fila.estadoSat === 'anulado' ? null : ['enLaSatYNoEnArrancar', item];
+  return esFaltante(fila) ? ['enLaSatYNoEnArrancar', item] : null;
 }
 
 const ordenar = (a: ItemDeConciliacion, b: ItemDeConciliacion): number =>

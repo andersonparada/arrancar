@@ -94,6 +94,8 @@ export interface ResultadoDeConciliacion {
   sinDatosDeLaSat: ItemDeConciliacion[];
   anuladoEnLaSatYVigenteAqui: ItemDeConciliacion[];
   descartado: ItemDeConciliacion[];
+  /** Factura especial recibida (es una venta) registrada como compra: el usuario debe eliminarla de aquí. */
+  facturaEspecialDeVentaRegistradaComoCompra: ItemDeConciliacion[];
   /** Emitidas en el mes, antes de la fecha de inicio y sin documento en Arrancar: deben estar en el libro del sistema anterior. Informativo. */
   anterioresALaFechaDeInicio: ItemDeConciliacion[];
 }

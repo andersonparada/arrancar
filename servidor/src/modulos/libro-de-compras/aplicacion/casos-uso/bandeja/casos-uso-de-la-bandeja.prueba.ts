@@ -244,3 +244,23 @@ describe('descartar y restaurar', () => {
     ]);
   });
 });
+
+describe('la factura especial recibida (una venta) vuelve bloqueada, no pendiente', () => {
+  it('al soltarla de su documento y al restaurarla de un descarte', async () => {
+    const enlazada = await agregar({ tipoDte: 'FESP' });
+    enlazada.registrar('doc-1');
+    await new EnlaceDeLaBandeja(filas).soltar('doc-1');
+    const descartada = await agregar({ tipoDte: 'FESP' });
+    descartada.descartar({ motivo: 'No', por: crypto.randomUUID(), en: new Date() });
+
+    const restaurada = await new RestaurarDteRecibido({
+      unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
+      filas,
+      autorizaciones: { estaRegistrada: async () => false },
+      auditoria: new AuditoriaEnMemoria(),
+    }).ejecutar(operador, descartada.id.valor);
+
+    expect(enlazada.instantanea()).toMatchObject({ estado: 'bloqueado', motivoDeBloqueo: 'factura_especial_de_venta' });
+    expect(restaurada).toMatchObject({ estado: 'bloqueado', motivoDeBloqueo: 'factura_especial_de_venta' });
+  });
+});

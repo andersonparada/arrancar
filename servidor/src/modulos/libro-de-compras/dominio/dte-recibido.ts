@@ -126,6 +126,11 @@ export class DteRecibido extends Entidad<DteRecibidoId> {
     return this.propiedades.estado;
   }
 
+  /** Toda factura especial (`FESP`) que llega a recibidos es una venta de la empresa, no una compra. */
+  get esVenta(): boolean {
+    return this.propiedades.tipoDte === 'FESP';
+  }
+
   /** @throws TransicionDeDteInvalida si ya está registrada. */
   registrar(documentoId: string): void {
     this.mover('registrado', { documentoId });

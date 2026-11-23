@@ -21,6 +21,7 @@ export class EnlaceDeLaBandeja implements EnlaceConLaBandeja {
     const fila = await this.filas.buscarPorDocumento(documentoId, true);
     if (!fila) return;
     fila.devolverAPendiente();
+    if (fila.esVenta) fila.bloquear('factura_especial_de_venta');
     await this.filas.guardar(fila);
   }
 }

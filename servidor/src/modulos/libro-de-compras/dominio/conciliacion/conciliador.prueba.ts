@@ -194,3 +194,30 @@ describe('CoberturaDeLotes', () => {
     expect(lotes.cubreElMesDe('2026-01-31')).toBe(false);
   });
 });
+
+describe('la factura especial recibida es una venta', () => {
+  it('registrada como compra sale aparte, para eliminarla', () => {
+    const resultado = conciliar({
+      periodo: PERIODO,
+      documentos: [documento({ tipoDte: 'FESP' })],
+      filas: [fila({ tipoDte: 'FESP' })],
+      cobertura,
+      fechaDeInicio: null,
+    });
+
+    expect(resultado.facturaEspecialDeVentaRegistradaComoCompra.map((i) => i.documentoId)).toEqual(['doc-1']);
+    expect(resultado.cuadra).toEqual([]);
+  });
+
+  it('bloqueada y sin documento no es un faltante: no sale en «en la SAT y no en Arrancar»', () => {
+    const resultado = conciliar({
+      periodo: PERIODO,
+      documentos: [],
+      filas: [fila({ tipoDte: 'FESP', estado: 'bloqueado', motivoDeBloqueo: 'factura_especial_de_venta' })],
+      cobertura,
+      fechaDeInicio: null,
+    });
+
+    expect(resultado.enLaSatYNoEnArrancar).toEqual([]);
+  });
+});

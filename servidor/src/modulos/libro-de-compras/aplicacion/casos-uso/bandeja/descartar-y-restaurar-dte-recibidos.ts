@@ -81,7 +81,8 @@ export class RestaurarDteRecibido {
       if (fila.estado !== 'descartado') throw new DteNoEstaDescartado();
       const anterior = dtoDeDteRecibido(fila);
       fila.devolverAPendiente();
-      if (await autorizaciones.estaRegistrada(fila.instantanea().autorizacionFel)) {
+      if (fila.esVenta) fila.bloquear('factura_especial_de_venta');
+      else if (await autorizaciones.estaRegistrada(fila.instantanea().autorizacionFel)) {
         fila.bloquear('registrado_en_otra_empresa');
       }
       await filas.guardar(fila);
