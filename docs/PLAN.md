@@ -4354,7 +4354,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (solo con la matrícula fiscal, por fecha: PA-21 a), documento y `archivo_id` (la FK existe; PA-AR lo usará). Llave compuesta
   al inmueble con `on delete cascade`, únicos `(id, empresa_id)` y `(inmueble_id, fuente, vigente_desde)`, checks de las partes
   y del total en centavos, solo `politicaPorEmpresa()`. Dominio `ValorDeInmueble` (no se edita), casos `RegistrarValorDeInmueble`,
-  `EliminarValorDeInmueble` (audita `eliminar` con recurso `empresas.valores_de_inmueble`) y `ListarValoresDeInmueble`; rutas
+  `EliminarValorDeInmueble` (audita `eliminar` con recurso `empresas.inmuebles`, corregido tras la revisión) y `ListarValoresDeInmueble`; rutas
   `GET/POST /empresas/inmuebles/:id/valores` y `DELETE …/:valorId` (ver con `empresas.inmuebles.ver`; registrar y eliminar con
   `.editar`). Avisos del mediador `empresas.valor_de_inmueble_registrado` y `empresas.valor_de_inmueble_por_eliminar` en
   `core/contratos/empresas.contratos.ts` (el segundo dentro de la transacción: si Activos fijos lanza
@@ -4364,5 +4364,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   inmueble y sus valores en una sola transacción. Cliente: la ficha del inmueble gana la sección «Valores» (una lista por
   fuente con «Vigente hoy», ventana para registrar y eliminar con confirmación). **Pendiente:** confirmar con el contador la
   vigencia del Decreto 18-2026 y la ayuda de la categoría (§5.2); sin QA en el navegador; AF-P23 debe escuchar los dos avisos
-  (el rechazo real llega con AF-5). La auditoría de los valores no entró al catálogo permanente (§4.3 solo nombra
-  `empresas.inmuebles` y `parcelas.contratos`).
+  (el rechazo real llega con AF-5). Corrección tras la revisión (§10.2): eliminar un valor audita con el recurso permanente
+  `empresas.inmuebles` (su `anterior` trae `inmuebleId`); eliminar, inactivar y reactivar un inmueble dejan en `anterior` el
+  DTO con sus valores (las dos series), leídos antes de borrar.

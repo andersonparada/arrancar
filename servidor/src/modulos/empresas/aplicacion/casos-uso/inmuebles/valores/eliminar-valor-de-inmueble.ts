@@ -12,7 +12,7 @@ export class EliminarValorDeInmueble {
 
   /**
    * Antes de borrar pregunta a los demás módulos (Activos fijos rechaza si ya lo usó en un mes cerrado: entonces se
-   * registra otro valor hacia adelante). Queda en la auditoría el valor como estaba.
+   * registra otro valor hacia adelante). Queda en la auditoría, bajo el recurso permanente de los inmuebles, el valor como estaba (con su `inmuebleId`).
    * @throws RecursoNoEncontrado si el inmueble o el valor no existen, o el operador no ve el inmueble.
    */
   ejecutar(operador: Operador, datos: ValorAEliminar): Promise<void> {
@@ -28,7 +28,7 @@ export class EliminarValorDeInmueble {
       });
       await repositorio.eliminar(datos.valorId);
       await auditoria.registrar({
-        recurso: 'empresas.valores_de_inmueble',
+        recurso: 'empresas.inmuebles',
         registroId: datos.valorId,
         accion: 'eliminar',
         anterior,

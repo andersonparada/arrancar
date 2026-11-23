@@ -127,14 +127,15 @@ describe('valores del inmueble por API', () => {
     const creado = await cuenta.propietario.post(`${RUTA}/${id}/valores`, valor({ documento: 'Recibo 9' }));
 
     const baja = await cuenta.propietario.delete(`${RUTA}/${id}/valores/${creado.cuerpo.id}`);
-    const rastro = await comoPropietario<{ anterior: { documento: string; vigenteDesde: string } }>(
-      "select anterior from core.auditoria where recurso = 'empresas.valores_de_inmueble' and accion = 'eliminar' and registro_id = $1",
+    const rastro = await comoPropietario<{ anterior: { documento: string; inmuebleId: string } }>(
+      "select anterior from core.auditoria where recurso = 'empresas.inmuebles' and accion = 'eliminar' and registro_id = $1",
       [creado.cuerpo.id],
     );
 
     expect(baja.estado).toBe(204);
     expect((await cuenta.propietario.get(`${RUTA}/${id}/valores`)).cuerpo).toEqual([]);
     expect(rastro.map((fila) => fila.anterior.documento)).toEqual(['Recibo 9']);
+    expect(rastro[0]?.anterior.inmuebleId).toBe(id);
   });
 
   it('si Activos fijos lo rechaza por un mes cerrado, el valor sigue y no queda rastro de baja', async () => {
@@ -188,5 +189,23 @@ describe('valores del inmueble por API', () => {
 
     expect(baja.estado).toBe(204);
     expect(quedan).toEqual([]);
+  });
+
+  it('al eliminar o inactivar el inmueble la auditoría guarda sus valores', async () => {
+    const id = await nuevoInmueble();
+    await cuenta.propietario.post(`${RUTA}/${id}/valores`, valor({ categoriaIusi: 'vivienda' }));
+    await cuenta.propietario.post(`${RUTA}/${id}/valores`, valor({ fuente: 'catastro_municipal', valorTotal: '5.00' }));
+
+    await cuenta.propietario.post(`${RUTA}/${id}/inactivar`, {});
+    await cuenta.propietario.delete(`${RUTA}/${id}`);
+    const rastro = await comoPropietario<{ accion: string; anterior: { valores: Array<{ fuente: string }> } }>(
+      "select accion, anterior from core.auditoria where recurso = 'empresas.inmuebles' and registro_id = $1 order by accion",
+      [id],
+    );
+
+    expect(rastro.map((fila) => fila.accion)).toEqual(['eliminar', 'inactivar']);
+    for (const fila of rastro) {
+      expect(fila.anterior.valores.map((v) => v.fuente).sort()).toEqual(['catastro_municipal', 'matricula_fiscal']);
+    }
   });
 });

@@ -1,6 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { InmuebleDto } from '../../dto/inmueble.dto.js';
-import { inmuebleExistente, type DependenciasDeInmuebles } from './dependencias-de-inmuebles.js';
+import { inmuebleExistente, inmuebleParaAuditar, type DependenciasDeInmuebles } from './dependencias-de-inmuebles.js';
 
 /**
  * Inactivar y reactivar un inmueble: el registro no cambia, solo su estado, y la auditoría guarda cómo estaba
@@ -16,8 +16,8 @@ export abstract class CambiarEstadoDeInmueble {
     const { unidadDeTrabajo, repositorio, consultas, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const inmueble = await inmuebleExistente(repositorio, inmuebleId);
-      const anterior = await consultas.obtener(inmuebleId);
-      if (anterior.activo === this.activoDespues) return anterior;
+      const { valores, ...actual } = await inmuebleParaAuditar(this.dependencias, inmuebleId);
+      if (actual.activo === this.activoDespues) return actual;
       if (this.activoDespues) inmueble.reactivar();
       else inmueble.inactivar();
       await repositorio.guardar(inmueble);
@@ -25,7 +25,7 @@ export abstract class CambiarEstadoDeInmueble {
         recurso: 'empresas.inmuebles',
         registroId: inmuebleId,
         accion: this.activoDespues ? 'reactivar' : 'inactivar',
-        anterior,
+        anterior: { ...actual, valores },
       });
       return consultas.obtener(inmuebleId);
     });

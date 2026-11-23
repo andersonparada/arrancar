@@ -30,6 +30,7 @@ const dependenciasDeInmuebles = () => ({
   auditoria: dependenciasCompartidas().auditoria,
   repositorio: new RepositorioInmueblesDrizzle(),
   consultas: new ConsultasInmueblesDrizzle(),
+  valores: new ConsultasValoresDeInmuebleDrizzle(),
 });
 
 type Dependencias = ReturnType<typeof dependenciasDeInmuebles>;
@@ -46,11 +47,11 @@ const casosDeUso = (dependencias: Dependencias) => ({
 
 /** Exportar e importar en Excel; cada fila importada pasa por las mismas reglas que el formulario, con sus valores. */
 function intercambioDeInmuebles(casos: ReturnType<typeof casosDeUso>, dependencias: Dependencias) {
-  const { unidadDeTrabajo, consultas } = dependencias;
+  const { unidadDeTrabajo, consultas, valores } = dependencias;
   const listar = new ListarInmueblesConValores({
     unidadDeTrabajo,
     consultas,
-    valores: new ConsultasValoresDeInmuebleDrizzle(),
+    valores,
     reloj: dependenciasCompartidas().reloj,
   });
   const crear = new CrearInmuebleConValores({
