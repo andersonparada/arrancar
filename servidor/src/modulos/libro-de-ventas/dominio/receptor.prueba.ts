@@ -20,6 +20,15 @@ describe('receptor del documento', () => {
     expect(resolverReceptor({ nitReceptor: 'cf', nombreReceptor: 'Juan' }, null).nombreReceptor).toBe('Juan');
   });
 
+  it('un cliente con NIT CF se factura como consumidor final, sin escribir nada', () => {
+    const esperado = { tipoDeIdentificacion: 'cf', nitReceptor: 'CF', nombreReceptor: 'Distribuidora Quiroa' };
+
+    expect(resolverReceptor({}, cliente({ nit: 'CF' }))).toEqual(esperado);
+    expect(resolverReceptor({ tipoDeIdentificacion: 'cf' }, cliente({ nit: 'cf' }))).toEqual(esperado);
+    expect(resolverReceptor({ tipoDeIdentificacion: 'cf' }, cliente({ nit: NIT_VALIDO }))).toEqual(esperado);
+    expect(resolverReceptor({ nitReceptor: 'cf' }, cliente({ nit: NIT_VALIDO }))).toEqual(esperado);
+  });
+
   it('sin cliente no cabe un NIT', () => {
     expect(() => resolverReceptor({ nitReceptor: NIT_VALIDO }, null)).toThrow(ClienteObligatorio);
     expect(() => resolverReceptor({ tipoDeIdentificacion: 'nit' }, null)).toThrow(ClienteObligatorio);

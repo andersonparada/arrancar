@@ -10,6 +10,7 @@ import {
   documentoDeVentaDePrueba,
   instalarCarteraFalsa,
   prepararEscenarioDeVentas,
+  registrarCliente,
   RUTA_DOCUMENTOS_DE_VENTA as RUTA,
   type EscenarioDeVentas,
 } from './soporte/escenario-de-ventas.js';
@@ -81,6 +82,44 @@ describe('el régimen del mes del documento', () => {
       lista.cuerpo.elementos.map((fila: { regimenIvaDeLaEmpresa: string }) => fila.regimenIvaDeLaEmpresa),
     );
     expect(regimenes).toEqual(new Set(['general', 'pequeno_contribuyente']));
+  });
+});
+
+describe('el IVA sale de la familia del documento', () => {
+  it('una factura de pequeño contribuyente en un mes general se guarda sin IVA con el IVA 0 del DTE, y avisa', async () => {
+    const respuesta = await registrarEn(cambiante, {
+      tipo: 'factura_pequeno_contribuyente',
+      fechaEmision: dia(MES_PASADO, 12),
+      ivaDelDte: '0.00',
+      serie: 'FAM',
+      numero: '1',
+    });
+
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
+    expect(respuesta.cuerpo.documento.totales).toMatchObject({ gravadoBienes: '1120.00', iva: '0.00' });
+    expect(respuesta.cuerpo.avisos).toHaveLength(1);
+  });
+
+  it('una factura con IVA en un mes de pequeño contribuyente conserva el IVA del DTE y avisa', async () => {
+    const respuesta = await registrarEn(cambiante, { ivaDelDte: '120.00', serie: 'FAM', numero: '2' });
+
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
+    expect(respuesta.cuerpo.documento.totales.iva).toBe('120.00');
+    expect(respuesta.cuerpo.avisos).toHaveLength(1);
+  });
+
+  it('un cliente guardado con NIT CF se factura por omisión como consumidor final', async () => {
+    const { clienteId } = await registrarCliente(cambiante.cuenta, 'Cliente de mostrador', { nit: 'CF' });
+
+    const respuesta = await registrarEn(cambiante, {
+      clienteId,
+      fechaEmision: dia(MES_PASADO, 13),
+      serie: 'FAM',
+      numero: '3',
+    });
+
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
+    expect(respuesta.cuerpo.documento).toMatchObject({ tipoDeIdentificacion: 'cf', nitReceptor: 'CF' });
   });
 });
 

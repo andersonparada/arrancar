@@ -170,7 +170,7 @@ export function armarDocumentoDeVenta(solicitud: SolicitudArmada, contexto: Cont
   exigirPosteriorALaFechaDeInicio(fechaEmision, contexto.fechaDeInicio);
   const receptor = resolverReceptor(solicitud, contexto.cliente);
   const opciones = {
-    cobraIva: cobraIva(regimenIva, tipo),
+    cobraIva: cobraIva({ regimen: regimenIva, tipo, tipoDeLaFactura: contexto.facturaAfectada?.tipo ?? null }),
     tasaDeIva: contexto.tasaDeIva,
     ivaDelDte: solicitud.ivaDelDte,
   };

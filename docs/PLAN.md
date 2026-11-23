@@ -4403,3 +4403,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Pendiente: las retenciones esperadas, el ajuste proporcional por nota de crédito y la comprobación de «constancias» al
   eliminar llegan en LV-3; la bandeja (`dte_emitido_id`, el origen `bandeja_sat` y «anulado en la SAT») en LV-4; las
   pantallas en LV-2c.
+- **2026-11-23 — LV-2: correcciones de la revisión.** (1) El IVA de un documento sale de su **familia**, no del régimen
+  del mes (`cobraIva({ regimen, tipo, tipoDeLaFactura })`): llevan IVA la factura, la cambiaria y la especial; no la
+  de pequeño contribuyente, agropecuario o primario, el recibo ni la nota de abono. Un tipo que no corresponde al
+  régimen solo avisa y respeta el IVA del DTE. (2) La nota de crédito o de débito hereda el tratamiento de la factura
+  del libro que corrige; si la factura es del sistema anterior (no se conoce su familia) se usa el régimen del mes
+  (pendiente de validar con `contador-guatemala`). (3) La nota de crédito que agota el total de la factura tolera hasta
+  Q0.05 de IVA de más por el redondeo de cada documento; si no agota el total, el tope del IVA es exacto. (4) Un cliente
+  con NIT `CF` se factura como consumidor final por omisión (tipo `cf`), también con solo `tipoDeIdentificacion: 'cf'`
+  o `nitReceptor: 'CF'`. Con pruebas de dominio y de API.

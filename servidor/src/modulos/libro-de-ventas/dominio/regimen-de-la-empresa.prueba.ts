@@ -11,17 +11,35 @@ import type { TipoDeDocumento } from './tipos-de-documento.js';
 
 const DEROGACION = '2025-07-09';
 
-describe('qué régimen carga débito', () => {
-  it('solo el general, y la factura especial que emite el comprador', () => {
-    expect(cobraIva('general', 'factura')).toBe(true);
-    expect(cobraIva('pequeno_contribuyente', 'factura_pequeno_contribuyente')).toBe(false);
-    expect(cobraIva('primario_pecuario', 'factura_primario_pecuario')).toBe(false);
-    expect(cobraIva('no_afiliado', 'factura_especial_recibida')).toBe(true);
+describe('qué documento carga débito', () => {
+  const sinFactura = { tipoDeLaFactura: null };
+
+  it('lo decide la familia del documento, no el régimen del mes', () => {
+    expect(cobraIva({ regimen: 'general', tipo: 'factura', ...sinFactura })).toBe(true);
+    expect(cobraIva({ regimen: 'pequeno_contribuyente', tipo: 'factura', ...sinFactura })).toBe(true);
+    expect(cobraIva({ regimen: 'general', tipo: 'factura_pequeno_contribuyente', ...sinFactura })).toBe(false);
+    expect(cobraIva({ regimen: 'primario_pecuario', tipo: 'factura_primario_pecuario', ...sinFactura })).toBe(false);
+    expect(cobraIva({ regimen: 'no_afiliado', tipo: 'factura_especial_recibida', ...sinFactura })).toBe(true);
   });
 
   it('el recibo y la nota de abono nunca llevan IVA', () => {
-    expect(cobraIva('general', 'recibo')).toBe(false);
-    expect(cobraIva('general', 'nota_de_abono')).toBe(false);
+    expect(cobraIva({ regimen: 'general', tipo: 'recibo', ...sinFactura })).toBe(false);
+    expect(cobraIva({ regimen: 'general', tipo: 'nota_de_abono', tipoDeLaFactura: 'factura' })).toBe(false);
+  });
+
+  it('la nota hereda el tratamiento de su factura', () => {
+    const regimen = 'general';
+    expect(cobraIva({ regimen, tipo: 'nota_de_credito', tipoDeLaFactura: 'factura_pequeno_contribuyente' })).toBe(
+      false,
+    );
+    expect(cobraIva({ regimen: 'pequeno_contribuyente', tipo: 'nota_de_debito', tipoDeLaFactura: 'factura' })).toBe(
+      true,
+    );
+  });
+
+  it('la nota de una factura del sistema anterior usa el régimen del mes', () => {
+    expect(cobraIva({ regimen: 'general', tipo: 'nota_de_credito', tipoDeLaFactura: null })).toBe(true);
+    expect(cobraIva({ regimen: 'pequeno_contribuyente', tipo: 'nota_de_credito', tipoDeLaFactura: null })).toBe(false);
   });
 });
 

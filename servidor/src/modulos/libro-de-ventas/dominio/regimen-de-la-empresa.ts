@@ -47,13 +47,27 @@ const NOMBRE_DEL_REGIMEN: Record<RegimenDeIva, string> = {
   no_afiliado: 'no afiliado al IVA',
 };
 
+/** Las familias que llevan débito fiscal: la factura y la cambiaria (y la especial, cuyo IVA retiene el comprador). */
+const FAMILIAS_CON_IVA: readonly TipoDeDocumento[] = ['factura', 'factura_cambiaria', 'factura_especial_recibida'];
+
 /**
- * Solo el régimen general carga débito fiscal (y la factura especial que el comprador le emite a cualquier empresa:
- * ese IVA lo retiene él). El recibo y la nota de abono nunca llevan IVA: no son hechos generadores ni rebajan el débito.
+ * El IVA sale de la familia del documento, no del régimen del mes: la SAT ya certificó el DTE y un régimen mal cargado
+ * solo da un aviso (§3.4). Llevan IVA la factura, la cambiaria y la especial; las facturas de pequeño contribuyente,
+ * agropecuario y primario, el recibo y la nota de abono no. La nota de crédito o de débito hereda el tratamiento de la
+ * factura que corrige (`tipoDeLaFactura`); si la factura es del sistema anterior (no se conoce su familia) se usa el
+ * régimen del mes: solo el general carga IVA.
  */
-export function cobraIva(regimen: RegimenDeIva, tipo: TipoDeDocumento): boolean {
-  if (tipo === 'recibo' || tipo === 'nota_de_abono') return false;
-  return tipo === 'factura_especial_recibida' || regimen === 'general';
+export function cobraIva(datos: {
+  regimen: RegimenDeIva;
+  tipo: TipoDeDocumento;
+  tipoDeLaFactura: TipoDeDocumento | null;
+}): boolean {
+  const { regimen, tipo, tipoDeLaFactura } = datos;
+  if (tipo === 'nota_de_abono') return false;
+  if (tipo === 'nota_de_credito' || tipo === 'nota_de_debito') {
+    return tipoDeLaFactura ? FAMILIAS_CON_IVA.includes(tipoDeLaFactura) : regimen === 'general';
+  }
+  return FAMILIAS_CON_IVA.includes(tipo);
 }
 
 /**

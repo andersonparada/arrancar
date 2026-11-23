@@ -50,11 +50,15 @@ function consumidorFinal(solicitado: ReceptorSolicitado): Receptor {
   };
 }
 
+const CF_DEDUCIDO = { tipo: 'cf', valor: CONSUMIDOR_FINAL } as const;
+
+const esConsumidorFinal = (escrito: string): boolean => escrito.trim().toUpperCase() === CONSUMIDOR_FINAL;
+
 /** Qué identificación y de qué clase lleva el documento de un cliente que no la dijo el usuario. */
 function identificacionDelCliente(cliente: ClienteDelDocumento): { tipo: TipoDeIdentificacion; valor: string } {
-  if (cliente.nit) return { tipo: 'nit', valor: cliente.nit };
+  if (cliente.nit) return esConsumidorFinal(cliente.nit) ? CF_DEDUCIDO : { tipo: 'nit', valor: cliente.nit };
   if (cliente.dpi) return { tipo: 'cui', valor: cliente.dpi };
-  return { tipo: 'cf', valor: CONSUMIDOR_FINAL };
+  return CF_DEDUCIDO;
 }
 
 type Validador = (escrito: string) => string;
@@ -103,8 +107,8 @@ export function resolverReceptor(solicitado: ReceptorSolicitado, cliente: Client
   if (!cliente) return consumidorFinal(solicitado);
   const propia = texto(solicitado.nitReceptor);
   const deducida = identificacionDelCliente(cliente);
-  const tipo = solicitado.tipoDeIdentificacion ?? (propia ? 'nit' : deducida.tipo);
-  const escrito = propia || (tipo === deducida.tipo ? deducida.valor : '');
+  const tipo = solicitado.tipoDeIdentificacion ?? (propia ? (esConsumidorFinal(propia) ? 'cf' : 'nit') : deducida.tipo);
+  const escrito = propia || (tipo === deducida.tipo ? deducida.valor : tipo === 'cf' ? CONSUMIDOR_FINAL : '');
   return {
     tipoDeIdentificacion: tipo,
     nitReceptor: identificacionValida(tipo, escrito),

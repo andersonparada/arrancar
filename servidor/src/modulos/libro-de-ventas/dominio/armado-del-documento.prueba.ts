@@ -117,6 +117,25 @@ describe('armar una factura', () => {
     expect(avisos).toHaveLength(1);
   });
 
+  it('el IVA sale de la familia: una FPEQ en mes general no lleva débito y se puede registrar con el IVA 0 del DTE', () => {
+    const { documento, avisos } = armarDocumentoDeVenta(
+      solicitud({ tipo: 'factura_pequeno_contribuyente', ivaDelDte: 0 }),
+      contexto(),
+    );
+
+    expect(documento.totales).toMatchObject({ iva: 0, gravadoBienes: 11200 });
+    expect(avisos).toHaveLength(1);
+  });
+
+  it('una factura con IVA en un mes de pequeño contribuyente conserva el IVA del DTE y avisa', () => {
+    const regimen = { regimenIva: 'pequeno_contribuyente', regimenIsr: null } as const;
+
+    const { documento, avisos } = armarDocumentoDeVenta(solicitud({ ivaDelDte: 1200 }), contexto({ regimen }));
+
+    expect(documento.totales.iva).toBe(1200);
+    expect(avisos).toHaveLength(1);
+  });
+
   it('la cartera activa recibe la venta a un cliente', () => {
     const { documento } = armarDocumentoDeVenta(solicitud(), contexto({ destinosActivos: ['cuentas-por-cobrar'] }));
 
@@ -191,6 +210,18 @@ describe('notas', () => {
       documentoAfectadoId: factura().id,
     });
     expect(documento.totales.iva).toBe(1200);
+  });
+
+  it('una nota hereda el tratamiento de su factura aunque el régimen haya cambiado', () => {
+    const sinIva = factura({ tipo: 'factura_pequeno_contribuyente', iva: 0 });
+    const total = armarDocumentoDeVenta(nota({ ivaDelDte: 0 }), contexto({ facturaAfectada: sinIva }));
+    expect(total.documento.totales.iva).toBe(0);
+
+    const regimen = { regimenIva: 'pequeno_contribuyente', regimenIsr: null } as const;
+    const conIva = armarDocumentoDeVenta(nota({ ivaDelDte: 1200 }), contexto({ regimen, facturaAfectada: factura() }));
+    expect(conIva.documento.totales.iva).toBe(1200);
+    const calculada = armarDocumentoDeVenta(nota(), contexto({ regimen, facturaAfectada: factura() }));
+    expect(calculada.documento.totales.iva).toBe(1200);
   });
 
   it('sin factura es error', () => {

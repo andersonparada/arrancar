@@ -27,7 +27,7 @@ export interface LineaCalculada extends LineaEscrita {
 
 /** Cómo se trata el IVA del documento al calcular sus líneas. */
 export interface OpcionesDeCalculo {
-  /** `false` fuera del régimen general: no hay débito, todo va a la base. */
+  /** `false` si la familia del documento no lleva IVA: no hay débito, todo va a la base. */
   cobraIva: boolean;
   /** Tasa del IVA en centésimas (12 % → 1200). */
   tasaDeIva: number;
@@ -53,7 +53,7 @@ function ivasDeLasLineas(lineas: readonly LineaEscrita[], opciones: OpcionesDeCa
   const hayIva = opciones.cobraIva && indices.length > 0;
   if (!hayIva && (opciones.ivaDelDte ?? 0) > 0) {
     throw new LineaInvalida(
-      'El documento trae IVA, pero ninguna línea es gravada o el régimen de la empresa no cobra IVA.',
+      'El documento trae IVA, pero ninguna línea es gravada o este tipo de documento no lleva IVA.',
     );
   }
   const ivas = lineas.map(() => 0);

@@ -9,6 +9,7 @@ import {
 } from './errores-de-notas.js';
 import { DocumentoInvalido } from './errores-de-documento.js';
 import { venceLaVispera } from './fechas-del-libro.js';
+import { TOLERANCIA_MINIMA_DE_IVA_EN_CENTAVOS } from './reparto-de-iva.js';
 import { FAMILIAS_QUE_ADMITEN_NOTA, esNota, type TipoDeDocumento, type TipoDeNota } from './tipos-de-documento.js';
 
 /** Meses de la factura dentro de los que se puede emitir una nota de crédito que rebaje el débito (Ley del IVA, art. 17). */
@@ -104,8 +105,10 @@ export interface FacturaConNotas {
 
 /**
  * El tope de las notas de crédito: su suma, en total y en IVA, no pasa de la factura más sus notas de débito vigentes.
- * La nota de débito aumenta la factura, así que no tiene tope; la de abono tampoco (no toca el débito). La fila de la
- * factura debe estar bloqueada (`for update`) para que dos notas a la vez no se pasen.
+ * Cada nota redondea su IVA por su cuenta, así que la que agota el total de la factura puede pasarse del saldo de IVA
+ * hasta `TOLERANCIA_MINIMA_DE_IVA_EN_CENTAVOS` (Q0.05); si no agota el total, el tope del IVA es exacto. La nota de
+ * débito aumenta la factura, así que no tiene tope; la de abono tampoco (no toca el débito). La fila de la factura debe
+ * estar bloqueada (`for update`) para que dos notas a la vez no se pasen.
  * @throws NotaExcedeLaFactura
  */
 export function exigirQueLaNotaNoSupereLaFactura(
@@ -113,9 +116,11 @@ export function exigirQueLaNotaNoSupereLaFactura(
   nota: { tipo: TipoDeNota; total: number; iva: number },
 ): void {
   if (nota.tipo !== 'nota_de_credito') return;
-  const total = factura.totalDeNotasDeCredito + nota.total > factura.total + factura.totalDeNotasDeDebito;
-  const iva = factura.ivaDeNotasDeCredito + nota.iva > factura.iva + factura.ivaDeNotasDeDebito;
-  if (total || iva) throw new NotaExcedeLaFactura();
+  const totalAcumulado = factura.totalDeNotasDeCredito + nota.total;
+  const topeDelTotal = factura.total + factura.totalDeNotasDeDebito;
+  const margen = totalAcumulado === topeDelTotal ? TOLERANCIA_MINIMA_DE_IVA_EN_CENTAVOS : 0;
+  const iva = factura.ivaDeNotasDeCredito + nota.iva > factura.iva + factura.ivaDeNotasDeDebito + margen;
+  if (totalAcumulado > topeDelTotal || iva) throw new NotaExcedeLaFactura();
 }
 
 /** `true` si la nota de crédito se emite pasados los dos meses de su factura (vence la víspera). */
