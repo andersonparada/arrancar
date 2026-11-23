@@ -317,7 +317,9 @@ Cuentas por pagar a mano para la nota marcada: pasa a leer el mapa de b).
 
 **d) Concepto reservado**: también **ya está en `main`** (`CONCEPTOS_RESERVADOS_POR_MODULO`, `dominio/conceptos-reservados.ts`).
 VC-0b agrega `cobro_a_cliente`, `cobro_a_cliente_de_activo` y `devolucion_a_cliente` → `cuentas-por-cobrar`: se eligen a
-mano en una nota **solo** si Cuentas por cobrar no está activo.
+mano en una nota **solo** si Cuentas por cobrar no está activo; también `cheque_rechazado` (que antes se elegía a mano como sugerido y no debe dejar de poder elegirse ni de poder corregirse). `cobro_a_cliente` no entra: es la marca.
+
+**e) La marca vale en su dirección y no adopta notas viejas.** `CONCEPTO_QUE_MARCA_PARA_MODULO` trae el módulo **y** el tipo de nota (`pago_a_proveedor` solo débito; `cobro_a_cliente` solo crédito). La `0039` no adopta por nombre un concepto «Cobros a clientes» que ya tiene movimientos (sus notas quedarían marcadas para un módulo que quizá no existe, sin salida): lo renombra «… (anterior)» y el de sistema se inserta aparte.
 
 ### 4.3 Libro de compras (paso VC-0c)
 
@@ -1117,7 +1119,7 @@ siguiente al programar.
 |---|---|---|---|---|
 | **VC-0a** (hecho 2026-11-19) | Terceros, migración `0010_clientes_para_ventas`: único `clientes_id_cuenta_unico (id, cuenta_id)`, aviso `terceros.cliente_guardado` con secciones, orden `terceros.crear_cliente_desde_dte` (§4.1); pruebas de la llave entre cuentas, del aviso y de la orden (CF no crea nada) | backend | — | — |
 | VC-0a-c | Secciones aportadas en el formulario y la ficha de Clientes | frontend | VC-0a | — |
-| **VC-0b** (hecho 2026-11-23) | Bancos, migración `0039_cobros_a_clientes`: conceptos de sistema de cobro (como la `0037`), mapa de nota marcada por módulo (`marcadaParaModulo`), conceptos reservados de `cuentas-por-cobrar`, `RevisorDeCambios` con el mapa (§4.2); pruebas | backend | — (CCL-B1 ya está en `main`) | — |
+| **VC-0b** (hecho 2026-11-23, con correcciones de la revisión) | Bancos, migración `0039_cobros_a_clientes`: conceptos de sistema de cobro (como la `0037`), mapa de nota marcada por módulo (`marcadaParaModulo`), conceptos reservados de `cuentas-por-cobrar`, `RevisorDeCambios` con el mapa (§4.2); pruebas | backend | — (CCL-B1 ya está en `main`) | — |
 | VC-0b-c (hecho 2026-11-23) | `marcadaParaModulo` en las pantallas de Bancos (etiqueta «Para Cuentas por cobrar») | frontend | VC-0b | — |
 | **VC-0c1** | Libro de compras: pregunta `cifras_para_la_declaracion` y `foto.ventas` (§3.3, §4.3); migración `0040_factura_especial_de_venta` (bloqueo de toda `FESP` en recibidos, y las pendientes que ya estén); la `FESP` registrada como compra en el cuadre; pruebas con un doble que responde | backend | — | — |
 | **VC-0c2** | Libro de compras: remanente de retenciones del SAT-2237 y saldo de constancias del SAT-2046 en la foto (sin migración), el anterior escrito por el usuario en el primer mes, cálculo del impuesto del SAT-2046; pruebas de varios meses seguidos y de la rectificación | backend | VC-0c1 | La casilla exacta sale de la captura (VC-P29), pero **no bloquea**: las cifras se guardan igual y la casilla se ajusta después |

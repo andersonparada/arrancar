@@ -245,6 +245,12 @@ describe('lo que generó otro módulo y las notas marcadas (CP4)', () => {
     expect(accionesDeMovimiento(debito({ tipo: 'credito' }))).toMatchObject({ puedeMarcar: false });
   });
 
+  it('la marca solo vale en su dirección: un débito con «Cobros a clientes» o un crédito con pago a proveedores no marcan', () => {
+    expect(moduloMarcado(debito({ tipo: 'debito', claveDelConcepto: 'cobro_a_cliente' }))).toBeNull();
+    expect(moduloMarcado(debito({ tipo: 'credito', claveDelConcepto: 'pago_a_proveedor' }))).toBeNull();
+    expect(estaMarcada(debito({ tipo: 'debito', claveDelConcepto: 'cobro_a_cliente' }))).toBe(false);
+  });
+
   it('el mismo concepto en un cheque, una transferencia, un inverso o lo de otro módulo no es marca', () => {
     for (const cambios of [
       { tipo: 'cheque' as const },

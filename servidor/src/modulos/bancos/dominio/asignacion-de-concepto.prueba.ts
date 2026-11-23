@@ -145,6 +145,21 @@ describe('exigirConceptoElegible', () => {
       ).toThrow(/Cuentas por cobrar/);
     });
 
+    it('«Cheque rechazado» se elige a mano sin Cuentas por cobrar, se conserva al corregir y con el módulo activo lo registra él', () => {
+      const rechazado = concepto({ claveDeSistema: 'cheque_rechazado', aplicaA: 'debito' });
+
+      expect(() => exigirConceptoElegible(rechazado, 'debito', { modulosActivos: sinModulos })).not.toThrow();
+      expect(() =>
+        exigirConceptoElegible(rechazado, 'debito', {
+          yaAsignado: true,
+          modulosActivos: new Set(['cuentas-por-cobrar']),
+        }),
+      ).not.toThrow();
+      expect(() =>
+        exigirConceptoElegible(rechazado, 'debito', { modulosActivos: new Set(['cuentas-por-cobrar']) }),
+      ).toThrow(/Cuentas por cobrar/);
+    });
+
     it('«Cobros a clientes» marca la nota: no se elige a mano en una nota, solo al marcarla', () => {
       expect(() => exigirConceptoElegible(cobro, 'credito', { modulosActivos: sinModulos })).toThrow(
         ConceptoDeSistemaNoSeElige,

@@ -35,17 +35,26 @@ export const CONCEPTOS_RESERVADOS_POR_MODULO: Readonly<Record<string, string>> =
   cobro_a_cliente: MODULO_CUENTAS_POR_COBRAR,
   cobro_a_cliente_de_activo: MODULO_CUENTAS_POR_COBRAR,
   devolucion_a_cliente: MODULO_CUENTAS_POR_COBRAR,
+  cheque_rechazado: MODULO_CUENTAS_POR_COBRAR,
 };
+
+/** Lo que marca un concepto: el módulo y la dirección de la nota suelta que lo lleva (la marca solo vale en esa dirección). */
+export interface MarcaDeConcepto {
+  modulo: string;
+  tipoDeNota: 'credito' | 'debito';
+}
 
 /**
- * Concepto de sistema → módulo para el que una **nota suelta** con ese concepto queda marcada (VC-0b): la marca es el
- * concepto mismo, sin columna aparte. El módulo puede ligar la nota a sus documentos.
+ * Concepto de sistema → marca de una **nota suelta** con ese concepto (VC-0b): la marca es el concepto mismo, sin
+ * columna aparte, y solo cuenta en el tipo de nota indicado. El módulo puede ligar la nota a sus documentos.
  */
-export const CONCEPTO_QUE_MARCA_PARA_MODULO: Readonly<Record<string, string>> = {
-  pago_a_proveedor: MODULO_CUENTAS_POR_PAGAR,
-  cobro_a_cliente: MODULO_CUENTAS_POR_COBRAR,
+export const CONCEPTO_QUE_MARCA_PARA_MODULO: Readonly<Record<string, MarcaDeConcepto>> = {
+  pago_a_proveedor: { modulo: MODULO_CUENTAS_POR_PAGAR, tipoDeNota: 'debito' },
+  cobro_a_cliente: { modulo: MODULO_CUENTAS_POR_COBRAR, tipoDeNota: 'credito' },
 };
 
-/** El módulo para el que marca ese concepto de sistema; nulo si no marca para ninguno. */
-export const moduloQueMarca = (claveDeSistema: string | null): string | null =>
-  (claveDeSistema !== null ? CONCEPTO_QUE_MARCA_PARA_MODULO[claveDeSistema] : undefined) ?? null;
+/** El módulo para el que marca ese concepto en una nota de ese tipo; nulo si no marca para ninguno. */
+export const moduloQueMarca = (claveDeSistema: string | null, tipoDeNota: string): string | null => {
+  const marca = claveDeSistema !== null ? CONCEPTO_QUE_MARCA_PARA_MODULO[claveDeSistema] : undefined;
+  return marca !== undefined && marca.tipoDeNota === tipoDeNota ? marca.modulo : null;
+};

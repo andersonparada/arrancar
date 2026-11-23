@@ -45,10 +45,10 @@ const esVigente = (hechos: HechosDeUnMovimiento): boolean => !hechos.anulado && 
 /**
  * El módulo para el que una nota suelta, sin origen, está marcada (VC-0b): lo dice su concepto de sistema
  * (`CONCEPTO_QUE_MARCA_PARA_MODULO`: «Pago a proveedores» → Cuentas por pagar; «Cobros a clientes» → Cuentas por cobrar).
- * Una nota anulada o revertida conserva su concepto y sigue siendo «marcada». Nulo si no lo está.
+ * Solo marca en la dirección que le toca (débito de pago, crédito de cobro). Una nota anulada o revertida conserva su concepto y sigue siendo «marcada». Nulo si no lo está.
  */
 export const moduloMarcado = (hechos: HechosDeUnMovimiento): string | null =>
-  esNotaSuelta(hechos) ? moduloQueMarca(hechos.claveDelConcepto) : null;
+  esNotaSuelta(hechos) ? moduloQueMarca(hechos.claveDelConcepto, hechos.tipo) : null;
 
 export const estaMarcada = (hechos: HechosDeUnMovimiento): boolean => moduloMarcado(hechos) !== null;
 

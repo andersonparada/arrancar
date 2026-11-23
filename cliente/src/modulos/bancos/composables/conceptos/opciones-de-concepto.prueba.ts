@@ -168,6 +168,27 @@ describe('liberarReservados', () => {
     expect(textos(opcionesDeConcepto(libres, ['debito']))).not.toContain('Fondo de caja chica');
   });
 
+  it('ofrece «Cheque rechazado» sin Cuentas por cobrar y lo oculta con el módulo activo', () => {
+    const rechazado = { ...fondo, id: 'rechazado', nombre: 'Cheque rechazado', claveDeSistema: 'cheque_rechazado' };
+
+    expect(
+      textos(
+        opcionesDeConcepto(
+          liberarReservados([rechazado], () => false),
+          ['debito'],
+        ),
+      ),
+    ).toContain('Cheque rechazado');
+    expect(
+      textos(
+        opcionesDeConcepto(
+          liberarReservados([rechazado], () => true),
+          ['debito'],
+        ),
+      ),
+    ).not.toContain('Cheque rechazado');
+  });
+
   it('no toca «Pago a proveedores»', () => {
     expect(liberarReservados([pago], () => false)[0]!.claveDeSistema).toBe('pago_a_proveedor');
   });

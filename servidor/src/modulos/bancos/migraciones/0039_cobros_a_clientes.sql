@@ -2,6 +2,22 @@
 -- el nombre se compara con `core.nombre_normalizado`; al concepto sin clave del mismo nombre se le pone la clave, se le
 -- alinea la clasificación (el cargo bancario no se toca) y se reactiva; después se insertan los que falten. «Depósito de
 -- ventas» queda sin clave y libre. Repetible: converge siempre al mismo resultado.
+-- «Cobros a clientes» es la marca de Cuentas por cobrar: un concepto de ese nombre que ya tiene movimientos NO se adopta
+-- (sus notas quedarían marcadas para un módulo que quizá no existe, sin salida). Se renombra y sigue como concepto propio;
+-- el de sistema se inserta aparte.
+UPDATE "bancos"."conceptos" c
+SET "nombre" = c."nombre" || ' (anterior)'
+WHERE c."clave_de_sistema" IS NULL
+  AND core.nombre_normalizado(c."nombre") = core.nombre_normalizado('Cobros a clientes')
+  AND (
+    EXISTS (SELECT 1 FROM "bancos"."movimientos" m WHERE m."concepto_id" = c."id")
+    OR EXISTS (SELECT 1 FROM "bancos"."desglose_de_movimientos" d WHERE d."concepto_id" = c."id")
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM "bancos"."conceptos" x
+    WHERE x."empresa_id" = c."empresa_id"
+      AND core.nombre_normalizado(x."nombre") = core.nombre_normalizado(c."nombre" || ' (anterior)')
+  );--> statement-breakpoint
 UPDATE "bancos"."conceptos" c
 SET "clave_de_sistema" = s."clave", "aplica_a" = s."aplica_a", "actividad_de_flujo" = s."actividad",
     "grupo_de_flujo" = s."grupo", "activo" = true

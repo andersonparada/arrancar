@@ -4348,6 +4348,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+- **2026-11-23 — VC-0b, correcciones de la revisión.** (1) La `0039` ya no adopta por nombre un «Cobros a clientes» con
+  movimientos (ni en `movimientos` ni en `desglose_de_movimientos`): lo renombra «… (anterior)» y siembra el de sistema;
+  así ninguna nota existente queda marcada para un módulo inexistente. (2) `cheque_rechazado` es reservado de
+  `cuentas-por-cobrar` (servidor y cliente): se sigue eligiendo y corrigiendo a mano sin el módulo. (3)
+  `CONCEPTO_QUE_MARCA_PARA_MODULO` incluye el tipo de nota y `moduloMarcado` lo exige (pago: débito; cobro: crédito).
 - **2026-11-23 — VC-0b y VC-0b-c: Bancos listo para Cuentas por cobrar.** Migración `0039_cobros_a_clientes` (como la
   `0037`: por nombre normalizado, alinea, reactiva, inserta y es repetible) con los conceptos de sistema `cobro_a_cliente`,
   `cobro_a_cliente_de_activo`, `devolucion_a_cliente` y `cheque_rechazado` (este ya existía como sugerido y pasa a

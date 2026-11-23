@@ -28,6 +28,7 @@ const MODULO_DE_CONCEPTO_RESERVADO: Readonly<Record<string, string>> = {
   // «Cobros a clientes» no está: marca la nota y solo se pone al marcarla (como «Pago a proveedores»).
   cobro_a_cliente_de_activo: 'cuentas-por-cobrar',
   devolucion_a_cliente: 'cuentas-por-cobrar',
+  cheque_rechazado: 'cuentas-por-cobrar',
 };
 
 /**
