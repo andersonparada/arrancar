@@ -853,8 +853,8 @@ nulas se crean igual en su tabla).
 |---|---|---|---|---|
 | **PA-0a** (hecho 2026-11-19) | Empresas: `inmuebles` (`0014_inmuebles`, §5.1, **sin** `uso_declarado`) con `politicaPorEmpresa` + alcance opcional por localidad; crear, editar, inactivar, reactivar, eliminar (409 `inmueble_en_uso` al traducir la llave); permisos `empresas.inmuebles.*`; auditoría y auditoría permanente (motivo con C-9); Excel sin valores. Pruebas de tablas (checks del registro, único registral, copropiedad), aislamiento por localidad y empresa, API y Excel | backend | — | — |
 | PA-0ac (hecho 2026-11-19, sin QA en el navegador) | Empresas → Inmuebles (recurso completo con el generador; sin valores ni escritura) | frontend | PA-0a | — |
-| **PA-0b** | `valores_de_inmueble` (`0015`, §5.2): dos series, categoría del IUSI, registrar y eliminar, avisos `empresas.valor_de_inmueble_registrado` y `…_por_eliminar` en `core/contratos/empresas.contratos.ts` (prueba con un escucha falso que rechaza), columnas de valores en el Excel de inmuebles | backend | PA-0a | PA-20, PA-21 |
-| PA-0bc | Ficha del inmueble → Valores (dos listas y ventana) | frontend | PA-0b, PA-0ac | — |
+| **PA-0b** (hecho 2026-11-23) | `valores_de_inmueble` (`0015`, §5.2): dos series, categoría del IUSI, registrar y eliminar, avisos `empresas.valor_de_inmueble_registrado` y `…_por_eliminar` en `core/contratos/empresas.contratos.ts` (prueba con un escucha falso que rechaza), columnas de valores en el Excel de inmuebles (también `GET …/:id/valores` para listar; PA-20 y PA-21 respondidas con la recomendación) | backend | PA-0a | — |
+| PA-0bc (hecho 2026-11-23, sin QA en el navegador) | Ficha del inmueble → Valores (dos listas y ventana) | frontend | PA-0b, PA-0ac | — |
 | AF-P23d | Llevar AF-P23 a `diseno-activos-fijos.md` (§3.5.1, §5.3, §6.5, pasos AF-5 y AF-7, pregunta AF-P23 respondida por PA-1 c) | arquitecto | — | PA-20 |
 | **AF-P23** | Activos fijos: `00xx_af_p23_inmueble` (`inmueble_id`, quita las tres columnas y sus checks; aborta si hay valores), dominio y DTO, manejadores de los dos avisos (sin cierres aún, no rechazan: el rechazo real llega con AF-5) | backend | PA-0b, AF-P23d | — |
 | AF-P23c | `CamposDeActivo`: selector de inmueble en edificios y terrenos en vez de matrícula y catastro | frontend | AF-P23 | — |
@@ -973,5 +973,7 @@ del mapa y el límite del GeoJSON.
   vencidas), PA-18 b (avisos en el cierre de la carga), PA-19 b (JSONB en v2).
 - El mismo día el contador validó V-1 a V-7 (`dictamen-parcelas-validacion-2026-11-19.md`); sus correcciones están en el
   texto y sus preguntas son PA-20 a PA-23 (§17.1), **sin responder**.
+- **PA-20 y PA-21 (2026-11-23): se programan con la opción recomendada** (dos series de valores, un valor usado en un mes
+  cerrado no se borra; la categoría del IUSI por fecha en el valor de matrícula).
 - La pregunta del inmueble para Activos fijos se renombra **AF-P23** (AF-P22 ya existía); PA-1 c la deja decidida en
   principio y falta llevarla a `diseno-activos-fijos.md` (paso AF-P23d).

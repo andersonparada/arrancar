@@ -4348,3 +4348,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+- **2026-11-23 — Parcelas PA-0b y PA-0bc: valores del inmueble en dos series (Empresas, servidor y cliente).** Migración
+  `empresas/0015_valores_de_inmueble` (§5.2 del diseño): `empresas.valores_de_inmueble` con la fuente (`matricula_fiscal` o
+  `catastro_municipal`), origen, fecha de vigencia, terreno, construcciones y cultivos permanentes, total, categoría del IUSI
+  (solo con la matrícula fiscal, por fecha: PA-21 a), documento y `archivo_id` (la FK existe; PA-AR lo usará). Llave compuesta
+  al inmueble con `on delete cascade`, únicos `(id, empresa_id)` y `(inmueble_id, fuente, vigente_desde)`, checks de las partes
+  y del total en centavos, solo `politicaPorEmpresa()`. Dominio `ValorDeInmueble` (no se edita), casos `RegistrarValorDeInmueble`,
+  `EliminarValorDeInmueble` (audita `eliminar` con recurso `empresas.valores_de_inmueble`) y `ListarValoresDeInmueble`; rutas
+  `GET/POST /empresas/inmuebles/:id/valores` y `DELETE …/:valorId` (ver con `empresas.inmuebles.ver`; registrar y eliminar con
+  `.editar`). Avisos del mediador `empresas.valor_de_inmueble_registrado` y `empresas.valor_de_inmueble_por_eliminar` en
+  `core/contratos/empresas.contratos.ts` (el segundo dentro de la transacción: si Activos fijos lanza
+  `valor_de_inmueble_usado_en_cierre` el valor sigue y no queda rastro; probado con un escucha falso). El Excel de inmuebles
+  trae al final el valor vigente hoy de cada fuente (fecha, origen, terreno, construcciones, cultivos, total, documento y, en la
+  matrícula, la categoría del IUSI); al importar, una serie con algún dato exige fecha, origen y total, y la fila crea el
+  inmueble y sus valores en una sola transacción. Cliente: la ficha del inmueble gana la sección «Valores» (una lista por
+  fuente con «Vigente hoy», ventana para registrar y eliminar con confirmación). **Pendiente:** confirmar con el contador la
+  vigencia del Decreto 18-2026 y la ayuda de la categoría (§5.2); sin QA en el navegador; AF-P23 debe escuchar los dos avisos
+  (el rechazo real llega con AF-5). La auditoría de los valores no entró al catálogo permanente (§4.3 solo nombra
+  `empresas.inmuebles` y `parcelas.contratos`).
