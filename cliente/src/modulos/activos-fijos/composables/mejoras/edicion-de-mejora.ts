@@ -133,8 +133,8 @@ export function mensajeDeRegistroDeMejora(edicion: EdicionDeMejora, costoActual:
       : '';
   return (
     `Se registra ${que} de ${formatearMonto(textoDeCentavos(total))}. El costo del activo pasa de ` +
-    `${formatearMonto(costoActual)} a ${formatearMonto(nuevo)}.${vida} La depreciación cambia desde el mes de la ` +
-    'fecha indicada, sin tocar los meses ya cerrados.'
+    `${formatearMonto(costoActual)} a ${formatearMonto(nuevo)}.${vida} La depreciación se ajusta según la regla de ` +
+    'la empresa para el primer mes, nunca en meses ya cerrados.'
   );
 }
 

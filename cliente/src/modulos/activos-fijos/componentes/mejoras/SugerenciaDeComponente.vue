@@ -15,8 +15,8 @@ const emit = defineEmits<{ darDeAlta: [] }>();
     <div class="space-y-2">
       <p>
         Lo que se puede separar del activo y tiene su propia vida (un motor, un techo) conviene darlo de alta como
-        <strong>componente</strong>: se deprecia con su propia vida útil y se puede dar de baja o trasladar aparte. Si
-        lo registra como mejora, se suma al costo del activo y se deprecia con él.
+        <strong>componente</strong>: se deprecia con su propia vida útil y se puede dar de baja aparte. Si lo registra
+        como mejora, se suma al costo del activo y se deprecia con él.
       </p>
       <BotonBase v-permiso="'activos-fijos.activos.crear'" variante="secundario" pequeno @click="emit('darDeAlta')">
         Darlo de alta como componente

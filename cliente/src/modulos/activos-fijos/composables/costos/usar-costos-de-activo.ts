@@ -61,5 +61,5 @@ export function usarCostosDeActivo(activoId: string, esEdificio: () => boolean, 
     return true;
   }
 
-  return { datos, cargando, ...registro, anular };
+  return { datos, cargando, cargar, ...registro, anular };
 }

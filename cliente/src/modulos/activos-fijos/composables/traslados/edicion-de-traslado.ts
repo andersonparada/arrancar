@@ -19,6 +19,10 @@ export interface ActivoPorTrasladar {
   id: string;
   codigo: string;
   descripcion: string;
+  /** Dónde está hoy; con un solo activo, el formulario parte de aquí. */
+  localidadId?: string | null;
+  departamentoId?: string | null;
+  responsable?: string | null;
 }
 
 /** Los nombres elegidos del destino, para decirlos en la confirmación. */
@@ -27,17 +31,31 @@ export interface DestinoElegido {
   departamento: string | null;
 }
 
-/** El formulario vacío; `hoy` (`AAAA-MM-DD`) es la fecha que se propone. */
-export const edicionDeTrasladoNueva = (hoy: string): EdicionDeTraslado => ({
-  fecha: hoy,
-  localidadId: null,
-  departamentoId: null,
-  responsable: '',
-  recibidoPor: '',
-  motivo: '',
-  aBodega: false,
-  marcarOcioso: false,
-});
+function ubicacionActual(activos: ActivoPorTrasladar[]) {
+  const unico = activos.length === 1 ? activos[0] : undefined;
+  return {
+    localidadId: unico?.localidadId ?? null,
+    departamentoId: unico?.departamentoId ?? null,
+    responsable: unico?.responsable ?? '',
+  };
+}
+
+/**
+ * El formulario nuevo; `hoy` (`AAAA-MM-DD`) es la fecha que se propone. Con un solo activo parte de su localidad,
+ * departamento y responsable actuales: el traslado reemplaza la ubicación completa, así que lo que no se cambia se
+ * conserva. Con varios, el destino parte vacío y hay que elegirlo.
+ */
+export const edicionDeTrasladoNueva = (hoy: string, activos: ActivoPorTrasladar[] = []): EdicionDeTraslado => {
+  const actual = ubicacionActual(activos);
+  return {
+    fecha: hoy,
+    ...actual,
+    recibidoPor: '',
+    motivo: '',
+    aBodega: false,
+    marcarOcioso: false,
+  };
+};
 
 /** «Marcar como ocioso» solo vale al dejar el bien en la bodega: si se desmarca la bodega, se desmarca el ocio. */
 export function alCambiarABodega(edicion: EdicionDeTraslado): void {
@@ -71,11 +89,23 @@ export function datosDeTraslado(activos: ActivoPorTrasladar[], edicion: EdicionD
 /** El número de la boleta como se imprime: año y correlativo (`2027-0012`). */
 export const numeroDeBoleta = (numero: number, anio: number): string => `${anio}-${String(numero).padStart(4, '0')}`;
 
-function descripcionDelDestino(edicion: EdicionDeTraslado, destino: DestinoElegido): string {
-  const lugar = [destino.localidad, destino.departamento].filter(Boolean).join(' · ');
-  const base = lugar || 'la misma localidad y departamento';
-  return edicion.aBodega ? `la bodega de activos (${base})` : base;
+function nombreDeLugar(id: string | null, nombre: string | null, sin: string): string {
+  if (nombre) return nombre;
+  return id ? 'la ubicación indicada' : sin;
 }
+
+/** Dice exactamente qué queda: el traslado reemplaza localidad, departamento y responsable por lo escrito. */
+function descripcionDelDestino(edicion: EdicionDeTraslado, destino: DestinoElegido): string {
+  const localidad = nombreDeLugar(edicion.localidadId, destino.localidad, 'sin localidad');
+  const departamento = nombreDeLugar(edicion.departamentoId, destino.departamento, 'sin departamento');
+  const lugar = `${localidad} · ${departamento}`;
+  return edicion.aBodega ? `la bodega de activos (${lugar})` : lugar;
+}
+
+const textoDelResponsable = (edicion: EdicionDeTraslado): string =>
+  edicion.responsable.trim()
+    ? `El responsable del bien queda: ${edicion.responsable.trim()}.`
+    : 'Queda sin responsable.';
 
 /** Lo que pasará al trasladar, para confirmar: qué, adónde, quién recibe y qué documento se genera. */
 export function mensajeDeTraslado(
@@ -90,6 +120,6 @@ export function mensajeDeTraslado(
   const ocio = edicion.aBodega && edicion.marcarOcioso ? ' Quedan marcados como ociosos.' : '';
   return (
     `Se traslada ${que} a ${descripcionDelDestino(edicion, destino)}, con fecha ${formatearFecha(edicion.fecha)}. ` +
-    `Recibe ${edicion.recibidoPor.trim()}.${ocio} Se genera la boleta numerada, lista para imprimir y firmar.`
+    `${textoDelResponsable(edicion)} Recibe ${edicion.recibidoPor.trim()}.${ocio} Se genera la boleta numerada, lista para imprimir y firmar.`
   );
 }

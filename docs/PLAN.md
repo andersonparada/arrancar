@@ -4354,3 +4354,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   estimación y cambiar matrícula o catastro; boleta de traslado imprimible (página propia, anulable) y enlace a ella desde el
   historial de ubicación. Sin cambios en el servidor. Pendientes anotados en `docs/modulos/diseno-activos-fijos.md`: mejora con
   líneas del libro, selección múltiple para trasladar desde la lista y subir la boleta firmada (AFI-4c).
+- **2026-11-23 — Correcciones de la revisión de AF-7c y AF-8c.** El traslado desde la ficha parte de la localidad, el
+  departamento y el responsable actuales (el servidor reemplaza la ubicación completa), y la confirmación dice qué queda
+  («sin localidad», «sin responsable»); la pestaña Costos se vuelve a traer al registrar o anular una mejora; los avisos de
+  mejora ya no prometen el mes de la depreciación (lo decide la regla `primer_mes` de la empresa y los cierres); la sugerencia de
+  componente ya no dice que se traslada aparte.

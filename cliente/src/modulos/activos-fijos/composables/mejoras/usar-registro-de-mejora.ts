@@ -47,7 +47,7 @@ export function usarRegistroDeMejora(
     const solicitud = datosDeMejora(contexto.activoId, edicion.value, contexto.esEdificio());
     if (!(await enviar(() => apiMejoras.registrar(solicitud)))) return;
     ventanaAbierta.value = false;
-    avisos.exito('Registrado. La depreciación se ajusta desde el mes de la fecha indicada.');
+    avisos.exito('Registrado. La depreciación se ajusta según la regla de la empresa, sin tocar meses cerrados.');
     await alRegistrar();
   }
 

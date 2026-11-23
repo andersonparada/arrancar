@@ -69,7 +69,7 @@ function usarEstadoDeTraslado() {
 
   function empezar(porTrasladar: ActivoPorTrasladar[]): void {
     activos.value = porTrasladar;
-    edicion.value = edicionDeTrasladoNueva(hoy());
+    edicion.value = edicionDeTrasladoNueva(hoy(), porTrasladar);
     ventanaAbierta.value = true;
   }
 

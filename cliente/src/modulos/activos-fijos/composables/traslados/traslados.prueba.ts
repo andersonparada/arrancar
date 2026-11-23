@@ -54,6 +54,30 @@ describe('traslado', () => {
     expect(datosDeTraslado(activos, { ...edicion, marcarOcioso: true }).marcarOcioso).toBe(false);
   });
 
+  it('con un activo parte de su ubicación actual y con varios, vacío', () => {
+    const uno = [{ ...activos[0]!, localidadId: 'l1', departamentoId: 'd1', responsable: 'Ana' }];
+    expect(edicionDeTrasladoNueva('2026-11-20', uno)).toMatchObject({
+      localidadId: 'l1',
+      departamentoId: 'd1',
+      responsable: 'Ana',
+    });
+    const varios = [...uno, { id: 'a2', codigo: 'AF-0002', descripcion: 'Arado', localidadId: 'l2' }];
+    expect(edicionDeTrasladoNueva('2026-11-20', varios)).toMatchObject({ localidadId: null, responsable: '' });
+  });
+
+  it('la confirmación dice lo que queda cuando falta destino o responsable', () => {
+    const texto = mensajeDeTraslado(activos, llena(), { localidad: null, departamento: null });
+    expect(texto).toContain('sin localidad · sin departamento');
+    expect(texto).toContain('Queda sin responsable.');
+    const con = mensajeDeTraslado(
+      activos,
+      { ...llena(), responsable: 'Ana' },
+      { localidad: 'Norte', departamento: null },
+    );
+    expect(con).toContain('Norte · sin departamento');
+    expect(con).toContain('El responsable del bien queda: Ana.');
+  });
+
   it('numera la boleta con año y correlativo', () => {
     expect(numeroDeBoleta(12, 2027)).toBe('2027-0012');
   });
@@ -69,7 +93,7 @@ describe('traslado', () => {
       { localidad: null, departamento: null },
     );
     expect(varios).toContain('2 activos');
-    expect(varios).toContain('la bodega de activos (la misma localidad y departamento)');
+    expect(varios).toContain('la bodega de activos (sin localidad · sin departamento)');
     expect(varios).toContain('ociosos');
   });
 

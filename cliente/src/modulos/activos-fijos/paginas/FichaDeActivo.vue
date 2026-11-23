@@ -28,7 +28,9 @@ const { registro, cargando, cargar, detalles, etiquetas } = usarFichaDeActivo(pr
 const costos = usarCostosDeActivo(props.activoId, () => registro.value?.incisoFiscal === 'edificios', cargar);
 const anulacion = usarAnulacionDeCosto(() => costos.datos.value.total, costos.anular);
 const saldo = usarSaldoDeFicha(() => registro.value);
-const acciones = usarAccionesDeFicha(props.activoId, registro, cargar);
+// Una mejora cambia los costos (y su total): la pestaña Costos se vuelve a traer junto con la ficha.
+const cargarTodo = async () => void (await Promise.all([cargar(), costos.cargar()]));
+const acciones = usarAccionesDeFicha(props.activoId, registro, cargarTodo);
 const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: 'activos-fijos.activos' } };
 const pestanas = [
   { clave: 'datos', texto: 'Datos' },
