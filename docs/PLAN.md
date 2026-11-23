@@ -4348,3 +4348,17 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+
+- **2026-11-23 — AFI-3 (Activos fijos, servidor): «Disponible para uso» por lote.** Sin migración. `PonerEnUsoVarios`
+  (`POST /activos-fijos/activos/poner-en-uso`, mismo permiso `activos.poner-en-uso`): `activoIds` (1 a 200, sin repetidos),
+  una fecha, `ubicacion` común opcional y `ajustes` por activo (porcentaje fiscal, vida útil, residual; lo que falte lo
+  propone la clase). Todo o nada, con el candado compartido del cierre. `PonerEnUso` y el lote comparten
+  `ActivadorDeActivos`; la ficha única también acepta `ubicacion`. **Ubicación:** sin `enBodega` escrito, queda en la bodega de
+  activos si no hay responsable (§3.3). Si el activo solo tiene su fila de alta, esa fila toma la ubicación (aún no hubo boleta);
+  si ya tuvo traslados, el cambio es un traslado con boleta en la misma transacción (una boleta por lote, motivo «Disponible
+  para uso», recibe el responsable o «Bodega de activos», valida mes abierto y fecha no anterior al último traslado) y publica
+  `activo_trasladado`; los componentes se mueven con su principal; sin cambio de ubicación no se crea traslado. Error nuevo
+  `poner_en_uso_varios_invalido`. `QuitarDeUso` ya no necesita los traslados ni los eventos (`DependenciasDeQuitarDeUso`).
+  Decisiones: «solo tiene su fila de alta» = una sola fila vigente en el historial; los textos «Disponible para uso» son de
+  pantalla (AF-4c y AFI-4c). Las pruebas con base de datos de esta sesión se corrieron por un reenvío local al
+  PostgreSQL de Docker porque el puerto 5433 reseteaba conexiones desde el anfitrión.
