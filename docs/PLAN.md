@@ -4358,3 +4358,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   textos (título, nombre y texto del aviso); su efecto contable provisional es `banco` y no manda aviso: AP-3 lo decide al
   programar la forma. Pruebas de checks, único y referido en `pagos.prueba.ts`; la del reparto en
   `pruebas-api/cuentas-por-pagar-migracion-de-permisos-de-cheques-de-apertura.api.prueba.ts`. Sin cambios en Bancos. Corrección de la revisión: esa prueba ahora siembra también un permiso directo `aplicar-a-apertura` y otro ajeno, y comprueba que solo el primero recibe ligar y desligar en `usuario_permisos` (sin duplicados al correr dos veces); además se corrigió el usuario (31 letras, pasaba del máximo de 30) y se activan los módulos de los que depende.
+
+- **2026-11-23, AP-2 (órdenes de Bancos para cheques de apertura, sin migración).** Órdenes `bancos.ligar_cheque_de_apertura`
+  y `bancos.desligar_cheque_de_apertura` (`core/contratos/bancos.contratos.ts`; casos de uso `LigarChequeDeApertura` y
+  `DesligarChequeDeApertura`, atendidas en `composicion/ordenes.ts`). Ligar bloquea el movimiento (`RepositorioMovimientos.bloquear`,
+  `for update`), exige módulo de origen activo, que sea un posfechado de apertura vigente y sin origen
+  (`ChequeDeAperturaNoLigable`) y el monto exacto (`MontoDistintoDelCheque`); pone origen, concepto de mayor monto y desglose, y
+  audita `corregir` en `bancos.cheques` con el movimiento como estaba. Avisos que no bloquean: `beneficiario_distinto`
+  (`bancos.nombre_para_comparar`) y `posfechado_cobrado_pronto` (marcado en la primera conciliación de la cuenta, con la fecha
+  del corte). Desligar quita origen y desglose, deja `sin_clasificar`, exige el origen que pide (`OrigenDelMovimientoNoCoincide`)
+  y motivo, y audita `corregir`. El aviso también sale al marcar un posfechado de apertura por primera vez en la primera
+  conciliación (`MarcarMovimientos` devuelve `avisos` en el documento; `ConsultasConciliaciones.hayAnteriorA`). Después de ligado,
+  el `RevisorDeCambios` y `exigirSinOrigen` ya impiden corregir, eliminar y blanquear. Pruebas: dominio
+  (`ligadura-de-cheque-de-apertura.prueba.ts`) y API (`bancos-ordenes-cheque-de-apertura*.api.prueba.ts`). Decisiones del programador:
+  el motivo de la auditoría usa el id del documento («Ligado al pago <id> de Cuentas por pagar») porque la orden no trae el número
+  del pago; desligar rechaza uno anulado o revertido; el aviso de la conciliación solo sale al marcar por primera vez (no en cada
+  guardado).
