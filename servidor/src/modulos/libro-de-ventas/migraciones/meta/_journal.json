@@ -15,6 +15,13 @@
       "when": 1795471447171,
       "tag": "0001_lv1_conceptos_y_datos_de_cliente",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795475184869,
+      "tag": "0002_lv2_documentos_y_lineas",
+      "breakpoints": true
     }
   ]
 }
