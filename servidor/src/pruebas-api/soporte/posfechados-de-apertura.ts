@@ -10,7 +10,7 @@ let numeroDeCheque = 100;
 export async function crearPosfechadoDeApertura(
   usuario: ClienteApi,
   cuentaId: string,
-  datos: { monto: string; beneficiario: string },
+  datos: { monto: string; beneficiario: string; fecha?: string },
 ): Promise<string> {
   numeroDeCheque += 1;
   const conceptoId = await conceptoGeneral(usuario);
