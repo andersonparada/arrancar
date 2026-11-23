@@ -1,4 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { contextoDe } from '../../core/compartido/http/contexto-de-la-solicitud.js';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { ActualizarEmpresa } from '../aplicacion/casos-uso/actualizar-empresa.js';
 import type { ListarEmpresas } from '../aplicacion/casos-uso/listar-empresas.js';
@@ -23,17 +24,19 @@ export class EmpresasControlador {
     this.casosDeUso.obtener.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
 
   registrar = async (solicitud: FastifyRequest<{ Body: EmpresaSolicitada }>, respuesta: FastifyReply) => {
-    const { secciones, ...datos } = solicitud.body;
+    const { secciones, motivoDelNit: _motivo, ...datos } = solicitud.body;
     const empresa = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), datos, secciones);
     return respuesta.status(201).send(empresa);
   };
 
   actualizar = (solicitud: FastifyRequest<{ Params: ParamsEmpresa; Body: EmpresaSolicitada }>) => {
-    const { secciones, ...datos } = solicitud.body;
+    const { secciones, motivoDelNit, ...datos } = solicitud.body;
     return this.casosDeUso.actualizar.ejecutar(operadorDe(solicitud), {
       empresaId: solicitud.params.empresaId,
       solicitud: datos,
       secciones,
+      motivoDelNit,
+      puedeCorregirNit: contextoDe(solicitud).permisos.has('empresas.nit.corregir'),
     });
   };
 }

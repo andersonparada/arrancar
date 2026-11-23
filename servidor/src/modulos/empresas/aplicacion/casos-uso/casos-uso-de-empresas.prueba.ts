@@ -168,11 +168,15 @@ describe('aviso de NIT repetido en la cuenta', () => {
 
   it('al editar, avisa solo si otra empresa tiene el NIT; la propia no cuenta', async () => {
     const primera = await casos.registrar.ejecutar(propietario, solicitud({ nit: '12345679' }));
-    const sinCambios = { empresaId: primera.id, solicitud: solicitud({ nit: '12345679' }) };
+    const sinCambios = { empresaId: primera.id, solicitud: solicitud({ nit: '12345679' }), puedeCorregirNit: true };
     expect((await casos.actualizar.ejecutar(propietario, sinCambios)).avisos).toEqual([]);
 
     const segunda = await casos.registrar.ejecutar(propietario, solicitud({ nombre: 'Otra' }));
-    const conElNit = { empresaId: segunda.id, solicitud: solicitud({ nombre: 'Otra', nit: '12345679' }) };
+    const conElNit = {
+      empresaId: segunda.id,
+      solicitud: solicitud({ nombre: 'Otra', nit: '12345679' }),
+      puedeCorregirNit: true,
+    };
     expect((await casos.actualizar.ejecutar(propietario, conElNit)).avisos).toEqual([AVISO]);
   });
 
@@ -213,10 +217,11 @@ describe('actualizar una empresa', () => {
     const actualizada = await casos.actualizar.ejecutar(propietario, {
       empresaId: empresa.id,
       solicitud: solicitud({ nombre: 'Parcela El Mirador', nit: '12345679' }),
+      puedeCorregirNit: false,
     });
 
     expect(actualizada).toMatchObject({ nombre: 'Parcela El Mirador', nit: '12345679' });
-    expect(auditoria.entradas).toEqual([]);
+    expect(auditoria.acciones()).toEqual(['empresas.empresas:corregir']);
   });
 
   it('avisa a los demás módulos con las secciones, con la empresa editada como empresa del operador', async () => {
@@ -224,7 +229,12 @@ describe('actualizar una empresa', () => {
     avisos.avisos.length = 0;
     const secciones = { 'libro-de-compras': { regimenIva: 'general' } };
 
-    await casos.actualizar.ejecutar(propietario, { empresaId: empresa.id, solicitud: solicitud(), secciones });
+    await casos.actualizar.ejecutar(propietario, {
+      empresaId: empresa.id,
+      solicitud: solicitud(),
+      secciones,
+      puedeCorregirNit: false,
+    });
 
     expect(avisos.avisos).toEqual([
       { operador: { ...propietario, empresaId: empresa.id }, aviso: { empresaId: empresa.id, secciones } },
@@ -234,7 +244,11 @@ describe('actualizar una empresa', () => {
   it('desactivarla y reactivarla quedan en la auditoría', async () => {
     const empresa = await casos.registrar.ejecutar(propietario, solicitud());
     const cambiar = (activa: boolean) =>
-      casos.actualizar.ejecutar(propietario, { empresaId: empresa.id, solicitud: solicitud({ activa }) });
+      casos.actualizar.ejecutar(propietario, {
+        empresaId: empresa.id,
+        solicitud: solicitud({ activa }),
+        puedeCorregirNit: false,
+      });
 
     await cambiar(false);
     await cambiar(true);
@@ -249,6 +263,7 @@ describe('actualizar una empresa', () => {
     const desactivar = casos.actualizar.ejecutar(trabajandoEnElla, {
       empresaId: empresa.id,
       solicitud: solicitud({ activa: false }),
+      puedeCorregirNit: false,
     });
 
     await expect(desactivar).rejects.toThrow(NoSePuedeDesactivarLaEmpresaEnUso);
@@ -258,7 +273,11 @@ describe('actualizar una empresa', () => {
     const empresa = await casos.registrar.ejecutar(propietario, solicitud());
     const deOtraCuenta = operadorDePrueba({ esSuperacceso: true });
 
-    const cambio = casos.actualizar.ejecutar(deOtraCuenta, { empresaId: empresa.id, solicitud: solicitud() });
+    const cambio = casos.actualizar.ejecutar(deOtraCuenta, {
+      empresaId: empresa.id,
+      solicitud: solicitud(),
+      puedeCorregirNit: false,
+    });
 
     await expect(cambio).rejects.toThrow(RecursoNoEncontrado);
   });
