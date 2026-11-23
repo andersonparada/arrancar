@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1795470950572,
+      "tag": "0000_ct1_cuentas_e_inicios",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795470955433,
+      "tag": "0001_ct1_hoja_de_detalle_y_auditoria",
+      "breakpoints": true
+    }
+  ]
+}

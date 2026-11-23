@@ -19,6 +19,11 @@ export const UNICOS_DE_CATALOGOS: Readonly<Record<string, UnicoRepetido>> = {
   unidades_simbolo_unico: { mensaje: 'Ya existe una unidad con ese símbolo.', campo: 'simbolo' },
   lotes_codigo_unico: { mensaje: 'Ya existe un lote con ese código en este artículo.', campo: 'codigo' },
   clases_nombre_unico: { mensaje: 'Ya existe una clase de activo con ese nombre.', campo: 'nombre' },
+  cuentas_codigo_unico: { mensaje: 'Ya existe una cuenta con ese código.', campo: 'codigo' },
+  cuentas_nombre_unico: {
+    mensaje: 'Ya existe una cuenta con ese nombre bajo la misma cuenta superior.',
+    campo: 'nombre',
+  },
 };
 
 /** Los mensajes por restricción, para sumarlos a los demás. */
