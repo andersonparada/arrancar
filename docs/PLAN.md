@@ -4352,3 +4352,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   o que lee un módulo y que pueden estar apagados. Cuenta para el orden del migrador, para `verificarDeclaracion` (deben
   estar registrados) y para la prueba de llaves entre esquemas; `validarActivacion` y `validarDesactivacion` siguen
   leyendo solo `dependeDe`. Pruebas de orden, de ciclos, de verificación y de activación. Sin migración.
+- **2026-11-23**: VCJ-0d (Ventas y caja, paso 0d). **A-9:** únicos `core.empresas (id, cuenta_id)`, `core.archivos (id, empresa_id)`
+  (migración core `0037`) y `bancos.movimientos (id, empresa_id)` (Bancos `0040`), para las llaves compuestas de Ventas.
+  **A-10:** permiso `empresas.nit.corregir`; `ActualizarEmpresa` audita todo cambio de NIT (`empresas.empresas:corregir`, con el
+  registro de antes más `nitNuevo`), y quitar o reemplazar el NIT exige el permiso y un motivo (`motivoDelNit` en el cuerpo del
+  PUT). Agregar un NIT a una empresa sin NIT no pide nada, pero también queda en la auditoría. No se dio el permiso a quien ya
+  tenía `empresas.editar`: se asigna a mano (el acceso total lo recibe). **Inscrita (§3.9):** `estaInscrita` y
+  `situacionDeInscripcion` en `core/compartido/dominio/inscripcion-fiscal.ts` (regla pura; `CF` no cuenta). Quien la use leerá
+  el historial de `libro_de_compras.datos_fiscales_de_empresa` con `usaTablasDe` (lo hace VCJ-1).
