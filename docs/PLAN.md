@@ -3667,6 +3667,37 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   línea de la nota (`LineaSobrerrecibida`; sustituye lo anotado arriba de que no se validaba), y su fecha no puede ser anterior
   a la de las entradas (`devolucion_antes_de_la_entrada`). `EntradaDevolvible` trae `fecha` y `costoCentavos`. Con promedio el
   costo real del motor puede diferir de la estimación por redondeos; la regla usa la estimación.
+- **2026-11-23 — INV-6 (Inventarios, servidor): traslados entre bodegas, con y sin tránsito, y su boleta.**
+  Migración `0006_inv6_traslados`: `documentos` admite las clases `salida_de_traslado` y `entrada_de_traslado` y gana
+  `bodega_de_destino_id` (llave compuesta a `bodegas`, solo en la salida) y `estado_de_traslado` (`en_transito` o `recibido`,
+  solo en la salida), con sus checks (`documentos_traslado_destino_segun_clase`, `…_estado_segun_clase`, `…_estado_valido`,
+  `…_a_otra_bodega`, `documentos_recepcion_ligada`) y un único parcial: una salida tiene una sola recepción vigente. La política
+  de alcance de `documentos` ahora también deja ver y escribir la fila a quien tiene asignada la bodega de **destino**
+  (`politicaPorAlcanceOpcionalOEn` en `core/base-datos/alcance.ts`; el texto de las políticas con una sola columna no cambia):
+  así el receptor ve «Por recibir» sin ver el origen. Como quien envía con tránsito solo ve el origen, la migración agrega
+  la función `inventarios.nombres_de_bodegas(uuid[])` (`security definer`, solo id, nombre y estado de las bodegas de la empresa
+  activa, sin `execute` para `public`; **para revisión de `seguridad`**, como `empresas.nombres_de_localidades`) con la que se
+  valida el destino y se muestra su nombre. **Casos de uso:** `TrasladarArticulos` (`POST /inventarios/traslados`; sin
+  tránsito, que es lo predeterminado, crea las dos mitades con la misma fecha y exige ver las dos bodegas, `bodega_fuera_de_alcance`;
+  con `inventarios.traslados.con_transito = true` deja la salida `en_transito`), `RecibirTraslado` (`POST …/:id/recibir`, `traslados.recibir`,
+  solo quien ve el destino; la entrada va completa, con fecha igual o posterior a la salida y hoy si no se escribe; no se
+  recibe dos veces: `traslado_ya_recibido`), `AnularTraslado` (`POST …/:id/anular`; en tránsito anula la salida, recibido anula
+  la entrada, devuelve la salida a `en_transito` y la anula; exige ver el origen y, recibido, el destino; una auditoría `anular`
+  `inventarios.traslados` por cada mitad) y `ObtenerBoleta` (`GET /inventarios/documentos/:id/boleta`, con la salida o la
+  recepción: número, fecha, origen, destino, artículos, cantidades, quién entrega y quién recibe, **sin costos**). El kardex
+  por bodega muestra el traslado con su cantidad y sin valor. **Neutros para el costeo:** las dos mitades son movimientos
+  `traslado` (la de destino ligada a la de origen con `movimiento_de_origen_id`, orden 2 la salida y 0 la entrada), con costo
+  unitario informativo que deja el recálculo (el motor de INV-3 ya los trataba así); no crean capas ni cambian `saldo_*`. Evento
+  `inventarios.traslado_registrado` (sin dinero; `enTransito`, `recibido`). Permisos: `traslados.crear`, `.recibir`, `.anular`.
+  `AnularDocumento` gana `anularEnLaTransaccion` (para anular las dos mitades en una sola transacción) y revierte las existencias
+  con el signo de cada movimiento. Pruebas: dominio, casos de uso con el kardex en memoria (incluido PEPS: no cambia el orden de
+  consumo ni crea capas y lo que viaja sigue en el valor) y API (`inventarios-traslados`, `-peps`, `-aislamiento`, `-tablas`);
+  el «Cuadre del kardex» de las pruebas ahora revisa también Σ existencias + Σ en tránsito = saldo del artículo.
+  Decisiones: la recepción se registra en la unidad base del artículo (no guarda cómo se escribió la salida); recibir una
+  parte no existe (lo que faltó va a un ajuste, INV-9); no hay anulación de solo la recepción; la lista «Por recibir» es
+  `GET /inventarios/documentos?estado=vigente&estadoDeTraslado=en_transito`. **Pendiente:** la pantalla de traslados (INV-6c),
+  anular solo la recepción de un traslado si hiciera falta, y la revisión de `seguridad` de la función `nombres_de_bodegas`
+  y de que el receptor pueda también escribir (no solo leer) la fila de la salida.
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

@@ -441,6 +441,7 @@ date nula (obligatoria si el artículo `maneja_vencimiento`, dominio); `fecha_de
 | `bodega_id` | uuid | sí | FK compuesta a `bodegas`; `(clase in ('rebaja_de_costo','costo_adicional')) = (bodega_id is null)`; índice parcial |
 | `documento_relacionado_id` | uuid | sí | FK compuesta a `documentos`: la otra mitad del traslado, o la recepción que devuelve o rebaja; índice parcial |
 | `estado_de_traslado` | text | sí | `in ('en_transito','recibido')`; solo en `salida_de_traslado` (`(clase = 'salida_de_traslado') = (estado_de_traslado is not null)`) |
+| `bodega_de_destino_id` | uuid | sí | [INV-6] FK compuesta a `bodegas`; solo en `salida_de_traslado`, distinta de `bodega_id`. La política de alcance también deja ver y escribir la fila a quien tiene asignada esta bodega (el receptor); el nombre del destino sale de `inventarios.nombres_de_bodegas`, para quien envía y no la ve |
 | `documento_de_compra_id` | uuid | sí | FK compuesta a `libro_de_compras.documentos (id, empresa_id)`: la factura o nota de una recepción, devolución, rebaja o costo adicional del libro; índice parcial (para los avisos del libro) |
 | `causa` | text | sí | `entrada_manual`: `in ('produccion_propia','donacion_recibida','aporte','otra')`; `salida_especial`: `in ('retiro_del_dueno','donacion','muestra')`; nula en las demás (check por clase) |
 | `destino` | text | sí | Solo `salida_por_consumo`: `in ('gasto','obra_de_activo_fijo','mantenimiento_de_activo_fijo')` |
@@ -1254,7 +1255,7 @@ texto.
 | INV-4c | Existencias, ficha con kardex, Movimientos (entrada y salida), Política de costeo | frontend |
 | **INV-5** | Bandeja por recibir, recepciones, devoluciones (PEPS sobre su capa), rebajas, descartes **con la orden `libro-de-compras.cambiar_marca_de_inventario`** (V-8; la orden la programa el libro en este mismo paso, con su auditoría y su prueba), avisos del libro (R-1) y mensaje del error de llave en el libro | backend — **hecho** (2026-11-19, migración `0005_inv5_recepciones`, con la columna `quito_la_marca` en los descartes; la devolución valida su costo contra la línea de la nota y su fecha contra las entradas; quedan los costos adicionales, el aviso del umbral de Activos fijos y el bloqueo del cierre: ver la bitácora de `PLAN.md`) |
 | INV-5c | Por recibir | frontend |
-| **INV-6** | Traslados con y sin tránsito, neutros para el costeo (§7.2), boleta; prueba de que un traslado con PEPS no cambia el orden de consumo y de que lo que viaja sigue en el valor | backend |
+| **INV-6** | Traslados con y sin tránsito, neutros para el costeo (§7.2), boleta; prueba de que un traslado con PEPS no cambia el orden de consumo y de que lo que viaja sigue en el valor | backend — **hecho** (2026-11-23, migración `0006_inv6_traslados`; la bitácora de `PLAN.md` dice cómo se resolvió la visibilidad del destino) |
 | INV-6c | Traslados | frontend |
 | **INV-7** | Saldos iniciales, pregunta de EM-2, aviso de fecha de inicio, Excel | backend |
 | INV-7c | Saldos iniciales de inventario | frontend |
