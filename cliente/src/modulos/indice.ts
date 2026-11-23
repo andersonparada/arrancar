@@ -10,6 +10,7 @@ import { moduloCuentasPorLiquidar } from './cuentas-por-liquidar/modulo';
 import { moduloActivosFijos } from './activos-fijos/modulo';
 import { moduloInventarios } from './inventarios/modulo';
 import { moduloMultimoneda } from './multimoneda/modulo';
+import { moduloParcelas } from './parcelas/modulo';
 // generador: importaciones
 
 /** Módulos del frontend, en el orden del menú; el core va al final (Cuenta y Soporte). */
@@ -24,6 +25,7 @@ export const modulosCliente: readonly DefinicionModuloCliente[] = [
   moduloActivosFijos,
   moduloInventarios,
   moduloMultimoneda,
+  moduloParcelas,
   // generador: modulos
   moduloCore,
 ];
