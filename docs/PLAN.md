@@ -4380,3 +4380,26 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   manual con ese nombre normalizado, este cede el nombre y pasa a «… (manual)». La lista sugerida sigue sembrándose solo
   con el catálogo vacío. Pruebas: casos de uso (crear antes de listar, renombrado) y API (crear antes de abrir; datos
   heredados).
+- **2026-11-23 — LV-2 (servidor) hecho: documentos de venta y sus líneas (registrar, anular, eliminar).** Migración
+  `0002_lv2_documentos_y_lineas` de `libro-de-ventas`: `documentos` (receptor, régimen del mes copiado, totales por
+  columna del libro, nota que corrige una factura del libro o del sistema anterior, destino, anulación completa, moneda
+  en quetzales con las columnas de Multimoneda) y `lineas_de_documento` (clase fiscal; solo la gravada lleva IVA), con
+  RLS por empresa, llaves compuestas (cliente por cuenta; factura corregida, localidad y concepto por empresa) y los
+  `check` de la forma. Casos de uso `RegistrarDocumentoDeVenta`, `AnularDocumentoDeVenta`, `EliminarDocumentoDeVenta`,
+  `ListarDocumentosDeVenta`, `ObtenerDocumentoDeVenta` y la orden `libro-de-ventas.marcar_procesado`; el armado fiscal es
+  dominio puro (`armarDocumentoDeVenta`). Reglas de §7.1 y §7.2 con la validación del contador: régimen **del mes del
+  documento** (con `for share` del historial), `regimen_derogado` (régimen o familia derogados desde la variable
+  `libro-de-compras.regimenes.fecha_de_derogacion`; antes vale como histórico), fecha de inicio (rechazo y aviso de mes
+  incompleto), período declarado (rechazo con el control encendido, aviso apagado; lee `libro_de_compras.periodos`), notas
+  (factura del libro o del sistema anterior, mismo cliente, tope de total e IVA con las notas de débito, plazo de dos
+  meses con aviso, `nota_sobre_factura_especial`, aviso de la nota de abono sin IVA), factura especial recibida con aviso
+  de empresa inscrita, plazo de anulación en la SAT (vencimiento de la declaración corrido al día hábil, solo aviso) y
+  avisos a la cartera (`documento_por_anular` / `_por_eliminar`, `cuentas-por-cobrar.recibir_documento`; sin escucha
+  todavía, la cartera llega en CXC-1). Contratos nuevos `core/contratos/libro-de-ventas.contratos.ts` y
+  `cuentas-por-cobrar.contratos.ts`. Auditoría `anular` y `eliminar` con la ficha anterior (recurso permanente de la
+  `0001`). El eliminar de conceptos de ingreso ya revisa las líneas (`enUso`). Pruebas: dominio, casos de uso con dobles,
+  tablas (RLS, `check`s, únicos, llaves) y API (registro, consultas, permisos, aislamiento, régimen del mes, fecha de
+  inicio, períodos declarados, notas, cartera falsa). Decisiones de LV-2 en `docs/modulos/libro-de-ventas.md`.
+  Pendiente: las retenciones esperadas, el ajuste proporcional por nota de crédito y la comprobación de «constancias» al
+  eliminar llegan en LV-3; la bandeja (`dte_emitido_id`, el origen `bandeja_sat` y «anulado en la SAT») en LV-4; las
+  pantallas en LV-2c.
