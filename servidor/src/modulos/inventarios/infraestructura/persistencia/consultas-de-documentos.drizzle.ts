@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, gte, inArray, lte, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, exists, gte, inArray, lte, or, sql, type SQL } from 'drizzle-orm';
 import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
@@ -78,7 +78,11 @@ const columnasDeRenglon = {
   costoTotal: movimientos.costoTotal,
 };
 
-/** Los renglones de los documentos, leídos **siempre unidos a su documento** (R-3): la seguridad por bodega los protege. */
+/**
+ * Los renglones de los documentos, leídos **siempre unidos a su documento** (R-3): la seguridad por bodega los protege.
+ * Un documento vigente muestra solo los renglones vigentes (un saldo inicial corregido deja el anterior sin vigencia);
+ * uno anulado los muestra todos.
+ */
 const filasDeRenglones = (documentoIds: readonly string[]) =>
   transaccionEnCurso()
     .select(columnasDeRenglon)
@@ -88,7 +92,12 @@ const filasDeRenglones = (documentoIds: readonly string[]) =>
     .innerJoin(unidadBase, eq(unidadBase.id, articulos.unidadBaseId))
     .leftJoin(unidadEscrita, eq(unidadEscrita.id, movimientos.unidadEscritaId))
     .leftJoin(lotes, eq(lotes.id, movimientos.loteId))
-    .where(inArray(movimientos.documentoId, [...documentoIds]))
+    .where(
+      and(
+        inArray(movimientos.documentoId, [...documentoIds]),
+        or(eq(movimientos.vigente, true), eq(documentos.estado, 'anulado')),
+      ),
+    )
     .orderBy(movimientos.secuencia);
 
 async function renglonesDe(documentoIds: readonly string[]): Promise<Map<string, RenglonDeDocumentoDto[]>> {

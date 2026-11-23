@@ -19,6 +19,8 @@ export interface CargaInicial {
  */
 export interface MesesCerrados {
   estaCerrado(periodo: string): Promise<boolean>;
+  /** Si ya existe algún cierre mensual (con uno, los saldos iniciales y la fecha de inicio ya no se tocan). */
+  hayAlguno(): Promise<boolean>;
 }
 
 /** El método con que arranca la empresa si nadie lo eligió: `inventarios.costeo.metodo_inicial`. */

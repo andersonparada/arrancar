@@ -3,6 +3,7 @@
  * se agregan con el paso que las trae, junto con el `check` de la base de datos.
  */
 export const CLASES_DE_DOCUMENTO = [
+  'saldo_inicial',
   'entrada_manual',
   'salida_por_consumo',
   'recepcion_de_compra',
@@ -36,6 +37,7 @@ export type EstadoDeTraslado = (typeof ESTADOS_DE_TRASLADO)[number];
  * una mitad de un traslado, neutra para el costeo (`traslado`: el signo de la cantidad dice si sale o entra).
  */
 export const TIPO_DE_MOVIMIENTO_POR_CLASE = {
+  saldo_inicial: 'entrada',
   entrada_manual: 'entrada',
   salida_por_consumo: 'salida',
   recepcion_de_compra: 'entrada',
@@ -47,6 +49,7 @@ export const TIPO_DE_MOVIMIENTO_POR_CLASE = {
 
 /** Cómo se llama cada clase en los mensajes («Recepción 3»). */
 export const NOMBRE_DE_CLASE: Record<ClaseDeDocumento, string> = {
+  saldo_inicial: 'Saldo inicial',
   entrada_manual: 'Entrada',
   salida_por_consumo: 'Salida',
   recepcion_de_compra: 'Recepción',

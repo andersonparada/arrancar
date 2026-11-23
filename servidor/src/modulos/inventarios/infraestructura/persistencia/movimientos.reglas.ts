@@ -13,7 +13,9 @@ type Columnas = Record<
   | 'saldoValor'
   | 'bodegaId'
   | 'lineaDeDocumentoDeCompraId'
-  | 'documentoDeCompraId',
+  | 'documentoDeCompraId'
+  | 'fecha'
+  | 'fechaDeCapa',
   AnyPgColumn
 >;
 
@@ -39,5 +41,6 @@ export function reglasDeMovimiento(t: Columnas) {
       'movimientos_linea_de_compra_completa',
       sql`(${t.lineaDeDocumentoDeCompraId} is null) = (${t.documentoDeCompraId} is null)`,
     ),
+    check('movimientos_fecha_de_capa', sql`${t.fechaDeCapa} is null or ${t.fechaDeCapa} <= ${t.fecha}`),
   ];
 }

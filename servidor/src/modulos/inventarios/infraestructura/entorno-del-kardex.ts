@@ -40,4 +40,8 @@ export class MesesCerradosPendientes implements MesesCerrados {
   async estaCerrado(): Promise<boolean> {
     return false;
   }
+
+  async hayAlguno(): Promise<boolean> {
+    return false;
+  }
 }

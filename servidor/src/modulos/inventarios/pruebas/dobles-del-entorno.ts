@@ -9,10 +9,12 @@ import type { MetodoDeCosteo } from '../dominio/costeo/tipos.js';
 
 /** La carga inicial de una empresa: con o sin fecha de inicio. */
 export class CargaInicialFija implements CargaInicial {
+  cerrada = false;
+
   constructor(public fechaDeInicio: string | null = null) {}
 
   async obtener(_operador: Operador) {
-    return { fechaDeInicio: this.fechaDeInicio, cerrada: false };
+    return { fechaDeInicio: this.fechaDeInicio, cerrada: this.cerrada };
   }
 }
 
@@ -21,6 +23,10 @@ export class MesesCerradosFijos implements MesesCerrados {
 
   async estaCerrado(periodo: string): Promise<boolean> {
     return this.cerrados.includes(periodo);
+  }
+
+  async hayAlguno(): Promise<boolean> {
+    return this.cerrados.length > 0;
   }
 }
 

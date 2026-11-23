@@ -16,7 +16,7 @@ import type { CambioDeMovimiento, SaldoDelArticulo } from '../dominio/costeo/cam
 import type { MovimientoDelKardex } from '../dominio/costeo/movimientos-del-kardex.js';
 import type { ConversionDeArticulo } from '../dominio/conversion.js';
 import type { UnidadParaConvertir } from '../dominio/conversion-a-base.js';
-import type { DocumentoDto, RenglonDeDocumentoDto } from '../aplicacion/dto/documento.dto.js';
+import type { DocumentoDto } from '../aplicacion/dto/documento.dto.js';
 import type {
   AnulacionDeDocumento,
   CambioDeTraslado,
@@ -108,6 +108,10 @@ export class KardexEnMemoria
     for (const m of this.movimientos.filter((x) => x.documentoId === documentoId)) m.vigente = false;
   }
 
+  async desactivarMovimiento(id: string): Promise<void> {
+    this.movimientos.find((m) => m.id === id)!.vigente = false;
+  }
+
   async reemplazarCapas(articuloId: string, derivado: DerivadoDePeps): Promise<void> {
     this.capas.set(articuloId, derivado);
   }
@@ -123,10 +127,9 @@ export class KardexEnMemoria
   // ExistenciasPorBodega
   async mover(cambios: readonly CambioDeExistencia[]): Promise<void> {
     for (const c of cambios) {
-      const clave = `${c.bodegaId}|${c.articuloId}|${c.loteId ?? ''}`;
-      const nueva = (this.existenciasPorClave.get(clave) ?? 0n) + c.cantidad;
+      const nueva = this.existenciaDe(c.bodegaId, c.articuloId, c.loteId) + c.cantidad;
       if (nueva < 0n) throw new Error('El check de existencias lo habría rechazado.');
-      this.existenciasPorClave.set(clave, nueva);
+      this.existenciasPorClave.set(`${c.bodegaId}|${c.articuloId}|${c.loteId ?? ''}`, nueva);
     }
   }
 
@@ -144,6 +147,11 @@ export class KardexEnMemoria
 
   async buscar(id: string): Promise<DocumentoGuardado | null> {
     return this.documentosGuardados.get(id) ?? null;
+  }
+
+  async buscarSaldoInicialDeBodega(bodegaId: string): Promise<DocumentoGuardado | null> {
+    const vigente = (d: DocumentoGuardado) => d.clase === 'saldo_inicial' && d.estado === 'vigente';
+    return [...this.documentosGuardados.values()].find((d) => vigente(d) && d.bodegaId === bodegaId) ?? null;
   }
 
   async anular(id: string, _anulacion: AnulacionDeDocumento): Promise<void> {
@@ -191,8 +199,7 @@ export class KardexEnMemoria
   }
 
   async bodega(id: string): Promise<BodegaParaMovimiento | null> {
-    if (this.bodegasOcultas.has(id)) return null;
-    return this.bodegasDelCatalogo.get(id) ?? null;
+    return this.bodegasOcultas.has(id) ? null : (this.bodegasDelCatalogo.get(id) ?? null);
   }
 
   /** Las bodegas que el usuario «no ve» (las de `bodegasOcultas`) igual existen para elegirlas como destino. */
@@ -210,7 +217,9 @@ export class KardexEnMemoria
   async documento(id: string): Promise<DocumentoDto> {
     const d = this.documentosGuardados.get(id);
     if (!d) throw new RecursoNoEncontrado('El documento');
-    const renglones = this.movimientos.filter((m) => m.documentoId === id).map((m) => this.renglonDe(m));
+    const renglones = this.movimientos
+      .filter((m) => m.documentoId === id && (m.vigente || d.estado === 'anulado'))
+      .map((m) => renglonDeDocumento(m, this.articulosDelCatalogo.get(m.articuloId)));
     return {
       ...d,
       bodegaNombre: (d.bodegaId && this.bodegasDelCatalogo.get(d.bodegaId)?.nombre) || '',
@@ -221,10 +230,6 @@ export class KardexEnMemoria
       costoTotal: deCentavosEnteros(renglones.reduce((suma, r) => suma + aCentavosEnteros(r.costoTotal ?? '0'), 0n)),
       renglones,
     };
-  }
-
-  private renglonDe(m: MovimientoDelKardex): RenglonDeDocumentoDto {
-    return renglonDeDocumento(m, this.articulosDelCatalogo.get(m.articuloId));
   }
 
   async existencias(): Promise<ExistenciaDto[]> {

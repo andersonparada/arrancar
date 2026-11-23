@@ -3,6 +3,7 @@ import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import type { EventoDominio } from '../../../core/compartido/dominio/evento-dominio.js';
 import type { MovimientoDelKardex } from '../../dominio/costeo/movimientos-del-kardex.js';
+import type { CausaDeRecalculo } from '../../dominio/costeo/recalculo.js';
 import type { MetodoDeCosteo } from '../../dominio/costeo/tipos.js';
 import {
   DocumentoInvalido,
@@ -22,12 +23,18 @@ import { RecalculadorDeArticulo } from './recalculador-de-articulo.js';
 export interface PedidoDeRegistro {
   plan: PlanDeDocumento;
   articulos: ReadonlyMap<string, ArticuloParaMovimiento>;
+  /** Un documento vigente que ya existe y recibe los renglones del plan (el saldo inicial de una bodega). */
+  documento?: DocumentoGuardado | null;
+  /** Por qué se recalcula el costo; por omisión, un registro con fecha anterior. */
+  causa?: CausaDeRecalculo;
 }
 
 /** Lo que dejó el registro: el documento, sus movimientos ya costeados y los eventos por publicar tras confirmar. */
 export interface ResultadoDeRegistro {
   documento: DocumentoGuardado;
   movimientos: MovimientoDelKardex[];
+  /** Solo los que este registro agregó (en un documento que ya existía, no están todos los renglones). */
+  nuevos: MovimientoDelKardex[];
   eventosDeRecalculo: EventoDominio[];
 }
 
@@ -55,17 +62,19 @@ export class RegistradorDeDocumento {
    * @throws MesCerrado si el mes ya se cerró.
    * @throws ExistenciaNegativa si alguna existencia quedaría negativa en alguna fecha.
    */
-  async registrar(operador: Operador, { plan }: PedidoDeRegistro): Promise<ResultadoDeRegistro> {
+  async registrar(operador: Operador, pedido: PedidoDeRegistro): Promise<ResultadoDeRegistro> {
+    const { plan, documento: existente, causa } = pedido;
     const { almacen } = this.dependencias;
     await almacen.bloquear(plan.renglones.map((renglon) => renglon.articuloId));
     if (plan.bodegaId) await this.revisarBodega(plan.bodegaId);
-    await this.revisarFecha(operador, plan.fecha);
+    await this.revisarFecha(operador, plan);
     const metodo = await this.metodo.usarParaMover(operador, plan.fecha);
-    const documento = await this.guardarDocumento(plan);
+    const documento = existente ?? (await this.guardarDocumento(plan));
     const nuevos = await almacen.agregarMovimientos(plan.renglones.map((r) => nuevoMovimiento(documento, r)));
-    const eventos = await this.recalcularArticulos({ operador, documento, nuevos, metodo });
+    const eventos = await this.recalcularArticulos({ operador, documento, nuevos, metodo, causa });
     await this.dependencias.existencias.mover(cambiosDeExistencia(documento, plan.renglones));
-    return { documento, movimientos: await almacen.movimientosDelDocumento(documento.id), eventosDeRecalculo: eventos };
+    const movimientos = await almacen.movimientosDelDocumento(documento.id);
+    return { documento, movimientos, nuevos, eventosDeRecalculo: eventos };
   }
 
   private async revisarBodega(bodegaId: string): Promise<void> {
@@ -74,11 +83,13 @@ export class RegistradorDeDocumento {
     if (!bodega.activo) throw new ElementoInactivo(`La bodega ${bodega.nombre}`);
   }
 
-  private async revisarFecha(operador: Operador, fecha: string): Promise<void> {
+  /** El saldo inicial lleva el día anterior al inicio de la empresa: es lo único que puede ir antes de ella. */
+  private async revisarFecha(operador: Operador, { fecha, clase }: PlanDeDocumento): Promise<void> {
     const { reloj, cargaInicial, cierres } = this.dependencias;
     if (fecha > (await reloj.hoy(operador))) throw new DocumentoInvalido('La fecha no puede ser futura.');
     const { fechaDeInicio } = await cargaInicial.obtener(operador);
-    if (fechaDeInicio && fecha < fechaDeInicio) throw new FechaAnteriorAlInicio(fechaDeInicio);
+    if (fechaDeInicio && fecha < fechaDeInicio && clase !== 'saldo_inicial')
+      throw new FechaAnteriorAlInicio(fechaDeInicio);
     if (await cierres.estaCerrado(periodoDe(fecha))) throw new MesCerrado(periodoDe(fecha));
   }
 
@@ -107,9 +118,9 @@ export class RegistradorDeDocumento {
     documento: DocumentoGuardado;
     nuevos: readonly MovimientoDelKardex[];
     metodo: MetodoDeCosteo;
+    causa?: CausaDeRecalculo;
   }): Promise<EventoDominio[]> {
-    const { operador, documento, nuevos, metodo } = datos;
-    const causa = 'registro_con_fecha_anterior';
+    const { operador, documento, nuevos, metodo, causa = 'registro_con_fecha_anterior' } = datos;
     const movimientosNuevos = new Set(nuevos.map((m) => m.id));
     const eventos: EventoDominio[] = [];
     for (const articuloId of [...new Set(nuevos.map((m) => m.articuloId))].sort()) {

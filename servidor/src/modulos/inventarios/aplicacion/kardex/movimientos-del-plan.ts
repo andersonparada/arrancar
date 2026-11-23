@@ -19,6 +19,7 @@ function referenciasDelLibro(documento: DocumentoGuardado, renglon: RenglonDePla
     lineaDeCompraId,
     documentoDeCompraId: lineaDeCompraId ? documento.documentoDeCompraId : null,
     movimientoDeOrigenId: renglon.movimientoDeOrigenId ?? null,
+    fechaDeCapa: renglon.fechaDeCapa ?? null,
   };
 }
 

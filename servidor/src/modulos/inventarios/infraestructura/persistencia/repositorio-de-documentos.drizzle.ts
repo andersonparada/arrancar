@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { deLaTransaccion } from '../../../core/base-datos/columnas.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
@@ -49,6 +49,16 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
 
   async buscar(id: string): Promise<DocumentoGuardado | null> {
     const [fila] = await transaccionEnCurso().select().from(documentos).where(eq(documentos.id, id));
+    return fila ? aDocumento(fila) : null;
+  }
+
+  async buscarSaldoInicialDeBodega(bodegaId: string): Promise<DocumentoGuardado | null> {
+    const [fila] = await transaccionEnCurso()
+      .select()
+      .from(documentos)
+      .where(
+        and(eq(documentos.clase, 'saldo_inicial'), eq(documentos.bodegaId, bodegaId), eq(documentos.estado, 'vigente')),
+      );
     return fila ? aDocumento(fila) : null;
   }
 

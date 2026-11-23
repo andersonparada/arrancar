@@ -1,0 +1,6 @@
+ALTER TABLE "inventarios"."documentos" DROP CONSTRAINT "documentos_clase_valida";--> statement-breakpoint
+ALTER TABLE "inventarios"."movimientos" ADD COLUMN "fecha_de_capa" date;--> statement-breakpoint
+CREATE UNIQUE INDEX "documentos_saldo_inicial_por_bodega_unico" ON "inventarios"."documentos" USING btree ("empresa_id","bodega_id") WHERE "inventarios"."documentos"."clase" = 'saldo_inicial' and "inventarios"."documentos"."estado" = 'vigente';--> statement-breakpoint
+CREATE INDEX "movimientos_saldo_inicial_idx" ON "inventarios"."movimientos" USING btree ("empresa_id","articulo_id") WHERE "inventarios"."movimientos"."fecha_de_capa" is not null and "inventarios"."movimientos"."vigente";--> statement-breakpoint
+ALTER TABLE "inventarios"."documentos" ADD CONSTRAINT "documentos_clase_valida" CHECK ("inventarios"."documentos"."clase" in ('saldo_inicial', 'entrada_manual', 'salida_por_consumo', 'recepcion_de_compra', 'devolucion_a_proveedor', 'rebaja_de_costo', 'salida_de_traslado', 'entrada_de_traslado'));--> statement-breakpoint
+ALTER TABLE "inventarios"."movimientos" ADD CONSTRAINT "movimientos_fecha_de_capa" CHECK ("inventarios"."movimientos"."fecha_de_capa" is null or "inventarios"."movimientos"."fecha_de_capa" <= "inventarios"."movimientos"."fecha");

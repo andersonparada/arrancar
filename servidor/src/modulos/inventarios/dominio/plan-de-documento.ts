@@ -17,6 +17,8 @@ export interface RenglonDePlan {
   lineaDeCompraId?: string | null;
   /** La entrada que devuelve una devolución, o la que recibe la parte de una rebaja. */
   movimientoDeOrigenId?: string | null;
+  /** Solo en un saldo inicial: el día de la compra real del renglón (el que ordena su capa con PEPS). */
+  fechaDeCapa?: string | null;
   /** Solo en una rebaja: lo que le toca a la entrada (con signo) y con qué base se repartió. */
   reparto?: { base: BaseDeReparto; parte: bigint } | null;
 }

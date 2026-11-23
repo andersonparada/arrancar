@@ -48,6 +48,7 @@ const columnas = {
   lineaDeDocumentoDeCompraId: uuid(),
   documentoDeCompraId: uuid(),
   movimientoDeOrigenId: uuid(),
+  fechaDeCapa: date({ mode: 'string' }),
   montoAResultados: numeric({ precision: 14, scale: 2 }).notNull().default('0'),
   vigente: boolean().notNull().default(true),
   ...marcasDeTiempo,
@@ -116,6 +117,9 @@ const indices = (t: Columnas) => [
   index('movimientos_linea_de_compra_idx')
     .on(t.lineaDeDocumentoDeCompraId)
     .where(conValor(t.lineaDeDocumentoDeCompraId)),
+  index('movimientos_saldo_inicial_idx')
+    .on(t.empresaId, t.articuloId)
+    .where(sql`${t.fechaDeCapa} is not null and ${t.vigente}`),
   index('movimientos_origen_idx').on(t.movimientoDeOrigenId).where(conValor(t.movimientoDeOrigenId)),
 ];
 

@@ -15,6 +15,7 @@ import type { DocumentoGuardado } from '../../puertos/repositorio-de-documentos.
 
 /** El recurso de auditoría de cada clase (`inventarios.<plural del documento>`, §10.2). */
 const RECURSO_DE_AUDITORIA: Record<ClaseDeDocumento, string> = {
+  saldo_inicial: 'inventarios.saldos-iniciales',
   entrada_manual: 'inventarios.entradas',
   salida_por_consumo: 'inventarios.salidas',
   recepcion_de_compra: 'inventarios.recepciones',

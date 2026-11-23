@@ -53,7 +53,7 @@ function sumarValor(capas: readonly Capa[], m: MovimientoDeCosto): Capa[] {
 function capaNueva(m: MovimientoDeCosto): Capa {
   return {
     id: m.id,
-    fecha: m.fecha,
+    fecha: m.fechaDeCapa ?? m.fecha,
     secuencia: m.secuencia,
     cantidadInicial: m.cantidad,
     cantidadRestante: m.cantidad,

@@ -123,6 +123,9 @@ const indices = (t: Columnas) => [
   uniqueIndex('documentos_recepcion_de_traslado_unica')
     .on(t.documentoRelacionadoId)
     .where(sql`${t.clase} = 'entrada_de_traslado' and ${t.estado} = 'vigente'`),
+  uniqueIndex('documentos_saldo_inicial_por_bodega_unico')
+    .on(t.empresaId, t.bodegaId)
+    .where(sql`${t.clase} = 'saldo_inicial' and ${t.estado} = 'vigente'`),
 ];
 
 /**

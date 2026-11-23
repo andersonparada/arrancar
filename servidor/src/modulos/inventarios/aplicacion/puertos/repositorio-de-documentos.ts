@@ -51,6 +51,8 @@ export interface RepositorioDeDocumentos {
   /** Nulo si no existe o la bodega no es de las que el usuario ve. */
   buscar(id: string): Promise<DocumentoGuardado | null>;
   anular(id: string, anulacion: AnulacionDeDocumento): Promise<void>;
+  /** El saldo inicial vigente de la bodega (a lo más uno), si el usuario ve esa bodega. */
+  buscarSaldoInicialDeBodega(bodegaId: string): Promise<DocumentoGuardado | null>;
   /** Pone la salida de un traslado en tránsito o recibida (con la entrada que la recibió). */
   cambiarTraslado(id: string, cambio: CambioDeTraslado): Promise<void>;
 }
