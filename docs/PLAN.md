@@ -4358,4 +4358,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     período cerrado). Pruebas unitarias (`avisos-de-la-carga.prueba.ts`) y de API
     (`pruebas-api/empresas-avisos-de-la-carga.api.prueba.ts`). Nadie escucha todavía: Contabilidad lo hará en CT-6.
   - CT-0f (documentación): `diseno-cp5-reportes.md` §2.3 corregido: un documento eliminado sí estaba provisionado y
-    eliminarlo cancela su partida (solo con el período abierto).
+    eliminarlo cancela su partida. Corregido en la revisión: eliminar un documento sí cambia el saldo neto y el total de
+    los cortes pasados; hoy solo se elimina un documento no autorizado y con el Libro de compras abierto, y «período
+    contable abierto» es regla futura con Contabilidad. Leyenda nueva en `LEYENDAS_DE_SALDOS` («Un documento eliminado
+    después del corte ya no aparece…»), por validar con el contador. La prueba de API de CT-0e no se pudo correr aquí
+    (ECONNRESET a PostgreSQL :5433 desde el entorno del agente): correrla antes de unir.
