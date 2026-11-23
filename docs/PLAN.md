@@ -4371,3 +4371,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   componentes): si alguno necesita boleta, todos los que cambian de lugar van en la misma boleta y ninguna fila de alta se
   reescribe; solo si ninguno la necesita se mueve la alta. Así anular la boleta devuelve a la familia entera (§6.7). Pruebas
   de anulación de ambos casos en `poner-en-uso-componentes.prueba.ts`.
+- **2026-11-23 — AFI-4 (Activos fijos, servidor): el escaneo firmado de la boleta (I-8 b).** Migración
+  `0008_af8_boletas_firmadas` (§5.16): `activos_fijos.boletas_firmadas` (PK `(empresa_id, grupo_id)`, `archivo_id` único con
+  llave a `core.archivos`, RLS por empresa; sin llave a `traslados`). `POST /activos-fijos/traslados/:grupoId/firmada` (multipart,
+  `traslados.crear`, con `limitarSubidas`) guarda o reemplaza el escaneo (PDF revisado con qpdf o foto, `recurso_dueno =
+  'activos-fijos.traslados'`) y `GET …/firmada` lo abre (`activos.ver`, cabeceras seguras, nombre armado por el servidor;
+  `/archivos/:id` no lo sirve). `SubirBoletaFirmada` va en tres tiempos como la evidencia de Bancos (qpdf fuera de la
+  transacción), toma un candado por boleta, borra el archivo anterior y audita `adjuntar` con el escaneo anterior (o `null`).
+  La boleta (`GET …/boleta`) ahora trae `firmada` (datos del archivo, sin ruta ni id). Errores: `boleta_inexistente` (404; la
+  boleta no existe o está anulada: qpdf ni corre) y `boleta_sin_firmada` (404). Decisiones: anular la boleta no borra el
+  escaneo y aún se abre; no hay ruta de quitar (el diseño no la pide); el archivo se guarda en el módulo (no se importa de
+  Bancos). La parte de `aBodega`, `marcarOcioso` y el título ya estaba hecha, con lo que AFI-4 queda completo en el servidor.
+  Pruebas: 7 unitarias y 11 de API (permisos, archivo inválido, sin archivo, anulada, reemplazo, aislamiento). Las pruebas con
+  base de datos se corrieron en un PostgreSQL propio (el puerto 5433 reseteaba conexiones).

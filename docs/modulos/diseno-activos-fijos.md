@@ -1326,7 +1326,7 @@ dos decimales.
 | **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend **Programado, en revisión** (2026-11-19; migración `0007_af7_mejoras`; notas abajo) |
 | AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | |
 | **AF-8** | Traslados con boleta (grupo), anular | backend | **Programado, en revisión** (2026-11-19; sin migración; notas abajo) |
-| **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | **Parcial** (2026-11-19): hecho `aBodega`, `marcarOcioso` y el título configurable; falta subir el escaneo firmado (espera a `seguridad`) |
+| **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | **Programado** (2026-11-23; migración `0008_af8_boletas_firmadas`; `aBodega`, `marcarOcioso` y el título desde 2026-11-19; ver notas de AF-8) |
 | AF-8c | Traslados y boleta imprimible | frontend | |
 | AFI-4c (con AF-8c) | Entregar y devolver; casilla «A la bodega»; selección múltiple; subir la boleta firmada | frontend | |
 | **AFI-5** (después de AF-7 y AF-8) | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl` (y su uso en cierre, ficha y bajas), dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §7.6 y 50 divisiones de 1, y de integración (cierre después de dividir, baja después de dividir, anular) | backend | |
@@ -1376,7 +1376,9 @@ dos decimales.
   la pantalla imprime (AF-8c). Eventos `activo_trasladado` y `traslado_anulado` (este no estaba en §9).
 - El historial de la ficha (`TrasladoDto`) trae `grupoId`, `numero`, `anioDeNumero` y `motivoDeAnulacion`: con el `grupoId` la pantalla
   reimprime (`GET …/boleta`) o anula la boleta después de crearla.
-- Falta para AFI-4: subir y bajar el escaneo firmado (`boletas_firmadas`, §5.16). Falta para AF-8c: pantalla de traslados y boleta
+- AFI-4 (2026-11-23): `POST …/traslados/:grupoId/firmada` (multipart, `traslados.crear`) sube o reemplaza el escaneo y `GET …/firmada` (`activos.ver`)
+  lo abre; `BoletaDto.firmada` trae sus datos. Reemplazar borra el archivo anterior y audita `adjuntar`; anular la boleta no lo borra.
+  Errores `boleta_inexistente` (grupo ausente o anulado) y `boleta_sin_firmada`. Falta para AF-8c: pantalla de traslados y boleta
   imprimible. `GET /activos-fijos/ubicaciones` sigue con `activos.ver` (el diseño dice `traslados.crear` o `inventarios.crear`).
 
 **Notas de lo programado en AF-7 (servidor, migración `0007_af7_mejoras`):**
@@ -1499,7 +1501,7 @@ Pendiente con `seguridad` (antes de programar cada parte):
 - **Antes del paso AF-P22**: las funciones `empresas.nombres_de_localidades` y `empresas.nombres_de_departamentos`
   (§6.13): `security definer`, `search_path` fijo, filtro por `app.empresa_id`, columnas mínimas, `GRANT` solo a
   `arrancar_app`, y lo que el usuario aceptó exponer.
-- Antes de AFI-4: el escaneo firmado de la boleta (`core.archivos`, `recurso_dueno = 'activos-fijos.traslados'`, PDF con
+- ~~Antes de AFI-4~~ (hecho con la revisión del diseño y las reglas de archivos de los demás módulos): el escaneo firmado de la boleta (`core.archivos`, `recurso_dueno = 'activos-fijos.traslados'`, PDF con
   qpdf, `limitarSubidas`).
 - Antes de AFI-2: el tope de 200 unidades por operación (tamaño del cuerpo y tiempo de la transacción).
 - Lo de siempre: las dos dependencias nuevas del cliente (QR y lectura de QR), el permiso de cámara, las fotos y actas
