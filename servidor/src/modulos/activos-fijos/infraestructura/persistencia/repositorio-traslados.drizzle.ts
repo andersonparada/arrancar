@@ -24,6 +24,16 @@ export class RepositorioTrasladosDrizzle implements RepositorioTraslados {
     return filas.map((fila) => mapeadorDeTraslado.aEntidad(fila));
   }
 
+  async delGrupoBloqueando(grupoId: string): Promise<Traslado[]> {
+    const filas = await transaccionEnCurso()
+      .select()
+      .from(traslados)
+      .where(eq(traslados.grupoId, grupoId))
+      .orderBy(asc(traslados.id))
+      .for('share');
+    return filas.map((fila) => mapeadorDeTraslado.aEntidad(fila));
+  }
+
   async guardar(traslado: Traslado): Promise<void> {
     const { anuladoEn, anuladoPor, motivoDeAnulacion, estado } = mapeadorDeTraslado.aFila(traslado);
     await transaccionEnCurso()

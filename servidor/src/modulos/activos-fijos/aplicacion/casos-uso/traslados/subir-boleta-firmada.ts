@@ -25,12 +25,12 @@ export class SubirBoletaFirmada {
    */
   async ejecutar(operador: Operador, solicitud: SolicitudDeBoletaFirmada): Promise<BoletaFirmadaDto> {
     const { unidadDeTrabajo, documentos } = this.dependencias;
-    await unidadDeTrabajo.ejecutar(operador, () => this.exigirVigente(solicitud.grupoId));
+    await unidadDeTrabajo.ejecutar(operador, () => this.exigirVigente(solicitud.grupoId, false));
     const revisado = await documentos.revisar(operador, solicitud.contenido, solicitud.nombre);
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const { grupoId } = solicitud;
       await this.dependencias.boletasFirmadas.bloquear(grupoId);
-      await this.exigirVigente(grupoId);
+      await this.exigirVigente(grupoId, true);
       const anterior = await this.dependencias.consultasDeTraslados.firmadaDe(grupoId);
       const archivoAnterior = await this.dependencias.boletasFirmadas.archivoDe(grupoId);
       const guardado = await documentos.guardarRevisado(operador, revisado, { recursoDueno: RECURSO_DE_TRASLADOS });
@@ -46,8 +46,10 @@ export class SubirBoletaFirmada {
     });
   }
 
-  private async exigirVigente(grupoId: string): Promise<void> {
-    const renglones = await this.dependencias.traslados.delGrupo(grupoId);
+  /** En la etapa final se leen los renglones con `FOR SHARE`: así una anulación en curso no se cruza con el guardado. */
+  private async exigirVigente(grupoId: string, bloqueando: boolean): Promise<void> {
+    const { traslados } = this.dependencias;
+    const renglones = await (bloqueando ? traslados.delGrupoBloqueando(grupoId) : traslados.delGrupo(grupoId));
     const primero = renglones[0];
     if (!primero || primero.instantanea().estado === 'anulado') throw new BoletaInexistente();
   }

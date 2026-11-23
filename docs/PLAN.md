@@ -4384,3 +4384,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Bancos). La parte de `aBodega`, `marcarOcioso` y el título ya estaba hecha, con lo que AFI-4 queda completo en el servidor.
   Pruebas: 7 unitarias y 11 de API (permisos, archivo inválido, sin archivo, anulada, reemplazo, aislamiento). Las pruebas con
   base de datos se corrieron en un PostgreSQL propio (el puerto 5433 reseteaba conexiones).
+- **2026-11-23 — AFI-4, corrección de la revisión (carrera subir/anular).** `SubirBoletaFirmada` leía los renglones sin
+  bloquearlos y podía guardar un escaneo en una boleta que otra transacción acababa de anular. En la etapa final ahora los
+  relee con `FOR SHARE` (`RepositorioTraslados.delGrupoBloqueando`): la anulación en curso gana y la subida responde
+  `boleta_inexistente`; la subida en curso hace esperar a la anulación. Prueba de API con la intercalación (falla sin la
+  corrección).

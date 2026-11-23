@@ -51,6 +51,10 @@ export class TrasladosEnMemoria implements RepositorioTraslados, ConsultasTrasla
     return this.filas.flatMap((fila) => (fila.traslado?.instantanea().grupoId === grupoId ? [fila.traslado] : []));
   }
 
+  async delGrupoBloqueando(grupoId: string): Promise<Traslado[]> {
+    return this.delGrupo(grupoId);
+  }
+
   async guardar(traslado: Traslado): Promise<void> {
     const fila = this.filas.find((candidata) => candidata.trasladoId === traslado.id.valor);
     if (fila) fila.traslado = traslado;

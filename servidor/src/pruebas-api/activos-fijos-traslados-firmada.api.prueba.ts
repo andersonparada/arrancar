@@ -3,7 +3,9 @@
  * seguras, auditoría `adjuntar`, archivos inválidos, boleta inexistente o anulada, permisos y otra cuenta.
  */
 import { createHash } from 'node:crypto';
+import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { configuracion } from '../configuracion.js';
 import { hayQpdf } from '../modulos/core/archivos/pruebas/soporte-de-qpdf.js';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { comoPropietario } from './soporte/consultas-de-propietario.js';
@@ -183,6 +185,31 @@ describe('lo que se rechaza', () => {
     expect([deAnulada.estado, deNadie.estado]).toEqual([404, 404]);
     expect(deAnulada.cuerpo.error.codigo).toBe('boleta_inexistente');
     expect(deNadie.cuerpo.error.codigo).toBe('boleta_inexistente');
+  });
+
+  it('una anulación en curso gana: la subida que llega a la etapa final no deja escaneo en una boleta anulada', async () => {
+    const grupoId = await boletaVigente();
+    const anulando = new pg.Client({ connectionString: configuracion.DATABASE_URL_PROPIETARIO });
+    await anulando.connect();
+    try {
+      await anulando.query('begin');
+      await anulando.query(
+        "update activos_fijos.traslados set estado = 'anulado', anulado_en = now(), anulado_por = creado_por, motivo_de_anulacion = 'Prueba' where grupo_id = $1",
+        [grupoId],
+      );
+      const subida = subir(e.cuenta.propietario, grupoId, await crearImagenPng());
+      await new Promise((resolver) => setTimeout(resolver, 800));
+      await anulando.query('commit');
+
+      const respuesta = await subida;
+
+      expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(404);
+      expect(respuesta.cuerpo.error.codigo).toBe('boleta_inexistente');
+    } finally {
+      await anulando.end();
+    }
+    const filas = await comoPropietario('select 1 from activos_fijos.boletas_firmadas where grupo_id = $1', [grupoId]);
+    expect(filas).toHaveLength(0);
   });
 
   it('abrir una boleta sin escaneo responde 404 boleta_sin_firmada', async () => {
