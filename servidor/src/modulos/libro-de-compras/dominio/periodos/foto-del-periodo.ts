@@ -61,10 +61,17 @@ function aplanar(valor: unknown, clave: string, salida: Map<string, string>): vo
   }
 }
 
-function cifrasDe(foto: FotoDelPeriodo): Map<string, string> {
+/** Los módulos de ventas que respondieron en las dos fotos: solo sus cifras se pueden comparar. */
+function modulosEnComun(anterior: FotoDelPeriodo, actual: FotoDelPeriodo): Set<string> {
+  const delAnterior = new Set((anterior.ventas ?? []).map((v) => v.modulo));
+  return new Set((actual.ventas ?? []).map((v) => v.modulo).filter((modulo) => delAnterior.has(modulo)));
+}
+
+function cifrasDe(foto: FotoDelPeriodo, modulos: Set<string>): Map<string, string> {
   const cifras = new Map<string, string>([['documentos', String(foto.documentos)]]);
   aplanar(foto.resumen, 'resumen', cifras);
   for (const { modulo, clave, cifras: deVentas } of foto.ventas ?? []) {
+    if (!modulos.has(modulo)) continue;
     for (const cifra of deVentas) cifras.set(`${clave}[${modulo}].${cifra.clave}`, cifra.valor);
   }
   return cifras;
@@ -77,10 +84,15 @@ const restar = (actual: string, anterior: string): string =>
 
 const cero = (referencia: string): string => (esMonto(referencia) ? '0.00' : '0');
 
-/** Compara dos fotos cifra por cifra; lo que falta en una vale cero. Las cifras que no cambian no salen. */
+/**
+ * Compara dos fotos cifra por cifra; las del libro que falten en una valen cero. Las cifras de ventas se comparan solo
+ * si ambas fotos traen respuesta de ese módulo (sin respuesta no hay punto de comparación, no es cero). Las cifras que
+ * no cambian no salen.
+ */
 export function diferenciaDeFotos(anterior: FotoDelPeriodo, actual: FotoDelPeriodo): DiferenciaDeFotos {
-  const antes = cifrasDe(anterior);
-  const ahora = cifrasDe(actual);
+  const modulos = modulosEnComun(anterior, actual);
+  const antes = cifrasDe(anterior, modulos);
+  const ahora = cifrasDe(actual, modulos);
   const claves = [...new Set([...antes.keys(), ...ahora.keys()])].sort();
   const cambios: CambioDeLaFoto[] = [];
   for (const clave of claves) {

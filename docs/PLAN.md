@@ -4357,3 +4357,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     restaurarla o soltarla de su documento. La `FESP` ya registrada como compra no se toca: el cuadre de compras la lista
     aparte («factura especial de venta registrada como compra», por revisar) y las `FESP` bloqueadas no salen como
     faltantes de la SAT. Falta: VC-0c2 (remanentes) y VC-0c-c (pantallas).
+
+- **2026-11-23 — VC-0c1, correcciones de revisión.** (1) La conciliación ya no pone en «anteriores a la fecha de inicio»
+  las facturas especiales bloqueadas como venta (`factura_especial_de_venta`), y la bandeja no las marca como anteriores
+  ni «en plazo de crédito»: una venta no es una compra con crédito fiscal posible. (2) `diferenciaDeFotos` compara las
+  cifras de ventas de un módulo solo si las dos fotos traen respuesta de ese módulo; sin respuesta no hay punto de
+  comparación (antes se tomaba como cero y desactivar Libro de ventas inventaba «cambió después de declarar»).
+  Pendiente: informar aparte en la pantalla que un módulo de ventas no tiene punto de comparación.

@@ -101,4 +101,12 @@ describe('conciliar con fecha de inicio', () => {
 
     expect(resultado.anterioresALaFechaDeInicio).toHaveLength(0);
   });
+
+  it('una factura especial de venta anterior al inicio no sale como anterior ni como faltante', () => {
+    const fesp = fila({ tipoDte: 'FESP', estado: 'bloqueado', motivoDeBloqueo: 'factura_especial_de_venta' });
+    const resultado = conciliar(entrada([fesp], '2026-04-01'));
+
+    expect(resultado.anterioresALaFechaDeInicio).toHaveLength(0);
+    expect(resultado.enLaSatYNoEnArrancar).toHaveLength(0);
+  });
 });

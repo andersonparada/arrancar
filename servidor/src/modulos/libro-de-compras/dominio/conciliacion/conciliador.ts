@@ -56,6 +56,15 @@ function claveDeLaFilaConDocumento(
 const esFaltante = (fila: FilaConciliable): boolean =>
   fila.estadoSat !== 'anulado' && fila.motivoDeBloqueo !== 'factura_especial_de_venta';
 
+/** Una compra (no una venta ni una anulada que nadie registró) emitida antes de la fecha de inicio. */
+function esDeUnaCompraAnterior(fila: FilaConciliable, fechaDeInicio: string | null): boolean {
+  return (
+    esAnteriorALaFechaDeInicio(fila.fechaEmision, fechaDeInicio) &&
+    fila.motivoDeBloqueo !== 'factura_especial_de_venta' &&
+    (fila.estado === 'descartado' || fila.estadoSat !== 'anulado')
+  );
+}
+
 /** Del lado de la SAT: una fila emitida en el mes que no cruzó con un documento del libro del período. */
 function clasificarFila(
   fila: FilaConciliable,
@@ -64,10 +73,7 @@ function clasificarFila(
 ): [keyof ResultadoDeConciliacion, ItemDeConciliacion] | null {
   const item = itemDeLaFila(fila, documento ?? null);
   if (documento) return [claveDeLaFilaConDocumento(fila, documento), item];
-  if (
-    esAnteriorALaFechaDeInicio(fila.fechaEmision, fechaDeInicio) &&
-    (fila.estado === 'descartado' || fila.estadoSat !== 'anulado')
-  ) {
+  if (esDeUnaCompraAnterior(fila, fechaDeInicio)) {
     const enPlazoDeCredito = estaEnPlazoDeCredito(fila.fechaEmision, fechaDeInicio);
     return ['anterioresALaFechaDeInicio', { ...item, enPlazoDeCredito }];
   }

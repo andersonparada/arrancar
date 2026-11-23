@@ -100,13 +100,12 @@ describe('diferencia de las cifras de ventas de la foto', () => {
     ]);
   });
 
-  it('una foto sin ventas contra una con ventas cuenta lo que falta como cero', () => {
-    const { cambios } = diferenciaDeFotos(foto(), foto(ventas('10.00', '2')));
+  it('una foto sin respuesta de ventas contra una con ventas no tiene punto de comparación', () => {
+    expect(diferenciaDeFotos(foto(), foto(ventas('10.00', '2'))).cambios).toEqual([]);
+  });
 
-    expect(cambios.map((c) => [c.clave, c.anterior])).toEqual([
-      ['ventas[libro-de-ventas].debito', '0.00'],
-      ['ventas[libro-de-ventas].operaciones', '0'],
-    ]);
+  it('una foto con ventas contra una sin respuesta (módulo desactivado) no inventa un cambio a cero', () => {
+    expect(diferenciaDeFotos(foto(ventas('120.00', '2')), foto()).cambios).toEqual([]);
   });
 
   it('las mismas cifras de ventas no dan diferencia', () => {
