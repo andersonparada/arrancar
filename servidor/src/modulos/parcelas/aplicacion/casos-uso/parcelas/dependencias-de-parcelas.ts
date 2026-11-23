@@ -24,13 +24,17 @@ export interface DependenciasDeParcelas {
   auditoria: Auditoria;
 }
 
-/** @throws RecursoNoEncontrado si no existe o el operador no la ve (empresa o localidad ajena). */
+/**
+ * La parcela, con su fila bloqueada hasta el final de la transacción (todo caso de uso que la usa va a cambiarla o a
+ * colgarle algo).
+ * @throws RecursoNoEncontrado si no existe o el operador no la ve (empresa o localidad ajena).
+ */
 export async function parcelaExistente(
-  repositorio: Pick<RepositorioParcelas, 'buscar'>,
+  repositorio: Pick<RepositorioParcelas, 'buscarBloqueando'>,
   id: string,
   nombre = 'La parcela',
 ): Promise<Parcela> {
-  const parcela = await repositorio.buscar(Identificador.desde(id));
+  const parcela = await repositorio.buscarBloqueando(Identificador.desde(id));
   if (!parcela) throw new RecursoNoEncontrado(nombre);
   return parcela;
 }

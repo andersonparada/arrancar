@@ -14,6 +14,8 @@ export interface ConsultasParcelas {
   buscarIdPorCodigo(codigo: string): Promise<string | null>;
   /** Los inmuebles de la empresa, para elegirlos por nombre al importar. */
   inmueblesPorNombre(): Promise<Array<{ id: string; nombre: string }>>;
+  /** Si la localidad (que el operador ve) está activa. */
+  localidadEstaActiva(localidadId: string): Promise<boolean>;
   /** @throws RecursoNoEncontrado si la localidad, el tipo o algún inmueble elegido no existe o es ajeno. */
   exigirReferencias(referencias: ReferenciasDeParcela): Promise<void>;
 }

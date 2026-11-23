@@ -25,7 +25,13 @@ export const esquemaCambioDeParcela = z.object({
   colindanciaOriente: textoOpcional(300),
   colindanciaPoniente: textoOpcional(300),
   observaciones: textoOpcional(500),
-  inmuebles: z.array(ligaConInmueble).max(50).default([]),
+  inmuebles: z
+    .array(ligaConInmueble)
+    .max(50)
+    .refine((ligas) => new Set(ligas.map(({ inmuebleId }) => inmuebleId)).size === ligas.length, {
+      message: 'Un inmueble no puede repetirse en la misma parcela.',
+    })
+    .default([]),
 });
 
 /** Lo que llega al crear una parcela: lo editable, dónde va y, si ya se conoce, su primera medición. */

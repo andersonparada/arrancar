@@ -9,6 +9,8 @@ import type { ParcelaDto, SolicitudDeParcela } from './dto/parcela.dto.js';
 export interface MedicionEnExcel {
   cantidadOriginal: string | null;
   unidadOriginal: UnidadDeSuperficie | null;
+  /** Solo la cuerda las lleva; si se omiten, se usan las de la configuración de la empresa. */
+  varasPorLadoDeCuerda: number | null;
   cantidadUtil: string | null;
   fuente: FuenteDeMedicion | null;
   vigenteDesde: string | null;
@@ -39,6 +41,10 @@ export function inmueblesPorNombre(
   nombres: readonly string[],
   existentes: ReadonlyArray<{ id: string; nombre: string }>,
 ): string[] {
+  const normalizados = nombres.map(normalizar);
+  if (new Set(normalizados).size !== normalizados.length) {
+    throw new ParcelaInvalida('Un inmueble no puede repetirse en la misma parcela.');
+  }
   return nombres.map((nombre) => {
     const encontrado = existentes.find((inmueble) => normalizar(inmueble.nombre) === normalizar(nombre));
     if (!encontrado) throw new ParcelaInvalida(`No existe el inmueble "${nombre}".`);
@@ -59,7 +65,10 @@ export function medicionDeLaFila(
   if (!cantidadOriginal || !unidadOriginal) {
     throw new ParcelaInvalida('Escriba la superficie y su unidad, o ninguna de las dos.');
   }
-  const varas = unidadOriginal === 'cuerda' ? predeterminados.varasPorLadoDeCuerda : null;
+  const varas =
+    unidadOriginal === 'cuerda'
+      ? (fila.varasPorLadoDeCuerda ?? predeterminados.varasPorLadoDeCuerda)
+      : fila.varasPorLadoDeCuerda;
   return {
     vigenteDesde: fila.vigenteDesde ?? predeterminados.hoy,
     fuente: fila.fuente ?? 'otra',

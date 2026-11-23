@@ -15,6 +15,11 @@ export class RepositorioParcelasDrizzle implements RepositorioParcelas {
     return fila ? mapeadorDeParcela.aEntidad(fila) : null;
   }
 
+  async buscarBloqueando(id: ParcelaId): Promise<Parcela | null> {
+    const [fila] = await transaccionEnCurso().select().from(parcelas).where(eq(parcelas.id, id.valor)).for('update');
+    return fila ? mapeadorDeParcela.aEntidad(fila) : null;
+  }
+
   async agregar(parcela: Parcela): Promise<void> {
     await transaccionEnCurso().insert(parcelas).values(mapeadorDeParcela.aFila(parcela));
   }

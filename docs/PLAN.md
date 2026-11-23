@@ -4387,3 +4387,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (PA-1c lo completa con árbol, formulario y ficha). **Pendiente:** eventos §9.2 y avisos `superficie_por_cambiar` y `parcela_guardada`
   (llegan con PA-2 y los módulos de rubro), la suma de hijas contra la madre y de porciones contra el inmueble (avisos de §3.2 y §5.6),
   el aviso de «Parcelas sin inmueble o sin medición» (PA-5) y la unidad de la útil distinta de la de la total.
+- **2026-11-23 — Parcelas PA-1: correcciones de la revisión.** (1) El Excel de parcelas lleva la columna «Varas por lado de la
+  cuerda»: se exporta la de la medición y, al importar, la celda manda y la configuración de la empresa solo se usa si está vacía
+  (en otra unidad que no sea la cuerda, escribirla es un error por fila). (2) La útil exportada es la cifra original si es igual a
+  la total y, si el redondeo la hiciera pasar de la total, se deja igual a ella: el archivo exportado siempre se puede reimportar.
+  (3) `CrearParcela` rechaza una localidad inactiva (`localidad_inactiva`; también por el Excel). (4) `buscarBloqueando`
+  (`FOR UPDATE`) en editar, inactivar, reactivar, eliminar, registrar y anular mediciones, y al crear una hija se bloquea la madre;
+  anular una medición bloquea la parcela antes de leer la medición. (5) Un inmueble repetido se rechaza en el esquema Zod (400), en
+  `inmueblesDe` (todos los casos de uso) y en `inmueblesPorNombre` (el Excel informa por fila). (6) Las varas por lado de la
+  cuerda van de 1 a 100 y la superficie no pasa de lo que cabe en `numeric(14,2)`: `SuperficieInvalida` en vez de un 500. (7) Una
+  medición con fecha futura se rechaza (`medicion_con_fecha_futura`): no hay proceso que active mediciones al llegar su fecha, y
+  así la ficha y `obtener_parcela_en_fecha` ven las mismas cifras. Pruebas: dominio, casos de uso y
+  `parcelas-limites-y-bloqueos.api.prueba.ts` (el bloqueo se prueba reteniendo la fila desde otra transacción).

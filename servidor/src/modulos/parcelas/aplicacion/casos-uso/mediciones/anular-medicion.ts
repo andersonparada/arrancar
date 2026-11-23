@@ -23,10 +23,10 @@ export class AnularMedicion {
   ejecutar(operador: Operador, { medicionId, solicitud }: AnulacionDeMedicion): Promise<FichaDeParcelaDto> {
     const { unidadDeTrabajo, mediciones, consultasDeMediciones, repositorio, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
+      const { parcelaId } = await consultasDeMediciones.obtener(medicionId);
+      const parcela = await parcelaExistente(repositorio, parcelaId);
       const medicion = await mediciones.buscar(Identificador.desde(medicionId));
       if (!medicion) throw new RecursoNoEncontrado('La medición');
-      const { parcelaId } = medicion.instantanea();
-      const parcela = await parcelaExistente(repositorio, parcelaId);
       const anterior = await consultasDeMediciones.obtener(medicionId);
       medicion.anular({ motivo: solicitud.motivo, usuarioId: operador.usuarioId, cuando: new Date() });
       await mediciones.guardar(medicion);

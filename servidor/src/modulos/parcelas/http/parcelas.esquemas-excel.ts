@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   decimalOpcional,
+  enteroOpcional,
   fechaOpcional,
   idObligatorio,
   opcionObligatoria,
@@ -25,6 +26,7 @@ export const esquemaParcelaEnExcel = z.object({
   parcelaMadreCodigo: textoOpcional(20),
   cantidadOriginal: decimalOpcional(4),
   unidadOriginal: opcionOpcional(UNIDADES_DE_SUPERFICIE),
+  varasPorLadoDeCuerda: enteroOpcional(),
   cantidadUtil: decimalOpcional(4),
   fuente: opcionOpcional(FUENTES_DE_MEDICION),
   vigenteDesde: fechaOpcional(),

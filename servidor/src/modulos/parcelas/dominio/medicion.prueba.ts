@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
-import { MedicionYaAnulada, SuperficieUtilMayorQueTotal, UnidadSinVarasDeCuerda } from './errores-de-parcela.js';
+import {
+  MedicionYaAnulada,
+  SuperficieInvalida,
+  SuperficieUtilMayorQueTotal,
+  UnidadSinVarasDeCuerda,
+} from './errores-de-parcela.js';
 import { Medicion, type DatosDeMedicion } from './medicion.js';
 import type { FactoresDeSuperficie } from './superficie.js';
 
@@ -47,6 +52,16 @@ describe('medición', () => {
   it('las varas por lado van con la cuerda y solo con ella', () => {
     expect(() => registrar({ unidadOriginal: 'cuerda' })).toThrow(UnidadSinVarasDeCuerda);
     expect(() => registrar({ unidadOriginal: 'manzana', varasPorLadoDeCuerda: 25 })).toThrow(UnidadSinVarasDeCuerda);
+  });
+
+  it('las varas por lado van de 1 a 100 y la superficie cabe en la base', () => {
+    const cuerda = (varas: number) => () => registrar({ unidadOriginal: 'cuerda', varasPorLadoDeCuerda: varas });
+
+    expect(cuerda(100)).not.toThrow();
+    for (const varas of [101, 0, -25, 2.5]) expect(cuerda(varas)).toThrow(SuperficieInvalida);
+    expect(() => registrar({ cantidadOriginal: '9999999999', unidadOriginal: 'caballeria' })).toThrow(
+      SuperficieInvalida,
+    );
   });
 
   it('la útil se escribe en la misma unidad y no pasa de la total', () => {

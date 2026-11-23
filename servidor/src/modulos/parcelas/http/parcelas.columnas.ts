@@ -56,6 +56,7 @@ const columnasDeLaParcela = (opciones: OpcionesDeReferencias): Columna[] => [
 const columnasDeLaMedicion: Columna[] = [
   { clave: 'cantidadOriginal', titulo: 'Superficie', requerido: false, tipo: 'decimal' },
   { clave: 'unidadOriginal', titulo: 'Unidad de la superficie', requerido: false, tipo: 'lista', opciones: UNIDADES },
+  { clave: 'varasPorLadoDeCuerda', titulo: 'Varas por lado de la cuerda', requerido: false, tipo: 'entero' },
   { clave: 'cantidadUtil', titulo: 'Superficie útil (misma unidad)', requerido: false, tipo: 'decimal' },
   { clave: 'fuente', titulo: 'Fuente de la medición', requerido: false, tipo: 'lista', opciones: FUENTES },
   { clave: 'vigenteDesde', titulo: 'Fecha de la medición', requerido: false, tipo: 'fecha' },

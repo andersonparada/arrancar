@@ -4,6 +4,8 @@ import type { InmuebleDeParcelaDto, LigaConInmueble } from '../dto/parcela.dto.j
 /** Guarda y recupera las parcelas para modificarlas. La seguridad por empresa y localidad (RLS) limita lo que se ve. */
 export interface RepositorioParcelas {
   buscar(id: ParcelaId): Promise<Parcela | null>;
+  /** Como `buscar`, pero bloquea la fila hasta que termine la transacción: quien la cambia no pisa a otro. */
+  buscarBloqueando(id: ParcelaId): Promise<Parcela | null>;
   agregar(parcela: Parcela): Promise<void>;
   guardar(parcela: Parcela): Promise<void>;
   /** @throws RecursoEnUso si algo la usa (llave foránea): subparcelas, mediciones o registros de otros módulos. */

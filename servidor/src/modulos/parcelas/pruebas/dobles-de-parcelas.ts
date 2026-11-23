@@ -26,6 +26,10 @@ export class ParcelasEnMemoria implements RepositorioParcelas, ConsultasParcelas
     return this.registros.get(id.valor) ?? null;
   }
 
+  async buscarBloqueando(id: ParcelaId): Promise<Parcela | null> {
+    return this.buscar(id);
+  }
+
   async agregar(parcela: Parcela): Promise<void> {
     this.registros.set(parcela.id.valor, parcela);
   }
@@ -62,6 +66,12 @@ export class ParcelasEnMemoria implements RepositorioParcelas, ConsultasParcelas
 
   async inmueblesPorNombre(): Promise<Array<{ id: string; nombre: string }>> {
     return [];
+  }
+
+  readonly localidadesInactivas = new Set<string>();
+
+  async localidadEstaActiva(localidadId: string): Promise<boolean> {
+    return !this.localidadesInactivas.has(localidadId);
   }
 
   async exigirReferencias(): Promise<void> {}

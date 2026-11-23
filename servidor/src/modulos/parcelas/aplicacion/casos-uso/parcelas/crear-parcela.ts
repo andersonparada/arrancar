@@ -1,5 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { LocalidadInactiva } from '../../../dominio/errores-de-parcela.js';
 import { Parcela } from '../../../dominio/parcela.js';
 import { datosDeParcela, inmueblesDe } from '../../datos-de-parcela.js';
 import type { FichaDeParcelaDto, SolicitudDeParcela } from '../../dto/parcela.dto.js';
@@ -12,17 +13,13 @@ export class CrearParcela {
   /**
    * Crea la parcela con sus inmuebles y, si ya se conoce, su primera medición, todo en la misma transacción.
    * @throws RecursoNoEncontrado si la localidad, la madre, el tipo o un inmueble no existen o son ajenos.
-   * @throws ParcelaInvalida, MadreInactiva, ParcelaDeOtraLocalidad o NivelMaximoDeParcelas si no cumple las reglas.
+   * @throws LocalidadInactiva, ParcelaInvalida, MadreInactiva, ParcelaDeOtraLocalidad o NivelMaximoDeParcelas si no cumple las reglas.
    * @throws RecursoDuplicado si repite el código o el nombre.
    */
   ejecutar(operador: Operador, solicitud: SolicitudDeParcela): Promise<FichaDeParcelaDto> {
-    const { unidadDeTrabajo, repositorio, consultas, ligas, configuracion } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, ligas, configuracion } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      await consultas.exigirReferencias({
-        localidadId: solicitud.localidadId,
-        tipoId: solicitud.tipoId,
-        inmuebleIds: inmueblesDe(solicitud),
-      });
+      await this.exigirReferencias(solicitud);
       const madre = solicitud.parcelaMadreId
         ? await parcelaExistente(repositorio, solicitud.parcelaMadreId, 'La parcela madre')
         : null;
@@ -39,5 +36,15 @@ export class CrearParcela {
       }
       return fichaDeParcela(this.dependencias, parcela.id.valor);
     });
+  }
+
+  private async exigirReferencias(solicitud: SolicitudDeParcela): Promise<void> {
+    const { consultas } = this.dependencias;
+    await consultas.exigirReferencias({
+      localidadId: solicitud.localidadId,
+      tipoId: solicitud.tipoId,
+      inmuebleIds: inmueblesDe(solicitud),
+    });
+    if (!(await consultas.localidadEstaActiva(solicitud.localidadId))) throw new LocalidadInactiva();
   }
 }

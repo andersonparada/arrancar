@@ -27,6 +27,11 @@ const DECIMALES: Readonly<Record<UnidadDeSuperficie, number>> = {
   caballeria: 4,
 };
 
+/** Lo más que cabe en `numeric(14,2)`, en centésimas de m². */
+const MAXIMO_DE_CENTESIMAS = 10n ** 14n - 1n;
+/** Las varas por lado que admite una cuerda. */
+export const VARAS_MAXIMAS_DE_CUERDA = 100;
+
 const ESCALA_DEL_FACTOR = 1_000_000n;
 const DECIMALES_DE_LA_CANTIDAD = 4;
 
@@ -56,7 +61,14 @@ function metrosCuadradosPorUnidad(origen: UnidadConCuerda, factores: FactoresDeS
 
 /** Las varas por lado de la cuerda, que la cuerda necesita y las demás unidades no llevan. */
 function varasDeLaCuerda({ varasPorLadoDeCuerda }: UnidadConCuerda): number {
-  if (!varasPorLadoDeCuerda) throw new UnidadSinVarasDeCuerda();
+  if (varasPorLadoDeCuerda === null) throw new UnidadSinVarasDeCuerda();
+  if (
+    !Number.isInteger(varasPorLadoDeCuerda) ||
+    varasPorLadoDeCuerda < 1 ||
+    varasPorLadoDeCuerda > VARAS_MAXIMAS_DE_CUERDA
+  ) {
+    throw new SuperficieInvalida(`Las varas por lado de la cuerda van de 1 a ${VARAS_MAXIMAS_DE_CUERDA}.`);
+  }
   return varasPorLadoDeCuerda;
 }
 
@@ -85,6 +97,7 @@ export function aCentesimasDeM2(cantidad: string, origen: UnidadConCuerda, facto
   if (diezmilesimas === 0n) throw new SuperficieInvalida('La superficie debe ser mayor que cero.');
   const centesimas = dividirRedondeando(diezmilesimas * metrosCuadradosPorUnidad(origen, factores), 10n ** 20n);
   if (centesimas === 0n) throw new SuperficieInvalida('La superficie es demasiado pequeña.');
+  if (centesimas > MAXIMO_DE_CENTESIMAS) throw new SuperficieInvalida('La superficie es demasiado grande.');
   return Number(centesimas);
 }
 

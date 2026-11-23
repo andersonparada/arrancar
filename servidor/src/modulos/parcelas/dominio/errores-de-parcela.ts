@@ -19,6 +19,24 @@ export class SuperficieInvalida extends DatoInvalido {
   readonly codigo: string = 'superficie_invalida';
 }
 
+/** La localidad elegida está inactiva: no se le crean parcelas. */
+export class LocalidadInactiva extends DatoInvalido {
+  readonly codigo = 'localidad_inactiva';
+
+  constructor() {
+    super('La localidad está inactiva: reactívela o elija otra.');
+  }
+}
+
+/** Una medición no puede regir desde una fecha futura: se registra cuando ya es vigente. */
+export class MedicionConFechaFutura extends DatoInvalido {
+  readonly codigo = 'medicion_con_fecha_futura';
+
+  constructor() {
+    super('La fecha de la medición no puede ser futura: regístrela cuando ya esté vigente.');
+  }
+}
+
 /** La superficie útil es mayor que la total. */
 export class SuperficieUtilMayorQueTotal extends DatoInvalido {
   readonly codigo = 'superficie_util_mayor_que_total';

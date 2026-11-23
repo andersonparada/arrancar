@@ -71,6 +71,14 @@ export class ConsultasParcelasDrizzle implements ConsultasParcelas {
     return transaccionEnCurso().select({ id: inmuebles.id, nombre: inmuebles.nombre }).from(inmuebles);
   }
 
+  async localidadEstaActiva(localidadId: string): Promise<boolean> {
+    const [fila] = await transaccionEnCurso()
+      .select({ activo: localidades.activo })
+      .from(localidades)
+      .where(eq(localidades.id, localidadId));
+    return fila?.activo ?? false;
+  }
+
   /** Lo elegido debe existir y ser de la empresa: la seguridad por filas oculta lo ajeno. */
   async exigirReferencias({ localidadId, tipoId, inmuebleIds }: ReferenciasDeParcela): Promise<void> {
     await exigirQueExista(localidades, localidadId ?? null, 'La localidad');

@@ -1,5 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { MedicionConFechaFutura } from '../../../dominio/errores-de-parcela.js';
 import { Medicion } from '../../../dominio/medicion.js';
 import type { Parcela } from '../../../dominio/parcela.js';
 import type { SolicitudDeMedicion } from '../../dto/medicion.dto.js';
@@ -7,7 +8,7 @@ import type { DependenciasDeParcelas } from '../parcelas/dependencias-de-parcela
 
 type Dependencias = Pick<
   DependenciasDeParcelas,
-  'repositorio' | 'mediciones' | 'consultasDeMediciones' | 'configuracion'
+  'repositorio' | 'mediciones' | 'consultasDeMediciones' | 'configuracion' | 'reloj'
 >;
 
 /**
@@ -26,12 +27,14 @@ export async function recalcularSuperficie(
 /**
  * Convierte la cifra escrita con los factores de la configuración, guarda la medición y actualiza la superficie de la
  * parcela. La parcela ya debe estar guardada.
+ * @throws MedicionConFechaFutura si la medición rige desde una fecha que aún no llega.
  */
 export async function registrarMedicionDeParcela(
   dependencias: Dependencias,
   operador: Operador,
   { parcela, datos }: { parcela: Parcela; datos: SolicitudDeMedicion },
 ): Promise<void> {
+  if (datos.vigenteDesde > (await dependencias.reloj.hoy(operador))) throw new MedicionConFechaFutura();
   const factores = await dependencias.configuracion.factores(operador);
   const medicion = Medicion.registrar(
     { empresaId: Identificador.desde(operador.empresaId), parcelaId: parcela.id.valor, factores },
