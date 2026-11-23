@@ -576,6 +576,32 @@ son anticipos) y clase de flujo `efectivo`: su saldo acreedor se **resta** de Ca
 Único `enlaces_rol_llave_unico (empresa_id, rol, coalesce(llave, ''))`. Índice `(cuenta_id)`. Cambiar un enlace solo
 afecta lo que se contabilice después (se audita, §9.2).
 
+**Lo que se programó en CT-2 (2026-11-23) y difiere de la letra de este diseño:**
+
+- Migraciones `0003_ct2_enlaces` (la tabla) y `0004_ct2_auditoria_permanente_de_enlaces` (`--custom`: el catálogo de
+  auditoría permanente del core); el `0002_ct2_enlaces` de §5.12 ya estaba tomado por una corrección de CT-1.
+- Se suman `check` a la tabla: `rol` en la lista cerrada de §3.9, `llave` no vacía y `(llave is null) = (llave_nombre is null)`.
+- El catálogo de roles con sus metadatos vive en `dominio/roles-de-enlace.ts` (nombre, módulos que lo usan, si lleva llave y
+  cómo se llama, si es de auxiliar); los nombres de los roles siguen en `core/contratos/contabilidad.contratos.ts`. Todos los
+  roles con llave la admiten **opcional**: sin llave el enlace rige para todo el rol (así lo dice la búsqueda de §3.9).
+- Roles de **auxiliar** (su cuenta queda `es_de_control` al enlazar): `proveedores`, `documentos_por_asignar`,
+  `pagos_por_aplicar`, `efectivo_para_pagos`, `cuenta_bancaria`, `caja_chica`, `anticipos_por_liquidar`,
+  `cuentas_por_cobrar_a_empleados`, `activo_fijo`, `depreciacion_acumulada` y `construcciones_en_curso`. Desmarcarla es
+  editar la cuenta (el aviso al desmarcar es de la pantalla, CT-2c).
+- API: `GET /contabilidad/enlaces` (los roles de los módulos activos con sus enlaces), `GET …/llaves/:rol`, `PUT …/:rol`
+  (`{ llave, cuentaId }`: crea el enlace o cambia su cuenta) y `DELETE …/:enlaceId`; `…/exportar`, `…/plantilla` y
+  `…/importar`. Cambiar o quitar un enlace exige `contabilidad.enlaces.editar` (no hay permisos `crear` ni `eliminar`, §9.1).
+  Solo el cambio de cuenta de un enlace existente y el quitar se auditan (`corregir` y `quitar`); crear no.
+- La llave se valida contra lo que ofrecen los módulos activos (`contabilidad.llaves_de_enlace`) al guardar: si ninguno la
+  ofrece, `enlace_invalido`. Respuestas: **Bancos** (`cuenta_bancaria`: sus cuentas; `concepto_bancario`: sus conceptos),
+  **Libro de compras** (`retencion_por_pagar`: las 9 reglas con su nombre; `gasto_por_concepto`: sus conceptos de gasto) y
+  **Cuentas por pagar** (`proveedores`: las categorías de proveedor de Terceros). El resto de los roles con llave
+  (`caja_chica`, `activo_fijo`…) las responderán Caja chica y Activos fijos en CT-11.
+- Excel: columnas `Rol` (por su nombre), `Llave` (por su nombre, vacía = todo el rol) y `Cuenta` (por su código).
+- Se cierra lo que CT-1 dejó pendiente de «sin enlaces»: una cuenta enlazada no se inactiva ni deja de ser de detalle
+  (`cuenta_con_enlaces`, 422); la eliminación la impide la llave foránea (409). Los errores `cuenta_inactiva` y
+  `cuenta_no_es_de_detalle` salen al enlazar una cuenta de mayor o inactiva. «Saldo cero» (inactivar) sigue siendo de CT-3.
+
 ### 5.4 `contabilidad.periodos`
 
 | Columna | Tipo | Nulo | Regla |
@@ -989,7 +1015,7 @@ pendiente de un paso solo toca la parte que se dice: lo demás del paso se progr
 | CT-0f (**hecho** 2026-11-23) | Corregir `diseno-cp5-reportes.md` §2.3 (documentación) | arquitecto | — | — |
 | **CT-1** (**hecho** 2026-11-23: migraciones `0000_ct1_cuentas_e_inicios`, `0001_ct1_hoja_de_detalle_y_auditoria` y `0002_bloqueo_del_padre_en_hoja_de_detalle`; decisiones en §5.2 y en la bitácora de `docs/PLAN.md`) | Esqueleto del módulo (`dependeDe: ['terceros']`), `inicios` (con firmantes), `cuentas` (rubros completos de §5.2, `tratamiento_fiscal` nuevo), máscara, disparador de hoja, Excel de cuentas; pruebas de tablas, del disparador y de la API. **Sin plantillas** (van en CT-1p) | backend | — | — |
 | CT-1c | Inicio (sin la vista previa del caso b) y Nomenclatura (árbol, ventana, Excel) | frontend | CT-1 | — |
-| **CT-2** | `enlaces`, catálogo de roles, pregunta `llaves_de_enlace` (respuestas de Bancos, Libro de compras y Cuentas por pagar), Excel | backend | CT-1, CT-0a | — |
+| **CT-2** (**hecho** 2026-11-23: migraciones `0003_ct2_enlaces` y `0004_ct2_auditoria_permanente_de_enlaces`; decisiones en §5.3 y en la bitácora de `docs/PLAN.md`) | `enlaces`, catálogo de roles, pregunta `llaves_de_enlace` (respuestas de Bancos, Libro de compras y Cuentas por pagar), Excel | backend | CT-1, CT-0a | — |
 | CT-2c | Enlaces contables | frontend | CT-2 | — |
 | **CT-1p** | Plantillas de la instalación (base, IVA general, régimen sobre las utilidades, agente de retención) con las cuentas y los **enlaces sugeridos** por rol; variable `contabilidad.plantillas.disponibles`; sembrado al iniciar | backend | CT-2 | **Plantilla de cuentas del contador** (con la cuenta de cada rol de §3.9) y los artículos de la LAT sobre los intereses |
 | **CT-3** | `periodos` (con `definitivo_por`, E-1), `partidas` (con `referencia_de_respaldo`), `lineas_de_partida`, disparadores, correlativo, partidas manuales con aprobación y respaldo, anular y reversar, auditoría permanente; pruebas de los disparadores con SQL directo | backend | CT-1 | **P-1**, solo la regla «respaldo obligatorio en `diario`» (dominio y `partida_al_contabilizar`); sin respuesta se programa el resto y la regla se agrega después |

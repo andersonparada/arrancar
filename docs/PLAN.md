@@ -4393,3 +4393,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   - Segunda corrección de la revisión de CT-1: la regla «`tipo` igual al del padre» tenía la misma carrera. `ActualizarCuenta`
     lee la cuenta con `buscarParaCambiar` (`FOR NO KEY UPDATE`) antes de `tieneHijas`, y al crear se lee al padre con
     `buscarPorCodigoParaCompartir` (`FOR SHARE`), que choca con el bloqueo del otro lado. Pruebas con dos conexiones.
+- **2026-11-23 (CT-2, Contabilidad: enlaces de roles y llaves)**:
+  - Tabla `contabilidad.enlaces` (migración `0003_ct2_enlaces`: RLS por empresa, único `(empresa_id, rol, coalesce(llave, ''))`,
+    llave compuesta con la cuenta, `check` del rol y de la llave) y `0004_ct2_auditoria_permanente_de_enlaces` (`--custom`).
+    Catálogo de roles con metadatos en `dominio/roles-de-enlace.ts`; entidad `Enlace` (cuenta de detalle y activa, llave solo
+    en roles que la llevan).
+  - Casos de uso: `ListarEnlaces` (roles de los módulos activos), `ListarLlavesDeEnlace`, `GuardarEnlace` (crea o cambia la
+    cuenta; audita `corregir`; marca de control la cuenta de un rol de auxiliar), `QuitarEnlace` (audita `quitar`) y las dos
+    piezas del Excel. API `GET/PUT/DELETE /contabilidad/enlaces…` con Excel y permisos `ver`, `editar`, `importar`, `exportar`.
+  - Pregunta `contabilidad.llaves_de_enlace` respondida por Bancos (cuentas y conceptos), Libro de compras (reglas de
+    retención y conceptos de gasto) y Cuentas por pagar (categorías de proveedor). Los nombres de las reglas pasaron a
+    `dominio/nombres-de-reglas-de-retencion.ts` (los usa también el Excel de retenciones).
+  - Se cerró lo de CT-1 sobre enlaces: una cuenta enlazada no se inactiva ni se vuelve de mayor (`cuenta_con_enlaces`).
+    Detalle y decisiones en `diseno-contabilidad.md` §5.3.
+  - Pruebas: 47 nuevas (dominio y catálogo, casos de uso, tabla contra PostgreSQL, API con Excel y permisos, y las tres
+    respuestas); 369 en las carpetas tocadas, en verde. Nota del entorno: el puerto :5433 sigue respondiendo `ECONNRESET`
+    al agente; las pruebas se corrieron en un contenedor propio con `SERVIDOR` de `nombres-de-bases.ts` apuntando a su
+    puerto, cambio local que no se confirmó.
