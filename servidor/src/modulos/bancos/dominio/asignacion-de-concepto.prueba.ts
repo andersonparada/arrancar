@@ -130,4 +130,25 @@ describe('exigirConceptoElegible', () => {
       );
     });
   });
+
+  describe('conceptos reservados de Cuentas por cobrar (VC-0b)', () => {
+    const devolucion = concepto({ claveDeSistema: 'devolucion_a_cliente', aplicaA: 'debito' });
+    const deActivo = concepto({ claveDeSistema: 'cobro_a_cliente_de_activo', aplicaA: 'credito' });
+    const cobro = concepto({ claveDeSistema: 'cobro_a_cliente', aplicaA: 'credito' });
+    const sinModulos = new Set<string>();
+
+    it('se eligen en una nota si Cuentas por cobrar no está activo; activo, lo registra ese módulo', () => {
+      expect(() => exigirConceptoElegible(devolucion, 'debito', { modulosActivos: sinModulos })).not.toThrow();
+      expect(() => exigirConceptoElegible(deActivo, 'credito', { modulosActivos: sinModulos })).not.toThrow();
+      expect(() =>
+        exigirConceptoElegible(deActivo, 'credito', { modulosActivos: new Set(['cuentas-por-cobrar']) }),
+      ).toThrow(/Cuentas por cobrar/);
+    });
+
+    it('«Cobros a clientes» marca la nota: no se elige a mano en una nota, solo al marcarla', () => {
+      expect(() => exigirConceptoElegible(cobro, 'credito', { modulosActivos: sinModulos })).toThrow(
+        ConceptoDeSistemaNoSeElige,
+      );
+    });
+  });
 });

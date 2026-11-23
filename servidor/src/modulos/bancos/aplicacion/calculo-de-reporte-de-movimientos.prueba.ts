@@ -34,7 +34,7 @@ function movimiento(datos: Partial<MovimientoDto> & Pick<MovimientoDto, 'tipo' |
     documentoDeOrigenId: null,
     puedeAnular: false,
     puedeEliminar: false,
-    marcadaParaCuentasPorPagar: false,
+    marcadaParaModulo: null,
     desglose: [],
     puedeMarcar: false,
     puedeDesmarcar: false,

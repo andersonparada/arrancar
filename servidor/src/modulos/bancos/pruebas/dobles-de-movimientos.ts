@@ -1,4 +1,4 @@
-import { accionesDeMovimiento, estaMarcada, type HechosDeUnMovimiento } from '../aplicacion/acciones-posibles.js';
+import { accionesDeMovimiento, moduloMarcado, type HechosDeUnMovimiento } from '../aplicacion/acciones-posibles.js';
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
 import { resumirSinClasificar } from '../aplicacion/calculo-de-reporte-de-movimientos.js';
 import type { FiltroDeMovimientos, MovimientoDto, ResumenDeSinClasificar } from '../aplicacion/dto/movimiento.dto.js';
@@ -6,7 +6,7 @@ import type { ConsultasMovimientos, SaldoPrincipalDeLaCuenta } from '../aplicaci
 import type { RepositorioMovimientos } from '../aplicacion/puertos/repositorio-movimientos.js';
 import { deCentavos } from '../dominio/centavos.js';
 import { Movimiento, type MovimientoId } from '../dominio/movimiento.js';
-import { CONCEPTO_SIN_CLASIFICAR, idDeSistema, nombreDelConceptoDePrueba } from './conceptos-de-prueba.js';
+import { CONCEPTO_SIN_CLASIFICAR, claveDeSistemaDe, nombreDelConceptoDePrueba } from './conceptos-de-prueba.js';
 
 export { PoliticaDeMismaFechaFija, PoliticaDeSobregiroFija } from './politicas-fijas-de-prueba.js';
 
@@ -34,7 +34,7 @@ function hechosDe(
     revertido: movimiento.estaRevertido,
     esInverso: movimiento.esInverso,
     esDeOtroModulo: movimiento.instantanea().moduloDeOrigen !== null,
-    conceptoEsDePago: movimiento.instantanea().conceptoId === idDeSistema('pago_a_proveedor'),
+    claveDelConcepto: claveDeSistemaDe(movimiento.instantanea().conceptoId),
     ...cuenta,
   };
 }
@@ -54,7 +54,7 @@ function aDto(movimiento: Movimiento, conciliacionId: string | null, cuenta: Hec
     numeroDeCheque: null,
     conciliacionId,
     desglose: [],
-    marcadaParaCuentasPorPagar: estaMarcada(hechos),
+    marcadaParaModulo: moduloMarcado(hechos),
     ...accionesDeMovimiento(hechos),
   };
 }

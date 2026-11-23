@@ -89,7 +89,7 @@ describe('desmarcar una nota desde la conciliación (CP4-B2b)', () => {
     const respuesta = await desmarcar(id);
 
     expect(respuesta.estado).toBe(200);
-    expect(respuesta.cuerpo).toMatchObject({ marcadaParaCuentasPorPagar: false, conceptoNombre: 'General de prueba' });
+    expect(respuesta.cuerpo).toMatchObject({ marcadaParaModulo: null, conceptoNombre: 'General de prueba' });
     expect(avisos).toEqual(['desmarcar']);
     expect(await auditoriaDe(id)).toContainEqual({
       accion: 'corregir',
@@ -105,7 +105,7 @@ describe('desmarcar una nota desde la conciliación (CP4-B2b)', () => {
     const respuesta = await desmarcar(id);
 
     expect(respuesta.cuerpo.error.codigo).toBe('movimiento_ligado_a_pagos');
-    expect((await movimientoDe(cuenta.propietario, id)).marcadaParaCuentasPorPagar).toBe(true);
+    expect((await movimientoDe(cuenta.propietario, id)).marcadaParaModulo).toBe('cuentas-por-pagar');
     expect(await auditoriaDe(id)).toHaveLength(1);
   });
 
@@ -123,7 +123,7 @@ describe('desmarcar una nota desde la conciliación (CP4-B2b)', () => {
     });
 
     expect(respuesta.estado).toBe(403);
-    expect((await movimientoDe(cuenta.propietario, id)).marcadaParaCuentasPorPagar).toBe(true);
+    expect((await movimientoDe(cuenta.propietario, id)).marcadaParaModulo).toBe('cuentas-por-pagar');
   });
 
   it('solo en una conciliación en proceso y solo notas que sean candidatas del mes', async () => {

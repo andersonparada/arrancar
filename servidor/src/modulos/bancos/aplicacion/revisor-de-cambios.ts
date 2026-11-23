@@ -1,7 +1,7 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import type { CambioDeMovimiento, FormaDeAnulacion } from '../../core/contratos/bancos.contratos.js';
 import { ModuloDeOrigenInactivo, OrigenDelMovimientoNoCoincide } from '../dominio/errores-de-origen.js';
-import { MODULO_CUENTAS_POR_PAGAR, type OrigenDeMovimiento } from '../dominio/origen-de-movimiento.js';
+import type { OrigenDeMovimiento } from '../dominio/origen-de-movimiento.js';
 import type { MovimientoDto } from './dto/movimiento.dto.js';
 import type { AvisosDeMovimientos } from './puertos/avisos-de-movimientos.js';
 import type { ModulosDeOrigen } from './puertos/modulos-de-origen.js';
@@ -12,7 +12,7 @@ interface Dependencias {
 }
 
 export interface CambioPorRevisar {
-  movimiento: Pick<MovimientoDto, 'id' | 'moduloDeOrigen' | 'documentoDeOrigenId' | 'marcadaParaCuentasPorPagar'>;
+  movimiento: Pick<MovimientoDto, 'id' | 'moduloDeOrigen' | 'documentoDeOrigenId' | 'marcadaParaModulo'>;
   cambio: CambioDeMovimiento;
   /** Solo en `anular`: cómo se va a anular. */
   formaDeAnulacion?: FormaDeAnulacion;
@@ -23,8 +23,8 @@ export interface CambioPorRevisar {
 }
 
 /**
- * Antes de cambiar un movimiento con origen en otro módulo o marcado para Cuentas por pagar (CP4, diseño §6.3; CCL-B1
- * lo generaliza a cualquier módulo): si ese módulo está inactivo no hay quien revise sus reglas y se rechaza; si no, se le manda el aviso
+ * Antes de cambiar un movimiento con origen en otro módulo o marcado para un módulo (CP4, diseño §6.3; CCL-B1 y VC-0b lo generalizan:
+ * Cuentas por pagar y Cuentas por cobrar): si ese módulo está inactivo no hay quien revise sus reglas y se rechaza; si no, se le manda el aviso
  * `bancos.movimiento_por_cambiar`, que puede rechazar. Un movimiento de Bancos a secas pasa sin avisar.
  */
 export class RevisorDeCambios {
@@ -37,7 +37,7 @@ export class RevisorDeCambios {
   async revisar(operador: Operador, cambio: CambioPorRevisar): Promise<void> {
     const { movimiento, pedidoPor } = cambio;
     if (pedidoPor) return this.exigirQueSeaSuyo(movimiento, pedidoPor);
-    if (!movimiento.moduloDeOrigen && !movimiento.marcadaParaCuentasPorPagar) return;
+    if (!movimiento.moduloDeOrigen && !movimiento.marcadaParaModulo) return;
     await this.exigirModuloDeOrigenActivo(operador, movimiento);
     await this.dependencias.avisos.porCambiar(operador, {
       movimientoId: movimiento.id,
@@ -54,7 +54,7 @@ export class RevisorDeCambios {
   private async exigirModuloDeOrigenActivo(operador: Operador, movimiento: CambioPorRevisar['movimiento']) {
     const modulos = [
       ...(movimiento.moduloDeOrigen ? [movimiento.moduloDeOrigen] : []),
-      ...(movimiento.marcadaParaCuentasPorPagar ? [MODULO_CUENTAS_POR_PAGAR] : []),
+      ...(movimiento.marcadaParaModulo ? [movimiento.marcadaParaModulo] : []),
     ];
     for (const modulo of new Set(modulos)) {
       if (!(await this.dependencias.modulosDeOrigen.estaActivo(operador, modulo))) {

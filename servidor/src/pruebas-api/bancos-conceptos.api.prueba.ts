@@ -3,8 +3,8 @@ import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const RUTA = '/api/bancos/conceptos';
-const CONCEPTOS_DE_SISTEMA = 20;
-const CONCEPTOS_SUGERIDOS = 17;
+const CONCEPTOS_DE_SISTEMA = 24;
+const CONCEPTOS_SUGERIDOS = 16;
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let otraCuenta: CuentaDePrueba;

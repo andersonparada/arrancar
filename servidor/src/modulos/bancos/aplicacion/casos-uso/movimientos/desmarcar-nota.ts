@@ -13,7 +13,7 @@ interface Desmarcado {
 const MAXIMO_DEL_MOTIVO = 500;
 
 /**
- * Quita la marca de Cuentas por pagar a una nota: le pone el concepto que se elija, quita el reparto por concepto que
+ * Quita la marca de un módulo (Cuentas por pagar o por cobrar) a una nota: le pone el concepto que se elija, quita el reparto por concepto que
  * tuviera y antes avisa a Cuentas por pagar, que la rechaza si la nota está ligada a un pago (CP4-b). El motivo es
  * obligatorio y queda en la auditoría junto con la nota como estaba.
  */
@@ -32,10 +32,10 @@ export class DesmarcarNota {
       if (!motivoLimpio || motivoLimpio.length > MAXIMO_DEL_MOTIVO) throw new MotivoObligatorio();
       const movimiento = await movimientoExistente(repositorio, movimientoId);
       movimiento.exigirClase(false);
-      movimiento.exigirNotaDeDebitoMarcable();
+      movimiento.exigirNotaSueltaVigente();
       const anterior = await consultas.obtener(movimientoId);
-      if (!anterior.marcadaParaCuentasPorPagar) throw new NotaNoMarcada();
-      const nuevo = await this.conceptoElegido(operador, conceptoId);
+      if (!anterior.marcadaParaModulo) throw new NotaNoMarcada();
+      const nuevo = await this.conceptoElegido(operador, { conceptoId, tipo: anterior.tipo });
       await revisor.revisar(operador, { movimiento: anterior, cambio: 'desmarcar', motivo: motivoLimpio });
       movimiento.reclasificar(nuevo.id.valor);
       await repositorio.guardar(movimiento);
@@ -51,9 +51,14 @@ export class DesmarcarNota {
     });
   }
 
-  /** El concepto nuevo de una débito: uno reservado por un módulo se elige solo si ese módulo no está activo. */
-  private async conceptoElegido(operador: Operador, conceptoId: string) {
+  /** El concepto nuevo de la nota: uno reservado por un módulo se elige solo si ese módulo no está activo. */
+  private async conceptoElegido(
+    operador: Operador,
+    { conceptoId, tipo }: { conceptoId: string; tipo: MovimientoDto['tipo'] },
+  ) {
     const modulosActivos = await this.dependencias.modulosDeOrigen.activos(operador);
-    return this.dependencias.conceptos.elegido(conceptoId, 'debito', { modulosActivos });
+    return this.dependencias.conceptos.elegido(conceptoId, tipo === 'credito' ? 'credito' : 'debito', {
+      modulosActivos,
+    });
   }
 }

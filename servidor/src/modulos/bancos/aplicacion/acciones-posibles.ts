@@ -1,4 +1,5 @@
 import type { EstadoDelCheque } from '../dominio/cheque.js';
+import { moduloQueMarca } from '../dominio/conceptos-reservados.js';
 import type { ParteDeApertura } from '../dominio/partes-de-apertura.js';
 
 /** Lo que se sabe de un movimiento para decidir qué se puede hacer con él. */
@@ -14,8 +15,8 @@ export interface HechosDeUnMovimiento {
   esInverso: boolean;
   /** Lo generó otro módulo (P6): su concepto lo fija ese módulo. */
   esDeOtroModulo: boolean;
-  /** Su concepto es el de sistema «Pago a proveedores»; con las demás condiciones de `estaMarcada`, es una nota marcada. */
-  conceptoEsDePago: boolean;
+  /** La clave de su concepto si es de sistema; con las demás condiciones de `moduloMarcado`, decide si es una nota marcada. */
+  claveDelConcepto: string | null;
   /** Su fecha cae en un mes ya conciliado (autorizado) de su cuenta. */
   mesConciliado: boolean;
   /** Su cuenta tiene alguna conciliación, de cualquier estado. */
@@ -27,13 +28,13 @@ export interface AccionesDeMovimiento {
   puedeAnular: boolean;
   puedeEliminar: boolean;
   puedeReclasificar: boolean;
-  /** Estructural: el servidor además exige que Cuentas por pagar esté activo al marcar. */
+  /** Estructural, solo de una nota de débito: el servidor además exige que Cuentas por pagar esté activo al marcar. */
   puedeMarcar: boolean;
   puedeDesmarcar: boolean;
 }
 
 const esNotaSuelta = (hechos: HechosDeUnMovimiento): boolean =>
-  hechos.tipo === 'debito' &&
+  (hechos.tipo === 'debito' || hechos.tipo === 'credito') &&
   !hechos.saldoInicial &&
   !hechos.esDeTransferencia &&
   !hechos.esInverso &&
@@ -42,10 +43,14 @@ const esNotaSuelta = (hechos: HechosDeUnMovimiento): boolean =>
 const esVigente = (hechos: HechosDeUnMovimiento): boolean => !hechos.anulado && !hechos.revertido;
 
 /**
- * Una nota de débito suelta, sin origen, con el concepto «Pago a proveedores»: la marca para Cuentas por pagar es el
- * concepto mismo (no hay columna). Una nota anulada o revertida conserva su concepto y sigue siendo «marcada».
+ * El módulo para el que una nota suelta, sin origen, está marcada (VC-0b): lo dice su concepto de sistema
+ * (`CONCEPTO_QUE_MARCA_PARA_MODULO`: «Pago a proveedores» → Cuentas por pagar; «Cobros a clientes» → Cuentas por cobrar).
+ * Una nota anulada o revertida conserva su concepto y sigue siendo «marcada». Nulo si no lo está.
  */
-export const estaMarcada = (hechos: HechosDeUnMovimiento): boolean => esNotaSuelta(hechos) && hechos.conceptoEsDePago;
+export const moduloMarcado = (hechos: HechosDeUnMovimiento): string | null =>
+  esNotaSuelta(hechos) ? moduloQueMarca(hechos.claveDelConcepto) : null;
+
+export const estaMarcada = (hechos: HechosDeUnMovimiento): boolean => moduloMarcado(hechos) !== null;
 
 /**
  * «Limpio» es lo que se puede eliminar de verdad: nunca pasó por el banco (no está marcado en una
@@ -84,7 +89,7 @@ function accionesDeBaja(hechos: HechosDeUnMovimiento) {
 function accionesDeMarca(hechos: HechosDeUnMovimiento) {
   const vigente = esVigente(hechos);
   return {
-    puedeMarcar: esNotaSuelta(hechos) && vigente && !hechos.conceptoEsDePago,
+    puedeMarcar: esNotaSuelta(hechos) && hechos.tipo === 'debito' && vigente && !estaMarcada(hechos),
     puedeDesmarcar: estaMarcada(hechos) && vigente,
   };
 }

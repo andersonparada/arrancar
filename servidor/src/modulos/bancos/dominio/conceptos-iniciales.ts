@@ -73,6 +73,21 @@ export const CONCEPTOS_DE_SISTEMA: readonly ConceptoInicial[] = [
     ...operacion('Anticipos no liquidados'),
   }),
   concepto('devolucion_de_anticipo', 'Devolución de anticipos', { aplicaA: 'credito', ...sinFlujo }),
+  // VC-0b: Cuentas por cobrar («Cheque rechazado» ya existía como sugerido sin clave).
+  concepto('cobro_a_cliente', 'Cobros a clientes', { aplicaA: 'credito', ...operacion('Cobros a clientes') }),
+  concepto('cobro_a_cliente_de_activo', 'Cobro de venta de activo fijo', {
+    aplicaA: 'credito',
+    ...inversion('Venta de activos'),
+  }),
+  concepto('devolucion_a_cliente', 'Devoluciones a clientes', {
+    aplicaA: 'debito',
+    ...operacion('Cobros a clientes'),
+  }),
+  concepto('cheque_rechazado', 'Cheque rechazado', {
+    aplicaA: 'debito',
+    ...operacion('Cobros a clientes'),
+    esCargoBancario: true,
+  }),
   concepto('saldo_inicial', 'Saldo inicial', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('anulacion_de_apertura', 'Partidas de apertura anuladas', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('sin_clasificar', 'Sin clasificar', { aplicaA: 'ambos', ...sinFlujo }),
@@ -91,11 +106,6 @@ export const CONCEPTOS_SUGERIDOS: readonly ConceptoInicial[] = [
     ...operacion('Intereses ganados'),
     esCargoBancario: true,
     pideDatosDeIntereses: true,
-  }),
-  concepto(null, 'Cheque rechazado', {
-    aplicaA: 'debito',
-    ...operacion('Cobros a clientes'),
-    esCargoBancario: true,
   }),
   concepto(null, 'Planilla', { aplicaA: 'debito', ...operacion('Pagos de planilla') }),
   concepto(null, 'Préstamo recibido', { aplicaA: 'credito', ...financiamiento('Préstamos recibidos') }),

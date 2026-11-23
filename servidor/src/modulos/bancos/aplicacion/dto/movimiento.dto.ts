@@ -59,8 +59,11 @@ export interface MovimientoDto {
   puedeEliminar: boolean;
   /** Lo calcula el servidor: si se le puede cambiar solo el concepto (no un inverso, ni una transferencia, ni el saldo inicial). */
   puedeReclasificar: boolean;
-  /** Nota de débito suelta con el concepto «Pago a proveedores»: Cuentas por pagar puede aplicarla a facturas (CP4). */
-  marcadaParaCuentasPorPagar: boolean;
+  /**
+   * Nota suelta con un concepto que marca (VC-0b): la clave del módulo que puede ligarla a sus documentos
+   * (`cuentas-por-pagar` con «Pago a proveedores», `cuentas-por-cobrar` con «Cobros a clientes»); nulo si no está marcada.
+   */
+  marcadaParaModulo: string | null;
   /** El reparto por concepto cuando no es «todo al concepto del movimiento»; vacío si no lo hay. */
   desglose: LineaDeDesgloseDto[];
   /** Lo calcula el servidor (estructural: al marcar también se exige Cuentas por pagar activo). */
@@ -91,7 +94,7 @@ export type SolicitudDeMovimiento = Omit<
   | 'puedeAnular'
   | 'puedeEliminar'
   | 'puedeReclasificar'
-  | 'marcadaParaCuentasPorPagar'
+  | 'marcadaParaModulo'
   | 'desglose'
   | 'puedeMarcar'
   | 'puedeDesmarcar'

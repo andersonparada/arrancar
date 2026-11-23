@@ -4,10 +4,14 @@ export const MODULO_CUENTAS_POR_LIQUIDAR = 'cuentas-por-liquidar';
 /** Cuentas por pagar genera los pagos y marca las notas que aplica a facturas (CP4). */
 export const MODULO_CUENTAS_POR_PAGAR = 'cuentas-por-pagar';
 
+/** Cuentas por cobrar genera los cobros y marca las notas de crédito que aplica a facturas (VC-0b). */
+export const MODULO_CUENTAS_POR_COBRAR = 'cuentas-por-cobrar';
+
 const NOMBRES_DE_MODULOS: Readonly<Record<string, string>> = {
   [MODULO_CAJA_CHICA]: 'Caja chica',
   [MODULO_CUENTAS_POR_LIQUIDAR]: 'Cuentas por liquidar',
   [MODULO_CUENTAS_POR_PAGAR]: 'Cuentas por pagar',
+  [MODULO_CUENTAS_POR_COBRAR]: 'Cuentas por cobrar',
 };
 
 /** El nombre del módulo para mostrarlo; si no se conoce, su clave. */
@@ -28,4 +32,20 @@ export const CONCEPTOS_RESERVADOS_POR_MODULO: Readonly<Record<string, string>> =
   gasto_de_anticipo_de_activo: MODULO_CUENTAS_POR_LIQUIDAR,
   anticipo_no_liquidado: MODULO_CUENTAS_POR_LIQUIDAR,
   devolucion_de_anticipo: MODULO_CUENTAS_POR_LIQUIDAR,
+  cobro_a_cliente: MODULO_CUENTAS_POR_COBRAR,
+  cobro_a_cliente_de_activo: MODULO_CUENTAS_POR_COBRAR,
+  devolucion_a_cliente: MODULO_CUENTAS_POR_COBRAR,
 };
+
+/**
+ * Concepto de sistema → módulo para el que una **nota suelta** con ese concepto queda marcada (VC-0b): la marca es el
+ * concepto mismo, sin columna aparte. El módulo puede ligar la nota a sus documentos.
+ */
+export const CONCEPTO_QUE_MARCA_PARA_MODULO: Readonly<Record<string, string>> = {
+  pago_a_proveedor: MODULO_CUENTAS_POR_PAGAR,
+  cobro_a_cliente: MODULO_CUENTAS_POR_COBRAR,
+};
+
+/** El módulo para el que marca ese concepto de sistema; nulo si no marca para ninguno. */
+export const moduloQueMarca = (claveDeSistema: string | null): string | null =>
+  (claveDeSistema !== null ? CONCEPTO_QUE_MARCA_PARA_MODULO[claveDeSistema] : undefined) ?? null;

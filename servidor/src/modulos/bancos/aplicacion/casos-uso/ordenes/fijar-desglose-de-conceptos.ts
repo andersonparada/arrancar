@@ -50,7 +50,7 @@ export class FijarDesgloseDeConceptos {
     if (dto.anuladoEn) throw new MovimientoAnulado();
     if (dto.revertidoEn) throw new MovimientoYaRevertido();
     if (!origen) {
-      if (!dto.marcadaParaCuentasPorPagar) throw new NotaNoMarcada();
+      if (!dto.marcadaParaModulo) throw new NotaNoMarcada();
       return;
     }
     if (dto.moduloDeOrigen !== origen.modulo || dto.documentoDeOrigenId !== origen.documentoId) {

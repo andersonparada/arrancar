@@ -49,7 +49,7 @@ export class ReclasificadorDeUnMovimiento {
     const movimiento = await movimientoExistente(repositorio, movimientoId);
     const anterior = await consultas.obtener(movimientoId);
     await this.exigirClase(pedido.clase, anterior);
-    if (anterior.marcadaParaCuentasPorPagar && anterior.conceptoId !== concepto.id.valor) {
+    if (anterior.marcadaParaModulo && anterior.conceptoId !== concepto.id.valor) {
       await this.revisarNotaMarcada(operador, anterior);
     }
     const conceptoAnterior = movimiento.reclasificar(concepto.id.valor);
