@@ -4362,3 +4362,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Decisiones: «solo tiene su fila de alta» = una sola fila vigente en el historial; los textos «Disponible para uso» son de
   pantalla (AF-4c y AFI-4c). Las pruebas con base de datos de esta sesión se corrieron por un reenvío local al
   PostgreSQL de Docker porque el puerto 5433 reseteaba conexiones desde el anfitrión.
+- **2026-11-23 — AFI-3, correcciones de la revisión.** (1) La fila de alta solo se reescribe si el bien no tenía movimiento
+  contable: lo que se pone en uso ahora o un componente aún en construcción; un componente que ya estaba en uso recibe
+  traslado con boleta y valida mes abierto. (2) Con `ubicacion`, un componente cuyo principal no va en el lote se rechaza con
+  `componente_se_traslada_con_su_principal`. (3) La fecha de uso debe caer en un mes abierto (`MesCerrado`) para todos los
+  activos, aunque el primer mes de depreciación sea el siguiente.

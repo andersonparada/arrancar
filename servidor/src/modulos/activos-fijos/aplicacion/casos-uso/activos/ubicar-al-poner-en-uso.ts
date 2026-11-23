@@ -51,7 +51,7 @@ function sinCambio(activo: Activo, destino: DestinoDeTraslado): boolean {
 /**
  * Deja a los activos en la ubicación elegida al ponerlos «Disponible para uso». Si el activo solo tiene su fila de alta
  * (aún no hubo boleta), esa fila toma la ubicación; si ya tuvo traslados, el cambio es un traslado con boleta
- * (una sola para todo el lote) con el motivo «Disponible para uso». Los componentes se mueven con su principal.
+ * (una sola para todo el lote) con el motivo «Disponible para uso». Los componentes se mueven con su principal; el que ya estaba en uso siempre recibe traslado con boleta.
  */
 export class UbicadorAlPonerEnUso {
   private readonly incisos: IncisosDeClases;
@@ -65,9 +65,10 @@ export class UbicadorAlPonerEnUso {
     const destino = destinoDe(pedido.ubicacion);
     const eventos: EventoDominio[] = [];
     let boleta: BoletaDeTraslado | null = null;
+    const propios = new Set(pedido.activos.map((activo) => activo.id.valor));
     for (const activo of await this.conComponentes(pedido.activos)) {
       if (sinCambio(activo, destino)) continue;
-      if (await this.soloTieneElAlta(activo)) {
+      if (await this.sinMovimientoPrevio(activo, propios)) {
         await this.moverAlta(activo, destino);
         continue;
       }
@@ -81,6 +82,15 @@ export class UbicadorAlPonerEnUso {
     const propios = new Set(activos.map((activo) => activo.id.valor));
     const componentes = await this.dependencias.repositorio.componentesDe([...propios]);
     return [...activos, ...componentes.filter((componente) => !propios.has(componente.id.valor))];
+  }
+
+  /**
+   * La fila de alta solo se toca si el bien no tenía movimiento contable: lo que se pone en uso ahora, o un componente
+   * que seguía en construcción. Un componente que ya estaba en uso recibe traslado con boleta (cuotas ya cerradas).
+   */
+  private async sinMovimientoPrevio(activo: Activo, propios: ReadonlySet<string>): Promise<boolean> {
+    const estabaEnConstruccion = propios.has(activo.id.valor) || activo.instantanea().estado === 'en_construccion';
+    return estabaEnConstruccion && (await this.soloTieneElAlta(activo));
   }
 
   private async soloTieneElAlta(activo: Activo): Promise<boolean> {

@@ -3,10 +3,12 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Activo } from '../../../dominio/activo.js';
+import { ComponenteSeTrasladaConSuPrincipal } from '../../../dominio/errores-de-traslado.js';
 import type { PrimerMes } from '../../../dominio/depreciacion/meses.js';
 import type { ActivoFichaDto, SolicitudDePonerEnUso, UbicacionAlPonerEnUso } from '../../dto/activo.dto.js';
 import type { TopesPorInciso } from '../../puertos/lector-de-topes.js';
 import { validarUbicacion } from './comprobaciones-de-activo.js';
+import { exigirMesAbierto } from '../traslados/dependencias-de-traslados.js';
 import type { DependenciasDeUso } from './dependencias-de-uso.js';
 import { planearUso } from './plan-de-uso.js';
 import { UbicadorAlPonerEnUso } from './ubicar-al-poner-en-uso.js';
@@ -29,6 +31,15 @@ interface ContextoDeActivar {
   operador: Operador;
   pedido: PedidoDeActivar;
   reglas: ReglasDeLaEmpresa;
+}
+
+/** Un componente no puede cambiar de ubicación sin su principal en el lote. */
+function exigirPrincipalConComponentes(activos: readonly Activo[]): void {
+  const ids = new Set(activos.map((activo) => activo.id.valor));
+  for (const activo of activos) {
+    const { activoPadreId, codigo } = activo.instantanea();
+    if (activoPadreId && !ids.has(activoPadreId)) throw new ComponenteSeTrasladaConSuPrincipal(codigo);
+  }
 }
 
 /**
@@ -57,8 +68,10 @@ export class ActivadorDeActivos {
     const { cierres, ubicaciones, consultas } = this.dependencias;
     const { operador, pedido } = contexto;
     await cierres.bloquear('compartido');
+    await exigirMesAbierto(cierres, pedido.fechaDeInicioDeUso);
     if (pedido.ubicacion) await validarUbicacion({ ubicaciones }, pedido.ubicacion);
     const activos = await this.cargar(pedido.activoIds);
+    if (pedido.ubicacion) exigirPrincipalConComponentes(activos);
     for (const activo of activos) await this.ponerUno(activo, contexto);
     const { fechaDeInicioDeUso: fecha, ubicacion } = pedido;
     const eventos: EventoDominio[] = ubicacion
