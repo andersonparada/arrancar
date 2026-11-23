@@ -4348,3 +4348,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+- **2026-11-23 — VC-0d (servidor) hecho: piezas del PDF y foliación genérica en `core/impresion/pdf`.** Se mudaron con
+  `git mv` `pincel-del-pdf`, `monto-del-pdf`, `texto-para-el-pdf` (y su prueba); `tabla-del-pdf` quedó genérica
+  (`ColumnaDeTabla<F, M>`: cada columna dice cómo leer su texto o monto) y las columnas del libro de compras
+  pasaron a `libro-de-compras/infraestructura/pdf/columnas-de-la-tabla.ts`. La paginación con «Vienen»/«Van» y
+  `foliosQueGasta` son ahora `paginarConSubtotales` (core, con su prueba); `paginarLibro` de compras es un envoltorio
+  con las mismas firmas. El PDF del libro de compras no cambia (sus pruebas pasan sin tocarse). Libro de ventas (LV-5)
+  ya puede emitir con folios sin importar a compras.

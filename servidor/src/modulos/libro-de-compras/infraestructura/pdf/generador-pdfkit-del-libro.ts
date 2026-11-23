@@ -4,17 +4,17 @@ import type {
   DatosDelPdfDelLibro,
   GeneradorDePdfDelLibro,
 } from '../../aplicacion/puertos/generador-de-pdf-del-libro.js';
-import { textoParaElPdf } from '../../dominio/libro/texto-para-el-pdf.js';
-import { dibujarHojaDeResumen } from './hoja-de-resumen.js';
-import { periodoParaElPdf } from './monto-del-pdf.js';
-import { PincelDelPdf } from './pincel-del-pdf.js';
+import { periodoParaElPdf } from '../../../core/impresion/pdf/monto-del-pdf.js';
+import { PincelDelPdf } from '../../../core/impresion/pdf/pincel-del-pdf.js';
 import {
   ANCHO_UTIL,
   MARGEN,
-  columnasDeLaTabla,
   dibujarEncabezadoDeLaTabla,
   dibujarFilasDeLaHoja,
-} from './tabla-del-pdf.js';
+} from '../../../core/impresion/pdf/tabla-del-pdf.js';
+import { textoParaElPdf } from '../../../core/impresion/pdf/texto-para-el-pdf.js';
+import { columnasDeLaTabla } from './columnas-de-la-tabla.js';
+import { dibujarHojaDeResumen } from './hoja-de-resumen.js';
 
 /** Oficio horizontal, en puntos. */
 const TAMANO_DE_HOJA: [number, number] = [936, 612];
@@ -57,7 +57,7 @@ function dibujarLibro(pincel: PincelDelPdf, datos: DatosDelPdfDelLibro): void {
     const pagina = libro.paginas[indice];
     if (pagina) {
       dibujarEncabezadoDeLaTabla(pincel, columnas);
-      dibujarFilasDeLaHoja(pincel, datos.tipoDeLibro, pagina);
+      dibujarFilasDeLaHoja(pincel, columnas, pagina);
     } else dibujarHojaDeResumen(pincel, datos);
     dibujarPie(pincel, hoja);
   }

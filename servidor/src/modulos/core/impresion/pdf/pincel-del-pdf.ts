@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { textoParaElPdf } from '../../dominio/libro/texto-para-el-pdf.js';
+import { textoParaElPdf } from './texto-para-el-pdf.js';
 
 /** Las fuentes viajan en el repositorio (`servidor/recursos/fuentes`), tanto en `src` como en `dist`; nunca de la red. */
 const rutaDeFuente = (archivo: string) =>
