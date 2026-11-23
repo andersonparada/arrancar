@@ -67,6 +67,26 @@ export class FormatoRegional {
     return unidad ? `${numero} ${unidad}` : numero;
   }
 
+  /** La cantidad de un artículo de inventario: de 2 a 4 decimales, como las guarda el servidor. */
+  cantidadDeInventario(valor: Numero, unidad?: string): string {
+    if (!hayNumero(valor)) return SIN_VALOR;
+    const numero = new Intl.NumberFormat(IDIOMA, { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(
+      Number(valor),
+    );
+    return unidad ? `${numero} ${unidad}` : numero;
+  }
+
+  /** El costo de una unidad: de 2 a 6 decimales, para que un costo chico no se redondee a otro. */
+  costoUnitario(valor: Numero, moneda = 'GTQ'): string {
+    if (!hayNumero(valor)) return SIN_VALOR;
+    return new Intl.NumberFormat(IDIOMA, {
+      style: 'currency',
+      currency: moneda,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    }).format(Number(valor));
+  }
+
   /**
    * El día del calendario en la zona horaria de la empresa, no en la del navegador.
    * Una fecha sin hora ("2026-01-15", la que se elige en un calendario) es ese día
