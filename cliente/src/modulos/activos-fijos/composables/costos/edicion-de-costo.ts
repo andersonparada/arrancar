@@ -99,6 +99,8 @@ export function detallesDeCosto(costo: Costo): DetalleDeRegistro[] {
     { etiqueta: 'Fecha', valor: formatearFecha(costo.fecha) },
     { etiqueta: 'Procedencia', valor: procedenciaDeCosto(costo), largo: true },
   ];
+  if (costo.mejoraId)
+    detalles.push({ etiqueta: 'Agrupado en', valor: 'Una mejora o costo posterior (pestaña Mejoras)', largo: true });
   if (costo.descripcion) detalles.push({ etiqueta: 'Descripción', valor: costo.descripcion, largo: true });
   if (!costo.aplicaAlLibroFiscal)
     detalles.push({ etiqueta: 'Fuera del libro fiscal', valor: costo.motivoFueraDelLibroFiscal ?? '', largo: true });
