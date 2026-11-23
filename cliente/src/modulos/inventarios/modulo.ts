@@ -49,6 +49,32 @@ export const moduloInventarios: DefinicionModuloCliente = {
       props: true,
       meta: { permiso: 'inventarios.articulos.editar', titulo: VENTANAS_INVENTARIOS.articulos.editar },
     },
+    {
+      path: '/inventarios/bodegas',
+      name: 'inventarios.bodegas',
+      component: () => import('./paginas/ListaDeBodegas.vue'),
+      meta: { permiso: 'inventarios.bodegas.ver', titulo: VENTANAS_INVENTARIOS.bodegas.titulo },
+    },
+    {
+      path: '/inventarios/bodegas/nuevo',
+      name: 'inventarios.bodegas.nuevo',
+      component: () => import('./paginas/FormularioDeBodega.vue'),
+      meta: { permiso: 'inventarios.bodegas.crear', titulo: VENTANAS_INVENTARIOS.bodegas.nuevo },
+    },
+    {
+      path: '/inventarios/bodegas/:bodegaId',
+      name: 'inventarios.bodegas.ficha',
+      component: () => import('./paginas/FichaDeBodega.vue'),
+      props: true,
+      meta: { permiso: 'inventarios.bodegas.ver', titulo: VENTANAS_INVENTARIOS.bodegas.titulo },
+    },
+    {
+      path: '/inventarios/bodegas/:bodegaId/editar',
+      name: 'inventarios.bodegas.editar',
+      component: () => import('./paginas/FormularioDeBodega.vue'),
+      props: true,
+      meta: { permiso: 'inventarios.bodegas.editar', titulo: VENTANAS_INVENTARIOS.bodegas.editar },
+    },
     // generador: rutas
   ],
   menu: [
@@ -77,6 +103,13 @@ export const moduloInventarios: DefinicionModuloCliente = {
           icono: Package,
           seccion: 'administracion',
           permiso: 'inventarios.articulos.ver',
+        },
+        {
+          titulo: VENTANAS_INVENTARIOS.bodegas.titulo,
+          ruta: '/inventarios/bodegas',
+          icono: Warehouse,
+          seccion: 'administracion',
+          permiso: 'inventarios.bodegas.ver',
         },
         // generador: menu
       ],

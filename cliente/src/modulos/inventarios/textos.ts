@@ -21,5 +21,11 @@ export const VENTANAS_INVENTARIOS = {
     nuevo: 'Nuevo artículo',
     editar: 'Editar artículo',
   },
+  bodegas: {
+    titulo: 'Bodegas',
+    descripcion: 'Las bodegas de la empresa.',
+    nuevo: 'Nueva bodega',
+    editar: 'Editar bodega',
+  },
   // generador: ventanas
 } as const;
