@@ -4362,3 +4362,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   vacío de un anticipo anulado (11). Siguen abiertos: «Es empleado» encendido en cada entrega (8, el tercero no lo recuerda), aviso rojo que no
   se limpia entre intentos (10, es del almacén de avisos del core) y alinear las tablas con y sin documento (11); y de decisión: terceros de
   tipo empresa en el selector, nota de débito sin referencia y corte futuro de CL-R1 (12).
+- **2026-11-23 (CC-11, QA de Caja chica):** recorrido en el navegador (escritorio y celular, claro y oscuro, impresión y Excel) de abrir con
+  cheque no negociable, factura desde la ficha, factura con retención (bandeja; asignada con permiso y motivo), vale sobre el tope, reponer
+  con desglose en Bancos, arqueo con faltante, custodio que repone (aviso), usuario sin el fondo asignado, bancarización con un cheque de
+  Cuentas por pagar y una factura de caja chica del mismo proveedor, vales provisionales, anular reposición y arqueo, cerrar, accesos y
+  los reportes CC-R1 a CC-R5; todo cuadra a mano (informe `docs/modulos/informe-qa-caja-chica-2026-11-23.md`). Errores: (media) se puede
+  anular el gasto sin factura de un vale liquidado, o su factura desde el libro, y el vale deja de cuadrar (dos `it.fails`); (baja) el acta
+  de arqueo imprime el uuid de quien arqueó (`it.fails`), la ficha repite cinco avisos si el fondo no se ve, el mensaje de un monto negativo
+  habla de decimales, la etiqueta del aviso de bancarización («Caja chica, A-1»). Corregidos: la ficha de un fondo cerrado ya no ofrece
+  «Asignar con retención» y «Cheque Cheque 3» del reporte de reposiciones. Prueba nueva de la bancarización compartida (cheque de Cuentas
+  por pagar más factura de caja chica). Observaciones para decidir: tope por comprobante mayor que el monto del fondo y rótulo del faltante.
+  Entorno: el puerto 5433 del PostgreSQL de desarrollo no se alcanzaba desde el equipo (puente de Docker viejo con la misma red 172.19.0.0/16
+  que `arrancar-dev_default`): la QA usó un PostgreSQL propio y desechable.
