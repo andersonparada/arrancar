@@ -30,7 +30,9 @@ function usarEntradasDeLaFactura() {
   async function traer(nota: LineaPorRecibir): Promise<EntradaDevolvible[] | null> {
     preparando.value = true;
     try {
-      const entradas = entradasDeLaFactura(await apiRecepciones.recepcionesVigentes(), nota.documentoAfectadoId);
+      const facturaId = nota.documentoAfectadoId;
+      const recepciones = facturaId ? await apiRecepciones.recepcionesDeLaFactura(facturaId) : [];
+      const entradas = entradasDeLaFactura(recepciones, facturaId);
       if (entradas.length) return entradas;
       avisos.error('La factura de esta nota no tiene recepciones vigentes: no hay mercadería que devolver.');
     } catch (error) {

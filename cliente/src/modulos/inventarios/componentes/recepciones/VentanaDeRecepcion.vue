@@ -6,11 +6,13 @@ import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { EdicionDeRecepcion } from '../../composables/recepciones/edicion-de-recepcion';
 import type { CatalogoDeRenglones } from '../../composables/documentos/usar-catalogo-de-renglones';
+import AvisoDeReferencias from '../compartido/AvisoDeReferencias.vue';
 import FilaDeRenglonRecibido from './FilaDeRenglonRecibido.vue';
 
 /** Recibir las líneas elegidas en una bodega: lo que no se reciba completo queda en la bandeja. */
 defineProps<{
   catalogo: CatalogoDeRenglones;
+  avisoDeReferencias: string | null;
   opcionesDeBodegas: OpcionDeRegistro[];
   errores: Record<string, string>;
   enviando: boolean;
@@ -28,6 +30,7 @@ const emit = defineEmits<{
 <template>
   <VentanaModal :abierta="edicion.abierta" titulo="Recibir mercadería" ancha @cerrar="emit('cerrar')">
     <form id="form-de-recepcion" class="space-y-4" novalidate @submit.prevent="emit('guardar')">
+      <AvisoDeReferencias :texto="avisoDeReferencias" />
       <div class="grid gap-4 sm:grid-cols-2">
         <CampoTexto
           v-model="edicion.fecha"

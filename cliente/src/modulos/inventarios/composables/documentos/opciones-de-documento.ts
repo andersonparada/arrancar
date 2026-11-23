@@ -40,3 +40,7 @@ export function opcionesDeDepartamentosActivos(
   );
   return [{ valor: null, texto: 'Sin departamento' }, ...aOpciones(visibles)];
 }
+
+/** El departamento elegido si sigue entre las opciones (cambió la localidad); si no, `null` para no enviar uno ajeno. */
+export const departamentoVigente = (opciones: OpcionDeRegistro[], departamentoId: string | null): string | null =>
+  departamentoId && opciones.some((opcion) => opcion.valor === departamentoId) ? departamentoId : null;

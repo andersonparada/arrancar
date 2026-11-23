@@ -1,4 +1,5 @@
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
+import type { Existencia } from '../../servicios/existencias.api';
 
 interface BodegaVisible {
   id: string;
@@ -28,3 +29,15 @@ export function bodegaPorOmision(bodegas: BodegaVisible[], veTodas: boolean): st
 
 /** ¿Se puede pedir el kardex con esta elección? Sin ver todas las bodegas hace falta elegir una. */
 export const puedePedirElKardex = (bodegaId: string | null, veTodas: boolean): boolean => veTodas || bodegaId !== null;
+
+/**
+ * Las bodegas que se ven en las existencias del artículo, sin repetir. Sirven cuando el usuario no puede listar las
+ * bodegas (no tiene `bodegas.ver`) pero sí ve lo que hay en ellas: el servidor ya recortó las existencias a su alcance.
+ */
+export function bodegasDeLasExistencias(existencias: Existencia[]): BodegaVisible[] {
+  const vistas = new Map<string, BodegaVisible>();
+  for (const existencia of existencias) {
+    vistas.set(existencia.bodegaId, { id: existencia.bodegaId, nombre: existencia.bodegaNombre, activo: true });
+  }
+  return [...vistas.values()];
+}

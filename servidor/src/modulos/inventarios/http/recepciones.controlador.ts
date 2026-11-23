@@ -4,6 +4,7 @@ import type { AnularDocumento } from '../aplicacion/casos-uso/movimientos/anular
 import type { DescartarLinea } from '../aplicacion/casos-uso/recepciones/descartar-linea.js';
 import type { DevolverLineaALaBandeja } from '../aplicacion/casos-uso/recepciones/devolver-linea-a-la-bandeja.js';
 import type { ListarPorRecibir } from '../aplicacion/casos-uso/recepciones/listar-por-recibir.js';
+import type { ListarRecepcionesDeUnaFactura } from '../aplicacion/casos-uso/recepciones/listar-recepciones-de-una-factura.js';
 import type { RecibirLineas } from '../aplicacion/casos-uso/recepciones/recibir-lineas.js';
 import type { RegistrarDevolucionAProveedor } from '../aplicacion/casos-uso/recepciones/registrar-devolucion.js';
 import type { RegistrarRebajaDeCosto } from '../aplicacion/casos-uso/recepciones/registrar-rebaja.js';
@@ -11,6 +12,7 @@ import type {
   DescarteSolicitado,
   DevolucionSolicitada,
   FiltrosDePorRecibirSolicitados,
+  FiltrosDeRecepcionesSolicitados,
   ParamsLinea,
   RebajaSolicitada,
   RecepcionSolicitada,
@@ -20,6 +22,7 @@ import { vistaDe } from './vista-de-la-solicitud.js';
 
 export interface CasosDeUsoDeRecepciones {
   listar: ListarPorRecibir;
+  listarDeUnaFactura: ListarRecepcionesDeUnaFactura;
   recibir: RecibirLineas;
   devolver: RegistrarDevolucionAProveedor;
   rebajar: RegistrarRebajaDeCosto;
@@ -44,6 +47,13 @@ export class RecepcionesControlador {
       hasta: hasta ?? undefined,
     });
   };
+
+  listarDeUnaFactura = (solicitud: FastifyRequest<{ Querystring: FiltrosDeRecepcionesSolicitados }>) =>
+    this.casosDeUso.listarDeUnaFactura.ejecutar(
+      operadorDe(solicitud),
+      solicitud.query.documentoDeCompraId,
+      vistaDe(solicitud),
+    );
 
   recibir = async (solicitud: FastifyRequest<{ Body: RecepcionSolicitada }>, respuesta: FastifyReply) => {
     const documentos = await this.casosDeUso.recibir.ejecutar(

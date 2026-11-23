@@ -83,17 +83,15 @@ const hayRecibibles = computed(() => recibiblesDe(props.documento).length > 0);
           </p>
         </div>
         <div class="flex flex-wrap gap-1">
-          <template v-if="esNotaDeCredito(linea)">
-            <span v-permiso="'inventarios.recepciones.crear'" class="contents">
-              <BotonBase variante="secundario" pequeno :icono="Undo2" @click="emit('devolver', linea)">
-                Devolver mercadería
-              </BotonBase>
-              <BotonBase variante="secundario" pequeno @click="emit('rebajar', linea)">Rebajar costo</BotonBase>
-            </span>
-          </template>
-          <span v-else v-permiso="'inventarios.recepciones.descartar'" class="contents">
+          <span v-if="esNotaDeCredito(linea)" v-permiso="'inventarios.recepciones.crear'" class="contents">
+            <BotonBase variante="secundario" pequeno :icono="Undo2" @click="emit('devolver', linea)">
+              Devolver mercadería
+            </BotonBase>
+            <BotonBase variante="secundario" pequeno @click="emit('rebajar', linea)">Rebajar costo</BotonBase>
+          </span>
+          <span v-permiso="'inventarios.recepciones.descartar'" class="contents">
             <BotonBase variante="fantasma" pequeno :icono="PackageMinus" @click="emit('descartar', linea)">
-              Descartar
+              {{ esNotaDeCredito(linea) ? 'No es mercadería: descartar' : 'Descartar' }}
             </BotonBase>
           </span>
         </div>

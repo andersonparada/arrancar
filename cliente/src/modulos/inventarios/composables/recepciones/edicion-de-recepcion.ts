@@ -67,6 +67,7 @@ export function dividirRenglon(renglones: EdicionDeRenglonRecibido[], indice: nu
     ...origen,
     clave: siguienteClave++,
     articuloId: null,
+    conLoteNuevo: false,
     loteId: null,
     loteCodigo: '',
     loteVencimiento: '',
@@ -75,6 +76,21 @@ export function dividirRenglon(renglones: EdicionDeRenglonRecibido[], indice: nu
     monto: '',
   };
   return [...renglones.slice(0, indice + 1), copia, ...renglones.slice(indice + 1)];
+}
+
+/**
+ * Al cambiar de artículo se descarta lo que era de otro: unidad, lote elegido y lote nuevo. El artículo nuevo puede
+ * no manejar lotes y esos campos quedarían ocultos, pero se seguirían validando y enviando.
+ */
+export function cambiarDeArticulo(renglon: EdicionDeRenglonRecibido, articuloId: string | null): void {
+  Object.assign(renglon, {
+    articuloId,
+    unidadId: null,
+    conLoteNuevo: false,
+    loteId: null,
+    loteCodigo: '',
+    loteVencimiento: '',
+  });
 }
 
 function renglonSolicitado(renglon: EdicionDeRenglonRecibido): RenglonDeRecepcion {

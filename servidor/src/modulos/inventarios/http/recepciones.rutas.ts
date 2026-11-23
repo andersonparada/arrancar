@@ -6,6 +6,7 @@ import {
   esquemaDescarte,
   esquemaDevolucion,
   esquemaFiltrosDePorRecibir,
+  esquemaFiltrosDeRecepciones,
   esquemaParamsLinea,
   esquemaRebaja,
   esquemaRecepcion,
@@ -40,9 +41,14 @@ const permisos = () => ({
   anular: proteger({ permiso: 'inventarios.recepciones.anular' }),
 });
 
-/** Recepciones: crear (`recepciones.crear`) y anular (`recepciones.anular`). */
+/** Recepciones: ver las de una factura y crear (`recepciones.crear`) y anular (`recepciones.anular`). */
 function rutasDeRecepciones(app: Aplicacion, controlador: RecepcionesControlador) {
   const { crear, anular } = permisos();
+  app.get('/inventarios/recepciones', {
+    schema: { tags, querystring: esquemaFiltrosDeRecepciones },
+    preHandler: crear,
+    handler: controlador.listarDeUnaFactura,
+  });
   app.post('/inventarios/recepciones', {
     schema: { tags, body: esquemaRecepcion },
     preHandler: crear,

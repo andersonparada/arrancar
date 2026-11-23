@@ -2,6 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { LineaPorRecibir } from '../../servicios/recepciones.api';
 import {
+  cambiarDeArticulo,
   datosDeRecepcion,
   dividirRenglon,
   erroresDeRecepcion,
@@ -82,6 +83,28 @@ describe('recepción desde el libro', () => {
     Object.assign(edicion.renglones[1]!, { articuloId: 'a2', cantidad: '5', monto: '200.00' });
     expect(erroresDeRecepcion(edicion)).toEqual({});
     expect(edicion.renglones[1]?.lineaId).toBe('l1');
+  });
+
+  it('repartir una línea con lote nuevo no copia el lote: el renglón nuevo no exige un lote que no se ve', () => {
+    const edicion = completa();
+    Object.assign(edicion.renglones[0]!, { conLoteNuevo: true, loteCodigo: 'L-1' });
+    edicion.renglones = dividirRenglon(edicion.renglones, 0);
+    edicion.renglones[0]!.monto = '300.00';
+    Object.assign(edicion.renglones[1]!, { articuloId: 'a2', cantidad: '5', monto: '200.00' });
+    expect(edicion.renglones[1]?.conLoteNuevo).toBe(false);
+    expect(erroresDeRecepcion(edicion)).toEqual({});
+    expect(datosDeRecepcion(edicion).renglones[1]?.loteNuevo).toBeNull();
+  });
+
+  it('cambiar de artículo descarta unidad, lote y lote nuevo del anterior', () => {
+    const edicion = completa();
+    const renglon = edicion.renglones[0]!;
+    Object.assign(renglon, { conLoteNuevo: true, loteCodigo: 'L-1', loteVencimiento: '2027-01-01', unidadId: 'u1' });
+    cambiarDeArticulo(renglon, 'a2');
+    expect(renglon).toMatchObject({ articuloId: 'a2', conLoteNuevo: false, loteCodigo: '', loteVencimiento: '' });
+    expect(renglon).toMatchObject({ loteId: null, unidadId: null });
+    expect(erroresDeRecepcion(edicion)).toEqual({});
+    expect(datosDeRecepcion(edicion).renglones[0]?.loteNuevo).toBeNull();
   });
 
   it('un monto en cero o mal escrito dice cuánto queda pendiente', () => {

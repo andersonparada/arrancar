@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { bodegaPorOmision, opcionesDeBodegasDelKardex, puedePedirElKardex } from './bodegas-del-kardex';
+import type { Existencia } from '../../servicios/existencias.api';
+import {
+  bodegaPorOmision,
+  bodegasDeLasExistencias,
+  opcionesDeBodegasDelKardex,
+  puedePedirElKardex,
+} from './bodegas-del-kardex';
 
 const bodegas = [
   { id: 'b2', nombre: 'Zona sur', activo: true },
@@ -27,5 +33,18 @@ describe('bodegas del kardex', () => {
     expect(puedePedirElKardex(null, false)).toBe(false);
     expect(puedePedirElKardex('b1', false)).toBe(true);
     expect(puedePedirElKardex(null, true)).toBe(true);
+  });
+});
+
+describe('bodegas desde las existencias', () => {
+  it('sin poder listar bodegas, las del artículo salen de sus existencias sin repetirse', () => {
+    const existencia = (bodegaId: string, bodegaNombre: string) => ({ bodegaId, bodegaNombre }) as Existencia;
+    const lista = bodegasDeLasExistencias([
+      existencia('b2', 'Zona sur'),
+      existencia('b1', 'Anexo'),
+      existencia('b2', 'Zona sur'),
+    ]);
+    expect(opcionesDeBodegasDelKardex(lista, false).map((o) => o.valor)).toEqual(['b1', 'b2']);
+    expect(bodegaPorOmision(lista, false)).toBe('b1');
   });
 });

@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
+import AvisoDeReferencias from '../componentes/compartido/AvisoDeReferencias.vue';
 import CamposDeEntrada from '../componentes/documentos/CamposDeEntrada.vue';
 import SeccionDeRenglones from '../componentes/documentos/SeccionDeRenglones.vue';
 import { usarFormularioDeEntrada } from '../composables/documentos/usar-formulario-de-entrada';
@@ -10,7 +11,7 @@ import { VENTANAS_INVENTARIOS } from '../textos';
 
 const router = useRouter();
 const ventana = VENTANAS_INVENTARIOS.entrada;
-const { edicion, catalogo, opcionesDeBodegas, enviando, errores, esDonacion, renglones, guardar } =
+const { edicion, catalogo, avisoDeReferencias, opcionesDeBodegas, enviando, errores, esDonacion, renglones, guardar } =
   usarFormularioDeEntrada();
 const volver = {
   texto: `Volver a ${VENTANAS_INVENTARIOS.movimientos.titulo}`,
@@ -21,6 +22,7 @@ const volver = {
 <template>
   <form class="space-y-4" novalidate @submit.prevent="guardar">
     <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion" :volver="volver" />
+    <AvisoDeReferencias :texto="avisoDeReferencias" />
     <TarjetaBase>
       <CamposDeEntrada
         v-model="edicion"

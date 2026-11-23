@@ -1,7 +1,9 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Articulo, ConversionDeArticulo, Lote } from '../../servicios/articulos.api';
+import type { Existencia } from '../../servicios/existencias.api';
 import {
+  idsDeLotesConExistencia,
   lotePropuesto,
   lotesPorVencimiento,
   opcionesDeArticulos,
@@ -57,7 +59,25 @@ describe('opciones de un renglón', () => {
 
   it('propone el lote que vence primero sin contar los vencidos', () => {
     const lotes = [lote('l1', 'A', '2026-01-01'), lote('l2', 'B', '2027-01-01'), lote('l3', 'C', '2026-12-31')];
-    expect(lotePropuesto(lotes, '2026-11-23')).toBe('l3');
-    expect(lotePropuesto([lote('l1', 'A', '2026-01-01')], '2026-11-23')).toBeNull();
+    const todos = new Set(['l1', 'l2', 'l3']);
+    expect(lotePropuesto(lotes, '2026-11-23', todos)).toBe('l3');
+    expect(lotePropuesto([lote('l1', 'A', '2026-01-01')], '2026-11-23', todos)).toBeNull();
+  });
+
+  it('no propone un lote agotado en la bodega aunque venza primero', () => {
+    const lotes = [lote('agotado', 'A', '2026-12-01'), lote('con', 'B', '2027-06-01'), lote('sin-fecha', 'C', null)];
+    expect(lotePropuesto(lotes, '2026-11-23', new Set(['con', 'sin-fecha']))).toBe('con');
+    expect(lotePropuesto(lotes, '2026-11-23', new Set())).toBeNull();
+  });
+
+  it('los lotes con existencia salen de las existencias de la bodega, sin repetirse ni contar ceros', () => {
+    const fila = (loteId: string | null, cantidad: string) => ({ loteId, cantidad }) as Existencia;
+    const ids = idsDeLotesConExistencia([
+      fila('l1', '5.0000'),
+      fila('l1', '2.0000'),
+      fila('l2', '0.0000'),
+      fila(null, '9'),
+    ]);
+    expect(ids).toEqual(['l1']);
   });
 });

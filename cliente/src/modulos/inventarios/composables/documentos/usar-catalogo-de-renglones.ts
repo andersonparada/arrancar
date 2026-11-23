@@ -1,8 +1,11 @@
 import { computed, reactive, type Ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiArticulos, type Articulo, type ConversionDeArticulo, type Lote } from '../../servicios/articulos.api';
 import { fechaDeHoy } from '../compartido/fechas';
+import { permisoParaVer } from '../compartido/referencias-que-faltan';
+import { usarExistenciasDeLotes } from './usar-existencias-de-lotes';
 import { opcionesDeArticulos, opcionesDeLotes, opcionesDeUnidades } from './opciones-de-renglon';
 
 interface DetalleDeArticulo {
@@ -40,10 +43,14 @@ function usarDetallesDeArticulos(articuloDe: (id: string | null) => Articulo | n
   return { detalles, cargarDetalle };
 }
 
-/** Los artículos para elegir en los renglones y, de cada uno elegido, sus unidades y lotes. */
+/**
+ * Los artículos para elegir en los renglones y, de cada uno elegido, sus unidades y lotes. Sin permiso para ver los
+ * artículos no se piden (el servidor respondería 403): el formulario avisa qué falta.
+ */
 export function usarCatalogoDeRenglones() {
+  const verArticulos = usarSesion().puede(permisoParaVer('articulos'));
   const { datos: articulos, cargando } = usarCarga(
-    () => apiArticulos.listar(),
+    async () => (verArticulos ? apiArticulos.listar() : []),
     [] as Articulo[],
     'No se pudieron cargar los artículos.',
   );
@@ -55,6 +62,7 @@ export function usarCatalogoDeRenglones() {
     cargando,
     articuloDe,
     cargarDetalle,
+    existenciasDeLotes: usarExistenciasDeLotes(),
     ...opcionesDeLosDetalles(articulos, articuloDe, detalles),
   };
 }

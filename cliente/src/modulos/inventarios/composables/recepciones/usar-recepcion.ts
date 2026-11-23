@@ -5,6 +5,7 @@ import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { Documento } from '../../servicios/documentos.api';
 import { apiRecepciones, type LineaPorRecibir } from '../../servicios/recepciones.api';
 import { fechaDeHoy } from '../compartido/fechas';
+import { usarAvisoDeReferencias } from '../compartido/referencias-que-faltan';
 import { usarCatalogoDeRenglones } from '../documentos/usar-catalogo-de-renglones';
 import { usarBodegasDeDocumento } from '../documentos/usar-referencias-de-documento';
 import {
@@ -43,6 +44,12 @@ function usarGuardadoDeRecepcion(edicion: Ref<EdicionDeRecepcion>, bodegas: Ref<
   return { enviando, errores, guardar };
 }
 
+/** Con una sola bodega para elegir, la ventana ya la trae elegida. */
+function bodegaUnicaDe(opciones: OpcionDeRegistro[]): string | null {
+  const activas = opciones.filter((opcion) => opcion.valor !== null);
+  return activas.length === 1 ? activas[0]!.valor : null;
+}
+
 /** La ventana «Recibir»: un renglón por línea elegida, con el artículo sugerido y todo el pendiente. */
 export function usarRecepcion(alTerminar: () => Promise<void>) {
   const edicion = ref<EdicionDeRecepcion>(cerrada());
@@ -53,14 +60,14 @@ export function usarRecepcion(alTerminar: () => Promise<void>) {
   function abrir(lineas: LineaPorRecibir[]): void {
     errores.value = {};
     edicion.value = recepcionNueva(lineas, fechaDeHoy());
-    const activas = opcionesDeBodegas.value.filter((opcion) => opcion.valor !== null);
-    if (activas.length === 1) edicion.value.bodegaId = activas[0]!.valor;
+    edicion.value.bodegaId = bodegaUnicaDe(opcionesDeBodegas.value);
     edicion.value.renglones.forEach((renglon) => void catalogo.cargarDetalle(renglon.articuloId));
   }
 
   return {
     edicion,
     catalogo,
+    avisoDeReferencias: usarAvisoDeReferencias(),
     opcionesDeBodegas,
     enviando,
     errores,

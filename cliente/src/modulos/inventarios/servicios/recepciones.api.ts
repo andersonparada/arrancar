@@ -107,9 +107,12 @@ export class ApiRecepciones {
     return this.http.crear<void>(`${RUTA}/por-recibir/${lineaId}/devolver`);
   }
 
-  /** Las recepciones vigentes (con sus renglones), para elegir qué devolver de una factura. */
-  recepcionesVigentes() {
-    return this.http.obtener<Documento[]>(`${RUTA}/documentos`, { clase: 'recepcion_de_compra', estado: 'vigente' });
+  /**
+   * Las recepciones vigentes de una factura (con sus renglones), para elegir qué devolver. El servidor filtra por la
+   * factura y basta el permiso de recibir.
+   */
+  recepcionesDeLaFactura(facturaId: string) {
+    return this.http.obtener<Documento[]>(`${RUTA}/recepciones`, { documentoDeCompraId: facturaId });
   }
 }
 

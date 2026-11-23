@@ -6,7 +6,7 @@ import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
-import type { EdicionDeRenglonRecibido } from '../../composables/recepciones/edicion-de-recepcion';
+import { cambiarDeArticulo, type EdicionDeRenglonRecibido } from '../../composables/recepciones/edicion-de-recepcion';
 
 /**
  * Lo que se recibe de una línea del libro: artículo, lote (uno que ya existe o uno nuevo), cantidad con su unidad y
@@ -27,7 +27,7 @@ const emit = defineEmits<{ elegirArticulo: []; dividir: []; quitar: [] }>();
 const error = (campo: string) => props.errores[`renglones.${props.indice}.${campo}`];
 
 function elegirArticulo(valor: string | null | undefined): void {
-  Object.assign(renglon.value, { articuloId: valor ?? null, loteId: null, unidadId: null });
+  cambiarDeArticulo(renglon.value, valor ?? null);
   emit('elegirArticulo');
 }
 </script>

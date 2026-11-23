@@ -1,6 +1,7 @@
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import { formatearFecha } from '@/modulos/core/utilidades/formato';
 import type { Articulo, ConversionDeArticulo, Lote } from '../../servicios/articulos.api';
+import type { Existencia } from '../../servicios/existencias.api';
 
 const porTexto = (a: OpcionDeRegistro, b: OpcionDeRegistro) => (a.texto ?? '').localeCompare(b.texto ?? '', 'es');
 
@@ -47,10 +48,19 @@ export function opcionesDeLotes(lotes: Lote[], hoy: string): OpcionDeRegistro[] 
   ];
 }
 
-/** En una salida se propone el lote que vence primero y todavía no venció (FEFO); el usuario puede cambiarlo. */
-export function lotePropuesto(lotes: Lote[], hoy: string): string | null {
+/** Los lotes que tienen existencia (mayor que cero) entre las existencias de un artículo en una bodega. */
+export function idsDeLotesConExistencia(existencias: Existencia[]): string[] {
+  const ids = existencias.filter((existencia) => existencia.loteId && Number(existencia.cantidad) > 0);
+  return [...new Set(ids.map((existencia) => existencia.loteId!))];
+}
+
+/**
+ * En una salida se propone el lote que vence primero (FEFO) entre los que no han vencido y tienen existencia en la
+ * bodega de la salida; el usuario puede cambiarlo. Un lote agotado nunca se propone: el servidor lo rechazaría.
+ */
+export function lotePropuesto(lotes: Lote[], hoy: string, conExistencia: ReadonlySet<string>): string | null {
   const vigentes = lotesPorVencimiento(lotes).filter(
-    (lote) => !lote.fechaDeVencimiento || lote.fechaDeVencimiento >= hoy,
+    (lote) => conExistencia.has(lote.id) && (!lote.fechaDeVencimiento || lote.fechaDeVencimiento >= hoy),
   );
   return vigentes[0]?.id ?? null;
 }

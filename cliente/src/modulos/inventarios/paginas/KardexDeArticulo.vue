@@ -12,8 +12,16 @@ import { usarKardexDeArticulo } from '../composables/existencias/usar-kardex-de-
 const props = defineProps<{ articuloId: string }>();
 
 const router = useRouter();
-const { filtros, kardex, cargandoElKardex, existencias, cargandoLasExistencias, opcionesDeBodegas, veTodas } =
-  usarKardexDeArticulo(props.articuloId);
+const {
+  filtros,
+  kardex,
+  cargandoElKardex,
+  existencias,
+  cargandoLasExistencias,
+  opcionesDeBodegas,
+  veTodas,
+  faltaElegirBodega,
+} = usarKardexDeArticulo(props.articuloId);
 const volver = { texto: 'Volver a Existencias', ruta: { name: 'inventarios.existencias' } };
 </script>
 
@@ -43,6 +51,12 @@ const volver = { texto: 'Volver a Existencias', ruta: { name: 'inventarios.exist
         Ve el kardex de cada una de sus bodegas con su propio saldo; el de toda la empresa es solo para quien ve todas.
       </p>
       <p v-if="cargandoElKardex" class="text-sm text-tierra-500">Cargando…</p>
+      <EstadoVacio
+        v-else-if="faltaElegirBodega"
+        :icono="Inbox"
+        titulo="Elija una bodega"
+        descripcion="Para ver el kardex elija arriba la bodega que le interesa."
+      />
       <EstadoVacio
         v-else-if="!kardex?.renglones.length"
         :icono="Inbox"

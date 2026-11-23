@@ -60,6 +60,7 @@ const { lista, recepcion, devolucion, rebaja, descarte } = usarBandejaPorRecibir
     <VentanaDeRecepcion
       v-model="recepcion.edicion.value"
       :catalogo="recepcion.catalogo"
+      :aviso-de-referencias="recepcion.avisoDeReferencias.value"
       :opciones-de-bodegas="recepcion.opcionesDeBodegas.value"
       :errores="recepcion.errores.value"
       :enviando="recepcion.enviando.value"

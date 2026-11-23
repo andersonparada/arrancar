@@ -22,6 +22,7 @@ function filtrosDe(filtros: FiltrosDeDocumentos): SQL[] {
   const condiciones: SQL[] = [];
   if (filtros.clase) condiciones.push(eq(documentos.clase, filtros.clase));
   if (filtros.bodegaId) condiciones.push(eq(documentos.bodegaId, filtros.bodegaId));
+  if (filtros.documentoDeCompraId) condiciones.push(eq(documentos.documentoDeCompraId, filtros.documentoDeCompraId));
   if (filtros.estado) condiciones.push(eq(documentos.estado, filtros.estado));
   if (filtros.desde) condiciones.push(gte(documentos.fecha, filtros.desde));
   if (filtros.hasta) condiciones.push(lte(documentos.fecha, filtros.hasta));

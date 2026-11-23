@@ -1,6 +1,7 @@
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, watch, type Ref } from 'vue';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
+import type { Bodega } from '../../servicios/bodegas.api';
 import {
   apiExistencias,
   type Existencia,
@@ -9,7 +10,12 @@ import {
 } from '../../servicios/existencias.api';
 import { filtrosSinVacios } from '../compartido/opciones-de-filtro';
 import { usarBodegasYCategoriasDeFiltro } from '../compartido/usar-bodegas-y-categorias';
-import { bodegaPorOmision, opcionesDeBodegasDelKardex, puedePedirElKardex } from './bodegas-del-kardex';
+import {
+  bodegaPorOmision,
+  bodegasDeLasExistencias,
+  opcionesDeBodegasDelKardex,
+  puedePedirElKardex,
+} from './bodegas-del-kardex';
 
 interface FiltrosEscritos {
   bodegaId: string | null;
@@ -32,6 +38,22 @@ function usarKardexFiltrado(articuloId: string, veTodas: boolean) {
   return { filtros, kardex };
 }
 
+/**
+ * Las bodegas que se ofrecen: las que el usuario lista o, sin permiso para listarlas, las que aparecen en las
+ * existencias que el servidor ya recortó a su alcance. Sin alcance total, el kardex abre con la primera en cuanto llegan.
+ */
+function usarBodegasVisibles(
+  bodegas: Ref<Bodega[]>,
+  existencias: Ref<Existencia[]>,
+  eleccion: { filtros: FiltrosEscritos; veTodas: boolean },
+) {
+  const visibles = computed(() => (bodegas.value.length ? bodegas.value : bodegasDeLasExistencias(existencias.value)));
+  watch(visibles, (lista) => {
+    if (eleccion.filtros.bodegaId === null) eleccion.filtros.bodegaId = bodegaPorOmision(lista, eleccion.veTodas);
+  });
+  return visibles;
+}
+
 /** El kardex de un artículo y lo que hay de él en cada bodega y lote. */
 export function usarKardexDeArticulo(articuloId: string) {
   const veTodas = usarSesion().puede('inventarios.bodegas.ver-todas');
@@ -42,10 +64,7 @@ export function usarKardexDeArticulo(articuloId: string) {
     [] as Existencia[],
     'No se pudieron cargar las existencias del artículo.',
   );
-  // Sin alcance total, el kardex abre con la primera bodega suya en cuanto llegan las bodegas.
-  watch(bodegas, (lista) => {
-    if (filtros.bodegaId === null) filtros.bodegaId = bodegaPorOmision(lista, veTodas);
-  });
+  const bodegasVisibles = usarBodegasVisibles(bodegas, existencias.datos, { filtros, veTodas });
 
   return {
     filtros,
@@ -53,7 +72,8 @@ export function usarKardexDeArticulo(articuloId: string) {
     cargandoElKardex: kardex.cargando,
     existencias: existencias.datos,
     cargandoLasExistencias: existencias.cargando,
-    opcionesDeBodegas: computed(() => opcionesDeBodegasDelKardex(bodegas.value, veTodas)),
+    opcionesDeBodegas: computed(() => opcionesDeBodegasDelKardex(bodegasVisibles.value, veTodas)),
+    faltaElegirBodega: computed(() => !puedePedirElKardex(filtros.bodegaId, veTodas)),
     veTodas,
   };
 }

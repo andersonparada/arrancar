@@ -59,6 +59,8 @@ export interface FiltrosDeDocumentos {
   clase?: ClaseDeDocumento;
   bodegaId?: string;
   articuloId?: string;
+  /** Los documentos que nacen de una factura o nota del libro de compras (las recepciones de una factura). */
+  documentoDeCompraId?: string;
   estado?: EstadoDeDocumento;
   desde?: string;
   hasta?: string;

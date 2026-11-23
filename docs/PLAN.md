@@ -4367,3 +4367,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   de proveedores); el servidor no lista las líneas descartadas, así que «Devolver a la bandeja» solo está disponible para
   lo descartado en la visita actual (hace falta un `GET` de descartes para listarlas todas); «Cambiar método» con la autorización
   de la SAT, salidas especiales, traslados, ajustes, conteos, cierres y los reportes siguen sin pantalla (sus pasos).
+- **2026-11-23 — Inventarios, correcciones de la revisión de INV-2c, INV-4c e INV-5c (tanda 9).** **Escanear** un artículo
+  que ya está en otra unidad agrega un renglón nuevo y solo ese se inicializa (antes se reiniciaba la unidad del anterior y
+  el error entraba al kardex sin aviso). **Recepción:** «Repartir» ya no copia «lote nuevo» y cambiar de artículo limpia
+  unidad, lote y lote nuevo (`cambiarDeArticulo`), así no se exige ni se envía un lote que no se ve. **Notas de crédito:**
+  las líneas de una nota también se pueden descartar (con `recepciones.descartar`) cuando no son mercadería. **Devolución:**
+  servidor, aditivo: `GET /inventarios/recepciones?documentoDeCompraId=` (permiso `recepciones.crear`, caso de uso
+  `ListarRecepcionesDeUnaFactura`) da las recepciones vigentes de la factura sin el tope de 500 de la lista de documentos y sin
+  exigir `existencias.ver`; la lista de documentos también acepta el filtro `documentoDeCompraId`. **Permisos de referencias:**
+  artículos, bodegas y conceptos de gasto de los formularios (entrada, salida, recepción) solo se piden con
+  `articulos.ver` y `bodegas.ver`; sin ellos no hay avisos de error por 403 y el formulario dice qué permiso falta
+  (`AvisoDeReferencias`). **Kardex:** sin `bodegas.ver` las bodegas salen de las existencias ya recortadas; sin bodega
+  elegida la pantalla dice «Elija una bodega» en vez de «Sin movimientos». **Lote propuesto (FEFO):** en las salidas solo
+  entre los lotes con existencia en la bodega elegida (`existencias.ver`; sin el permiso no se propone ninguno) y se
+  recalcula al cambiar la bodega. **Salida:** al cambiar la localidad se quita el departamento que no es de la nueva.
+  Queda anotado: el servidor no valida que el departamento pertenezca a la localidad (`exigirReferencias` solo revisa que
+  exista); falta endpoint de existencias por lote con el permiso de salidas para quien no tiene `existencias.ver`.

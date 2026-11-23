@@ -1,6 +1,7 @@
 import { computed, type Ref } from 'vue';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
+import { permisoParaVer } from '../compartido/referencias-que-faltan';
 import { apiArticulos, type ConceptoParaArticulo } from '../../servicios/articulos.api';
 import { apiBodegas, type Bodega } from '../../servicios/bodegas.api';
 import { apiUbicaciones, type DepartamentoParaElegir, type LocalidadParaElegir } from '../../servicios/ubicaciones.api';
@@ -12,11 +13,12 @@ import {
   opcionesDeLocalidadesActivas,
 } from './opciones-de-documento';
 
-/** Las bodegas del encabezado; con una sola, el formulario la elige solo. */
+/** Las bodegas del encabezado (solo si el usuario puede verlas); con una sola, el formulario la elige solo. */
 export function usarBodegasDeDocumento(alCargar: (bodegaUnicaId: string | null) => void) {
+  const verBodegas = usarSesion().puede(permisoParaVer('bodegas'));
   const { datos: bodegas } = usarCarga(
     async () => {
-      const lista = await apiBodegas.listar();
+      const lista = verBodegas ? await apiBodegas.listar() : [];
       alCargar(bodegaUnica(lista));
       return lista;
     },
@@ -51,8 +53,10 @@ function usarCentrosDeCosto(localidadId: Ref<string | null>) {
 
 /** Lo que la salida necesita para su destino: conceptos de gasto del libro y, si se ven, el centro de costo. */
 export function usarDestinosDeSalida(localidadId: Ref<string | null>) {
+  // Los conceptos de gasto los sirve el servidor con el permiso de ver artículos.
+  const verConceptos = usarSesion().puede(permisoParaVer('articulos'));
   const { datos: conceptos } = usarCarga(
-    () => apiArticulos.conceptosDeGasto(),
+    async () => (verConceptos ? apiArticulos.conceptosDeGasto() : []),
     [] as ConceptoParaArticulo[],
     'No se pudieron cargar los conceptos de gasto.',
   );
