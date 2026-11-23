@@ -3,7 +3,6 @@ import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import {
   esFormularioConRemanente,
   llevaCalculoDeRemanente,
-  type SaldosAnteriores,
 } from '../../../dominio/periodos/remanentes-de-retenciones.js';
 import { PeriodoDeclaradoEnElLibro } from '../../../dominio/eventos.js';
 import { PeriodoYaDeclarado } from '../../../dominio/periodos/errores-de-periodos.js';
@@ -21,7 +20,7 @@ import type { DeclaracionGuardada } from '../../puertos/puertos-de-periodos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 import { periodoDelLibro } from '../libro/consultar-libro.js';
 import { fotoDelPeriodoDeHoy, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
-import { remanenteAnteriorDelPeriodo } from './remanentes-del-periodo.js';
+import { remanenteAnteriorDelPeriodo, type SaldosEscritos } from './remanentes-del-periodo.js';
 import { revisionDelPeriodo } from './revision-del-periodo.js';
 
 interface Dependencias extends DependenciasDePeriodos {
@@ -45,16 +44,19 @@ export interface PeticionDeDeclaracion {
 }
 
 /** Lo que el usuario escribió como saldos con que empieza el período; sin nada escrito, `undefined`. */
-function saldosEscritos(peticion: PeticionDeDeclaracion): SaldosAnteriores | undefined {
+function saldosEscritos(peticion: PeticionDeDeclaracion): SaldosEscritos | undefined {
   const { remanenteDeRetencionesAnterior: retenciones, remanenteDeCreditoAnterior: credito } = peticion;
   if (retenciones === undefined && credito === undefined) return undefined;
-  return { retencionesCentavos: aCentavos(retenciones ?? '0'), creditoCentavos: aCentavos(credito ?? '0') };
+  return {
+    retencionesCentavos: retenciones === undefined ? undefined : aCentavos(retenciones),
+    creditoCentavos: credito === undefined ? undefined : aCentavos(credito),
+  };
 }
 
 interface EntradaDeGuardado {
   periodo: string;
   datos: Omit<Awaited<ReturnType<DeclararPeriodo['datosDeLaDeclaracion']>>, 'sinCalculo'>;
-  escrito: SaldosAnteriores | undefined;
+  escrito: SaldosEscritos | undefined;
   sinCalculo: boolean;
 }
 
@@ -144,7 +146,7 @@ export class DeclararPeriodo {
   }
 
   /** Solo el SAT-2237 y el SAT-2046 llevan remanente de retenciones; el anterior sale de la foto del mes previo. */
-  private async remanentes(periodo: string, formulario: FormularioDeDeclaracion, escrito?: SaldosAnteriores) {
+  private async remanentes(periodo: string, formulario: FormularioDeDeclaracion, escrito?: SaldosEscritos) {
     if (!esFormularioConRemanente(formulario)) return undefined;
     const anterior = await remanenteAnteriorDelPeriodo(this.dependencias.periodos, { periodo, formulario, escrito });
     return { formulario, anterior };

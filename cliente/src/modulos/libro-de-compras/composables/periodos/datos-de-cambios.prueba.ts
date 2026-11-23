@@ -19,6 +19,14 @@ describe('etiquetaDeCifra', () => {
     expect(etiquetaDeCifra('resumen.combustibles.idp')).toBe('Combustibles: IDP');
   });
 
+  it('nombra las cifras del remanente y distingue constancias del SAT-2046', () => {
+    expect(etiquetaDeCifra('remanentes.remanenteAnterior', 'SAT-2237')).toBe('Remanente de retenciones anterior');
+    expect(etiquetaDeCifra('remanentes.remanenteAnterior', 'SAT-2046')).toBe('Saldo de constancias anterior');
+    expect(etiquetaDeCifra('remanentes.creditoAlSiguiente')).toBe('Remanente de crédito fiscal al siguiente mes');
+    expect(etiquetaDeCifra('remanentes.impuestoAPagar')).toBe('Impuesto por pagar');
+    expect(etiquetaDeCifra('remanentes.algoNuevo')).toBe('remanentes.algoNuevo');
+  });
+
   it('deja la clave tal cual si no la conoce', () => {
     expect(etiquetaDeCifra('resumen.algoNuevo')).toBe('resumen.algoNuevo');
   });

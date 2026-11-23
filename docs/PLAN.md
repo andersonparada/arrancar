@@ -4395,3 +4395,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   período siempre se ve, con aviso si el mes no es del SAT-2046 o sin ventas. (6) El pequeño contribuyente electrónico
   (derogado, SAT-2241) no lleva cálculo de remanentes, ni en pantalla ni en la foto (`llevaCalculoDeRemanente`). Las
   pruebas de API corrieron con una base propia (la 5433 compartida rechazaba conexiones).
+- **2026-11-23 — Segunda corrección de la revisión de VC-0c2 y VC-0c.** (1) Un mes declarado sin ventas ya no pierde sus
+  saldos: el mes siguiente toma los `saldosIniciales` del previo (mismo formulario) tal cual, sin sumarles el crédito del
+  mes, porque sin ventas no hay débito conocido; también en el detalle (`remanentesVigentes`). Queda por confirmar con
+  `contador-guatemala` si el crédito de un mes sin ventas debe pasar al siguiente; no bloquea. (2) Al declarar, cada saldo
+  que el usuario deja vacío conserva el de la declaración anterior del mismo período (antes el vacío pasaba a 0). (3) La
+  tabla «cambió después de declarar» nombra las cifras `remanentes.*` en español y, con el SAT-2046, habla de constancias.

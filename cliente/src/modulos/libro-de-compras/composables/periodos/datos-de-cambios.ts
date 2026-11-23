@@ -1,4 +1,9 @@
-import type { CambioDeCifra, DocumentoCambiado } from '../../servicios/periodos.api';
+import type {
+  CambioDeCifra,
+  DeclaracionDelPeriodo,
+  DocumentoCambiado,
+  FormularioDeDeclaracion,
+} from '../../servicios/periodos.api';
 import { TIPOS_SAT } from '../documentos/tipos-de-documento-sat';
 import { MOTIVOS_CORTOS } from '../../textos-del-libro';
 import type { MotivoSinCredito } from '../../servicios/documentos.api';
@@ -27,8 +32,21 @@ const DE_COMBUSTIBLES: Record<string, string> = {
 const nombreDelTipo = (codigo: string): string => TIPOS_SAT.find((tipo) => tipo.codigo === codigo)?.nombre ?? codigo;
 const motivoCorto = (motivo: string): string => MOTIVOS_CORTOS[motivo as MotivoSinCredito] ?? motivo;
 
+/** Las cifras del remanente: lo del SAT-2046 son constancias de retención, lo del SAT-2237 son retenciones. */
+const REMANENTES: Record<string, (constancias: boolean) => string> = {
+  retencionesDelPeriodo: (c) => (c ? 'Constancias del período' : 'Retenciones del período'),
+  remanenteAnterior: (c) => (c ? 'Saldo de constancias anterior' : 'Remanente de retenciones anterior'),
+  remanenteAlSiguiente: (c) =>
+    c ? 'Saldo de constancias al siguiente mes' : 'Remanente de retenciones al siguiente mes',
+  creditoAnterior: () => 'Remanente de crédito fiscal anterior',
+  creditoAlSiguiente: () => 'Remanente de crédito fiscal al siguiente mes',
+  impuestoDelMes: () => 'Impuesto del mes (antes de retenciones)',
+  impuestoAPagar: () => 'Impuesto por pagar',
+};
+
 /** Cómo se llama cada forma de clave de la foto del libro; la primera que coincide gana. */
-const REGLAS: Array<[RegExp, (coincidencia: string[]) => string | undefined]> = [
+const REGLAS: Array<[RegExp, (coincidencia: string[], constancias: boolean) => string | undefined]> = [
+  [/^remanentes\.(\w+)$/, ([, dato], constancias) => REMANENTES[dato!]?.(constancias)],
   [/^documentos$/, () => 'Documentos en el libro'],
   [/^resumen\.creditoFiscalDelPeriodo$/, () => 'Crédito fiscal del período'],
   [/^resumen\.totales\.(\w+)$/, ([, columna]) => (COLUMNAS[columna!] ? `Libro: ${COLUMNAS[columna!]}` : undefined)],
@@ -43,11 +61,14 @@ const REGLAS: Array<[RegExp, (coincidencia: string[]) => string | undefined]> = 
   ],
 ];
 
-/** Cada cifra de la foto del libro con su nombre; la clave que no se conoce se muestra tal cual. */
-export function etiquetaDeCifra(clave: string): string {
+/**
+ * Cada cifra de la foto del libro con su nombre; la clave que no se conoce se muestra tal cual. Con el formulario
+ * `SAT-2046` los remanentes se nombran como constancias.
+ */
+export function etiquetaDeCifra(clave: string, formulario?: FormularioDeDeclaracion | null): string {
   for (const [patron, texto] of REGLAS) {
     const coincidencia = patron.exec(clave);
-    const etiqueta = coincidencia ? texto(coincidencia) : undefined;
+    const etiqueta = coincidencia ? texto(coincidencia, formulario === 'SAT-2046') : undefined;
     if (etiqueta) return etiqueta;
   }
   return clave;
@@ -80,3 +101,8 @@ export function nombreDelDocumentoCambiado(documento: DocumentoCambiado): string
 
 export const textoDelCambioDeDocumento = (documento: DocumentoCambiado): string =>
   documento.cambio === 'registrado' ? 'Registrado' : 'Anulado';
+
+/** El formulario de la última declaración o rectificación (las reaperturas no lo cambian). */
+export function formularioDeLaUltimaDeclaracion(historial: DeclaracionDelPeriodo[]): FormularioDeDeclaracion | null {
+  return historial.filter((declaracion) => declaracion.evento !== 'reapertura').at(-1)?.formulario ?? null;
+}

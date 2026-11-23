@@ -17,6 +17,7 @@ import {
   textoDelEstado,
   tonoDelEstado,
 } from '../composables/periodos/datos-de-periodos';
+import { formularioDeLaUltimaDeclaracion } from '../composables/periodos/datos-de-cambios';
 import { usarDetalleDePeriodo } from '../composables/periodos/usar-detalle-de-periodo';
 import { DETALLE_DE_PERIODO as textos, VENTANA_DE_PERIODOS, VENTANA_DE_REAPERTURA } from '../textos-de-periodos';
 
@@ -70,7 +71,10 @@ const resumenDelDeclarar = computed(() =>
     </SeccionDeFicha>
     <SeccionDeFicha v-if="detalle.cambioDesdeLaDeclaracion" :titulo="textos.cambios">
       <p class="mb-3 text-sm text-tierra-600 dark:text-tierra-300">{{ textos.cambiosAyuda }}</p>
-      <CambiosDesdeLaDeclaracion :cambio="detalle.cambioDesdeLaDeclaracion" />
+      <CambiosDesdeLaDeclaracion
+        :cambio="detalle.cambioDesdeLaDeclaracion"
+        :formulario="formularioDeLaUltimaDeclaracion(detalle.historial)"
+      />
     </SeccionDeFicha>
     <SeccionDeFicha :titulo="textos.historial"><HistorialDelPeriodo :historial="detalle.historial" /></SeccionDeFicha>
 

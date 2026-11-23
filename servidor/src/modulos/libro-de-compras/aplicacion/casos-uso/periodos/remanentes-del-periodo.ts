@@ -9,7 +9,13 @@ export interface PedidoDeRemanenteAnterior {
   periodo: string;
   formulario: FormularioConRemanente;
   /** Lo que el usuario escribió al declarar; solo vale si el mes previo no tiene foto con remanente. */
-  escrito?: SaldosAnteriores | undefined;
+  escrito?: SaldosEscritos | undefined;
+}
+
+/** Lo que el usuario escribió: cada saldo que dejó vacío conserva el de la declaración anterior del período. */
+export interface SaldosEscritos {
+  retencionesCentavos?: number | undefined;
+  creditoCentavos?: number | undefined;
 }
 
 /** La foto de la última declaración o rectificación del período (las reaperturas no llevan foto), si la hay. */
@@ -32,23 +38,41 @@ export function saldosDeInicioDeLaFoto(foto: FotoDelPeriodo | null, formulario: 
   return { retencionesCentavos: aCentavos(guardado.retenciones), creditoCentavos: aCentavos(guardado.credito) };
 }
 
+/** Con lo que cerró la foto del mes previo: el remanente que calculó o, sin ventas, los saldos iniciales que trasladó. */
+function saldosAlSiguienteDeLaFoto(foto: FotoDelPeriodo | null, formulario: FormularioConRemanente) {
+  const calculado = foto?.remanentes;
+  if (calculado?.formulario === formulario) {
+    return {
+      retencionesCentavos: aCentavos(calculado.remanenteAlSiguiente),
+      creditoCentavos: aCentavos(calculado.creditoAlSiguiente ?? '0.00'),
+    };
+  }
+  // Sin respuesta de ventas no hay débito conocido: los saldos iniciales pasan tal cual, sin sumarles el crédito del mes.
+  return foto?.saldosIniciales?.formulario === formulario ? saldosDeInicioDeLaFoto(foto, formulario) : null;
+}
+
 /**
  * Los saldos con que empieza el período: lo que dejó la foto del mes previo (del mismo formulario); si no hay, lo que
- * escribió el usuario; si tampoco, con lo que ya empezó la última declaración del mismo período (una rectificación no
- * lo pierde); y si nada, cero.
+ * escribió el usuario (cada saldo que dejó vacío conserva el con que ya empezó la última declaración del mismo período,
+ * así una rectificación no lo pierde); y si nada, cero.
  */
 export async function remanenteAnteriorDelPeriodo(
   periodos: RepositorioDePeriodos,
   pedido: PedidoDeRemanenteAnterior,
 ): Promise<SaldosAnteriores> {
-  const previo = (await ultimaFotoDe(periodos, sumarMeses(pedido.periodo, -1)))?.remanentes;
-  if (previo?.formulario === pedido.formulario) {
-    return {
-      retencionesCentavos: aCentavos(previo.remanenteAlSiguiente),
-      creditoCentavos: aCentavos(previo.creditoAlSiguiente ?? '0.00'),
-    };
-  }
-  if (pedido.escrito) return pedido.escrito;
-  const propia = await ultimaFotoDe(periodos, pedido.periodo);
-  return saldosDeInicioDeLaFoto(propia, pedido.formulario) ?? { retencionesCentavos: 0, creditoCentavos: 0 };
+  const previo = saldosAlSiguienteDeLaFoto(
+    await ultimaFotoDe(periodos, sumarMeses(pedido.periodo, -1)),
+    pedido.formulario,
+  );
+  if (previo) return previo;
+  const propia = saldosDeInicioDeLaFoto(await ultimaFotoDe(periodos, pedido.periodo), pedido.formulario);
+  return conLoEscrito(propia ?? { retencionesCentavos: 0, creditoCentavos: 0 }, pedido.escrito);
+}
+
+/** Lo escrito reemplaza solo el saldo que trae; el que se dejó vacío queda como estaba. */
+function conLoEscrito(base: SaldosAnteriores, escrito: SaldosEscritos | undefined): SaldosAnteriores {
+  return {
+    retencionesCentavos: escrito?.retencionesCentavos ?? base.retencionesCentavos,
+    creditoCentavos: escrito?.creditoCentavos ?? base.creditoCentavos,
+  };
 }

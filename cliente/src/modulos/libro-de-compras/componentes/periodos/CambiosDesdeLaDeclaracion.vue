@@ -10,14 +10,14 @@ import {
   sentidoDelCambio,
   textoDelCambioDeDocumento,
 } from '../../composables/periodos/datos-de-cambios';
-import type { CambioDesdeLaDeclaracion } from '../../servicios/periodos.api';
+import type { CambioDesdeLaDeclaracion, FormularioDeDeclaracion } from '../../servicios/periodos.api';
 import { DETALLE_DE_PERIODO as textos } from '../../textos-de-periodos';
 
 /**
  * Lo que cambió el libro después de la última declaración: las cifras y las facturas registradas o anuladas. Es lo
  * que se corrige al rectificar.
  */
-defineProps<{ cambio: CambioDesdeLaDeclaracion }>();
+defineProps<{ cambio: CambioDesdeLaDeclaracion; formulario?: FormularioDeDeclaracion | null }>();
 
 const mostrar = (valor: string) => (esDinero(valor) ? formatearMonto(valor) : valor);
 const COLOR = { sube: 'text-campo-800 dark:text-campo-300', baja: 'text-red-700 dark:text-red-400', igual: '' };
@@ -46,7 +46,9 @@ const COLOR = { sube: 'text-campo-800 dark:text-campo-300', baja: 'text-red-700 
           </thead>
           <tbody class="divide-y divide-tierra-200 dark:divide-tierra-700">
             <tr v-for="fila in ordenarCambios(cambio.cambios)" :key="fila.clave">
-              <th scope="row" class="py-1.5 pr-3 text-left font-normal">{{ etiquetaDeCifra(fila.clave) }}</th>
+              <th scope="row" class="py-1.5 pr-3 text-left font-normal">
+                {{ etiquetaDeCifra(fila.clave, formulario) }}
+              </th>
               <td class="px-3 py-1.5 text-right tabular-nums">{{ mostrar(fila.anterior) }}</td>
               <td class="px-3 py-1.5 text-right tabular-nums">{{ mostrar(fila.actual) }}</td>
               <td class="py-1.5 pl-3 text-right font-medium tabular-nums" :class="COLOR[sentidoDelCambio(fila.cambio)]">
