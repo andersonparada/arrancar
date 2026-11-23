@@ -8,6 +8,7 @@ import {
 import { EditarActivo } from '../aplicacion/casos-uso/activos/editar-activo.js';
 import { EliminarActivo } from '../aplicacion/casos-uso/activos/eliminar-activo.js';
 import { MarcarOcioso } from '../aplicacion/casos-uso/activos/marcar-ocioso.js';
+import { PonerEnUsoVarios } from '../aplicacion/casos-uso/activos/poner-en-uso-varios.js';
 import { PonerEnUso } from '../aplicacion/casos-uso/activos/poner-en-uso.js';
 import { QuitarDeUso } from '../aplicacion/casos-uso/activos/quitar-de-uso.js';
 import { ActivosControlador } from '../http/activos.controlador.js';
@@ -20,6 +21,7 @@ import { RepositorioClasesDrizzle } from '../infraestructura/persistencia/reposi
 import { UbicacionesEnEmpresas } from '../infraestructura/persistencia/ubicaciones-en-empresas.drizzle.js';
 import { CierresDrizzle } from '../infraestructura/persistencia/cierres.drizzle.js';
 import { RepositorioCostosDrizzle } from '../infraestructura/persistencia/repositorio-costos.drizzle.js';
+import { RepositorioTrasladosDrizzle } from '../infraestructura/persistencia/repositorio-traslados.drizzle.js';
 import { RepositorioSaldosInicialesDrizzle } from '../infraestructura/persistencia/repositorio-saldos-iniciales.drizzle.js';
 import { RepositorioTramosDrizzle } from '../infraestructura/persistencia/repositorio-tramos.drizzle.js';
 import { PrefijoEnConfiguracion } from '../infraestructura/prefijo-en-configuracion.js';
@@ -53,6 +55,8 @@ function dependenciasDeUso(base: ReturnType<typeof dependenciasDeActivos>) {
     cierres: new CierresDrizzle(),
     topes: new TopesEnConfiguracion(),
     primerMes: new PrimerMesEnConfiguracion(),
+    traslados: new RepositorioTrasladosDrizzle(),
+    publicadorEventos: dependenciasCompartidas().publicadorEventos,
   };
 }
 
@@ -68,6 +72,7 @@ export function rutasDeActivos() {
       editar: new EditarActivo(dependencias),
       marcarOcioso: new MarcarOcioso(dependencias),
       ponerEnUso: new PonerEnUso(deUso),
+      ponerEnUsoVarios: new PonerEnUsoVarios(deUso),
       quitarDeUso: new QuitarDeUso(deUso),
       eliminar: new EliminarActivo(dependencias),
       ubicaciones: new ListarUbicaciones(dependencias),

@@ -86,15 +86,45 @@ export interface ActivoFichaDto extends ActivoDto {
   tramos: TramoDto[];
 }
 
-/**
- * Lo que se recibe para poner un activo en uso. Lo que no se escribe lo propone la clase: porcentaje fiscal, vida
- * útil contable y valor residual (en monto, con dos decimales).
- */
-export interface SolicitudDePonerEnUso {
-  fechaDeInicioDeUso: string;
+/** Los parámetros de depreciación que el usuario puede cambiar; lo que no escribe lo propone la clase. */
+export interface ParametrosEscritosDeUso {
   porcentajeFiscal?: string | null;
   vidaUtilContableMeses?: number | null;
   valorResidual?: string | null;
+}
+
+/**
+ * Dónde queda el bien al ponerlo «Disponible para uso» (AFI-3). Sin `enBodega`, queda en la bodega de activos si no se
+ * escribe responsable.
+ */
+export interface UbicacionAlPonerEnUso {
+  localidadId: string | null;
+  departamentoId: string | null;
+  responsable: string | null;
+  enBodega?: boolean;
+}
+
+/**
+ * Lo que se recibe para poner un activo en uso («Disponible para uso»). Lo que no se escribe lo propone la clase:
+ * porcentaje fiscal, vida útil contable y valor residual (en monto, con dos decimales). Con `ubicacion` se fija dónde
+ * queda el bien; sin ella conserva la que tiene.
+ */
+export interface SolicitudDePonerEnUso extends ParametrosEscritosDeUso {
+  fechaDeInicioDeUso: string;
+  ubicacion?: UbicacionAlPonerEnUso | null;
+}
+
+/** Los parámetros propios de un activo del lote, si no sirven los propuestos por su clase. */
+export interface AjusteDeUsoPorActivo extends ParametrosEscritosDeUso {
+  activoId: string;
+}
+
+/** Poner en uso varios activos a la vez (hasta 200): una fecha y una ubicación para todos; todo o nada. */
+export interface SolicitudDePonerEnUsoVarios {
+  activoIds: string[];
+  fechaDeInicioDeUso: string;
+  ubicacion?: UbicacionAlPonerEnUso | null;
+  ajustes?: AjusteDeUsoPorActivo[];
 }
 
 /** Lo que se recibe para dar de alta un activo a mano; sin código, se propone el siguiente. */

@@ -2,23 +2,47 @@ import { aCentavos } from '../../core/compartido/dominio/centavos.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import {
   AuditoriaEnMemoria,
+  CorrelativosEnMemoria,
+  PublicadorEventosEnMemoria,
+  RelojFijo,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../core/compartido/pruebas/dobles-compartidos.js';
 import { PonerEnUso } from '../aplicacion/casos-uso/activos/poner-en-uso.js';
+import { PonerEnUsoVarios } from '../aplicacion/casos-uso/activos/poner-en-uso-varios.js';
 import { QuitarDeUso } from '../aplicacion/casos-uso/activos/quitar-de-uso.js';
 import type { SolicitudDePonerEnUso } from '../aplicacion/dto/activo.dto.js';
 import { Activo, type EntradaDeAlta } from '../dominio/activo.js';
 import { Clase } from '../dominio/clase.js';
 import { Costo } from '../dominio/costo.js';
 import type { IncisoFiscal } from '../dominio/incisos-fiscales.js';
-import { ActivosEnMemoria } from './dobles-de-activos.js';
+import { ActivosEnMemoria, UbicacionesEnMemoria } from './dobles-de-activos.js';
 import { ClasesEnMemoria, TopesFijos } from './dobles-de-clases.js';
 import { CostosEnMemoria } from './dobles-de-costos.js';
+import { TrasladosEnMemoria } from './dobles-de-traslados.js';
 import { SaldosEnMemoria } from './dobles-de-saldos.js';
 import { CierresDePrueba, PrimerMesFijo, TramosEnMemoria } from './dobles-de-uso.js';
 
 export const operador = operadorDePrueba();
+
+export const LOCALIDAD_NORTE = '11111111-1111-4111-8111-111111111111';
+export const LOCALIDAD_SUR = '22222222-2222-4222-8222-222222222222';
+export const DEPARTAMENTO_DEL_SUR = '33333333-3333-4333-8333-333333333333';
+
+/** Las localidades y el departamento que conocen las pruebas de traslados y de «Disponible para uso». */
+function ubicacionesDePrueba(): UbicacionesEnMemoria {
+  const ubicaciones = new UbicacionesEnMemoria();
+  ubicaciones.localidades.set(LOCALIDAD_NORTE, { id: LOCALIDAD_NORTE, codigo: 'N', nombre: 'Norte', activo: true });
+  ubicaciones.localidades.set(LOCALIDAD_SUR, { id: LOCALIDAD_SUR, codigo: 'S', nombre: 'Sur', activo: true });
+  ubicaciones.departamentos.set(DEPARTAMENTO_DEL_SUR, {
+    id: DEPARTAMENTO_DEL_SUR,
+    codigo: 'D',
+    nombre: 'Taller',
+    activo: true,
+    localidadId: LOCALIDAD_SUR,
+  });
+  return ubicaciones;
+}
 const empresa = Identificador.desde<'Empresa'>(operador.empresaId);
 
 type DatosDeAlta = Partial<EntradaDeAlta['datos']>;
@@ -70,6 +94,10 @@ export function armarUso() {
   const primerMes = new PrimerMesFijo();
   const auditoria = new AuditoriaEnMemoria();
   const clases = new ClasesEnMemoria();
+  const traslados = new TrasladosEnMemoria(activos);
+  const ubicaciones = ubicacionesDePrueba();
+  const publicador = new PublicadorEventosEnMemoria();
+  const reloj = new RelojFijo('2027-06-15');
   const dependencias = {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     repositorio: activos,
@@ -82,6 +110,11 @@ export function armarUso() {
     cierres,
     topes: new TopesFijos(),
     primerMes,
+    ubicaciones,
+    traslados,
+    correlativos: new CorrelativosEnMemoria(),
+    reloj,
+    publicadorEventos: publicador,
   };
 
   const claseDe = async (incisoFiscal: IncisoFiscal, porcentajeFiscal: string, residual = '10.00') => {
@@ -118,6 +151,7 @@ export function armarUso() {
     const { id, incisoFiscal } = clase.instantanea();
     const activo = altaDe(id.valor, incisoFiscal, datos);
     await activos.agregar(activo);
+    traslados.registrarAlta(activo);
     if (monto) await agregarCosto(activo, monto);
     return activo;
   };
@@ -133,7 +167,12 @@ export function armarUso() {
     saldos,
     tramos,
     costos,
+    traslados,
+    ubicaciones,
+    publicador,
+    reloj,
     ponerEnUso,
+    ponerEnUsoVarios: new PonerEnUsoVarios(dependencias),
     quitarDeUso: new QuitarDeUso(dependencias),
     claseDe,
     activoConCosto,

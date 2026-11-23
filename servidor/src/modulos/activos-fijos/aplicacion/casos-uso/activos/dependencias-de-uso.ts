@@ -1,3 +1,5 @@
+import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
+import type { RepositorioTraslados } from '../../puertos/repositorio-traslados.js';
 import type { Cierres } from '../../puertos/cierres.js';
 import type { LectorDePrimerMes } from '../../puertos/lector-de-primer-mes.js';
 import type { LectorDeTopes } from '../../puertos/lector-de-topes.js';
@@ -6,10 +8,13 @@ import type { RepositorioCostos } from '../../puertos/repositorio-costos.js';
 import type { RepositorioTramos } from '../../puertos/repositorio-tramos.js';
 import type { DependenciasDeActivos } from './dependencias-de-activos.js';
 
-/** Lo que usan «poner en uso» y «quitar de uso»: lo de los activos más sus costos, sus tramos y los cierres. */
+/**
+ * Lo que usan «poner en uso» (uno o varios) y «quitar de uso»: lo de los activos más sus costos, sus tramos, los cierres
+ * y lo que pide fijar la ubicación al ponerlos disponibles (traslados, boleta y eventos).
+ */
 export interface DependenciasDeUso extends Pick<
   DependenciasDeActivos,
-  'unidadDeTrabajo' | 'repositorio' | 'consultas' | 'clases' | 'auditoria'
+  'unidadDeTrabajo' | 'repositorio' | 'consultas' | 'clases' | 'auditoria' | 'ubicaciones' | 'correlativos' | 'reloj'
 > {
   costos: RepositorioCostos;
   tramos: RepositorioTramos;
@@ -17,4 +22,9 @@ export interface DependenciasDeUso extends Pick<
   cierres: Cierres;
   topes: LectorDeTopes;
   primerMes: LectorDePrimerMes;
+  traslados: RepositorioTraslados;
+  publicadorEventos: PublicadorEventos;
 }
+
+/** Quitar de uso no mueve activos de lugar: no necesita los traslados ni los eventos. */
+export type DependenciasDeQuitarDeUso = Omit<DependenciasDeUso, 'traslados' | 'publicadorEventos'>;

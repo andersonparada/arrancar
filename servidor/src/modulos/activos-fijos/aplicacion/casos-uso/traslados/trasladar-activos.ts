@@ -16,7 +16,7 @@ import { exigirMesAbierto, IncisosDeClases, type DependenciasDeTraslados } from 
 import { eventoDeTraslado } from './eventos-de-traslados.js';
 
 /** El número del correlativo `activos-fijos.traslados`: uno por boleta, no por activo. */
-const CLAVE_DEL_CORRELATIVO = 'activos-fijos.traslados';
+export const CLAVE_DEL_CORRELATIVO = 'activos-fijos.traslados';
 
 interface Contexto {
   operador: Operador;

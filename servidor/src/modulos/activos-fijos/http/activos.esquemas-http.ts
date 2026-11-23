@@ -59,12 +59,38 @@ export const esquemaOcioDeActivo = z.object({
   motivo: textoOpcional(300),
 });
 
-/** Poner en uso: lo que no se escribe lo propone la clase del activo. */
-export const esquemaPonerEnUso = z.object({
-  fechaDeInicioDeUso: fechaObligatoria(),
+const parametrosDeUso = {
   porcentajeFiscal: decimalOpcional(2),
   vidaUtilContableMeses: enteroOpcional(),
   valorResidual: decimalOpcional(2),
+};
+
+/** Dónde queda el bien al ponerlo disponible; sin `enBodega`, en la bodega si no hay responsable. */
+const ubicacionAlPonerEnUso = z
+  .object({
+    localidadId: idOpcional(),
+    departamentoId: idOpcional(),
+    responsable: textoOpcional(150),
+    enBodega: z.boolean().optional(),
+  })
+  .nullish();
+
+/** Poner en uso: lo que no se escribe lo propone la clase del activo. */
+export const esquemaPonerEnUso = z.object({
+  fechaDeInicioDeUso: fechaObligatoria(),
+  ...parametrosDeUso,
+  ubicacion: ubicacionAlPonerEnUso,
+});
+
+/** Poner en uso varios activos (hasta 200) con una fecha y una ubicación; los parámetros propios van por activo. */
+export const esquemaPonerEnUsoVarios = z.object({
+  activoIds: z.array(idObligatorio()).min(1).max(200),
+  fechaDeInicioDeUso: fechaObligatoria(),
+  ubicacion: ubicacionAlPonerEnUso,
+  ajustes: z
+    .array(z.object({ activoId: idObligatorio(), ...parametrosDeUso }))
+    .max(200)
+    .optional(),
 });
 
 export const esquemaParamsActivo = z.object({ activoId: z.uuid() });
@@ -88,5 +114,6 @@ export type ActivoSolicitado = z.infer<typeof esquemaActivo>;
 export type EdicionDeActivoSolicitada = z.infer<typeof esquemaEdicionDeActivo>;
 export type OcioDeActivoSolicitado = z.infer<typeof esquemaOcioDeActivo>;
 export type PonerEnUsoSolicitado = z.infer<typeof esquemaPonerEnUso>;
+export type PonerEnUsoVariosSolicitado = z.infer<typeof esquemaPonerEnUsoVarios>;
 export type ParamsActivo = z.infer<typeof esquemaParamsActivo>;
 export type FiltrosDeActivosSolicitados = z.infer<typeof esquemaFiltrosDeActivos>;

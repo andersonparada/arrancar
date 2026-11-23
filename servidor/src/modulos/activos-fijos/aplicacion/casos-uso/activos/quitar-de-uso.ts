@@ -4,10 +4,10 @@ import { ActivoConLibrosUsados } from '../../../dominio/errores-de-depreciacion.
 import { ActivoConMejoras } from '../../../dominio/errores-de-mejora.js';
 import { ActivoDeSaldoInicial } from '../../../dominio/errores-de-saldo-inicial.js';
 import type { ActivoFichaDto } from '../../dto/activo.dto.js';
-import type { DependenciasDeUso } from './dependencias-de-uso.js';
+import type { DependenciasDeQuitarDeUso } from './dependencias-de-uso.js';
 
 export class QuitarDeUso {
-  constructor(private readonly dependencias: DependenciasDeUso) {}
+  constructor(private readonly dependencias: DependenciasDeQuitarDeUso) {}
 
   /**
    * Deshace «poner en uso»: el activo vuelve a construcción y se borran sus tramos. Queda en la auditoría como

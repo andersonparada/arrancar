@@ -5,6 +5,11 @@ export class ParametrosDeUsoInvalidos extends DatoInvalido {
   readonly codigo = 'parametros_de_uso_invalidos';
 }
 
+/** La solicitud de poner en uso varios activos a la vez no es válida (vacía, repetidos o pasa del tope). */
+export class PonerEnUsoVariosInvalido extends DatoInvalido {
+  readonly codigo = 'poner_en_uso_varios_invalido';
+}
+
 /** La fecha de inicio de uso no es válida para el activo. */
 export class FechaDeUsoInvalida extends DatoInvalido {
   readonly codigo = 'fecha_de_uso_invalida';
