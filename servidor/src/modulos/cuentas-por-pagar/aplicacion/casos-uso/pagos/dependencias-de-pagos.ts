@@ -52,6 +52,8 @@ export interface DependenciasDeRegistrarPago {
   topeDeDiferencia: TopeDeDiferenciaDelPago;
   cargaInicial: CargaInicial;
   fechasDeEntrada: FechasDeEntrada;
+  /** Los cheques de apertura de Bancos: la cuenta de apertura revisa el que dice haber pagado lo mismo. */
+  chequesDeApertura: ConsultasDeChequesDeApertura;
   correlativos: Correlativos;
   auditoria: Auditoria;
   /** Se publica después de confirmar la transacción de la propia petición. */

@@ -12,7 +12,7 @@ import { contrasenas } from './contrasenas.tablas.js';
 import { documentos } from './documentos.tablas.js';
 import { pagos } from './pagos.tablas.js';
 
-const FORMAS_DEL_MES = ['cheque', 'nota_de_debito', 'nota_ligada', 'efectivo'] as const;
+const FORMAS_DEL_MES = ['cheque', 'nota_de_debito', 'nota_ligada', 'efectivo', 'cheque_de_apertura'] as const;
 
 /** Primer día del mes de la fecha y primer día del siguiente (`AAAA-MM-DD`). */
 function limitesDelMes(fecha: string): { desde: string; hasta: string } {

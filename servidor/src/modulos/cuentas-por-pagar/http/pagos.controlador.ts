@@ -9,13 +9,17 @@ import type {
 } from '../aplicacion/casos-uso/pagos/consultas-de-pagos.js';
 import type { AplicarACuentaDeApertura } from '../aplicacion/casos-uso/pagos/aplicar-a-cuenta-de-apertura.js';
 import type { AnularPago } from '../aplicacion/casos-uso/pagos/anular-pago.js';
+import type { DesligarChequeDeApertura } from '../aplicacion/casos-uso/pagos/desligar-cheque-de-apertura.js';
+import type { RegistrarPagoConChequeDeApertura } from '../aplicacion/casos-uso/pagos/registrar-pago-con-cheque-de-apertura.js';
 import type { ReaplicarPago } from '../aplicacion/casos-uso/pagos/reaplicar-pago.js';
 import type { SaldarDiferenciaDelPago } from '../aplicacion/casos-uso/pagos/saldar-diferencia-del-pago.js';
 import type { RegistrarPago } from '../aplicacion/casos-uso/pagos/registrar-pago.js';
 import type { ParamsDeProveedor } from './documentos.esquemas-http.js';
 import type {
   AnularPagoSolicitado,
+  DesligarChequeDeAperturaSolicitado,
   MediosSolicitado,
+  PagoConChequeDeAperturaSolicitado,
   PagoDeAperturaSolicitado,
   NotasParaLigarSolicitado,
   PagoLigadoSolicitado,
@@ -31,6 +35,8 @@ export interface CasosDeUsoDePagos {
   registrar: RegistrarPago;
   ligar: LigarNotaDeDebito;
   aplicarAApertura: AplicarACuentaDeApertura;
+  registrarConChequeDeApertura: RegistrarPagoConChequeDeApertura;
+  desligarChequeDeApertura: DesligarChequeDeApertura;
   notasParaLigar: ListarNotasParaLigar;
   paraPagar: ListarCargosParaPagar;
   proveedoresPorPagar: ListarProveedoresPorPagar;
@@ -58,6 +64,22 @@ export class PagosControlador {
     const pago = await this.casosDeUso.aplicarAApertura.ejecutar(operadorDe(solicitud), solicitud.body);
     return respuesta.status(201).send(pago);
   };
+
+  registrarConChequeDeApertura = async (
+    solicitud: FastifyRequest<{ Body: PagoConChequeDeAperturaSolicitado }>,
+    respuesta: FastifyReply,
+  ) => {
+    const pago = await this.casosDeUso.registrarConChequeDeApertura.ejecutar(operadorDe(solicitud), solicitud.body);
+    return respuesta.status(201).send(pago);
+  };
+
+  desligarChequeDeApertura = (
+    solicitud: FastifyRequest<{ Params: ParamsDePago; Body: DesligarChequeDeAperturaSolicitado }>,
+  ) =>
+    this.casosDeUso.desligarChequeDeApertura.ejecutar(operadorDe(solicitud), {
+      pagoId: solicitud.params.id,
+      ...solicitud.body,
+    });
 
   notasParaLigar = (solicitud: FastifyRequest<{ Querystring: NotasParaLigarSolicitado }>) =>
     this.casosDeUso.notasParaLigar.ejecutar(operadorDe(solicitud), solicitud.query);

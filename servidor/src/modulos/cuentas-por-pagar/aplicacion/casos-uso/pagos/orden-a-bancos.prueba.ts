@@ -32,6 +32,10 @@ class BancosFalso implements PagosEnBancos {
     return { forma: 'sin_inverso' as const, fechaDelInverso: null };
   }
   async fijarDesglose() {}
+  async ligarChequeDeApertura() {
+    return { movimientoId: 'm', cuentaBancariaId: 'cb', numero: 4, fecha: '2026-11-10', avisos: [] };
+  }
+  async desligarChequeDeApertura() {}
 }
 
 const datos = { pagoId: 'p1', fecha: '2026-11-10', montoCentavos: 300, beneficiario: 'Agro S.A.', conceptos: [] };

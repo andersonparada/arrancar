@@ -91,6 +91,7 @@ export function dtoDeLaFicha(datos: DatosDeLaFicha): FichaDePagoDto {
     creadoEn: extras.creadoEn,
     puedeAnular: datos.puedeAnular,
     puedeReaplicar: datos.puedeReaplicar,
+    puedeDesligar: base.forma === 'cheque_de_apertura' && base.estado === 'vigente',
     puedeSaldarDiferencia: aplicaciones.some(({ diferenciaOfrecible: ofrecible }) => ofrecible !== '0.00'),
   };
 }

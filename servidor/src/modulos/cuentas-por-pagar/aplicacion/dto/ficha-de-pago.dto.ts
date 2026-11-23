@@ -86,5 +86,7 @@ export interface FichaDePagoDto extends Omit<PagoDto, 'movimiento' | 'aplicacion
   creadoEn: string;
   puedeAnular: boolean;
   puedeReaplicar: boolean;
+  /** Un pago vigente con cheque de apertura se puede desligar de su cheque (con el permiso de desligar). */
+  puedeDesligar: boolean;
   puedeSaldarDiferencia: boolean;
 }

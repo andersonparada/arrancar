@@ -53,7 +53,7 @@ export async function chequesPosfechados(
   const delProveedor = proveedorId ? sql`and p.proveedor_id = ${proveedorId}::uuid` : sql``;
   const delaCuenta = cuentaBancariaId ? sql`and m.cuenta_bancaria_id = ${cuentaBancariaId}::uuid` : sql``;
   const { rows } = await transaccion.execute(sql`${SELECCION_DE_CHEQUES}
-     where p.empresa_id = ${empresaId}::uuid and p.forma = 'cheque' and p.fecha > ${corte}::date
+     where p.empresa_id = ${empresaId}::uuid and p.forma in ('cheque', 'cheque_de_apertura') and p.fecha > ${corte}::date
        and ${pagoCuentaAlCorte(corte)}
        and (p.creado_en at time zone 'America/Guatemala')::date <= ${corte}::date
        and least(p.fecha, coalesce(${FIN_DE_MES_COBRADO}, p.fecha)) > ${corte}::date

@@ -11,7 +11,7 @@ import {
   avisoDeRetencionNoDescontada,
   avisosDeLaLinea,
 } from '../../../dominio/avisos-de-pagos.js';
-import { numeroDelPago } from '../../../dominio/pagos.js';
+import { numeroDelPago, type FormaDePago } from '../../../dominio/pagos.js';
 import type { DiferenciaPedida } from '../../../dominio/registro-de-pago.js';
 import type { PagoDelMes } from '../../puertos/puertos-de-pagos.js';
 import type { DependenciasDeRegistrarPago, LineaRevisada } from './dependencias-de-pagos.js';
@@ -28,7 +28,7 @@ export interface LineaConRetencion extends LineaRevisada {
 
 /** Lo que el armador necesita saber del pago para avisar. */
 export interface PagoParaAvisar {
-  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo';
+  forma: FormaDePago;
   /** Solo al ligar una nota: lo que le queda por aplicar después de este pago. */
   restanteDeLaNotaCentavos?: number;
   proveedorId: string;

@@ -57,6 +57,8 @@ export interface PagoDto {
   /** Solo en la cuenta de apertura: por qué se dio por pagado, y si la carga inicial estaba cerrada. */
   motivo: string | null;
   conCargaCerrada: boolean | null;
+  /** Solo en la cuenta de apertura y solo informativo: el cheque en circulación de la carga inicial que pagó lo mismo. */
+  chequeDeAperturaReferidoId: string | null;
   /** Solo en efectivo: el retiro de donde sale el dinero, quien recibió por el proveedor y la excepción de bancarización. */
   retiroId: string | null;
   recibidoPor: string | null;

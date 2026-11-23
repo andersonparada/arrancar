@@ -14,6 +14,8 @@ import { AplicarACuentaDeApertura } from '../aplicacion/casos-uso/pagos/aplicar-
 import { AnularPago } from '../aplicacion/casos-uso/pagos/anular-pago.js';
 import { AtenderMovimientoPorCambiar } from '../aplicacion/casos-uso/pagos/atender-movimiento-por-cambiar.js';
 import type { DependenciasDeCambiarPagos } from '../aplicacion/casos-uso/pagos/dependencias-de-pagos.js';
+import { DesligarChequeDeApertura } from '../aplicacion/casos-uso/pagos/desligar-cheque-de-apertura.js';
+import { RegistrarPagoConChequeDeApertura } from '../aplicacion/casos-uso/pagos/registrar-pago-con-cheque-de-apertura.js';
 import { ReaplicarPago } from '../aplicacion/casos-uso/pagos/reaplicar-pago.js';
 import { SaldarDiferenciaDelPago } from '../aplicacion/casos-uso/pagos/saldar-diferencia-del-pago.js';
 import { REGLAS_PARA_ANULAR_PAGO, REGLAS_PARA_REAPLICAR_PAGO } from '../dominio/reglas-de-anulacion-de-pagos.js';
@@ -67,6 +69,8 @@ function casosDeUso(): CasosDeUsoDePagos {
     registrar: new RegistrarPago(piezasParaRegistrar(paraConsultar, bancos)),
     ligar: new LigarNotaDeDebito(piezasParaRegistrar(paraConsultar, bancos)),
     aplicarAApertura: new AplicarACuentaDeApertura(piezasParaRegistrar(paraConsultar, bancos)),
+    registrarConChequeDeApertura: new RegistrarPagoConChequeDeApertura(piezasParaRegistrar(paraConsultar, bancos)),
+    desligarChequeDeApertura: new DesligarChequeDeApertura(paraCambiar),
     notasParaLigar: new ListarNotasParaLigar(paraConsultar),
     paraPagar: new ListarCargosParaPagar(paraConsultar),
     proveedoresPorPagar: new ListarProveedoresPorPagar(paraConsultar),

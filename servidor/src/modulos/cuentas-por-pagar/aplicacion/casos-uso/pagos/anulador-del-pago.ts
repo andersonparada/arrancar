@@ -24,6 +24,8 @@ export interface AnulacionHechaEnBancos {
 /** Por qué y cómo se anula el pago. */
 export interface DatosDeAnular extends AnulacionHechaEnBancos {
   motivo: string;
+  /** Solo al desligar un cheque de apertura: el pago «nunca existió» y su fecha contable es la suya. */
+  fechaContable?: string;
 }
 
 type Dependencias = Pick<
@@ -64,7 +66,7 @@ export class AnuladorDelPago {
   async anular(operador: Operador, pago: PagoConLineas, datos: DatosDeAnular): Promise<EventoDominio[]> {
     const { pagos, auditoria, reloj } = this.dependencias;
     const anterior = (await this.lector.leer(operador, pago)).dto;
-    const fecha = fechaDeAnulacionDelPago(pago, { ...datos, hoy: await reloj.hoy(operador) });
+    const fecha = datos.fechaContable ?? fechaDeAnulacionDelPago(pago, { ...datos, hoy: await reloj.hoy(operador) });
     const ajustes = await this.anularDiferencias(operador, pago, { motivo: datos.motivo, fecha });
     await pagos.anular(pago.id, { anuladoPor: operador.usuarioId, motivo: datos.motivo, fechaDeAnulacion: fecha });
     await auditoria.registrar({

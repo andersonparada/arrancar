@@ -3,7 +3,7 @@ import {
   ReaplicacionConOtroMonto,
   SoloSaldosIniciales,
 } from './errores-de-anulacion-de-pagos.js';
-import type { PagoConLineas } from './pago-con-lineas.js';
+import { esDeLaApertura, type PagoConLineas } from './pago-con-lineas.js';
 import type { EfectoDePago } from './eventos-de-pagos.js';
 import type { FormaDePago } from './pagos.js';
 import type { OrigenDeDocumento } from './tipos-de-documento.js';
@@ -57,7 +57,7 @@ export function exigirSoloSaldosInicialesEnLaApertura(
   pago: Pick<PagoConLineas, 'forma'>,
   origenes: readonly OrigenDeDocumento[],
 ): void {
-  if (pago.forma === 'cuenta_de_apertura' && origenes.some((origen) => origen !== 'saldo_inicial')) {
+  if (esDeLaApertura(pago) && origenes.some((origen) => origen !== 'saldo_inicial')) {
     throw new SoloSaldosIniciales();
   }
 }

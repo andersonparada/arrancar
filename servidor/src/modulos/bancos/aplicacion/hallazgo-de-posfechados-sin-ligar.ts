@@ -19,7 +19,7 @@ export function hallazgoDePosfechadosSinLigar({
   return {
     codigo: 'posfechados_sin_ligar',
     nivel: 'aviso',
-    mensaje: `Hay ${cheques} de apertura sin ligar (${total}): no pague otra vez las facturas que cubren; se podrán ligar pronto al pago de Cuentas por pagar.`,
+    mensaje: `Hay ${cheques} de apertura sin ligar (${total}): no pague otra vez las facturas que cubren; en Cuentas por pagar, líguelas al cheque con «Cheque de apertura».`,
     registro: null,
   };
 }

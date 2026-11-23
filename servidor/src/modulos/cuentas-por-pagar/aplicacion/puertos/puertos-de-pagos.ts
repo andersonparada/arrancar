@@ -9,6 +9,7 @@ import type {
 import type { AnulacionEnBancos } from '../../dominio/anulacion-de-pagos.js';
 import type { EfectoFiscal } from '../../dominio/bancarizacion-de-pagos.js';
 import type { PagoConLineas } from '../../dominio/pago-con-lineas.js';
+import type { FormaDePago } from '../../dominio/pagos.js';
 import type { RetencionDelLibro } from '../../dominio/avisos-de-pagos.js';
 import type { LigadoAUnaNota } from './puertos-de-notas-para-ligar.js';
 
@@ -63,6 +64,29 @@ export interface PagosEnBancos {
   anularMovimiento(operador: Operador, anulacion: AnulacionDeMovimiento): Promise<AnulacionDelMovimiento>;
   /** Vuelve a fijar el reparto por concepto del movimiento del pago (solo clasifica el flujo). */
   fijarDesglose(operador: Operador, desglose: DesgloseDelMovimiento): Promise<void>;
+  /** Liga el posfechado de apertura al pago (el pago es su origen); el monto debe ser el del cheque. */
+  ligarChequeDeApertura(
+    operador: Operador,
+    cheque: ChequeDeAperturaALigar,
+  ): Promise<MovimientoCreado & { fecha: string }>;
+  /** Quita el origen del posfechado de apertura y lo deja sin clasificar: el cheque sigue vigente en Bancos. */
+  desligarChequeDeApertura(operador: Operador, cheque: ChequeDeAperturaADesligar): Promise<void>;
+}
+
+/** Lo que Bancos necesita para ligar un posfechado de apertura a un pago. */
+export interface ChequeDeAperturaALigar {
+  origen: OrigenDeMovimientoContrato;
+  movimientoId: string;
+  montoCentavos: number;
+  /** El nombre del proveedor: si el beneficiario del cheque es otro, Bancos avisa. */
+  beneficiarioEsperado: string;
+  conceptos: LineaDeConcepto[];
+}
+
+export interface ChequeDeAperturaADesligar {
+  origen: OrigenDeMovimientoContrato;
+  movimientoId: string;
+  motivo: string;
 }
 
 /** Lo que Bancos necesita para anular el movimiento de un pago. */
@@ -142,7 +166,7 @@ export interface PagoNuevo {
   proveedorId: string;
   numero: number;
   anioDeNumero: number;
-  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo';
+  forma: FormaDePago;
   /** `AAAA-MM-DD`. */
   fecha: string;
   /** Nulo en la cuenta de apertura y en efectivo (el movimiento es del retiro). */
@@ -153,6 +177,8 @@ export interface PagoNuevo {
   motivo?: string | null;
   /** Solo en la cuenta de apertura: si la carga inicial estaba cerrada. */
   conCargaCerrada?: boolean | null;
+  /** Solo en la cuenta de apertura: el cheque en circulación de la carga inicial que pagó lo mismo (informativo). */
+  chequeDeAperturaReferidoId?: string | null;
   /** Solo en efectivo: el retiro de donde sale el dinero, quien recibió por el proveedor y la excepción de bancarización. */
   retiroId?: string | null;
   recibidoPor?: string | null;
@@ -184,7 +210,7 @@ export interface RepositorioDePagos {
 export interface PagoDelMes {
   numero: number;
   anioDeNumero: number;
-  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'efectivo';
+  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'efectivo' | 'cheque_de_apertura';
   montoCentavos: number;
   /** Los cargos que cubre (solo se llena en efectivo, para saber qué respalda). */
   cargoIds: string[];

@@ -37,6 +37,7 @@ export class LectorDelPago {
       observaciones: pago.observaciones,
       motivo: pago.motivo,
       conCargaCerrada: pago.conCargaCerrada,
+      chequeDeAperturaReferidoId: pago.chequeDeAperturaReferidoId,
       ...datosDelEfectivo(pago),
       fecha: pago.fecha,
       hoy: await this.dependencias.reloj.hoy(operador),

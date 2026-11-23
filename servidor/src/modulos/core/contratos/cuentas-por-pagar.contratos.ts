@@ -122,7 +122,7 @@ declare module '../eventos/bus-eventos.js' {
       numero: number;
       contrasenaIds: string[];
       proveedorId: string;
-      forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo';
+      forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo' | 'cheque_de_apertura';
       fecha: string;
       posfechado: boolean;
       montoCentavos: number;

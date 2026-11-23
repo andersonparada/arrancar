@@ -141,7 +141,7 @@ export class ConsultaDeSaldosAlCorte implements ConsultasDeSaldosAlCorte, Consul
         from cuentas_por_pagar.pagos p
         join bancos.movimientos m on m.id = p.movimiento_id
         join bancos.conciliaciones cn on cn.id = m.conciliacion_id and cn.estado = 'autorizada'
-       where p.empresa_id = ${empresaId}::uuid and p.forma = 'cheque' ${delProveedor}
+       where p.empresa_id = ${empresaId}::uuid and p.forma in ('cheque', 'cheque_de_apertura') ${delProveedor}
          and p.fecha > ${corte}::date
          and ${pagoCuentaAlCorte(corte)}
          and (p.creado_en at time zone 'America/Guatemala')::date <= ${corte}::date
