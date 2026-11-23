@@ -60,7 +60,21 @@ Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop*
 - **Recomendaciones aceptadas en todos los puntos:** Cuentas por cobrar y Ventas (VC-P1 a VC-P24), Contabilidad (CT-P1 a
   CT-P18), Bancos aprobaciones y tarjeta (§16) y Parcelas (PA-1 a PA-19).
 
-**En curso:** nada. El usuario cerró el día el 2026-11-19 por la mañana; se retoma con la lista de abajo.
+**En curso (2026-11-23):** workflow `arrancar-tanda-9` (run `wf_3c37cfe1-206`, reanudable con `resumeFromRunId`), desde la rama
+`base-tanda9` (`f3792328`). Son 11 cadenas; cada paso lleva revisión de Opus, corrección y segunda revisión si hubo altos o medios:
+- Correcciones de la QA CL-7 → CC-11 (QA, puertos 3311 y 5311).
+- AFI-3 → resto de AFI-4 → AF-9 → AFI-5.
+- Cliente AF-7c y AF-8c.
+- INV-6 → INV-7 → INV-8.
+- Cliente INV-2c, INV-4c e INV-5c.
+- VC-0b (bancos 0039) → cliente de VC-0a.
+- VC-0c1 (libro 0040) → VC-0c2 y VC-0c.
+- VC-0d → LV-1 → LV-2 → LV-1c y LV-2c.
+- CT-0e y CT-0f → CT-1 → CT-2 → CT-1c y CT-2c.
+- AP-1 → AP-2 → AP-3.
+- PA-0b y PA-0bc (empresas 0015) → PA-1 → PA-1c.
+
+Al terminar: unir la **última rama de cada cadena** en `integracion`, revisar migraciones, correr la suite y pasar a `main`.
 
 **Siguientes pasos al retomar** (todo diseñado y aprobado):
 - **Cuentas por liquidar:** corregir los dos medios de la QA CL-7.
