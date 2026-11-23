@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
-import type { RepositorioInicios } from '../../aplicacion/puertos/repositorio-inicios.js';
+import type { BloqueoDelInicio, RepositorioInicios } from '../../aplicacion/puertos/repositorio-inicios.js';
 import { InicioContable } from '../../dominio/inicio.js';
 import { inicios } from './inicios.tablas.js';
 
@@ -28,8 +28,9 @@ function aFila(inicio: InicioContable): typeof inicios.$inferInsert {
 
 /** La tabla tiene seguridad por empresa (RLS): solo se ve la fila de la empresa activa. */
 export class RepositorioIniciosDrizzle implements RepositorioInicios {
-  async obtener(): Promise<InicioContable | null> {
-    const [fila] = await transaccionEnCurso().select().from(inicios).limit(1);
+  async obtener(bloqueo?: BloqueoDelInicio): Promise<InicioContable | null> {
+    const consulta = transaccionEnCurso().select().from(inicios).limit(1);
+    const [fila] = await (bloqueo ? consulta.for(bloqueo === 'exclusivo' ? 'update' : 'share') : consulta);
     return fila ? aEntidad(fila) : null;
   }
 

@@ -4383,3 +4383,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     cuentas con Excel) y 80 de seguridad y registro de módulos. Nota del entorno: desde el entorno del agente el puerto
     publicado :5433 responde `ECONNRESET`; las pruebas se corrieron en un contenedor que comparte la red de la base de
     desarrollo (`docker run --network container:arrancar-dev-postgres-1 …` con un reenviador :5433 a :5432).
+  - Corrección de la revisión de CT-1 (migración `0002_bloqueo_del_padre_en_hoja_de_detalle`): (1) `GuardarInicio` solo
+    valida la fecha y el caso contra la carga al crear el inicio o cuando cambian; los firmantes se cambian siempre.
+    (2) El disparador `cuentas_hoja_de_detalle` bloquea la cuenta superior (`FOR SHARE`) antes de revisar si es de detalle
+    (prueba con dos conexiones). (3) `RepositorioInicios.obtener(bloqueo)`: `exclusivo` al guardar el inicio y
+    `compartido` al crear cuentas, para que una máscara nueva y la primera cuenta no se crucen sin verse. Pendiente de
+    decisión: qué pasa con `inicios.fecha` cuando la empresa cambia su fecha de inicio (hoy queda distinta sin aviso y
+    solo se detecta al cambiar la fecha del inicio; opciones: vetar el cambio o avisar por el mediador).

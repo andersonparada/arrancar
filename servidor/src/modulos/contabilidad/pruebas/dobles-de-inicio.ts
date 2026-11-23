@@ -1,12 +1,12 @@
 import type { CargaInicial, EstadoDeLaCarga } from '../aplicacion/puertos/carga-inicial.js';
-import type { RepositorioInicios } from '../aplicacion/puertos/repositorio-inicios.js';
+import type { BloqueoDelInicio, RepositorioInicios } from '../aplicacion/puertos/repositorio-inicios.js';
 import type { InicioContable } from '../dominio/inicio.js';
 
 /** El inicio de la contabilidad de una sola empresa, en memoria. */
 export class IniciosEnMemoria implements RepositorioInicios {
   private inicio: InicioContable | null = null;
 
-  async obtener(): Promise<InicioContable | null> {
+  async obtener(_bloqueo?: BloqueoDelInicio): Promise<InicioContable | null> {
     return this.inicio;
   }
 

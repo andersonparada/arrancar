@@ -6,6 +6,12 @@ import { MascaraDeCuentas } from '../../../dominio/mascara-de-cuentas.js';
 import type { InicioDto, SolicitudDeInicio } from '../../dto/inicio.dto.js';
 import { exigirFechaSegunLaCarga, inicioADto, type DependenciasDeInicio } from './dependencias-de-inicio.js';
 
+/** La fecha y el caso solo se validan contra la carga al crear o cuando cambian: los firmantes se cambian siempre. */
+function cambiaLaFecha(inicio: InicioContable, solicitud: SolicitudDeInicio): boolean {
+  const { fecha, caso } = inicio.instantanea();
+  return fecha !== solicitud.fecha || caso !== solicitud.caso;
+}
+
 export class GuardarInicio {
   constructor(private readonly dependencias: DependenciasDeInicio) {}
 
@@ -18,8 +24,9 @@ export class GuardarInicio {
   ejecutar(operador: Operador, solicitud: SolicitudDeInicio): Promise<InicioDto> {
     const { unidadDeTrabajo, repositorio } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      await exigirFechaSegunLaCarga(this.dependencias.cargaInicial, operador, solicitud);
-      const actual = await repositorio.obtener();
+      const actual = await repositorio.obtener('exclusivo');
+      if (!actual || cambiaLaFecha(actual, solicitud))
+        await exigirFechaSegunLaCarga(this.dependencias.cargaInicial, operador, solicitud);
       if (!actual) return this.iniciar(operador, solicitud);
       return this.cambiar(actual, solicitud);
     });

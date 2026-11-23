@@ -1,0 +1,525 @@
+{
+  "id": "45187a3b-d311-47b4-a075-41940c615790",
+  "prevId": "e071c37c-1a90-4e87-b942-f30a48e52e34",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "contabilidad.cuentas": {
+      "name": "cuentas",
+      "schema": "contabilidad",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codigo": {
+          "name": "codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "padre_id": {
+          "name": "padre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nivel": {
+          "name": "nivel",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "es_de_detalle": {
+          "name": "es_de_detalle",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "naturaleza": {
+          "name": "naturaleza",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rubro": {
+          "name": "rubro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "corriente": {
+          "name": "corriente",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "clase_de_flujo": {
+          "name": "clase_de_flujo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "es_monetaria": {
+          "name": "es_monetaria",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "moneda_codigo": {
+          "name": "moneda_codigo",
+          "type": "char(3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pide_tercero": {
+          "name": "pide_tercero",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "pide_centro_de_costo": {
+          "name": "pide_centro_de_costo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "es_de_control": {
+          "name": "es_de_control",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "tratamiento_fiscal": {
+          "name": "tratamiento_fiscal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'no_aplica'"
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "cuentas_nombre_unico": {
+          "name": "cuentas_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "coalesce(\"padre_id\", '00000000-0000-0000-0000-000000000000'::uuid)",
+              "isExpression": true,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "isExpression": true,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "cuentas_padre_idx": {
+          "name": "cuentas_padre_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "padre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "cuentas_codigo_prefijo_idx": {
+          "name": "cuentas_codigo_prefijo_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"codigo\" text_pattern_ops",
+              "isExpression": true,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "cuentas_empresa_id_empresas_id_fk": {
+          "name": "cuentas_empresa_id_empresas_id_fk",
+          "tableFrom": "cuentas",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "cuentas_moneda_codigo_monedas_codigo_fk": {
+          "name": "cuentas_moneda_codigo_monedas_codigo_fk",
+          "tableFrom": "cuentas",
+          "columnsFrom": [
+            "moneda_codigo"
+          ],
+          "tableTo": "monedas",
+          "schemaTo": "core",
+          "columnsTo": [
+            "codigo"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "cuentas_padre_fk": {
+          "name": "cuentas_padre_fk",
+          "tableFrom": "cuentas",
+          "columnsFrom": [
+            "padre_id",
+            "empresa_id"
+          ],
+          "tableTo": "cuentas",
+          "schemaTo": "contabilidad",
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cuentas_codigo_unico": {
+          "name": "cuentas_codigo_unico",
+          "columns": [
+            "empresa_id",
+            "codigo"
+          ],
+          "nullsNotDistinct": false
+        },
+        "cuentas_id_empresa_unico": {
+          "name": "cuentas_id_empresa_unico",
+          "columns": [
+            "id",
+            "empresa_id"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "cuentas_padre_distinto": {
+          "name": "cuentas_padre_distinto",
+          "value": "\"contabilidad\".\"cuentas\".\"padre_id\" is null or \"contabilidad\".\"cuentas\".\"padre_id\" <> \"contabilidad\".\"cuentas\".\"id\""
+        },
+        "cuentas_nivel_valido": {
+          "name": "cuentas_nivel_valido",
+          "value": "\"contabilidad\".\"cuentas\".\"nivel\" between 1 and 6"
+        },
+        "cuentas_nivel_sin_padre": {
+          "name": "cuentas_nivel_sin_padre",
+          "value": "(\"contabilidad\".\"cuentas\".\"nivel\" = 1) = (\"contabilidad\".\"cuentas\".\"padre_id\" is null)"
+        },
+        "cuentas_nombre_largo": {
+          "name": "cuentas_nombre_largo",
+          "value": "char_length(btrim(\"contabilidad\".\"cuentas\".\"nombre\")) between 1 and 150"
+        },
+        "cuentas_naturaleza_valida": {
+          "name": "cuentas_naturaleza_valida",
+          "value": "\"contabilidad\".\"cuentas\".\"naturaleza\" in ('deudora', 'acreedora')"
+        },
+        "cuentas_tipo_valido": {
+          "name": "cuentas_tipo_valido",
+          "value": "\"contabilidad\".\"cuentas\".\"tipo\" in ('balance', 'resultados')"
+        },
+        "cuentas_rubro_valido": {
+          "name": "cuentas_rubro_valido",
+          "value": "\"contabilidad\".\"cuentas\".\"rubro\" is null or \"contabilidad\".\"cuentas\".\"rubro\" in ('efectivo', 'cuentas_por_cobrar', 'cuentas_por_cobrar_partes_relacionadas', 'anticipos_a_proveedores', 'inventarios', 'impuestos_por_recuperar', 'gastos_anticipados', 'inversiones', 'propiedad_planta_y_equipo', 'propiedades_de_inversion', 'intangibles', 'activos_biologicos', 'impuesto_diferido_activo', 'otros_activos', 'proveedores', 'cuentas_por_pagar_partes_relacionadas', 'prestamos_corto_plazo', 'impuestos_por_pagar', 'retenciones_por_pagar', 'beneficios_a_empleados', 'ingresos_diferidos', 'otras_cuentas_por_pagar', 'provisiones', 'prestamos_largo_plazo', 'impuesto_diferido_pasivo', 'otros_pasivos', 'capital', 'aportes_para_futuras_capitalizaciones', 'reservas', 'superavit_por_revaluacion', 'resultados_acumulados', 'resultado_del_ejercicio', 'ingresos_ordinarios', 'costo_de_ventas', 'costo_de_produccion', 'gastos_de_venta', 'gastos_de_administracion', 'otros_ingresos', 'otros_gastos', 'cambio_en_valor_razonable_de_activos_biologicos', 'ingresos_financieros', 'gastos_financieros', 'diferencial_cambiario', 'impuesto_sobre_la_renta')"
+        },
+        "cuentas_clase_de_flujo_valida": {
+          "name": "cuentas_clase_de_flujo_valida",
+          "value": "\"contabilidad\".\"cuentas\".\"clase_de_flujo\" is null or \"contabilidad\".\"cuentas\".\"clase_de_flujo\" in ('efectivo', 'operacion', 'inversion', 'financiamiento', 'ninguna')"
+        },
+        "cuentas_tratamiento_fiscal_valido": {
+          "name": "cuentas_tratamiento_fiscal_valido",
+          "value": "\"contabilidad\".\"cuentas\".\"tratamiento_fiscal\" in ('deducible', 'no_deducible', 'exento', 'costo_de_renta_exenta', 'renta_de_capital', 'no_aplica')"
+        },
+        "cuentas_tratamiento_solo_en_resultados": {
+          "name": "cuentas_tratamiento_solo_en_resultados",
+          "value": "\"contabilidad\".\"cuentas\".\"tipo\" = 'resultados' or \"contabilidad\".\"cuentas\".\"tratamiento_fiscal\" = 'no_aplica'"
+        },
+        "cuentas_detalle_con_rubro": {
+          "name": "cuentas_detalle_con_rubro",
+          "value": "not \"contabilidad\".\"cuentas\".\"es_de_detalle\" or \"contabilidad\".\"cuentas\".\"rubro\" is not null"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "contabilidad.inicios": {
+      "name": "inicios",
+      "schema": "contabilidad",
+      "columns": {
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "caso": {
+          "name": "caso",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mascara": {
+          "name": "mascara",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plantilla": {
+          "name": "plantilla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "iniciada_en": {
+          "name": "iniciada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "iniciada_por": {
+          "name": "iniciada_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "firma_representante": {
+          "name": "firma_representante",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "firma_contador": {
+          "name": "firma_contador",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registro_del_contador": {
+          "name": "registro_del_contador",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "inicios_empresa_id_empresas_id_fk": {
+          "name": "inicios_empresa_id_empresas_id_fk",
+          "tableFrom": "inicios",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "inicios_caso_valido": {
+          "name": "inicios_caso_valido",
+          "value": "\"contabilidad\".\"inicios\".\"caso\" in ('desde_la_carga', 'posterior')"
+        },
+        "inicios_mascara_valida": {
+          "name": "inicios_mascara_valida",
+          "value": "\"contabilidad\".\"inicios\".\"mascara\" ~ '^9+(\\.9+){3,5}$'"
+        },
+        "inicios_firma_representante_largo": {
+          "name": "inicios_firma_representante_largo",
+          "value": "\"contabilidad\".\"inicios\".\"firma_representante\" is null or char_length(btrim(\"contabilidad\".\"inicios\".\"firma_representante\")) between 1 and 150"
+        },
+        "inicios_firma_contador_largo": {
+          "name": "inicios_firma_contador_largo",
+          "value": "\"contabilidad\".\"inicios\".\"firma_contador\" is null or char_length(btrim(\"contabilidad\".\"inicios\".\"firma_contador\")) between 1 and 150"
+        },
+        "inicios_registro_largo": {
+          "name": "inicios_registro_largo",
+          "value": "\"contabilidad\".\"inicios\".\"registro_del_contador\" is null or char_length(btrim(\"contabilidad\".\"inicios\".\"registro_del_contador\")) between 1 and 30"
+        },
+        "inicios_contador_completo": {
+          "name": "inicios_contador_completo",
+          "value": "(\"contabilidad\".\"inicios\".\"firma_contador\" is null) = (\"contabilidad\".\"inicios\".\"registro_del_contador\" is null)"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "contabilidad": "contabilidad"
+  },
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

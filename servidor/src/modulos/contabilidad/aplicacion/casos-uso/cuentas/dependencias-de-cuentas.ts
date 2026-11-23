@@ -27,7 +27,7 @@ export async function cuentaExistente(repositorio: RepositorioCuentas, id: strin
 
 /** @throws ContabilidadSinIniciar si la empresa todavía no definió su máscara de códigos. */
 export async function mascaraDeLaEmpresa(inicios: RepositorioInicios): Promise<MascaraDeCuentas> {
-  const inicio = await inicios.obtener();
+  const inicio = await inicios.obtener('compartido');
   if (!inicio) throw new ContabilidadSinIniciar();
   return inicio.mascara;
 }
