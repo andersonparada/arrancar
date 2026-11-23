@@ -4,19 +4,22 @@
 -- ventas» queda sin clave y libre. Repetible: converge siempre al mismo resultado.
 -- «Cobros a clientes» es la marca de Cuentas por cobrar: un concepto de ese nombre que ya tiene movimientos NO se adopta
 -- (sus notas quedarían marcadas para un módulo que quizá no existe, sin salida). Se renombra y sigue como concepto propio;
--- el de sistema se inserta aparte.
+-- el de sistema se inserta aparte. Si el nombre «(anterior)» ya está tomado, se usa «(anterior <id>)», que no choca
+-- con `conceptos_nombre_unico`.
 UPDATE "bancos"."conceptos" c
-SET "nombre" = c."nombre" || ' (anterior)'
+SET "nombre" = c."nombre" || CASE
+  WHEN EXISTS (
+    SELECT 1 FROM "bancos"."conceptos" x
+    WHERE x."empresa_id" = c."empresa_id"
+      AND core.nombre_normalizado(x."nombre") = core.nombre_normalizado(c."nombre" || ' (anterior)')
+  ) THEN ' (anterior ' || c."id"::text || ')'
+  ELSE ' (anterior)'
+END
 WHERE c."clave_de_sistema" IS NULL
   AND core.nombre_normalizado(c."nombre") = core.nombre_normalizado('Cobros a clientes')
   AND (
     EXISTS (SELECT 1 FROM "bancos"."movimientos" m WHERE m."concepto_id" = c."id")
     OR EXISTS (SELECT 1 FROM "bancos"."desglose_de_movimientos" d WHERE d."concepto_id" = c."id")
-  )
-  AND NOT EXISTS (
-    SELECT 1 FROM "bancos"."conceptos" x
-    WHERE x."empresa_id" = c."empresa_id"
-      AND core.nombre_normalizado(x."nombre") = core.nombre_normalizado(c."nombre" || ' (anterior)')
   );--> statement-breakpoint
 UPDATE "bancos"."conceptos" c
 SET "clave_de_sistema" = s."clave", "aplica_a" = s."aplica_a", "actividad_de_flujo" = s."actividad",

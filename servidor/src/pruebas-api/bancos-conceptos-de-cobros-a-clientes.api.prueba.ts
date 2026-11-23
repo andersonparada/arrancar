@@ -79,7 +79,8 @@ describe('migración 0039: conceptos de sistema de Cuentas por cobrar', () => {
   it('un concepto «Cobros a clientes» con movimientos no se adopta: se renombra y el de sistema se inserta aparte', async () => {
     const cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Cuenta de cobros viejos');
     await comoPropietario(
-      `update bancos.conceptos set clave_de_sistema = null, aplica_a = 'ambos' where empresa_id = $1 and clave_de_sistema = 'cobro_a_cliente'`,
+      `update bancos.conceptos set clave_de_sistema = null, nombre = 'Cobros a clientes', aplica_a = 'ambos'
+       where empresa_id = $1 and clave_de_sistema = 'cobro_a_cliente'`,
       [cuenta.empresaId],
     );
     await comoPropietario(
@@ -102,6 +103,50 @@ describe('migración 0039: conceptos de sistema de Cuentas por cobrar', () => {
       { clave_de_sistema: 'cobro_a_cliente', nombre: 'Cobros a clientes', aplica_a: 'credito', usos: '0' },
       { clave_de_sistema: null, nombre: 'Cobros a clientes (anterior)', aplica_a: 'ambos', usos: '1' },
     ]);
+  });
+
+  it('con «Cobros a clientes (anterior)» ya tomado, el renombrado usa el id y el de sistema sigue sin movimientos', async () => {
+    const otra = await darDeAltaCuenta(entorno, {
+      nombre: 'Cobros repetidos',
+      usuario: 'propietariorepetidos',
+      modulos: ['bancos'],
+    });
+    await otra.propietario.get('/api/bancos/conceptos');
+    const cuentaBancariaId = await crearCuentaBancaria(otra.propietario, 'Cuenta de cobros repetidos');
+    await comoPropietario(
+      `update bancos.conceptos set clave_de_sistema = null, nombre = 'Cobros a clientes', aplica_a = 'ambos'
+       where empresa_id = $1 and clave_de_sistema = 'cobro_a_cliente'`,
+      [otra.empresaId],
+    );
+    await comoPropietario(
+      `insert into bancos.movimientos (empresa_id, cuenta_bancaria_id, tipo, fecha, monto, concepto_id)
+       select $1, $2, 'debito', '2026-02-02', 5, id from bancos.conceptos
+       where empresa_id = $1 and clave_de_sistema is null and nombre = 'Cobros a clientes'`,
+      [otra.empresaId, cuentaBancariaId],
+    );
+    await comoPropietario(
+      `insert into bancos.conceptos (empresa_id, nombre, aplica_a, actividad_de_flujo, grupo_de_flujo,
+         es_cargo_bancario, pide_datos_de_intereses, admite_factura, activo)
+       values ($1, 'Cobros a clientes (anterior)', 'ambos', 'operacion', 'Cobros a clientes', false, false, false, true)`,
+      [otra.empresaId],
+    );
+
+    await correrMigracion();
+    await correrMigracion();
+
+    const filas = await comoPropietario<Record<string, string | null>>(
+      `select c.clave_de_sistema, c.nombre,
+         (select count(*) from bancos.movimientos m where m.concepto_id = c.id)::text as usos
+       from bancos.conceptos c where c.empresa_id = $1 and core.nombre_normalizado(c.nombre) like 'cobros a clientes%'
+       order by c.clave_de_sistema nulls last, c.nombre`,
+      [otra.empresaId],
+    );
+    expect(filas).toHaveLength(3);
+    expect(filas[0]).toMatchObject({ clave_de_sistema: 'cobro_a_cliente', nombre: 'Cobros a clientes', usos: '0' });
+    const conUsos = filas.filter((f) => f.usos === '1');
+    expect(conUsos).toHaveLength(1);
+    expect(conUsos[0]).toMatchObject({ clave_de_sistema: null });
+    expect(conUsos[0]!.nombre).toMatch(/^Cobros a clientes \(anterior [^)]+\)$/);
   });
 
   it('una empresa sin catálogo no recibe nada: lo siembra completo al abrir Conceptos', async () => {

@@ -4353,6 +4353,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   así ninguna nota existente queda marcada para un módulo inexistente. (2) `cheque_rechazado` es reservado de
   `cuentas-por-cobrar` (servidor y cliente): se sigue eligiendo y corrigiendo a mano sin el módulo. (3)
   `CONCEPTO_QUE_MARCA_PARA_MODULO` incluye el tipo de nota y `moduloMarcado` lo exige (pago: débito; cobro: crédito).
+- **2026-11-23 — VC-0b, segunda corrección de la revisión.** Si la empresa ya tenía «Cobros a clientes (anterior)», el
+  renombrado de la `0039` se saltaba y el concepto con movimientos quedaba adoptado por la clave `cobro_a_cliente`
+  (notas marcadas para un módulo posiblemente inexistente). Ahora siempre se renombra: «(anterior)» si está libre y, si
+  no, «(anterior <id>)» (no choca con `conceptos_nombre_unico`); el INSERT siembra el de sistema. Prueba API con ambos.
 - **2026-11-23 — VC-0b y VC-0b-c: Bancos listo para Cuentas por cobrar.** Migración `0039_cobros_a_clientes` (como la
   `0037`: por nombre normalizado, alinea, reactiva, inserta y es repetible) con los conceptos de sistema `cobro_a_cliente`,
   `cobro_a_cliente_de_activo`, `devolucion_a_cliente` y `cheque_rechazado` (este ya existía como sugerido y pasa a
