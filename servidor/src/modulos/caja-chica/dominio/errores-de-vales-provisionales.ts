@@ -69,6 +69,15 @@ export class ComprobanteDeUnVale extends ReglaDeNegocioInfringida {
   }
 }
 
+/** Un comprobante con el que se liquidó un vale provisional no se anula: el vale ya no cuadraría. */
+export class ComprobanteDeUnValeNoSeAnula extends ReglaDeNegocioInfringida {
+  readonly codigo = 'comprobante_de_un_vale_no_se_anula';
+
+  constructor(etiqueta: string) {
+    super(`El comprobante ${etiqueta} se usó para liquidar un vale provisional: no se puede anular.`);
+  }
+}
+
 /** Las notas de crédito de la liquidación superan lo que gastó el vale: no compensan un gasto del mismo vale. */
 export class NotasDeCreditoSinGasto extends ReglaDeNegocioInfringida {
   readonly codigo = 'notas_de_credito_sin_gasto';

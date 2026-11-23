@@ -50,7 +50,7 @@ PostgreSQL propio con el puerto 5433. No se tocó la base de desarrollo del usua
 
 ## Errores
 
-### Error 1 (media): se puede anular lo que justificó un vale provisional ya liquidado y el vale deja de cuadrar
+### Error 1 (media, corregido el 2026-11-23): se puede anular lo que justificó un vale provisional ya liquidado y el vale deja de cuadrar
 
 Pasos: abrir un fondo; entregar un vale provisional de Q 400.00; liquidarlo con una factura de Q 280.00 y un gasto sin factura de Q 70.00
 (regresan Q 50.00). Luego, de dos maneras: (a) en la ficha, «Anular vale» sobre el gasto de Q 70.00 (`POST
@@ -65,7 +65,7 @@ decir faltan Q 70.00 o Q 350.00 que nadie justifica, y el efectivo esperado del 
 a 750.00): el próximo arqueo mostrará un faltante falso. Con la reposición anulada y el arqueo, el fondo cuadra por la ecuación pero
 no por el vale.
 
-Gravedad: media (descuadra dinero y no se ve; hay camino de recuperación anulando el vale, pero no se avisa). Prueba con `it.fails`:
+Corrección: `AnuladorDeComprobantes` (lo usan «Anular vale» y el aviso del libro) rechaza con `comprobante_de_un_vale_no_se_anula` (422) el comprobante de un vale provisional, la ficha oculta «Anular vale» en esos gastos y las dos pruebas ya no llevan `it.fails`. Gravedad: media (descuadra dinero y no se ve; hay camino de recuperación anulando el vale, pero no se avisa). Prueba con `it.fails`:
 `servidor/src/pruebas-api/caja-chica-qa-hallazgos.api.prueba.ts`, dos casos. Sugerencia: la misma guardia de
 `devolver-a-la-bandeja.ts` (`valeProvisionalId !== null`) en `anular-comprobante.ts` y en `atender-avisos-del-libro.ts`, y esconder
 «Anular vale» en esos gastos.

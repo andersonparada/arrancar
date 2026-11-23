@@ -58,7 +58,7 @@ const vigenteSinRepuesto = (): boolean =>
         Devolver a la bandeja
       </BotonBase>
       <BotonBase
-        v-if="comprobante.clase === 'vale_de_gasto'"
+        v-if="comprobante.clase === 'vale_de_gasto' && comprobante.valeProvisionalId === null"
         v-permiso="'caja-chica.comprobantes.anular'"
         variante="secundario"
         pequeno

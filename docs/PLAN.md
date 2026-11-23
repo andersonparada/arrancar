@@ -4372,5 +4372,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   habla de decimales, la etiqueta del aviso de bancarización («Caja chica, A-1»). Corregidos: la ficha de un fondo cerrado ya no ofrece
   «Asignar con retención» y «Cheque Cheque 3» del reporte de reposiciones. Prueba nueva de la bancarización compartida (cheque de Cuentas
   por pagar más factura de caja chica). Observaciones para decidir: tope por comprobante mayor que el monto del fondo y rótulo del faltante.
+  **Corrección posterior:** el error medio ya no existe: el anulador compartido rechaza (`comprobante_de_un_vale_no_se_anula`, 422) el comprobante
+  de un vale provisional, tanto desde «Anular vale» como desde el aviso de anulación del libro; la ficha oculta el botón en esos gastos y las dos
+  pruebas pasaron de `it.fails` a normales (el efectivo esperado tras liquidar es Q2,650.00, no Q2,800.00).
   Entorno: el puerto 5433 del PostgreSQL de desarrollo no se alcanzaba desde el equipo (puente de Docker viejo con la misma red 172.19.0.0/16
   que `arrancar-dev_default`): la QA usó un PostgreSQL propio y desechable.

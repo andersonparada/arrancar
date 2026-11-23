@@ -15,7 +15,7 @@ import { documentoDePrueba, RUTA_DOCUMENTOS } from './soporte/escenario-de-docum
 
 const entorno = usarEntornoApi();
 
-describe('comprobantes de un vale provisional ya liquidado (error abierto)', () => {
+describe('comprobantes de un vale provisional ya liquidado', () => {
   let e: EscenarioDeComprobantes;
   let v: AyudasDeVales;
 
@@ -39,23 +39,20 @@ describe('comprobantes de un vale provisional ya liquidado (error abierto)', () 
     return { fondo, vale, documentoId, gasto };
   }
 
-  it.fails(
-    'anular el gasto sin factura de un vale liquidado se rechaza, como devolver su factura a la bandeja',
-    async () => {
-      const { fondo, vale, gasto } = await valeLiquidado('Caja del vale liquidado con gasto anulado');
+  it('anular el gasto sin factura de un vale liquidado se rechaza, como devolver su factura a la bandeja', async () => {
+    const { fondo, vale, gasto } = await valeLiquidado('Caja del vale liquidado con gasto anulado');
 
-      const respuesta = await e
-        .propietario()
-        .post(`${RUTA_DE_CAJA_CHICA}/comprobantes/${gasto.id}/anular`, { motivo: 'Prueba de QA' });
+    const respuesta = await e
+      .propietario()
+      .post(`${RUTA_DE_CAJA_CHICA}/comprobantes/${gasto.id}/anular`, { motivo: 'Prueba de QA' });
 
-      // Hoy responde 200: el vale queda con 500 entregados, 250 gastados y 150 devueltos, y el efectivo esperado sube Q50.00.
-      expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(422);
-      expect(await valeEnBase(vale.id)).toMatchObject({ estado: 'liquidado', devuelto: '150.00' });
-      expect(await v.ficha(fondo.id)).toMatchObject({ efectivoEsperado: '2800.00', pendienteDeReponer: '350.00' });
-    },
-  );
+    // Antes respondía 200 y el efectivo esperado subía Q50.00 (2700.00).
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(422);
+    expect(await valeEnBase(vale.id)).toMatchObject({ estado: 'liquidado', devuelto: '150.00' });
+    expect(await v.ficha(fondo.id)).toMatchObject({ efectivoEsperado: '2650.00', pendienteDeReponer: '350.00' });
+  });
 
-  it.fails('anular en el libro la factura de un vale liquidado se rechaza y no toca el vale', async () => {
+  it('anular en el libro la factura de un vale liquidado se rechaza y no toca el vale', async () => {
     const { fondo, documentoId } = await valeLiquidado('Caja del vale liquidado con factura anulada en el libro');
 
     const respuesta = await e.propietario().post(`/api/libro-de-compras/documentos/${documentoId}/anular`, {
@@ -63,9 +60,9 @@ describe('comprobantes de un vale provisional ya liquidado (error abierto)', () 
       motivo: 'Prueba de QA',
     });
 
-    // Hoy responde 200 y el comprobante del vale queda anulado: el vale ya no cuadra (entregó 500, gastó 50, devolvió 150).
+    // Antes respondía 200 y el comprobante del vale quedaba anulado: el vale ya no cuadraba.
     expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(422);
-    expect(await v.ficha(fondo.id)).toMatchObject({ efectivoEsperado: '2800.00', pendienteDeReponer: '350.00' });
+    expect(await v.ficha(fondo.id)).toMatchObject({ efectivoEsperado: '2650.00', pendienteDeReponer: '350.00' });
   });
 });
 
