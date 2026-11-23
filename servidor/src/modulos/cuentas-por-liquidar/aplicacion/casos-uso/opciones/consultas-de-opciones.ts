@@ -40,13 +40,19 @@ export class ListarConceptosParaGasto {
   }
 }
 
-/** Los terceros activos por nombre: a quién se puede entregar un anticipo o filtrar la lista; no pide `terceros.ver`. */
+/**
+ * A quién se puede entregar un anticipo (todos los terceros activos, con su NIT) o, para quien solo mira la lista, los
+ * beneficiarios que ya tienen anticipos en la empresa (sin NIT); no pide `terceros.ver`.
+ */
 export class ListarBeneficiariosParaElegir {
   constructor(
     private readonly dependencias: { unidadDeTrabajo: UnidadDeTrabajo; beneficiarios: BeneficiariosParaElegir },
   ) {}
 
-  ejecutar(operador: Operador): Promise<BeneficiarioParaElegir[]> {
-    return this.dependencias.unidadDeTrabajo.ejecutar(operador, () => this.dependencias.beneficiarios.listarActivos());
+  ejecutar(operador: Operador, catalogoCompleto: boolean): Promise<BeneficiarioParaElegir[]> {
+    const { unidadDeTrabajo, beneficiarios } = this.dependencias;
+    return unidadDeTrabajo.ejecutar(operador, () =>
+      catalogoCompleto ? beneficiarios.listarActivos() : beneficiarios.listarConAnticipos(),
+    );
   }
 }

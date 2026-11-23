@@ -28,4 +28,6 @@ export interface BeneficiarioParaElegir {
 /** Los terceros activos de la cuenta (lectura; RLS por cuenta), sin pedir el permiso de Terceros. */
 export interface BeneficiariosParaElegir {
   listarActivos(): Promise<BeneficiarioParaElegir[]>;
+  /** Solo los que ya tienen anticipos en la empresa, con su nombre y sin NIT (para filtrar la lista). */
+  listarConAnticipos(): Promise<BeneficiarioParaElegir[]>;
 }

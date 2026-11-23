@@ -21,5 +21,10 @@ export class OpcionesControlador {
 
   conceptos = (solicitud: FastifyRequest) => this.casosDeUso.conceptos.ejecutar(operadorDe(solicitud));
 
-  beneficiarios = (solicitud: FastifyRequest) => this.casosDeUso.beneficiarios.ejecutar(operadorDe(solicitud));
+  /** El catálogo completo es de quien entrega (`anticipos.crear`); quien solo mira recibe los que ya tienen anticipos. */
+  beneficiarios = (solicitud: FastifyRequest) =>
+    this.casosDeUso.beneficiarios.ejecutar(
+      operadorDe(solicitud),
+      solicitud.contexto?.permisos.has('cuentas-por-liquidar.anticipos.crear') ?? false,
+    );
 }
