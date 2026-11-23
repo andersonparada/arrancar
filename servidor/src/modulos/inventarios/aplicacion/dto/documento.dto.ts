@@ -1,4 +1,10 @@
-import type { CausaDeEntrada, ClaseDeDocumento, DestinoDeSalida, EstadoDeDocumento } from '../../dominio/documento.js';
+import type {
+  CausaDeEntrada,
+  ClaseDeDocumento,
+  DestinoDeSalida,
+  EstadoDeDocumento,
+  EstadoDeTraslado,
+} from '../../dominio/documento.js';
 
 /** Un renglón de un documento. Sin `costos.ver`, los costos van en `null` (INV-A7). */
 export interface RenglonDeDocumentoDto {
@@ -30,6 +36,10 @@ export interface DocumentoDto {
   /** La factura o nota del Libro de compras de la que nace (recepción, devolución, rebaja). */
   documentoDeCompraId: string | null;
   documentoRelacionadoId: string | null;
+  /** Solo en la salida de un traslado: a dónde va (nombre aunque el usuario no tenga asignada esa bodega) y si ya llegó. */
+  bodegaDeDestinoId: string | null;
+  bodegaDeDestinoNombre: string | null;
+  estadoDeTraslado: EstadoDeTraslado | null;
   causa: CausaDeEntrada | null;
   destino: DestinoDeSalida | null;
   conceptoDeGastoId: string | null;
@@ -60,6 +70,8 @@ export interface FiltrosDeDocumentos {
   bodegaId?: string;
   articuloId?: string;
   estado?: EstadoDeDocumento;
+  /** Los traslados `en_transito` son la lista «Por recibir» de la bodega de destino. */
+  estadoDeTraslado?: EstadoDeTraslado;
   desde?: string;
   hasta?: string;
 }
@@ -93,6 +105,22 @@ export interface SolicitudDeSalida {
   entregadoA: string | null;
   observaciones: string | null;
   renglones: RenglonSolicitado[];
+}
+
+/** Un traslado entre bodegas (§6.7): lo mismo que sale del origen entra al destino, sin costos. */
+export interface SolicitudDeTraslado {
+  fecha: string;
+  bodegaDeOrigenId: string;
+  bodegaDeDestinoId: string;
+  entregadoA: string | null;
+  observaciones: string | null;
+  renglones: RenglonSolicitado[];
+}
+
+/** La recepción de un traslado en tránsito; sin fecha se toma la de hoy. */
+export interface SolicitudDeRecepcionDeTraslado {
+  fecha: string | null;
+  observaciones: string | null;
 }
 
 export interface SolicitudDeAnulacion {

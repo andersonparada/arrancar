@@ -2,7 +2,7 @@
  * Eventos de `inventarios` (ver `docs/modulos/diseno-inventarios.md` §9), de después de confirmar, para la futura
  * Contabilidad y quien quiera escucharlos. El dinero va en centavos enteros (quetzales) y las cantidades como texto con
  * 4 decimales en la unidad base del artículo. Los de este paso: recepciones, devoluciones, rebajas, entradas manuales,
- * salidas por consumo, anulaciones y recálculos; los de traslados, ajustes y cierres llegan con sus pasos.
+ * salidas por consumo, traslados, anulaciones y recálculos; los de ajustes y cierres llegan con sus pasos.
  */
 type TipoDeInventario = string;
 
@@ -61,6 +61,23 @@ declare module '../eventos/bus-eventos.js' {
       localidadId: string | null;
       departamentoId: string | null;
       activoFijoId: string | null;
+    };
+    /**
+     * Salió mercadería de una bodega hacia otra de la misma empresa, o llegó a ella. Informativo y **sin dinero**: el
+     * traslado es neutro para el costeo (no cambia el costo ni el valor del artículo). `documentoId` es el de la salida;
+     * `enTransito` si salió y todavía no se recibió; `recibido` si ya entró al destino (el traslado sin tránsito nace
+     * recibido).
+     */
+    'inventarios.traslado_registrado': {
+      empresaId: string;
+      documentoId: string;
+      numero: number;
+      fecha: string;
+      bodegaDeOrigenId: string;
+      bodegaDeDestinoId: string;
+      enTransito: boolean;
+      recibido: boolean;
+      renglones: { articuloId: string; tipoDeInventario: TipoDeInventario; cantidad: string }[];
     };
     /** Se anuló un documento (Contabilidad revierte lo suyo). */
     'inventarios.documento_anulado': { empresaId: string; documentoId: string; clase: string; numero: number };

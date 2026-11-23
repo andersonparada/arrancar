@@ -23,6 +23,7 @@ function filtrosDe(filtros: FiltrosDeDocumentos): SQL[] {
   if (filtros.clase) condiciones.push(eq(documentos.clase, filtros.clase));
   if (filtros.bodegaId) condiciones.push(eq(documentos.bodegaId, filtros.bodegaId));
   if (filtros.estado) condiciones.push(eq(documentos.estado, filtros.estado));
+  if (filtros.estadoDeTraslado) condiciones.push(eq(documentos.estadoDeTraslado, filtros.estadoDeTraslado));
   if (filtros.desde) condiciones.push(gte(documentos.fecha, filtros.desde));
   if (filtros.hasta) condiciones.push(lte(documentos.fecha, filtros.hasta));
   if (filtros.articuloId) {
@@ -35,9 +36,19 @@ function filtrosDe(filtros: FiltrosDeDocumentos): SQL[] {
   return condiciones;
 }
 
+/** El nombre del destino de un traslado sale de la función de bodegas: quien envía no tiene asignada esa bodega. */
+const nombreDelDestino = sql<
+  string | null
+>`(select n.nombre from inventarios.nombres_de_bodegas(array[${documentos.bodegaDeDestinoId}]::uuid[]) n)`;
+
 const cabeceras = () =>
   transaccionEnCurso()
-    .select({ documento: documentos, bodegaNombre: bodegas.nombre, conceptoNombre: conceptosDeGasto.nombre })
+    .select({
+      documento: documentos,
+      bodegaNombre: bodegas.nombre,
+      conceptoNombre: conceptosDeGasto.nombre,
+      destinoNombre: nombreDelDestino,
+    })
     .from(documentos)
     .leftJoin(bodegas, eq(bodegas.id, documentos.bodegaId))
     .leftJoin(conceptosDeGasto, eq(conceptosDeGasto.id, documentos.conceptoDeGastoId));
@@ -85,7 +96,7 @@ async function renglonesDe(documentoIds: readonly string[]): Promise<Map<string,
 
 type DatosDelDocumento = Omit<
   DocumentoDto,
-  'bodegaNombre' | 'conceptoDeGastoNombre' | 'avisos' | 'costoTotal' | 'renglones'
+  'bodegaNombre' | 'conceptoDeGastoNombre' | 'bodegaDeDestinoNombre' | 'avisos' | 'costoTotal' | 'renglones'
 >;
 
 /** Solo lo que la pantalla necesita del documento: nada de la autoría ni de las llaves internas. */
@@ -98,6 +109,8 @@ function datosDelDocumento(d: Cabecera['documento']): DatosDelDocumento {
     bodegaId: d.bodegaId,
     documentoDeCompraId: d.documentoDeCompraId,
     documentoRelacionadoId: d.documentoRelacionadoId,
+    bodegaDeDestinoId: d.bodegaDeDestinoId,
+    estadoDeTraslado: d.estadoDeTraslado,
     causa: d.causa,
     destino: d.destino,
     conceptoDeGastoId: d.conceptoDeGastoId,
@@ -118,6 +131,7 @@ function aDocumento(cabecera: Cabecera, renglones: RenglonDeDocumentoDto[]): Doc
     ...datosDelDocumento(cabecera.documento),
     bodegaNombre: cabecera.bodegaNombre,
     conceptoDeGastoNombre: cabecera.conceptoNombre,
+    bodegaDeDestinoNombre: cabecera.destinoNombre,
     avisos: [],
     costoTotal: deCentavosEnteros(total),
     renglones,

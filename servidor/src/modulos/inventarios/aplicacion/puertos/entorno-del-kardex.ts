@@ -25,3 +25,8 @@ export interface MesesCerrados {
 export interface LectorDelMetodoInicial {
   paraEmpresa(operador: Operador): Promise<MetodoDeCosteo>;
 }
+
+/** Si los traslados de la empresa pasan por «en tránsito»: `inventarios.traslados.con_transito` (§6.7). */
+export interface LectorDeTransito {
+  conTransito(operador: Operador): Promise<boolean>;
+}

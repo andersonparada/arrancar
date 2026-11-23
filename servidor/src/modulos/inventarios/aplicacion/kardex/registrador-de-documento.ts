@@ -90,6 +90,8 @@ export class RegistradorDeDocumento {
       ...datos,
       documentoDeCompraId: datos.documentoDeCompraId ?? null,
       documentoRelacionadoId: datos.documentoRelacionadoId ?? null,
+      bodegaDeDestinoId: datos.bodegaDeDestinoId ?? null,
+      estadoDeTraslado: datos.estadoDeTraslado ?? null,
       id: randomUUID(),
       numero,
       requiereFactura: false,

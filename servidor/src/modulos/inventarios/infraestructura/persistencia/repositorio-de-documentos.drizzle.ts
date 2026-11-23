@@ -3,6 +3,7 @@ import { deLaTransaccion } from '../../../core/base-datos/columnas.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   AnulacionDeDocumento,
+  CambioDeTraslado,
   DocumentoGuardado,
   RepositorioDeDocumentos,
 } from '../../aplicacion/puertos/repositorio-de-documentos.js';
@@ -19,6 +20,8 @@ function aDocumento(fila: Fila): DocumentoGuardado {
     bodegaId: fila.bodegaId,
     documentoDeCompraId: fila.documentoDeCompraId,
     documentoRelacionadoId: fila.documentoRelacionadoId,
+    bodegaDeDestinoId: fila.bodegaDeDestinoId,
+    estadoDeTraslado: fila.estadoDeTraslado,
     causa: fila.causa,
     destino: fila.destino,
     conceptoDeGastoId: fila.conceptoDeGastoId,
@@ -54,5 +57,9 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
       .update(documentos)
       .set({ estado: 'anulado', anuladoEn: ahora, anuladoPor: usuarioId, motivoDeAnulacion: motivo })
       .where(eq(documentos.id, id));
+  }
+
+  async cambiarTraslado(id: string, cambio: CambioDeTraslado): Promise<void> {
+    await transaccionEnCurso().update(documentos).set(cambio).where(eq(documentos.id, id));
   }
 }

@@ -19,6 +19,7 @@ import type { UnidadParaConvertir } from '../dominio/conversion-a-base.js';
 import type { DocumentoDto, RenglonDeDocumentoDto } from '../aplicacion/dto/documento.dto.js';
 import type {
   AnulacionDeDocumento,
+  CambioDeTraslado,
   DocumentoGuardado,
   RepositorioDeDocumentos,
 } from '../aplicacion/puertos/repositorio-de-documentos.js';
@@ -27,7 +28,8 @@ import type { MetodoGuardado, RepositorioDeMetodos } from '../aplicacion/puertos
 import type { MetodoDeCosteo } from '../dominio/costeo/tipos.js';
 import type { ArticuloDeKardex, ConsultasDelKardex, FilaDeKardex } from '../aplicacion/puertos/consultas-del-kardex.js';
 import type { ExistenciaDto } from '../aplicacion/dto/existencia.dto.js';
-import { aCentavosEnteros, deCentavosEnteros, deDiezmilesimas, deMillonesimas } from '../dominio/decimales.js';
+import { aCentavosEnteros, deCentavosEnteros } from '../dominio/decimales.js';
+import { renglonDeDocumento } from './renglon-de-documento.js';
 
 interface MovimientoGuardado extends MovimientoDelKardex {
   vigente: boolean;
@@ -59,6 +61,8 @@ export class KardexEnMemoria
   readonly conversiones = new Map<string, ConversionDeArticulo[]>();
   readonly lotesDelCatalogo = new Map<string, LoteParaMovimiento>();
   readonly bodegasDelCatalogo = new Map<string, BodegaParaMovimiento>();
+  /** Bodegas que existen pero el usuario no tiene asignadas: `bodega` no las encuentra. */
+  readonly bodegasOcultas = new Set<string>();
   /** El orden de los candados y de la lectura de artículos, para probar que el candado va primero. */
   readonly orden: string[] = [];
   private secuencia = 0;
@@ -146,6 +150,10 @@ export class KardexEnMemoria
     this.documentosGuardados.get(id)!.estado = 'anulado';
   }
 
+  async cambiarTraslado(id: string, cambio: CambioDeTraslado): Promise<void> {
+    Object.assign(this.documentosGuardados.get(id)!, cambio);
+  }
+
   // RepositorioDeMetodos
   async listar(): Promise<MetodoGuardado[]> {
     return [...this.metodos].sort((a, b) => b.desde.localeCompare(a.desde));
@@ -183,6 +191,12 @@ export class KardexEnMemoria
   }
 
   async bodega(id: string): Promise<BodegaParaMovimiento | null> {
+    if (this.bodegasOcultas.has(id)) return null;
+    return this.bodegasDelCatalogo.get(id) ?? null;
+  }
+
+  /** Las bodegas que el usuario «no ve» (las de `bodegasOcultas`) igual existen para elegirlas como destino. */
+  async bodegaParaTraslado(id: string): Promise<BodegaParaMovimiento | null> {
     return this.bodegasDelCatalogo.get(id) ?? null;
   }
 
@@ -200,6 +214,7 @@ export class KardexEnMemoria
     return {
       ...d,
       bodegaNombre: (d.bodegaId && this.bodegasDelCatalogo.get(d.bodegaId)?.nombre) || '',
+      bodegaDeDestinoNombre: (d.bodegaDeDestinoId && this.bodegasDelCatalogo.get(d.bodegaDeDestinoId)?.nombre) || null,
       conceptoDeGastoNombre: null,
       motivoDeAnulacion: null,
       avisos: [],
@@ -209,22 +224,7 @@ export class KardexEnMemoria
   }
 
   private renglonDe(m: MovimientoDelKardex): RenglonDeDocumentoDto {
-    const abs = (v: bigint) => (v < 0n ? -v : v);
-    const articulo = this.articulosDelCatalogo.get(m.articuloId);
-    return {
-      movimientoId: m.id,
-      articuloId: m.articuloId,
-      articuloCodigo: articulo?.codigo ?? '',
-      articuloNombre: articulo?.nombre ?? '',
-      loteId: m.loteId,
-      loteCodigo: null,
-      cantidad: deDiezmilesimas(abs(m.cantidad)),
-      unidadBaseNombre: 'Libra',
-      cantidadEscrita: null,
-      unidadEscritaSimbolo: null,
-      costoUnitario: deMillonesimas(m.costoUnitario),
-      costoTotal: deCentavosEnteros(abs(m.costoTotal)),
-    };
+    return renglonDeDocumento(m, this.articulosDelCatalogo.get(m.articuloId));
   }
 
   async existencias(): Promise<ExistenciaDto[]> {

@@ -22,6 +22,7 @@ function costoUnitarioDeLaFila(fila: FilaDeKardex): bigint {
 }
 
 function renglon(fila: FilaDeKardex, saldoCantidad: bigint, opciones: OpcionesDelKardex): RenglonDeKardexDto {
+  const conCostoPropio = opciones.verCostos && fila.tipo !== 'traslado';
   const unitario = costoUnitarioDeLaFila(fila);
   const saldoValor = opciones.porBodega ? valorDe(unitario, saldoCantidad) : fila.saldoValor;
   return {
@@ -37,8 +38,8 @@ function renglon(fila: FilaDeKardex, saldoCantidad: bigint, opciones: OpcionesDe
     entrada: fila.cantidad > 0n ? deDiezmilesimas(fila.cantidad) : null,
     salida: fila.cantidad < 0n ? deDiezmilesimas(magnitud(fila.cantidad)) : null,
     saldoCantidad: deDiezmilesimas(saldoCantidad),
-    costoUnitario: opciones.verCostos ? deMillonesimas(fila.costoUnitario) : null,
-    costoTotal: opciones.verCostos ? deCentavosEnteros(fila.costoTotal) : null,
+    costoUnitario: conCostoPropio ? deMillonesimas(fila.costoUnitario) : null,
+    costoTotal: conCostoPropio ? deCentavosEnteros(fila.costoTotal) : null,
     saldoValor: opciones.verCostos ? deCentavosEnteros(saldoValor) : null,
   };
 }

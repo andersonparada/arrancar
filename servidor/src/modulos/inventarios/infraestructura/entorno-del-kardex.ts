@@ -5,6 +5,7 @@ import { mediador } from '../../core/mediador/contexto.js';
 import type {
   CargaInicial,
   EstadoDeLaCarga,
+  LectorDeTransito,
   LectorDelMetodoInicial,
   MesesCerrados,
 } from '../aplicacion/puertos/entorno-del-kardex.js';
@@ -21,6 +22,13 @@ export class CargaInicialEnMediador implements CargaInicial {
 export class MetodoInicialEnConfiguracion implements LectorDelMetodoInicial {
   paraEmpresa({ cuentaId, empresaId }: Operador): Promise<MetodoDeCosteo> {
     return configuracion.lector.obtener<MetodoDeCosteo>('inventarios.costeo.metodo_inicial', { cuentaId, empresaId });
+  }
+}
+
+/** Lee `inventarios.traslados.con_transito` de la configuración de la empresa (`false` si no se cambió). */
+export class TransitoEnConfiguracion implements LectorDeTransito {
+  conTransito({ cuentaId, empresaId }: Operador): Promise<boolean> {
+    return configuracion.lector.obtener<boolean>('inventarios.traslados.con_transito', { cuentaId, empresaId });
   }
 }
 

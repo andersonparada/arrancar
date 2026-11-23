@@ -10,7 +10,12 @@ import {
   textoObligatorio,
   textoOpcional,
 } from '../../core/compartido/http/esquemas-comunes.js';
-import { CAUSAS_DE_ENTRADA, CLASES_DE_DOCUMENTO, DESTINOS_DE_SALIDA } from '../dominio/documento.js';
+import {
+  CAUSAS_DE_ENTRADA,
+  CLASES_DE_DOCUMENTO,
+  DESTINOS_DE_SALIDA,
+  ESTADOS_DE_TRASLADO,
+} from '../dominio/documento.js';
 import { TIPOS_DE_INVENTARIO } from '../dominio/tipos-de-inventario.js';
 
 const renglon = z.object({
@@ -22,7 +27,7 @@ const renglon = z.object({
 });
 
 /** Cantidades y dinero viajan como texto; las reglas de negocio las revisa el dominio. */
-const renglones = z.array(renglon).min(1, 'Agregue al menos un renglón.').max(200);
+export const renglones = z.array(renglon).min(1, 'Agregue al menos un renglón.').max(200);
 
 export const esquemaEntrada = z.object({
   fecha: fechaObligatoria(),
@@ -55,6 +60,7 @@ export const esquemaFiltrosDeDocumentos = z.object({
   bodegaId: z.uuid().optional(),
   articuloId: z.uuid().optional(),
   estado: z.enum(['vigente', 'anulado']).optional(),
+  estadoDeTraslado: z.enum(ESTADOS_DE_TRASLADO).optional(),
   desde: fechaOpcional().optional(),
   hasta: fechaOpcional().optional(),
 });

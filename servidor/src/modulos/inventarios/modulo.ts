@@ -8,6 +8,7 @@ import { rutasDeBodegas } from './composicion/bodegas.js';
 import { rutasDeAccesosABodegas } from './composicion/accesos-a-bodegas.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { rutasDeRecepciones } from './composicion/recepciones.js';
+import { rutasDeTraslados } from './composicion/traslados.js';
 import { ALCANCE_DE_BODEGAS } from './infraestructura/persistencia/accesos-a-bodegas.tablas.js';
 // generador: importaciones
 
@@ -87,6 +88,12 @@ export const moduloInventarios: DefinicionModulo = {
       descripcion:
         'Descartar líneas de la bandeja «Por recibir» y devolverlas a ella (también quita o pone la marca de inventario en el libro)',
     },
+    { clave: 'inventarios.traslados.crear', descripcion: 'Trasladar mercadería entre bodegas de la empresa' },
+    {
+      clave: 'inventarios.traslados.recibir',
+      descripcion: 'Recibir en la bodega de destino los traslados que van en tránsito',
+    },
+    { clave: 'inventarios.traslados.anular', descripcion: 'Anular traslados entre bodegas' },
     // generador: permisos
   ],
   recursosConAlcance: [
@@ -107,6 +114,7 @@ export const moduloInventarios: DefinicionModulo = {
     rutasDeAccesosABodegas(),
     rutasDeMovimientos(),
     rutasDeRecepciones(),
+    rutasDeTraslados(),
     // generador: rutas
   ]),
 };

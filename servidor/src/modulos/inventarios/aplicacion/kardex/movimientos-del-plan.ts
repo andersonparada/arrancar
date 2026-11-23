@@ -8,6 +8,10 @@ import type { DocumentoGuardado } from '../puertos/repositorio-de-documentos.js'
 
 const signoDe = (tipo: 'entrada' | 'salida'): bigint => (tipo === 'entrada' ? 1n : -1n);
 
+/** Si el documento suma a su bodega: las entradas y la mitad de destino de un traslado; las demás restan. */
+const sumaALaBodega = (documento: DocumentoGuardado): boolean =>
+  documento.clase === 'entrada_de_traslado' || TIPO_DE_MOVIMIENTO_POR_CLASE[documento.clase] === 'entrada';
+
 /** Lo que cada renglón guarda del libro: su línea y su documento, o nada si no viene de él. */
 function referenciasDelLibro(documento: DocumentoGuardado, renglon: RenglonDePlan) {
   const lineaDeCompraId = renglon.lineaDeCompraId ?? null;
@@ -40,12 +44,37 @@ function movimientoDeValor(documento: DocumentoGuardado, renglon: RenglonDePlan)
 }
 
 /**
+ * Una mitad de un traslado: neutra para el costeo. Su costo unitario es informativo y lo deja el recálculo (provisional
+ * en cero); la de destino guarda la salida que la origina.
+ */
+function movimientoDeTraslado(documento: DocumentoGuardado, renglon: RenglonDePlan): NuevoMovimiento {
+  const entra = sumaALaBodega(documento);
+  return {
+    documentoId: documento.id,
+    articuloId: renglon.articuloId,
+    bodegaId: documento.bodegaId,
+    loteId: renglon.loteId,
+    fecha: documento.fecha,
+    ordenDelDia: entra ? ORDEN_DEL_DIA.entrada : ORDEN_DEL_DIA.salida,
+    tipo: 'traslado',
+    cantidad: (entra ? 1n : -1n) * renglon.cantidad,
+    cantidadEscrita: renglon.cantidadEscrita,
+    unidadEscritaId: renglon.unidadEscritaId,
+    costoUnitario: 0n,
+    costoTotal: 0n,
+    costoDelMetodo: true,
+    ...referenciasDelLibro(documento, renglon),
+  };
+}
+
+/**
  * El movimiento que un renglón guarda en el kardex. El costo de una salida va provisional en cero: el recálculo lo deja
  * definitivo. La devolución a proveedor sale al costo de su entrada, no al del método (`costo_del_metodo = false`).
  */
 export function nuevoMovimiento(documento: DocumentoGuardado, renglon: RenglonDePlan): NuevoMovimiento {
   const tipo = TIPO_DE_MOVIMIENTO_POR_CLASE[documento.clase];
   if (tipo === 'valor') return movimientoDeValor(documento, renglon);
+  if (tipo === 'traslado') return movimientoDeTraslado(documento, renglon);
   const esEntrada = tipo === 'entrada';
   return {
     documentoId: documento.id,
@@ -72,10 +101,11 @@ export function cambiosDeExistencia(
 ): CambioDeExistencia[] {
   const tipo = TIPO_DE_MOVIMIENTO_POR_CLASE[documento.clase];
   if (tipo === 'valor' || documento.bodegaId === null) return [];
+  const signo = sumaALaBodega(documento) ? 1n : -1n;
   return renglones.map((renglon) => ({
     bodegaId: documento.bodegaId!,
     articuloId: renglon.articuloId,
     loteId: renglon.loteId,
-    cantidad: signoDe(tipo) * renglon.cantidad,
+    cantidad: signo * renglon.cantidad,
   }));
 }

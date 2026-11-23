@@ -69,3 +69,30 @@ export class MetodoFijado extends ReglaDeNegocioInfringida {
     super('El método de costeo ya se usó en un movimiento: solo se cambia con la autorización de la SAT.');
   }
 }
+
+/** El destino de un traslado es la misma bodega de origen. */
+export class TrasladoALaMismaBodega extends ReglaDeNegocioInfringida {
+  readonly codigo = 'traslado_a_la_misma_bodega';
+
+  constructor() {
+    super('El destino del traslado debe ser otra bodega: elija una distinta del origen.');
+  }
+}
+
+/** El traslado ya se recibió en el destino: la operación pedida solo vale mientras está en tránsito. */
+export class TrasladoYaRecibido extends ReglaDeNegocioInfringida {
+  readonly codigo = 'traslado_ya_recibido';
+
+  constructor(mensaje = 'El traslado ya se recibió en la bodega de destino.') {
+    super(mensaje);
+  }
+}
+
+/** Una bodega que la operación necesita ver no está entre las que el usuario tiene asignadas. */
+export class BodegaFueraDeAlcance extends ReglaDeNegocioInfringida {
+  readonly codigo = 'bodega_fuera_de_alcance';
+
+  constructor(mensaje: string) {
+    super(mensaje);
+  }
+}

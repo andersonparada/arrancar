@@ -36,6 +36,11 @@ export interface CatalogosDelKardex {
   lotes(ids: readonly string[]): Promise<LoteParaMovimiento[]>;
   /** Nulo si no existe o el usuario no la ve. */
   bodega(id: string): Promise<BodegaParaMovimiento | null>;
+  /**
+   * La bodega de la empresa aunque el usuario no la tenga asignada: la elige quien envía un traslado con tránsito, que
+   * solo ve la de origen (§3.5). Nulo si no existe en la empresa.
+   */
+  bodegaParaTraslado(id: string): Promise<BodegaParaMovimiento | null>;
   /** @throws RecursoNoEncontrado si algo de lo que se eligió no existe en la empresa. */
   exigirReferencias(referencias: ReferenciasDeSalida): Promise<void>;
 }

@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir-que-exista.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { departamentos } from '../../../empresas/infraestructura/persistencia/departamentos.tablas.js';
@@ -76,6 +76,14 @@ export class CatalogosDelKardexDrizzle implements CatalogosDelKardex {
       .from(bodegas)
       .where(eq(bodegas.id, id));
     return fila ?? null;
+  }
+
+  /** Con la función `inventarios.nombres_de_bodegas` (migración 0006): sin el alcance de bodegas, solo id, nombre y estado. */
+  async bodegaParaTraslado(id: string): Promise<BodegaParaMovimiento | null> {
+    const { rows } = await transaccionEnCurso().execute<{ id: string; nombre: string; activo: boolean }>(
+      sql`select id, nombre, activo from inventarios.nombres_de_bodegas(array[${id}]::uuid[])`,
+    );
+    return rows[0] ?? null;
   }
 
   /** Lo elegido debe existir y ser de la empresa: la seguridad por filas oculta lo ajeno. */

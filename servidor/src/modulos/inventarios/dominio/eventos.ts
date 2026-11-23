@@ -6,6 +6,7 @@ export type DatosDeEntradaRegistrada = EventosDominio['inventarios.entrada_regis
 export type DatosDeSalidaRegistrada = EventosDominio['inventarios.salida_registrada'];
 export type DatosDeDevolucionAProveedor = EventosDominio['inventarios.devolucion_a_proveedor'];
 export type DatosDeCostoAjustado = EventosDominio['inventarios.costo_ajustado'];
+export type DatosDeTrasladoRegistrado = EventosDominio['inventarios.traslado_registrado'];
 export type DatosDeDocumentoAnulado = EventosDominio['inventarios.documento_anulado'];
 export type DatosDeCostoRecalculado = EventosDominio['inventarios.costo_recalculado'];
 
@@ -41,6 +42,15 @@ export class CostoAjustado extends EventoDominio<DatosDeCostoAjustado> {
   readonly nombre = 'inventarios.costo_ajustado';
 
   constructor(datos: DatosDeCostoAjustado) {
+    super(datos);
+  }
+}
+
+/** Una mitad de un traslado entre bodegas (la salida o su recepción); informativo y sin dinero. Se publica tras confirmar. */
+export class TrasladoRegistrado extends EventoDominio<DatosDeTrasladoRegistrado> {
+  readonly nombre = 'inventarios.traslado_registrado';
+
+  constructor(datos: DatosDeTrasladoRegistrado) {
     super(datos);
   }
 }

@@ -1,5 +1,10 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
-import type { CargaInicial, LectorDelMetodoInicial, MesesCerrados } from '../aplicacion/puertos/entorno-del-kardex.js';
+import type {
+  CargaInicial,
+  LectorDeTransito,
+  LectorDelMetodoInicial,
+  MesesCerrados,
+} from '../aplicacion/puertos/entorno-del-kardex.js';
 import type { MetodoDeCosteo } from '../dominio/costeo/tipos.js';
 
 /** La carga inicial de una empresa: con o sin fecha de inicio. */
@@ -24,5 +29,13 @@ export class MetodoInicialFijo implements LectorDelMetodoInicial {
 
   async paraEmpresa(): Promise<MetodoDeCosteo> {
     return this.metodo;
+  }
+}
+
+export class TransitoFijo implements LectorDeTransito {
+  constructor(public activo = false) {}
+
+  async conTransito(): Promise<boolean> {
+    return this.activo;
   }
 }
