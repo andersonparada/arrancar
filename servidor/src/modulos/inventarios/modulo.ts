@@ -9,6 +9,7 @@ import { rutasDeAccesosABodegas } from './composicion/accesos-a-bodegas.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { rutasDeRecepciones } from './composicion/recepciones.js';
 import { rutasDeTraslados } from './composicion/traslados.js';
+import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 import { ALCANCE_DE_BODEGAS } from './infraestructura/persistencia/accesos-a-bodegas.tablas.js';
 // generador: importaciones
 
@@ -94,6 +95,24 @@ export const moduloInventarios: DefinicionModulo = {
       descripcion: 'Recibir en la bodega de destino los traslados que van en tránsito',
     },
     { clave: 'inventarios.traslados.anular', descripcion: 'Anular traslados entre bodegas' },
+    {
+      clave: 'inventarios.saldos-iniciales.ver',
+      descripcion: 'Ver los saldos iniciales de inventario (con sus costos)',
+    },
+    { clave: 'inventarios.saldos-iniciales.crear', descripcion: 'Cargar saldos iniciales de inventario' },
+    {
+      clave: 'inventarios.saldos-iniciales.editar',
+      descripcion: 'Corregir saldos iniciales de inventario con la carga inicial abierta',
+    },
+    {
+      clave: 'inventarios.saldos-iniciales.eliminar',
+      descripcion: 'Eliminar saldos iniciales de inventario con la carga inicial abierta',
+    },
+    {
+      clave: 'inventarios.saldos-iniciales.importar',
+      descripcion: 'Importar saldos iniciales de inventario desde Excel (también baja la plantilla)',
+    },
+    { clave: 'inventarios.saldos-iniciales.exportar', descripcion: 'Exportar saldos iniciales de inventario a Excel' },
     // generador: permisos
   ],
   recursosConAlcance: [
@@ -115,6 +134,7 @@ export const moduloInventarios: DefinicionModulo = {
     rutasDeMovimientos(),
     rutasDeRecepciones(),
     rutasDeTraslados(),
+    rutasDeSaldosIniciales(),
     // generador: rutas
   ]),
 };
