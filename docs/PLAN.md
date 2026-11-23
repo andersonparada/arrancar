@@ -4382,3 +4382,24 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   el motivo de la auditoría usa el id del documento («Ligado al pago <id> de Cuentas por pagar») porque la orden no trae el número
   del pago; desligar rechaza uno anulado o revertido; el aviso de la conciliación solo sale al marcar por primera vez (no en cada
   guardado).
+
+- **2026-11-23, AP-3 (forma `cheque_de_apertura` en Cuentas por pagar, sin migración).** Caso de uso
+  `RegistrarPagoConChequeDeApertura` (`POST /api/cuentas-por-pagar/pagos/cheque-de-apertura`, permiso
+  `pagos.ligar-cheques-de-apertura`): revisa los cargos sin bloquear (solo saldos iniciales, mismo proveedor, autorizados y en
+  contraseña), ordena a Bancos `ligar_cheque_de_apertura` (que bloquea el cheque primero y rechaza un monto distinto), bloquea
+  contraseñas y cargos y guarda; la fecha del pago es la del cheque (comprometido hasta ella, pagado en ella), sin retención
+  descontada ni diferencias, con la carga abierta o cerrada; publica `pago_registrado` (`efecto banco`). `DesligarChequeDeApertura`
+  (`POST …/pagos/:id/desligar`, permiso `pagos.desligar-cheques-de-apertura`) bloquea el cheque y después el pago, ordena
+  `desligar_cheque_de_apertura`, deja el pago `anulado` con `fecha_de_anulacion = pagos.fecha` y audita `anular` (`AnuladorDelPago`
+  acepta `fechaContable`); `pago_anulado` sale con `anulacionEnBancos = null`. `creoSuMovimiento` incluye la forma nueva: anular el
+  pago (o el cheque desde Bancos, y el lote de caducos) la trata como un cheque (`PagoCobrado` si está conciliado, sin bandeja);
+  `exigirSoloSaldosInicialesEnLaApertura` cubre las dos formas de apertura. La cuenta de apertura acepta
+  `chequeDeAperturaReferidoId` (informativo, validado contra los cheques en circulación vigentes de la empresa con RLS; error
+  `cheque_de_apertura_referido_invalido`) y el pago lo devuelve. Cuenta para la bancarización del mes del cheque
+  (`FORMAS_DEL_MES`), los reportes de cheques posfechados y de cheques cobrados antes, y los filtros por forma. La ficha trae
+  `puedeDesligar`. Pruebas: unitarias de dominio y de `DesligarChequeDeApertura`; API en
+  `cuentas-por-pagar-pagos-cheque-de-apertura(-baja).api.prueba.ts`. Decisiones del programador: ruta propia en vez de
+  `POST /pagos` con la forma (cada forma especial tiene la suya y su permiso: nota ligada, apertura), el pago de apertura no manda
+  aviso de pago al proveedor, y las listas de cheques para elegir (posfechados sin ligar y en circulación) quedan para AP-5.
+  **Verificación pendiente:** al programar, el PostgreSQL de desarrollo estaba inalcanzable (el puente de Docker sin conexión) y
+  las pruebas de API no se pudieron correr; sí pasan `tsc`, ESLint, Prettier y las unitarias.
