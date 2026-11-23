@@ -477,7 +477,7 @@ a la fecha, y en `pendientes` cuántos llevan más de 30 días [validación 2026
 
 ### 4.7 Documentos
 
-Corregir `diseno-cp5-reportes.md` §2.3 (dictamen §0.4): un documento eliminado **sí** estaba provisionado; eliminarlo cancela
+**Hecho (CT-0f, 2026-11-23).** Corregir `diseno-cp5-reportes.md` §2.3 (dictamen §0.4): un documento eliminado **sí** estaba provisionado; eliminarlo cancela
 la partida y solo se puede con el período contable abierto. Paso de documentación aparte (no entra en este commit).
 
 ## 5. Datos (esquema `contabilidad`)
@@ -964,8 +964,8 @@ pendiente de un paso solo toca la parte que se dice: lo demás del paso se progr
 | **CT-0b** | Libro de compras: `documento_registrado` v2 (con `documentoAfectado` de las notas, §4.2) y `_anulado` v2 (`fecha`, `causa`, `periodoDeclarado`), `documento_eliminado` con fecha; prueba con los montos reales de un documento con combustible, activo y retenciones, y de una nota de crédito sobre una factura del sistema anterior | backend | CT-0a2 | — |
 | **CT-0c** | Bancos: los 7 eventos de §4.3; pruebas por tipo (con y sin origen, intereses, transferencia, anulación con y sin inverso) | backend | CT-0a3 | — |
 | **CT-0d** | Cuentas por pagar: destino del faltante (migración, Zod, dominio, evento); cliente: selector al liquidar con la nota de CT-P8 (§4.4) | backend + frontend chico | CT-0a2 | — |
-| **CT-0e** | Empresas: avisos `carga_por_cerrar` y `carga_por_reabrir` | backend | — | — |
-| CT-0f | Corregir `diseno-cp5-reportes.md` §2.3 (documentación) | arquitecto | — | — |
+| **CT-0e** (**hecho** 2026-11-23) | Empresas: avisos `carga_por_cerrar` y `carga_por_reabrir` | backend | — | — |
+| CT-0f (**hecho** 2026-11-23) | Corregir `diseno-cp5-reportes.md` §2.3 (documentación) | arquitecto | — | — |
 | **CT-1** | Esqueleto del módulo (`dependeDe: ['terceros']`), `inicios` (con firmantes), `cuentas` (rubros completos de §5.2, `tratamiento_fiscal` nuevo), máscara, disparador de hoja, Excel de cuentas; pruebas de tablas, del disparador y de la API. **Sin plantillas** (van en CT-1p) | backend | — | — |
 | CT-1c | Inicio (sin la vista previa del caso b) y Nomenclatura (árbol, ventana, Excel) | frontend | CT-1 | — |
 | **CT-2** | `enlaces`, catálogo de roles, pregunta `llaves_de_enlace` (respuestas de Bancos, Libro de compras y Cuentas por pagar), Excel | backend | CT-1, CT-0a | — |

@@ -4348,3 +4348,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+
+- **2026-11-23 (CT-0e y CT-0f, Contabilidad)**:
+  - CT-0e (Empresas, sin migración): avisos `empresas.carga_por_cerrar` y `empresas.carga_por_reabrir`
+    (`{ empresaId, fechaDeInicio }`) declarados en `core/contratos/empresas.contratos.ts`. Puerto nuevo `AvisosDeLaCarga`
+    (`empresas/aplicacion/puertos/avisos-de-empresa.ts`), implementado por `AvisosDeEmpresaEnMediador`. `CerrarCargaInicial`
+    avisa después de guardar el cierre y antes de auditar, y `ReabrirCargaInicial` después de guardar la reapertura, los dos
+    dentro de la transacción, con el operador de la empresa de la carga: un error del que escucha deshace todo (veto del
+    período cerrado). Pruebas unitarias (`avisos-de-la-carga.prueba.ts`) y de API
+    (`pruebas-api/empresas-avisos-de-la-carga.api.prueba.ts`). Nadie escucha todavía: Contabilidad lo hará en CT-6.
+  - CT-0f (documentación): `diseno-cp5-reportes.md` §2.3 corregido: un documento eliminado sí estaba provisionado y
+    eliminarlo cancela su partida (solo con el período abierto).
