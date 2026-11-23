@@ -46,6 +46,8 @@ function verificarRecursosConAlcance(modulo: DefinicionModulo): void {
 function verificarDependencias(modulo: DefinicionModulo, instalados: ReadonlySet<string>): void {
   const faltante = (modulo.dependeDe ?? []).find((dependencia) => !instalados.has(dependencia));
   if (faltante) throw new Error(`El módulo "${modulo.clave}" depende de "${faltante}", que no está registrado.`);
+  const usada = (modulo.usaTablasDe ?? []).find((clave) => !instalados.has(clave));
+  if (usada) throw new Error(`El módulo "${modulo.clave}" usa las tablas de "${usada}", que no está registrado.`);
 }
 
 /** @throws Error con el primer problema que encuentre en la declaración del módulo. */

@@ -110,6 +110,22 @@ describe('RegistroModulos', () => {
     expect(() => new RegistroModulos([modulo('caja-chica', { dependeDe: ['bancos'] })])).toThrow(/no está registrado/);
   });
 
+  it('falla al arrancar si un módulo usa las tablas de otro que no está instalado', () => {
+    expect(() => new RegistroModulos([modulo('ventas', { usaTablasDe: ['bancos'] })])).toThrow(
+      /usa las tablas de "bancos"/,
+    );
+  });
+
+  it('usaTablasDe no obliga a activar ni a conservar activo al otro módulo', () => {
+    const registro = new RegistroModulos([
+      modulo('core', { esencial: true }),
+      modulo('bancos'),
+      modulo('ventas', { usaTablasDe: ['bancos'] }),
+    ]);
+    expect(() => registro.validarActivacion('ventas', new Set(['core']))).not.toThrow();
+    expect(() => registro.validarDesactivacion('bancos', new Set(['core', 'bancos', 'ventas']))).not.toThrow();
+  });
+
   it('falla si un módulo se registra dos veces', () => {
     expect(() => new RegistroModulos([modulo('bancos'), modulo('bancos')])).toThrow(/dos veces/);
   });
