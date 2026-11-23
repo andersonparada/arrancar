@@ -4357,4 +4357,4 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `usuario_permisos` a quien tenía `pagos.aplicar-a-apertura`, repetibles). El tipo `FormaDePago` suma la forma nueva con sus
   textos (título, nombre y texto del aviso); su efecto contable provisional es `banco` y no manda aviso: AP-3 lo decide al
   programar la forma. Pruebas de checks, único y referido en `pagos.prueba.ts`; la del reparto en
-  `pruebas-api/cuentas-por-pagar-migracion-de-permisos-de-cheques-de-apertura.api.prueba.ts`. Sin cambios en Bancos.
+  `pruebas-api/cuentas-por-pagar-migracion-de-permisos-de-cheques-de-apertura.api.prueba.ts`. Sin cambios en Bancos. Corrección de la revisión: esa prueba ahora siembra también un permiso directo `aplicar-a-apertura` y otro ajeno, y comprueba que solo el primero recibe ligar y desligar en `usuario_permisos` (sin duplicados al correr dos veces); además se corrigió el usuario (31 letras, pasaba del máximo de 30) y se activan los módulos de los que depende.
