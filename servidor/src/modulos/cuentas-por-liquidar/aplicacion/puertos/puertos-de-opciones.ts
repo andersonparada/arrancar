@@ -16,3 +16,16 @@ export interface ConceptoParaGasto {
 export interface ConceptosParaGasto {
   listarActivos(): Promise<ConceptoParaGasto[]>;
 }
+
+/** Un tercero de la cuenta que puede recibir un anticipo. */
+export interface BeneficiarioParaElegir {
+  id: string;
+  nombreMostrar: string;
+  nit: string | null;
+  activo: boolean;
+}
+
+/** Los terceros activos de la cuenta (lectura; RLS por cuenta), sin pedir el permiso de Terceros. */
+export interface BeneficiariosParaElegir {
+  listarActivos(): Promise<BeneficiarioParaElegir[]>;
+}

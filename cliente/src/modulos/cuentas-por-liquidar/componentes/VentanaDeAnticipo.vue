@@ -21,7 +21,6 @@ defineProps<{
   beneficiarios: OpcionBuscable<string>[];
   usuarios: OpcionBuscable<string>[];
   puedeElegirUsuario: boolean;
-  puedeVerTerceros: boolean;
   puedeCrearTerceros: boolean;
   fechaLimitePropuesta: string;
   cargando: boolean;
@@ -62,7 +61,6 @@ const clase =
         :beneficiarios="beneficiarios"
         :usuarios="usuarios"
         :puede-elegir-usuario="puedeElegirUsuario"
-        :puede-ver-terceros="puedeVerTerceros"
         :puede-crear-terceros="puedeCrearTerceros"
         :cargando="cargando"
         :hay-vencidos="vencidos.length > 0"

@@ -25,7 +25,6 @@ const props = defineProps<{
   beneficiarios: OpcionBuscable<string>[];
   usuarios: OpcionBuscable<string>[];
   puedeElegirUsuario: boolean;
-  puedeVerTerceros: boolean;
   puedeCrearTerceros: boolean;
   cargando: boolean;
   hayVencidos: boolean;
@@ -51,12 +50,8 @@ const hoy = fechaDeHoy();
         :opciones="beneficiarios"
         :error="errores.beneficiarioId"
       />
-      <p v-if="!puedeVerTerceros" class="text-sm text-tierra-600 dark:text-tierra-300">
-        Su usuario no puede ver los terceros: pida a un administrador el permiso «Ver terceros» para escoger al
-        beneficiario.
-      </p>
       <BotonBase
-        v-else-if="puedeCrearTerceros"
+        v-if="puedeCrearTerceros"
         variante="fantasma"
         pequeno
         :icono="UserPlus"

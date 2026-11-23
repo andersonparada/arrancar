@@ -16,6 +16,7 @@ let entrega: ClienteApi;
 let liquida: ClienteApi;
 let registra: ClienteApi;
 let soloVer: ClienteApi;
+let sinNada: ClienteApi;
 
 beforeAll(async () => {
   e = await EscenarioDeAnticipos.preparar(entorno, 'cxlopciones');
@@ -25,6 +26,7 @@ beforeAll(async () => {
   liquida = await usuarioCon('Liquida', ['cuentas-por-liquidar.anticipos.liquidar']);
   registra = await usuarioCon('Registra', ['cuentas-por-liquidar.gastos.crear']);
   soloVer = await usuarioCon('Mira', ['cuentas-por-liquidar.anticipos.ver']);
+  sinNada = await usuarioCon('Nada', ['cuentas-por-liquidar.reportes.ver']);
 });
 
 describe('las cuentas y chequeras', () => {
@@ -80,5 +82,32 @@ describe('los conceptos de gasto', () => {
 
   it('sin el permiso de registrar gastos no se ven', async () => {
     expect((await soloVer.get(`${RUTA}/conceptos-de-gasto`)).estado).toBe(403);
+  });
+});
+
+describe('los beneficiarios', () => {
+  it('quien entrega o quien mira los anticipos los ve sin tener terceros.ver, solo los activos y por nombre', async () => {
+    await e.tercero('Zoila', 'Zamora');
+    const apagado = await e.tercero('Abel', 'Apagado');
+    const baja = await e
+      .propietario()
+      .put(`/api/terceros/${apagado}`, { tipo: 'individual', nombres: 'Abel', apellidos: 'Apagado', activo: false });
+    expect(baja.estado, JSON.stringify(baja.cuerpo)).toBe(200);
+
+    const quienEntrega = await entrega.get(`${RUTA}/beneficiarios`);
+    const quienMira = await soloVer.get(`${RUTA}/beneficiarios`);
+
+    expect(quienEntrega.estado, JSON.stringify(quienEntrega.cuerpo)).toBe(200);
+    expect(quienMira.estado).toBe(200);
+    const nombres = quienEntrega.cuerpo.map((b: { nombreMostrar: string }) => b.nombreMostrar);
+    expect(nombres).toContain('Zoila Zamora');
+    expect(nombres).not.toContain('Abel Apagado');
+    expect([...nombres].sort((a, b) => a.localeCompare(b, 'es'))).toEqual(nombres);
+    expect((await entrega.get('/api/terceros')).estado).toBe(403);
+  });
+
+  it('sin permiso de ver ni de entregar anticipos no se ven', async () => {
+    expect((await sinNada.get(`${RUTA}/beneficiarios`)).estado).toBe(403);
+    expect((await liquida.get(`${RUTA}/beneficiarios`)).estado).toBe(403);
   });
 });
