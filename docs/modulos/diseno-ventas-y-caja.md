@@ -1578,3 +1578,19 @@ quedan incorporados así. Ninguna revisión ejecutó el módulo, porque aún no 
 - PIN de encargado en vez de contraseña, si la autorización estorba en la práctica (R-21), con diseño de `seguridad`.
 - Política de retención de datos de clientes y aviso de privacidad, según VJ-P17 y la opinión de un abogado.
 - `docs/PLAN.md` §6 y `docs/HOJA-DE-RUTA.md`: anotar este diseño y sus adendas cuando el usuario lo apruebe.
+
+## Respuestas del usuario (2026-11-23)
+
+Regla del módulo, dicha por el usuario: «formas de ventas: si la forma tiene configuración FEL, es formal la venta; si no, es solo
+para control y es informal; puedo tener ambas a la vez». No hay módulo Caseta.
+
+El usuario aceptó la **opción recomendada (a) de VJ-P1 a VJ-P17**:
+
+- **VJ-P2:** transcribir la autorización del DTE hasta que exista la emisión FEL.
+- **Mostrador:** VJ-P4, VJ-P7, VJ-P8, VJ-P9 y VJ-P16.
+- **Controles:** VJ-P10, VJ-P12, VJ-P13, VJ-P14 y VJ-P15.
+- **Fiscal y crédito:** VJ-P1, VJ-P3, VJ-P5, VJ-P6, VJ-P11 y VJ-P17.
+
+Antes de VCJ-4 sigue pendiente confirmar contra texto oficial las citas de IVA (Q50, Q2,500) y el techo de Q500,285. No se programa
+ningún plazo de contingencia ni monto de multa mientras no se lea la Res. SAT-DSI-1793-2026. El aviso de privacidad lo revisa un
+abogado antes de publicarse.
