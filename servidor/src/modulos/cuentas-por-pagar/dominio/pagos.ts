@@ -4,7 +4,8 @@ import { numeroDeContrasena } from './contrasena.js';
  * Cómo se pagó. Que la forma tenga o no un movimiento en Bancos no se asume aquí: solo las tablas y quien orquesta el
  * pago lo saben, y una forma nueva (efectivo) puede no tenerlo.
  */
-export type FormaDePago = 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo';
+export type FormaDePago =
+  'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo' | 'cheque_de_apertura';
 
 export type EstadoDeUnPago = 'vigente' | 'anulado';
 

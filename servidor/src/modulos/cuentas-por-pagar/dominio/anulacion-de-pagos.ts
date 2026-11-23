@@ -37,6 +37,7 @@ export function efectoDelPago(pago: Pick<PagoConLineas, 'forma' | 'conCargaCerra
     nota_de_debito: 'banco',
     nota_ligada: 'transitoria_por_aplicar',
     efectivo: 'efectivo',
+    cheque_de_apertura: 'banco',
   };
   if (pago.forma !== 'cuenta_de_apertura') return porForma[pago.forma];
   return pago.conCargaCerrada ? 'correccion_de_error' : 'apertura';

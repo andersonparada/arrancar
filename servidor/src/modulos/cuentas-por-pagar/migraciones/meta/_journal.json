@@ -99,6 +99,13 @@
       "when": 1795042133285,
       "tag": "0013_pc4_permisos_de_plazos",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795468934356,
+      "tag": "0014_cp_ap_cheques_de_apertura",
+      "breakpoints": true
     }
   ]
 }

@@ -109,6 +109,15 @@ export const PERMISOS_DE_CUENTAS_POR_PAGAR: DefinicionPermiso[] = [
     descripcion: 'Pagar con una nota de débito ya registrada en Bancos y marcada para Cuentas por pagar',
   },
   {
+    clave: 'cuentas-por-pagar.pagos.ligar-cheques-de-apertura',
+    descripcion: 'Ligar un cheque posfechado de Bancos a un proveedor como pago de sus documentos',
+  },
+  {
+    clave: 'cuentas-por-pagar.pagos.desligar-cheques-de-apertura',
+    descripcion:
+      'Desligar un cheque posfechado de su pago (el pago se anula y los documentos vuelven a quedar pendientes)',
+  },
+  {
     clave: 'cuentas-por-pagar.pagos.aplicar-a-apertura',
     descripcion:
       'Aplicar saldos iniciales a la cuenta de apertura (dar por pagado lo que ya se había pagado antes de la fecha de inicio)',

@@ -4348,3 +4348,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+
+- **2026-11-23, AP-1 (datos de Cuentas por pagar para cheques de apertura).** Migración `0014_cp_ap_cheques_de_apertura`:
+  `pagos.forma` suma `cheque_de_apertura` (se reemplaza `pagos_forma_valida`), único parcial
+  `pagos_cheque_de_apertura_vigente_unico` (un posfechado, un pago vigente; anulado + vigente pasa),
+  `cheque_de_apertura_referido_id` (FK a `bancos.movimientos`, check `pagos_referido_solo_en_apertura`, índice parcial) y los
+  permisos `pagos.ligar-cheques-de-apertura` y `pagos.desligar-cheques-de-apertura` (repartidos en `rol_permisos` y
+  `usuario_permisos` a quien tenía `pagos.aplicar-a-apertura`, repetibles). El tipo `FormaDePago` suma la forma nueva con sus
+  textos (título, nombre y texto del aviso); su efecto contable provisional es `banco` y no manda aviso: AP-3 lo decide al
+  programar la forma. Pruebas de checks, único y referido en `pagos.prueba.ts`; la del reparto en
+  `pruebas-api/cuentas-por-pagar-migracion-de-permisos-de-cheques-de-apertura.api.prueba.ts`. Sin cambios en Bancos.

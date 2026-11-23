@@ -40,7 +40,9 @@ export const pagos = esquemaCuentasPorPagar.table(
     numero: integer().notNull(),
     /** El año del número si la empresa reinicia sus correlativos cada año; 0 si no. */
     anioDeNumero: integer().notNull().default(0),
-    forma: text().$type<'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo'>().notNull(),
+    forma: text()
+      .$type<'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo' | 'cheque_de_apertura'>()
+      .notNull(),
     /** La del movimiento (un cheque posfechado lleva la suya), la de la aplicación o la de inicio con carga abierta. */
     fecha: date().notNull(),
     monto: numeric({ precision: 14, scale: 2 }).notNull(),
@@ -54,6 +56,11 @@ export const pagos = esquemaCuentasPorPagar.table(
     motivoSinBancarizar: text(),
     /** En nota ligada, cuenta de apertura y efectivo (el recibo del proveedor); en cheque y nota de débito la referencia va a Bancos. */
     referencia: text(),
+    /**
+     * Solo en la cuenta de apertura y solo informativa: el cheque posfechado de Bancos que podría estar pagando lo
+     * mismo (aviso de «movimiento por cambiar»); no mueve saldos.
+     */
+    chequeDeAperturaReferidoId: uuid(),
     /** Solo en la cuenta de apertura, obligatorio. */
     motivo: text(),
     /** Solo en la cuenta de apertura: si la carga inicial estaba cerrada al registrarlo. */
@@ -76,6 +83,11 @@ export const pagos = esquemaCuentasPorPagar.table(
       foreignColumns: [retirosDeEfectivo.id, retirosDeEfectivo.empresaId],
     }),
     foreignKey({ name: 'pagos_movimiento_fk', columns: [t.movimientoId], foreignColumns: [movimientos.id] }),
+    foreignKey({
+      name: 'pagos_cheque_de_apertura_referido_fk',
+      columns: [t.chequeDeAperturaReferidoId],
+      foreignColumns: [movimientos.id],
+    }),
     ...restriccionesDePago(t),
     ...restriccionesDeEstadoYAnulacion('pagos', t),
     unique('pagos_numero_unico').on(t.empresaId, t.anioDeNumero, t.numero),

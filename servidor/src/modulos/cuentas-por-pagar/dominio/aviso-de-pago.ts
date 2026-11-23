@@ -26,6 +26,7 @@ const FORMAS_EN_EL_TEXTO: Record<FormaDePago, string> = {
   nota_ligada: 'débito ya registrado',
   cuenta_de_apertura: 'cuenta de apertura',
   efectivo: 'efectivo',
+  cheque_de_apertura: 'cheque de apertura',
 };
 
 export const textoDeLaForma = (forma: FormaDePago): string => FORMAS_EN_EL_TEXTO[forma];
