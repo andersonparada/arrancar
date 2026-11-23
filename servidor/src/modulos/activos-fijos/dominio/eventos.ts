@@ -8,6 +8,9 @@ export type DatosDeMejoraCapitalizada = EventosDominio['activos-fijos.mejora_cap
 export type DatosDeBaseFiscalCambiada = EventosDominio['activos-fijos.base_fiscal_cambiada'];
 export type DatosDeActivoTrasladado = EventosDominio['activos-fijos.activo_trasladado'];
 export type DatosDeTrasladoAnulado = EventosDominio['activos-fijos.traslado_anulado'];
+export type DatosDeActivoDadoDeBaja = EventosDominio['activos-fijos.activo_dado_de_baja'];
+export type DatosDeActivoVendido = EventosDominio['activos-fijos.activo_vendido'];
+export type DatosDeBajaAnulada = EventosDominio['activos-fijos.baja_anulada'];
 export type DatosDeDepreciacionCerrada = EventosDominio['activos-fijos.depreciacion_cerrada'];
 export type DatosDeDepreciacionReabierta = EventosDominio['activos-fijos.depreciacion_reabierta'];
 
@@ -79,6 +82,33 @@ export class TrasladoAnulado extends EventoDominio<DatosDeTrasladoAnulado> {
   readonly nombre = 'activos-fijos.traslado_anulado';
 
   constructor(datos: DatosDeTrasladoAnulado) {
+    super(datos);
+  }
+}
+
+/** Un activo se dio de baja (no venta). Se publica tras confirmar. */
+export class BajaDeActivoRegistrada extends EventoDominio<DatosDeActivoDadoDeBaja> {
+  readonly nombre = 'activos-fijos.activo_dado_de_baja';
+
+  constructor(datos: DatosDeActivoDadoDeBaja) {
+    super(datos);
+  }
+}
+
+/** Un activo se vendió. Se publica tras confirmar. */
+export class VentaDeActivoRegistrada extends EventoDominio<DatosDeActivoVendido> {
+  readonly nombre = 'activos-fijos.activo_vendido';
+
+  constructor(datos: DatosDeActivoVendido) {
+    super(datos);
+  }
+}
+
+/** Se anuló una baja o venta y el activo volvió a estar en uso. Se publica tras confirmar. */
+export class BajaDeActivoAnulada extends EventoDominio<DatosDeBajaAnulada> {
+  readonly nombre = 'activos-fijos.baja_anulada';
+
+  constructor(datos: DatosDeBajaAnulada) {
     super(datos);
   }
 }

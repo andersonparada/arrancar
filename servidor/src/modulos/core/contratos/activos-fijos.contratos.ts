@@ -104,6 +104,60 @@ declare module '../eventos/bus-eventos.js' {
       trasladoId: string;
       grupoId: string;
     };
+    /** Un activo se dio de baja (no venta); las cifras son las congeladas al día de la baja. */
+    'activos-fijos.activo_dado_de_baja': {
+      empresaId: string;
+      activoId: string;
+      claseId: string;
+      incisoFiscal: string;
+      localidadId: string | null;
+      departamentoId: string | null;
+      fecha: string;
+      periodo: string;
+      bajaId: string;
+      causa: string;
+      costoCentavos: number;
+      costoFiscalCentavos: number;
+      depreciacionAcumuladaContableCentavos: number;
+      depreciacionAcumuladaFiscalCentavos: number;
+      valorEnLibrosCentavos: number;
+    };
+    /** Un activo se vendió: lo de la baja más el precio, el IVA, la factura FEL y los resultados contable y fiscal (A1). */
+    'activos-fijos.activo_vendido': {
+      empresaId: string;
+      activoId: string;
+      claseId: string;
+      incisoFiscal: string;
+      localidadId: string | null;
+      departamentoId: string | null;
+      fecha: string;
+      periodo: string;
+      bajaId: string;
+      costoCentavos: number;
+      costoFiscalCentavos: number;
+      depreciacionAcumuladaContableCentavos: number;
+      depreciacionAcumuladaFiscalCentavos: number;
+      valorEnLibrosCentavos: number;
+      precioCentavos: number;
+      ivaCentavos: number;
+      serieFel: string | null;
+      numeroFel: string;
+      autorizacionFel: string;
+      resultadoContableCentavos: number;
+      resultadoFiscalCentavos: number;
+    };
+    /** Se anuló una baja o venta: el activo volvió a estar en uso. */
+    'activos-fijos.baja_anulada': {
+      empresaId: string;
+      activoId: string;
+      claseId: string;
+      incisoFiscal: string;
+      localidadId: string | null;
+      departamentoId: string | null;
+      fecha: string;
+      periodo: string;
+      bajaId: string;
+    };
     /** Se cerró un mes de depreciación: las cuotas de cada activo y libro (el dinero en centavos). */
     'activos-fijos.depreciacion_cerrada': {
       empresaId: string;
