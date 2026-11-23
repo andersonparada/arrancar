@@ -3712,6 +3712,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `?estadoDeTraslado=en_transito&estado=vigente&bodegaDeDestinoId=<bodega>`. (6) `bodegaNombre` de un documento usa
   `nombres_de_bodegas` cuando la bodega no se ve (el receptor ve de dónde viene el traslado). Pruebas: casos de uso y
   `inventarios-traslados-visibilidad.api.prueba.ts`.
+- **2026-11-23 — INV-6, destinos según el tránsito.** `GET /inventarios/traslados/destinos` ahora mira
+  `inventarios.traslados.con_transito`: con tránsito lista todas las bodegas activas (`nombres_de_bodegas`); sin tránsito, solo
+  las activas que la seguridad por bodega deja ver al usuario (§3.5, §6.7), así no se revelan bodegas ajenas ni se ofrecen
+  opciones que darían 422 `bodega_fuera_de_alcance`. Prueba de API para ambos modos.
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

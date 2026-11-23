@@ -74,6 +74,15 @@ describe('destinos', () => {
     expect(Object.keys(respuesta.cuerpo[0]).sort()).toEqual(['id', 'nombre']);
   });
 
+  it('sin tránsito solo ofrece las bodegas que el usuario ve', async () => {
+    await fijarTransito(entorno, e, false);
+
+    const lista = (await remitente.get('/api/inventarios/traslados/destinos')).cuerpo as { id: string }[];
+    await fijarTransito(entorno, e, true);
+
+    expect(lista.map((b) => b.id)).toEqual([origen]);
+  });
+
   it('exige el permiso de crear traslados y no ofrece las bodegas inactivas', async () => {
     const sinPermiso = await crearUsuarioConPermisos(entorno, e.cuenta, {
       nombres: 'Mirón',

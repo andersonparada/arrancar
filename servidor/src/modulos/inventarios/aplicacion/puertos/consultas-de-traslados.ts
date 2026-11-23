@@ -9,6 +9,9 @@ export interface ConsultasDeTraslados {
    * @throws DocumentoInvalido si el documento no es un traslado.
    */
   boleta(documentoId: string): Promise<BoletaDeTrasladoDto>;
-  /** Las bodegas activas de la empresa (id y nombre), aunque el usuario no las tenga asignadas: así elige el destino. */
-  destinos(): Promise<DestinoDeTrasladoDto[]>;
+  /**
+   * Las bodegas activas que se pueden elegir como destino. Con tránsito, todas las de la empresa (id y nombre) aunque el
+   * usuario no las tenga asignadas; sin tránsito, solo las que ve (§3.5, §6.7).
+   */
+  destinos(conTransito: boolean): Promise<DestinoDeTrasladoDto[]>;
 }

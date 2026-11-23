@@ -8,6 +8,7 @@ import type { RenglonDeDocumentoDto } from '../../aplicacion/dto/documento.dto.j
 import type { ConsultasDeTraslados } from '../../aplicacion/puertos/consultas-de-traslados.js';
 import { DocumentoInvalido } from '../../dominio/errores-de-kardex.js';
 import { ConsultasDeDocumentosDrizzle } from './consultas-de-documentos.drizzle.js';
+import { bodegas } from './bodegas.tablas.js';
 import { documentos } from './documentos.tablas.js';
 
 const nombreCompleto = (nombres: string | null, apellidos: string | null): string | null =>
@@ -84,8 +85,18 @@ export class ConsultasDeTrasladosDrizzle implements ConsultasDeTraslados {
     return { recibidoPor: usuario ? nombreCompleto(usuario.nombres, usuario.apellidos) : null, fecha: rows[0].fecha };
   }
 
-  /** Las bodegas activas de la empresa con su nombre, sin el alcance de bodegas: el destino se elige sin tenerlo asignado. */
-  async destinos(): Promise<DestinoDeTrasladoDto[]> {
+  /**
+   * Con tránsito, las bodegas activas de la empresa sin el alcance de bodegas (el destino se elige sin tenerlo asignado);
+   * sin tránsito, solo las activas que la seguridad por bodega deja ver.
+   */
+  async destinos(conTransito: boolean): Promise<DestinoDeTrasladoDto[]> {
+    if (!conTransito) {
+      return transaccionEnCurso()
+        .select({ id: bodegas.id, nombre: bodegas.nombre })
+        .from(bodegas)
+        .where(eq(bodegas.activo, true))
+        .orderBy(bodegas.nombre);
+    }
     const { rows } = await transaccionEnCurso().execute<{ id: string; nombre: string }>(
       sql`select id, nombre from inventarios.nombres_de_bodegas() where activo order by nombre`,
     );
