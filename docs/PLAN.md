@@ -4368,3 +4368,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   y en las marcas de la bandeja se decide por `tipoDte === 'FESP'` y no por el motivo de bloqueo: descartar limpia el
   motivo y un bloqueo previo `registrado_en_otra_empresa` tampoco lo tenía, y así una venta salía como compra con crédito
   posible. Una FESP descartada sigue en el grupo `descartado` para poder restaurarla. Con pruebas de ambos casos.
+- **2026-11-23 — VC-0c2 y VC-0c-c (remanente de retenciones y pantallas).** Sin migración: todo vive en el `jsonb` de la
+  foto. `foto.remanentes` (`formulario`, `retencionesDelPeriodo`, `remanenteAnterior`, `impuestoDelMes`, `impuestoAPagar`,
+  `remanenteAlSiguiente`) lo calcula Libro de compras con `calcularRemanentesDeRetenciones` (dominio puro, centavos): SAT-2237,
+  máx(0, retenciones + anterior − (débito − crédito fiscal)); SAT-2046, lo mismo con las constancias y el 5 % de los ingresos.
+  Las cifras de ventas que lee son las de la respuesta `ventas`: `debito`, `retenciones_de_iva` e `ingresos` (contrato para
+  Libro de ventas, LV-5). El anterior sale de la foto del mes previo (del mismo formulario); sin ella, del campo
+  `remanenteDeRetencionesAnterior` de `POST …/declarar` (primer mes); sin él, del que ya traía la última declaración del
+  mismo período (rectificar no lo pierde) o 0. La diferencia de la rectificación y el «cambió después de declarar» comparan
+  el remanente solo si las dos fotos lo traen. `GET …/libro/sat-2237` trae `ventas` y `remanentes` (también para el
+  SAT-2046). Cliente: `SeccionDeVentas` en «Datos para el SAT-2237» y en la página del SAT-2046 (con selector de período) y
+  el campo del remanente anterior en la ventana de declarar. La casilla exacta del SAT-2237 sigue por confirmar con una
+  captura (VC-P29): no bloquea. Pendiente: sumar la sección de ventas al Excel del SAT-2237; el remanente del crédito
+  fiscal anterior no se rastrea (lo llena la SAT), así que el impuesto del mes lo ignora; las pruebas de API nuevas
+  (`libro-de-compras-periodos-remanentes`) no pudieron correrse en el entorno del agente (la base rechazaba la conexión:
+  ECONNRESET): correr con la base de desarrollo levantada.
