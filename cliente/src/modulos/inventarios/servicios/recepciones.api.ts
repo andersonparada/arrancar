@@ -22,6 +22,8 @@ export interface LineaPorRecibir {
   articuloSugeridoId: string | null;
   articuloSugeridoCodigo: string | null;
   articuloSugeridoNombre: string | null;
+  /** La línea está marcada como inventario en el libro; una nota de crédito puede no estarlo. */
+  esInventario: boolean;
   /** El documento es anterior a la fecha de inicio: si ya estaba en el saldo inicial, se descarta. */
   anteriorALaFechaDeInicio: boolean;
 }

@@ -54,6 +54,10 @@ export const VENTANAS_INVENTARIOS = {
   // generador: ventanas
 } as const;
 
+/** Lo que se le dice a quien va a descartar una nota de crédito sin marca de inventario: el libro no cambia. */
+export const AVISO_DE_DESCARTE_DE_NOTA =
+  'La nota de crédito sale de esta bandeja y no se aplicará al inventario. El Libro de compras no cambia: esta línea no estaba marcada como inventario.';
+
 /** Lo que se le dice a quien va a descartar una línea (V-8): el efecto en el libro y qué hacer con un bien de uso. */
 export const AVISO_DE_DESCARTE =
   'La línea dejará de ser inventario en el Libro de compras y volverá a ser gasto con su concepto. Si en realidad es un bien de uso, la marca de activo fijo no se pone desde aquí: se corrige en el libro (anular y registrar de nuevo, si importa la casilla del SAT-2237). Úsela también si la línea ya estaba en el saldo inicial.';

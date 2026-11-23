@@ -28,6 +28,7 @@ const linea = (datos: Partial<LineaPorRecibir> = {}): LineaPorRecibir => ({
   articuloSugeridoId: 'a1',
   articuloSugeridoCodigo: 'CON-1',
   articuloSugeridoNombre: 'Concentrado',
+  esInventario: true,
   anteriorALaFechaDeInicio: false,
   ...datos,
 });

@@ -74,16 +74,16 @@ export function articuloDeCodigo(articulos: Articulo[], leido: string): Articulo
 
 /**
  * Agrega el artículo leído: si ya hay un renglón suyo sin cantidad escrita o con cantidad, suma 1; si no, crea uno
- * con cantidad 1. Así escanear tres veces el mismo código da cantidad 3.
+ * con cantidad 1. Así escanear tres veces el mismo código da cantidad 3. Cambia la cantidad del mismo renglón (no una copia): quien lo
+ * esté inicializando (lote, unidad) sigue escribiendo en el renglón que se ve.
  */
 export function agregarLeido(renglones: EdicionDeRenglon[], articuloId: string): EdicionDeRenglon[] {
   const existente = renglones.find((renglon) => renglon.articuloId === articuloId && renglon.unidadId === null);
   if (!existente) return [...renglones, renglonNuevo(articuloId, '1')];
   const actual = Number(existente.cantidad);
   const siguiente = Number.isFinite(actual) && existente.cantidad !== '' ? actual + 1 : 1;
-  return renglones.map((renglon) =>
-    renglon === existente ? { ...renglon, cantidad: String(Math.round(siguiente * 10000) / 10000) } : renglon,
-  );
+  existente.cantidad = String(Math.round(siguiente * 10000) / 10000);
+  return [...renglones];
 }
 
 /** Quita los renglones vacíos (sin artículo ni cantidad) que dejó el formulario al abrirse. */

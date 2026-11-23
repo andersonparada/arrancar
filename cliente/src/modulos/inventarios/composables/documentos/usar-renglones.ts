@@ -14,31 +14,77 @@ import type { CatalogoDeRenglones } from './usar-catalogo-de-renglones';
 const sinArticuloConCodigo = (leido: string): string =>
   `No hay un artículo activo con el código «${leido.trim()}». Revise el código o elíjalo de la lista.`;
 
+/** El lote que tenía el renglón y el que puso el sistema la última vez (si lo hubo). */
+interface LoteAnterior {
+  anterior: string | null;
+  propuesto: string | null | undefined;
+  respetarElegido: boolean;
+}
+
+/** Un lote elegido a mano (no el propuesto) se conserva si tiene existencia en la bodega o si no se puede saber. */
+function seConservaElElegido(previo: LoteAnterior, { puedeVer, conExistencia }: ExistenciasDelRenglon) {
+  const { anterior, propuesto, respetarElegido } = previo;
+  const aMano = respetarElegido && anterior !== null && anterior !== propuesto;
+  return { aMano, conservar: aMano && (!puedeVer || conExistencia.has(anterior!)) };
+}
+
+const sinExistenciaEnLaBodega = (nuevo: string | null): string =>
+  `El lote que eligió no tiene existencia en la nueva bodega. ${nuevo ? 'Se propuso otro lote' : 'Elija otro lote'}: revise los renglones.`;
+
 /** Lo que los renglones necesitan saber del documento: si es salida (propone lote) y desde qué bodega sale. */
 export interface ContextoDeRenglones {
   esSalida: boolean;
   bodegaId: () => string | null;
 }
 
-/** El lote que se propone en las salidas: el que vence primero y tiene existencia en la bodega; sin bodega o permiso, ninguno. */
+interface ExistenciasDelRenglon {
+  puedeVer: boolean;
+  conExistencia: ReadonlySet<string>;
+}
+
+/** Los lotes con existencia en la bodega del documento para el renglón; `null` si algo cambió mientras se cargaban. */
+async function existenciasParaElRenglon(
+  renglon: EdicionDeRenglon,
+  catalogo: CatalogoDeRenglones,
+  contexto: ContextoDeRenglones,
+): Promise<ExistenciasDelRenglon | null> {
+  const { articuloId } = renglon;
+  const bodegaId = contexto.bodegaId();
+  const { existenciasDeLotes: existencias } = catalogo;
+  await existencias.cargar(articuloId, bodegaId);
+  if (renglon.articuloId !== articuloId || bodegaId !== contexto.bodegaId()) return null;
+  return { puedeVer: existencias.puedeVer, conExistencia: existencias.conExistencia(articuloId, bodegaId) };
+}
+
+/**
+ * El lote que se propone en las salidas: el que vence primero y tiene existencia en la bodega; sin bodega o permiso,
+ * ninguno. Un lote que el usuario eligió a mano se respeta al cambiar de bodega mientras tenga existencia en la nueva
+ * (o no se pueda saber); si ya no tiene, se vuelve a proponer y se avisa.
+ */
 function usarLotePropuesto(
   renglones: Ref<EdicionDeRenglon[]>,
   catalogo: CatalogoDeRenglones,
   contexto: ContextoDeRenglones,
 ) {
-  async function proponerLote(renglon: EdicionDeRenglon): Promise<void> {
+  const avisos = usarAvisos();
+  const propuestos = new Map<number, string | null>();
+  async function proponerLote(renglon: EdicionDeRenglon, respetarElegido = false): Promise<void> {
     if (!contexto.esSalida) return;
-    const { articuloId } = renglon;
-    const bodegaId = contexto.bodegaId();
-    await catalogo.existenciasDeLotes.cargar(articuloId, bodegaId);
-    if (renglon.articuloId !== articuloId || bodegaId !== contexto.bodegaId()) return;
-    const conExistencia = catalogo.existenciasDeLotes.conExistencia(articuloId, bodegaId);
-    renglon.loteId = lotePropuesto(catalogo.lotesDe(articuloId), fechaDeHoy(), conExistencia);
+    const { clave, loteId: anterior } = renglon;
+    const existencias = await existenciasParaElRenglon(renglon, catalogo, contexto);
+    if (!existencias) return;
+    const previo = { anterior, propuesto: propuestos.get(clave), respetarElegido };
+    const { aMano, conservar } = seConservaElElegido(previo, existencias);
+    if (conservar) return;
+    renglon.loteId = lotePropuesto(catalogo.lotesDe(renglon.articuloId), fechaDeHoy(), existencias.conExistencia);
+    propuestos.set(clave, renglon.loteId);
+    if (aMano) avisos.info(sinExistenciaEnLaBodega(renglon.loteId));
   }
 
-  /** Al cambiar la bodega de la salida, el lote propuesto se vuelve a buscar entre los que hay en la nueva. */
+  /** Al cambiar la bodega de la salida, los lotes propuestos se buscan de nuevo y los elegidos a mano se conservan. */
   async function reproponerLotes(): Promise<void> {
-    await Promise.all(renglones.value.filter((renglon) => renglon.articuloId).map(proponerLote));
+    const conArticulo = renglones.value.filter((renglon) => renglon.articuloId);
+    await Promise.all(conArticulo.map((renglon) => proponerLote(renglon, true)));
   }
 
   return { proponerLote, reproponerLotes };

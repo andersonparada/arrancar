@@ -11,7 +11,7 @@ import VentanaDeDevolucion from '../componentes/recepciones/VentanaDeDevolucion.
 import VentanaDeRebaja from '../componentes/recepciones/VentanaDeRebaja.vue';
 import VentanaDeRecepcion from '../componentes/recepciones/VentanaDeRecepcion.vue';
 import { usarBandejaPorRecibir } from '../composables/recepciones/usar-bandeja-por-recibir';
-import { AVISO_DE_DESCARTE, VENTANAS_INVENTARIOS } from '../textos';
+import { VENTANAS_INVENTARIOS } from '../textos';
 
 const ventana = VENTANAS_INVENTARIOS.porRecibir;
 const { lista, recepcion, devolucion, rebaja, descarte } = usarBandejaPorRecibir();
@@ -87,7 +87,7 @@ const { lista, recepcion, devolucion, rebaja, descarte } = usarBandejaPorRecibir
     <VentanaDeMotivo
       v-model="descarte.edicion.value"
       titulo="Descartar la línea"
-      :resumen="AVISO_DE_DESCARTE"
+      :resumen="descarte.aviso.value"
       texto-del-boton="Descartar"
       :enviando="descarte.enviando.value"
       :errores="descarte.errores.value"

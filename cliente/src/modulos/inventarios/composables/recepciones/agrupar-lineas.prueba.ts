@@ -20,6 +20,7 @@ const linea = (datos: Partial<LineaPorRecibir>): LineaPorRecibir => ({
   articuloSugeridoId: null,
   articuloSugeridoCodigo: null,
   articuloSugeridoNombre: null,
+  esInventario: true,
   anteriorALaFechaDeInicio: false,
   ...datos,
 });

@@ -4383,3 +4383,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   recalcula al cambiar la bodega. **Salida:** al cambiar la localidad se quita el departamento que no es de la nueva.
   Queda anotado: el servidor no valida que el departamento pertenezca a la localidad (`exigirReferencias` solo revisa que
   exista); falta endpoint de existencias por lote con el permiso de salidas para quien no tiene `existencias.ver`.
+
+- **2026-11-23 — Inventarios, segunda corrección de INV-2c, INV-4c e INV-5c (tanda 9).** **Cambio de bodega en una
+  salida:** el lote elegido a mano se conserva si tiene existencia en la bodega nueva o si no se puede saber (sin
+  `existencias.ver`); si ya no tiene, se propone otro y se avisa; el lote que puso el sistema se vuelve a proponer.
+  **Lector de códigos:** `agregarLeido` suma a la cantidad del mismo renglón (sin copiarlo), así el lote propuesto de la
+  primera lectura no se pierde con la segunda. **Descartar notas de crédito:** `LineaPorRecibirDto` suma `esInventario`
+  (aditivo); para una nota sin marca la ventana y los avisos de éxito y de deshacer dicen que el Libro de compras no cambia.

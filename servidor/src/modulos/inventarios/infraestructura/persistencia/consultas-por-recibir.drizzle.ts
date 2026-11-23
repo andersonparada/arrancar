@@ -52,6 +52,7 @@ const columnas = {
   costo: costoDeLineaSql,
   recibido: aplicadoSql,
   articuloSugeridoId: articuloSugeridoSql,
+  esInventario: lineasDeDocumento.esInventario,
 };
 
 /** La bandeja «Por recibir»: lo que el libro marcó como inventario (y las notas de facturas recibidas) y falta aplicar. */

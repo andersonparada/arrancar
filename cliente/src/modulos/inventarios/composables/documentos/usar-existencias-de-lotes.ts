@@ -29,5 +29,6 @@ export function usarExistenciasDeLotes() {
   const conExistencia = (articuloId: string | null, bodegaId: string | null): Set<string> =>
     new Set(articuloId && bodegaId ? (porArticuloYBodega[clave(articuloId, bodegaId)] ?? []) : []);
 
-  return { cargar, conExistencia };
+  /** Sin `existencias.ver` no se puede saber si un lote tiene existencia. */
+  return { cargar, conExistencia, puedeVer: puedeVerExistencias };
 }

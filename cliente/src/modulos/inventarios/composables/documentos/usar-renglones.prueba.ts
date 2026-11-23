@@ -18,18 +18,24 @@ const lote = (id: string, vence: string): Lote =>
   }) as Lote;
 
 /** Un catálogo mínimo: un artículo con dos lotes, de los que solo `conExistencia` tiene en la bodega. */
-function catalogoDe(conExistencia: string[]): CatalogoDeRenglones {
+function catalogoDe(conExistencia: string[], puedeVer = true, detalle = async () => {}) {
   return {
     articulos: ref([articulo]),
-    cargarDetalle: async () => undefined,
+    cargarDetalle: detalle,
     lotesDe: () => [lote('agotado', '2099-01-01'), lote('con', '2099-06-01')],
-    existenciasDeLotes: { cargar: async () => undefined, conExistencia: () => new Set(conExistencia) },
+    existenciasDeLotes: { cargar: async () => undefined, conExistencia: () => new Set(conExistencia), puedeVer },
   } as unknown as CatalogoDeRenglones;
 }
 
-const preparar = (renglones: EdicionDeRenglon[], esSalida = false, conExistencia: string[] = []) => {
+/** `existencias` son los lotes con existencia, o un catálogo ya armado. */
+const preparar = (
+  renglones: EdicionDeRenglon[],
+  esSalida = false,
+  existencias: string[] | CatalogoDeRenglones = [],
+) => {
+  const catalogo = Array.isArray(existencias) ? catalogoDe(existencias) : existencias;
   const lista = ref(renglones);
-  const acciones = usarRenglones(lista, catalogoDe(conExistencia), { esSalida, bodegaId: () => 'b1' });
+  const acciones = usarRenglones(lista, catalogo, { esSalida, bodegaId: () => 'b1' });
   return { lista, acciones };
 };
 
@@ -74,5 +80,51 @@ describe('usarRenglones: lote propuesto en las salidas', () => {
     const { lista, acciones } = preparar([renglonNuevo('a1', '1')], false, ['con']);
     await acciones.alElegirArticulo(lista.value[0]!);
     expect(lista.value[0]!.loteId).toBeNull();
+  });
+});
+
+describe('usarRenglones: cambio de bodega y lector', () => {
+  it('conserva el lote elegido a mano si tiene existencia en la nueva bodega', async () => {
+    const { lista, acciones } = preparar([renglonNuevo('a1', '1')], true, ['agotado', 'con']);
+    await acciones.alElegirArticulo(lista.value[0]!);
+    lista.value[0]!.loteId = 'agotado';
+    await acciones.reproponerLotes();
+    expect(lista.value[0]!.loteId).toBe('agotado');
+  });
+
+  it('vuelve a proponer el lote que puso el sistema', async () => {
+    const { lista, acciones } = preparar([renglonNuevo('a1', '1')], true, ['con']);
+    await acciones.alElegirArticulo(lista.value[0]!);
+    await acciones.reproponerLotes();
+    expect(lista.value[0]!.loteId).toBe('con');
+  });
+
+  it('cambia el lote elegido a mano si ya no tiene existencia', async () => {
+    const { lista, acciones } = preparar([renglonNuevo('a1', '1')], true, ['con']);
+    lista.value[0]!.loteId = 'otro';
+    await acciones.reproponerLotes();
+    expect(lista.value[0]!.loteId).toBe('con');
+  });
+
+  it('sin permiso para ver existencias conserva el lote elegido', async () => {
+    const { lista, acciones } = preparar([renglonNuevo('a1', '1')], true, catalogoDe([], false));
+    lista.value[0]!.loteId = 'agotado';
+    await acciones.reproponerLotes();
+    expect(lista.value[0]!.loteId).toBe('agotado');
+  });
+
+  it('dos lecturas seguidas con la carga pendiente dejan el lote propuesto en el renglón', async () => {
+    let liberar = () => {};
+    const espera = new Promise<void>((resolver) => (liberar = resolver));
+    const { lista, acciones } = preparar(
+      [],
+      true,
+      catalogoDe(['con'], true, () => espera),
+    );
+    const primera = acciones.leerCodigo('ART-1');
+    const segunda = acciones.leerCodigo('ART-1');
+    liberar();
+    await Promise.all([primera, segunda]);
+    expect(lista.value.map((r) => [r.cantidad, r.loteId])).toEqual([['2', 'con']]);
   });
 });
