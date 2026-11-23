@@ -4,7 +4,7 @@ import { finDelMesDeConciliacion, notasMarcadasDeLaConciliacion, resumenDeNotasM
 const nota = (id: string, fecha: string, extra: { marcada?: boolean; puede?: boolean } = {}) => ({
   id,
   fecha,
-  marcadaParaCuentasPorPagar: extra.marcada ?? true,
+  marcadaParaModulo: (extra.marcada ?? true) ? 'cuentas-por-pagar' : null,
   puedeDesmarcar: extra.puede ?? true,
 });
 
@@ -17,6 +17,12 @@ describe('finDelMesDeConciliacion', () => {
 });
 
 describe('notasMarcadasDeLaConciliacion', () => {
+  it('no incluye las marcadas para Cuentas por cobrar', () => {
+    const deCobrar = { ...nota('c', '2026-11-03'), marcadaParaModulo: 'cuentas-por-cobrar' };
+
+    expect(notasMarcadasDeLaConciliacion([deCobrar], [{ id: 'c' }])).toEqual([]);
+  });
+
   it('deja las marcadas que se pueden desmarcar y son candidatas, por fecha', () => {
     const notas = [
       nota('b', '2026-11-20'),

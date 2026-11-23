@@ -6,16 +6,17 @@ import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import type { Movimiento } from '../../servicios/movimientos.api';
 import type { EdicionDeNota } from './edicion-de-nota';
 
-export const ETIQUETA_DE_MARCA = 'Para Cuentas por pagar';
+/** La etiqueta de una nota marcada: «Para <módulo>» (VC-0b: también «Para Cuentas por cobrar»). */
+export const etiquetaDeMarca = (modulo: string): string => `Para ${nombreDeModuloDeOrigen(modulo)}`;
 
-type ConMarca = Pick<Movimiento, 'anuladoEn' | 'revertidoEn' | 'revierteAId' | 'marcadaParaCuentasPorPagar'> &
+type ConMarca = Pick<Movimiento, 'anuladoEn' | 'revertidoEn' | 'revierteAId' | 'marcadaParaModulo'> &
   Partial<Pick<Movimiento, 'parteDeApertura'>>;
 
-/** La etiqueta de la tarjeta: lo revertido o anulado manda; luego la marca para Cuentas por pagar y la carga inicial. */
+/** La etiqueta de la tarjeta: lo revertido o anulado manda; luego la marca para un módulo y la carga inicial. */
 export function insigniaDeNota(nota: ConMarca): string | undefined {
   const reversion = marcaDeReversion(nota);
   if (reversion) return reversion;
-  if (nota.marcadaParaCuentasPorPagar) return ETIQUETA_DE_MARCA;
+  if (nota.marcadaParaModulo) return etiquetaDeMarca(nota.marcadaParaModulo);
   return nota.parteDeApertura ? INSIGNIA_DE_APERTURA : undefined;
 }
 
@@ -31,17 +32,20 @@ export const sePuedeCorregir = (nota: Pick<Movimiento, 'moduloDeOrigen'> & ConMa
   marcaDeReversion(nota) === undefined && !generoOtroModulo(nota) && !nota.parteDeApertura;
 
 /**
- * Con Cuentas por pagar apagado, lo que ese módulo generó o marcó no se cambia (no hay quien revise sus reglas): el
- * servidor lo rechazaría, así que la tarjeta no ofrece Anular, Desmarcar, Eliminar ni Editar y lo explica.
+ * El módulo que debe estar activo para cambiar la nota y hoy no lo está, o `null`: lo que un módulo generó o marcó no
+ * se cambia sin él (no hay quien revise sus reglas). El servidor lo rechazaría, así que la tarjeta no ofrece Anular,
+ * Desmarcar, Eliminar ni Editar y lo explica. Aquí solo se vigila lo marcado y lo de Cuentas por pagar.
  */
-export const esperaACuentasPorPagarInactivo = (
-  nota: Pick<Movimiento, 'moduloDeOrigen' | 'marcadaParaCuentasPorPagar'>,
-  cuentasPorPagarActivo: boolean,
-): boolean =>
-  !cuentasPorPagarActivo && (nota.marcadaParaCuentasPorPagar || nota.moduloDeOrigen === 'cuentas-por-pagar');
+export function moduloInactivoQueEspera(
+  nota: Pick<Movimiento, 'moduloDeOrigen' | 'marcadaParaModulo'>,
+  moduloActivo: (modulo: string) => boolean,
+): string | null {
+  const candidatos = [nota.marcadaParaModulo, nota.moduloDeOrigen === 'cuentas-por-pagar' ? nota.moduloDeOrigen : null];
+  return candidatos.find((modulo): modulo is string => modulo !== null && !moduloActivo(modulo)) ?? null;
+}
 
-export const TEXTO_DE_CUENTAS_POR_PAGAR_INACTIVO =
-  'Active Cuentas por pagar para cambiar este movimiento: lo generó o lo marcó ese módulo.';
+export const textoDeModuloInactivo = (modulo: string): string =>
+  `Active ${nombreDeModuloDeOrigen(modulo)} para cambiar este movimiento: lo generó o lo marcó ese módulo.`;
 
 /** Por qué no hay «Corregir» ni «Eliminar» en un movimiento de otro módulo; `null` si no aplica. */
 export function explicacionDeOrigen(nota: Pick<Movimiento, 'moduloDeOrigen'>): string | null {

@@ -12,7 +12,7 @@ function sirveParaTodos(concepto: Concepto, tipos: readonly TipoDeMovimiento[]):
 }
 
 /**
- * Concepto de sistema de Caja chica o de Cuentas por liquidar → su módulo (como `CONCEPTOS_RESERVADOS_POR_MODULO` del
+ * Concepto de sistema de Caja chica, Cuentas por liquidar o Cuentas por cobrar → su módulo (como `CONCEPTOS_RESERVADOS_POR_MODULO` del
  * servidor). «Pago a proveedores» no está aquí: solo lo eligen los cheques (`opcionesDeConceptoDeCheque`).
  */
 const MODULO_DE_CONCEPTO_RESERVADO: Readonly<Record<string, string>> = {
@@ -25,6 +25,9 @@ const MODULO_DE_CONCEPTO_RESERVADO: Readonly<Record<string, string>> = {
   gasto_de_anticipo_de_activo: 'cuentas-por-liquidar',
   anticipo_no_liquidado: 'cuentas-por-liquidar',
   devolucion_de_anticipo: 'cuentas-por-liquidar',
+  // «Cobros a clientes» no está: marca la nota y solo se pone al marcarla (como «Pago a proveedores»).
+  cobro_a_cliente_de_activo: 'cuentas-por-cobrar',
+  devolucion_a_cliente: 'cuentas-por-cobrar',
 };
 
 /**

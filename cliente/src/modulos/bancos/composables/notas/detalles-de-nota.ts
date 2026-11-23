@@ -6,9 +6,9 @@ import { textoDeOrigen } from '../movimientos/origen-y-causa';
 import { CLASE_DE_TIPO, SIGNO_DE_TIPO } from '../movimientos/estilo-de-tipo';
 import {
   detallesDeDesglose,
-  esperaACuentasPorPagarInactivo,
   explicacionDeOrigen,
-  TEXTO_DE_CUENTAS_POR_PAGAR_INACTIVO,
+  moduloInactivoQueEspera,
+  textoDeModuloInactivo,
 } from './marca-de-nota';
 import { OPCIONES_DE_TIPO } from './edicion-de-nota';
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
@@ -20,7 +20,7 @@ export const tituloDeNota = (nota: Pick<Movimiento, 'tipo'>): string =>
   OPCIONES_DE_TIPO[nota.tipo as 'credito' | 'debito'];
 
 /** De dónde viene la nota si la generó o la marcó otro módulo, y lo que eso implica para corregirla. */
-function detallesDeOrigen(nota: Movimiento, cuentasPorPagarActivo: boolean): DetalleDeRegistro[] {
+function detallesDeOrigen(nota: Movimiento, moduloActivo: (modulo: string) => boolean): DetalleDeRegistro[] {
   const detalles: DetalleDeRegistro[] = [];
   const apertura = detalleDeApertura(nota);
   if (apertura) detalles.push(apertura);
@@ -28,14 +28,16 @@ function detallesDeOrigen(nota: Movimiento, cuentasPorPagarActivo: boolean): Det
   if (origen) detalles.push({ etiqueta: 'Origen', valor: origen.replace('Origen: ', '') });
   const explicacion = explicacionDeOrigen(nota);
   if (explicacion) detalles.push({ etiqueta: 'Nota', valor: explicacion, largo: true });
-  if (esperaACuentasPorPagarInactivo(nota, cuentasPorPagarActivo)) {
-    detalles.push({ etiqueta: 'Aviso', valor: TEXTO_DE_CUENTAS_POR_PAGAR_INACTIVO, largo: true });
-  }
+  const espera = moduloInactivoQueEspera(nota, moduloActivo);
+  if (espera) detalles.push({ etiqueta: 'Aviso', valor: textoDeModuloInactivo(espera), largo: true });
   return detalles;
 }
 
 /** Lo que muestra la tarjeta de la nota; el monto va aparte, destacado y con color. */
-export function detallesDeNota(nota: Movimiento, cuentasPorPagarActivo = true): DetalleDeRegistro[] {
+export function detallesDeNota(
+  nota: Movimiento,
+  moduloActivo: (modulo: string) => boolean = () => true,
+): DetalleDeRegistro[] {
   const numero = formatearNumeroDeComprobante(nota);
   const detalles: DetalleDeRegistro[] = [
     ...(numero ? [{ etiqueta: 'No.', valor: numero }] : []),
@@ -50,7 +52,7 @@ export function detallesDeNota(nota: Movimiento, cuentasPorPagarActivo = true): 
     detalles.push({ etiqueta: 'Interés bruto', valor: formatearMonto(nota.interesBruto) });
     detalles.push({ etiqueta: 'ISR retenido', valor: formatearMonto(nota.isrRetenido) });
   }
-  detalles.push(...detallesDeOrigen(nota, cuentasPorPagarActivo));
+  detalles.push(...detallesDeOrigen(nota, moduloActivo));
   if (nota.observaciones) detalles.push({ etiqueta: 'Observaciones', valor: nota.observaciones, largo: true });
   const motivo = motivoDeLaBaja(nota);
   if (motivo) detalles.push(motivo);

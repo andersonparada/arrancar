@@ -39,7 +39,7 @@ const nota: Movimiento = {
   puedeEliminar: true,
   conceptoNombre: 'Concepto de prueba',
   puedeReclasificar: true,
-  marcadaParaCuentasPorPagar: false,
+  marcadaParaModulo: null,
   desglose: [],
   puedeMarcar: false,
   puedeDesmarcar: false,

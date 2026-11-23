@@ -31,7 +31,7 @@ function usarMarcado(alTerminar: () => Promise<void>) {
   return { marcar };
 }
 
-/** Lo que se escribe en la ventana de desmarcar: la nota, el motivo y el concepto con que sigue (débitos, por nombre). */
+/** Lo que se escribe en la ventana de desmarcar: la nota, el motivo y el concepto con que sigue (del tipo de la nota, por nombre). */
 function usarDatosDeDesmarcado() {
   const sesion = usarSesion();
   const { conceptos } = usarCatalogoDeConceptos();
@@ -39,7 +39,9 @@ function usarDatosDeDesmarcado() {
   const motivo = ref('');
   const conceptoId = ref<string | null>(null);
   const opciones = computed(() =>
-    opcionesDeConcepto(liberarReservados(conceptos.value, sesion.moduloActivo), ['debito']),
+    opcionesDeConcepto(liberarReservados(conceptos.value, sesion.moduloActivo), [
+      registro.value?.tipo === 'credito' ? 'credito' : 'debito',
+    ]),
   );
 
   function abrir(nota: Movimiento): void {
