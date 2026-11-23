@@ -2,7 +2,7 @@ import type { MovimientoConMarcaDto } from '../aplicacion/dto/conciliacion.dto.j
 import type { MovimientoParaConciliar } from '../aplicacion/calculo-de-conciliacion.js';
 import type { MovimientoDto } from '../aplicacion/dto/movimiento.dto.js';
 import type { MovimientosEnMemoria } from './dobles-de-movimientos.js';
-import type { Conciliacion } from '../dominio/conciliacion.js';
+import type { Conciliacion, Periodo } from '../dominio/conciliacion.js';
 import { aMovimientoParaConciliar } from './ayudas-de-conciliaciones.js';
 
 /**
@@ -66,4 +66,10 @@ export function marcadosAntesDeEnMemoria(
     for (const movimientoId of movimientoIds) anteriores.add(movimientoId);
   }
   return anteriores;
+}
+
+/** Si alguna de esas conciliaciones es de un mes anterior a `periodo`. */
+export function hayAnteriorEnMemoria(conciliaciones: readonly Conciliacion[], periodo: Periodo): boolean {
+  const meses = ({ anio, mes }: Periodo) => anio * 12 + mes;
+  return conciliaciones.some((conciliacion) => meses(conciliacion.instantanea()) < meses(periodo));
 }

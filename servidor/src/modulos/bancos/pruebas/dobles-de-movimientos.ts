@@ -99,6 +99,13 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
     return guardado ? copia(guardado) : null;
   }
 
+  bloquear = (id: MovimientoId) => this.buscar(id);
+
+  /** Movimientos que las pruebas dan por marcados en la primera conciliación de su cuenta. */
+  readonly marcadosEnLaPrimera = new Set<string>();
+
+  marcadoEnLaPrimeraConciliacion = async (id: string) => this.marcadosEnLaPrimera.has(id);
+
   async buscarInversoDe(id: MovimientoId): Promise<Movimiento | null> {
     const inverso = [...this.registros.values()].find((m) => m.instantanea().revierteAId === id.valor);
     return inverso ? copia(inverso) : null;

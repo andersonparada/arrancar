@@ -15,7 +15,11 @@ import type { MesDeConciliacionDto } from '../../aplicacion/dto/saldos-por-cuent
 import { cheques } from './cheques.tablas.js';
 import { esPendienteDeClasificar } from './condiciones-de-clasificacion.js';
 import { conceptos } from './conceptos.tablas.js';
-import { conciliadaHastaDe, marcadoEnConciliacionAutorizadaDe } from './marcas-de-conciliacion.drizzle.js';
+import {
+  conciliadaHastaDe,
+  marcadoEnConciliacionAutorizadaDe,
+  marcadoEnLaPrimeraConciliacionDe,
+} from './marcas-de-conciliacion.drizzle.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { desgloseDelMovimiento } from './desglose-del-movimiento.sql.js';
 import { cuentaConConciliacionesDe, hayCabeceraDeSaldoInicial, mesConciliadoDe } from './hechos-de-movimiento.js';
@@ -141,6 +145,10 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
 
   marcadoEnConciliacionAutorizada(movimientoId: string): Promise<boolean> {
     return marcadoEnConciliacionAutorizadaDe(movimientoId);
+  }
+
+  marcadoEnLaPrimeraConciliacion(movimientoId: string): Promise<boolean> {
+    return marcadoEnLaPrimeraConciliacionDe(movimientoId);
   }
 
   async saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string> {

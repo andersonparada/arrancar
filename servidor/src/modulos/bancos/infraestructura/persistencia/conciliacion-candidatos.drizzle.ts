@@ -173,6 +173,21 @@ export async function tieneAlgunaConciliacionDe(cuentaBancariaId: string): Promi
   return fila !== undefined;
 }
 
+/** Si la cuenta tiene una conciliación de un mes anterior a `periodo`. */
+export async function hayConciliacionAnteriorA(cuentaBancariaId: string, { anio, mes }: Periodo): Promise<boolean> {
+  const [fila] = await transaccionEnCurso()
+    .select({ id: conciliaciones.id })
+    .from(conciliaciones)
+    .where(
+      and(
+        eq(conciliaciones.cuentaBancariaId, cuentaBancariaId),
+        sql`make_date(${conciliaciones.anio}, ${conciliaciones.mes}, 1) < make_date(${anio}, ${mes}, 1)`,
+      ),
+    )
+    .limit(1);
+  return fila !== undefined;
+}
+
 /** Que no haya pasado por el banco: sin marca, o marcado en la conciliación que se está haciendo. */
 const sinPasarPorElBanco = (marca: AnyColumn, conciliacionId: string) => or(isNull(marca), eq(marca, conciliacionId));
 

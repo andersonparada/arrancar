@@ -6,6 +6,10 @@ import { EmitirCheque } from '../aplicacion/casos-uso/cheques/emitir-cheque.js';
 import { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anular-movimiento.js';
 import { CrearMovimiento } from '../aplicacion/casos-uso/movimientos/crear-movimiento.js';
 import { AnularMovimientoDeOrigen } from '../aplicacion/casos-uso/ordenes/anular-movimiento-de-origen.js';
+import { DesligarChequeDeApertura } from '../aplicacion/casos-uso/ordenes/desligar-cheque-de-apertura.js';
+import { LigarChequeDeApertura } from '../aplicacion/casos-uso/ordenes/ligar-cheque-de-apertura.js';
+import { ConsultasDeSugerenciasDrizzle } from '../infraestructura/persistencia/consultas-de-sugerencias.drizzle.js';
+import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 import { EmitirChequeDeOrigen } from '../aplicacion/casos-uso/ordenes/emitir-cheque-de-origen.js';
 import { FijarDesgloseDeConceptos } from '../aplicacion/casos-uso/ordenes/fijar-desglose-de-conceptos.js';
 import { MediosDePagoDeBancos } from '../aplicacion/casos-uso/ordenes/medios-de-pago.js';
@@ -39,6 +43,19 @@ function atenderOrdenes(): void {
   mediador.atender(MODULO, 'bancos.anular_movimiento_de_origen', (datos, operador) => anular.ejecutar(operador, datos));
   mediador.atender(MODULO, 'bancos.fijar_desglose_de_conceptos', (datos, operador) =>
     fijarDesglose.ejecutar(operador, datos),
+  );
+  atenderChequesDeApertura(deNotas);
+}
+
+/** Las órdenes que ligan y desligan el posfechado de la carga inicial (CP-AP, diseño §2.7). */
+function atenderChequesDeApertura(deNotas: ReturnType<typeof dependenciasDeNotas>): void {
+  const consultasDeSugerencias = new ConsultasDeSugerenciasDrizzle();
+  const cargaInicial = new CargaInicialEnMediador();
+  const ligar = new LigarChequeDeApertura({ ...deNotas, cargaInicial, consultasDeSugerencias });
+  const desligar = new DesligarChequeDeApertura(deNotas);
+  mediador.atender(MODULO, 'bancos.ligar_cheque_de_apertura', (datos, operador) => ligar.ejecutar(operador, datos));
+  mediador.atender(MODULO, 'bancos.desligar_cheque_de_apertura', (datos, operador) =>
+    desligar.ejecutar(operador, datos),
   );
 }
 

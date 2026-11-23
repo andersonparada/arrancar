@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { finDelMesDe } from '../../dominio/conciliacion.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
@@ -22,5 +22,24 @@ export async function marcadoEnConciliacionAutorizadaDe(movimientoId: string): P
     .from(movimientos)
     .innerJoin(conciliaciones, eq(conciliaciones.id, movimientos.conciliacionId))
     .where(and(eq(movimientos.id, movimientoId), eq(conciliaciones.estado, 'autorizada')));
+  return fila !== undefined;
+}
+
+/** Si el movimiento está marcado en la primera conciliación de su cuenta (ninguna de un mes anterior). */
+export async function marcadoEnLaPrimeraConciliacionDe(movimientoId: string): Promise<boolean> {
+  const [fila] = await transaccionEnCurso()
+    .select({ id: conciliaciones.id })
+    .from(movimientos)
+    .innerJoin(conciliaciones, eq(conciliaciones.id, movimientos.conciliacionId))
+    .where(
+      and(
+        eq(movimientos.id, movimientoId),
+        sql`not exists (
+          select 1 from ${conciliaciones} as anterior
+          where anterior.cuenta_bancaria_id = ${conciliaciones.cuentaBancariaId}
+            and make_date(anterior.anio, anterior.mes, 1) < make_date(${conciliaciones.anio}, ${conciliaciones.mes}, 1)
+        )`,
+      ),
+    );
   return fila !== undefined;
 }

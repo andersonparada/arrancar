@@ -26,6 +26,8 @@ import {
   NoSeRevierteUnInverso,
 } from './errores.js';
 import { MovimientoDeOtroModulo, NotaNoMarcable } from './errores-de-origen.js';
+import { desligarDelOrigen, ligarAlOrigen } from './ligadura-de-cheque-de-apertura.js';
+import type { OrigenDeMovimiento } from './origen-de-movimiento.js';
 import {
   datosDeLasPropiedades,
   datosValidos,
@@ -155,6 +157,16 @@ export class Movimiento extends Entidad<MovimientoId> {
       throw new Error('Solo un movimiento con origen fija su concepto por reparto.');
     }
     this.propiedades = { ...this.propiedades, conceptoId };
+  }
+
+  /** Liga el posfechado de la carga inicial al documento de otro módulo (ver `ligarAlOrigen`). */
+  ligarChequeDeApertura(origen: OrigenDeMovimiento, conceptoId: string): void {
+    this.propiedades = ligarAlOrigen(this.propiedades, origen, conceptoId);
+  }
+
+  /** Desliga el posfechado de ese documento; sigue vigente (ver `desligarDelOrigen`). */
+  desligarChequeDeApertura(origen: OrigenDeMovimiento, conceptoId: string): void {
+    this.propiedades = desligarDelOrigen(this.propiedades, origen, conceptoId);
   }
 
   /** El inverso sigue a su original cuando este se reclasifica (hereda el concepto, sin validar nada, C2). */

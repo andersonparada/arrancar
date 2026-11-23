@@ -12,13 +12,14 @@ import type {
   EstadoDeConciliacionDto,
 } from '../../aplicacion/dto/conciliacion.dto.js';
 import type { ConsultasConciliaciones } from '../../aplicacion/puertos/consultas-conciliaciones.js';
-import { finDelMesDe } from '../../dominio/conciliacion.js';
+import { finDelMesDe, type Periodo } from '../../dominio/conciliacion.js';
 import { diferenciaConElEstadoDeCuenta } from '../../dominio/estado-de-cuenta.js';
 import { bancos } from './bancos.tablas.js';
 import {
   aMovimientoParaConciliar,
   candidatosConMarcaDe,
   cobradosEnMesesAnterioresDe,
+  hayConciliacionAnteriorA,
   idsDeCandidatosDe,
   movimientosDelMesDe,
   paresCompensadosPendientesDe,
@@ -191,6 +192,10 @@ export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
 
   tieneAlguna(cuentaBancariaId: string): Promise<boolean> {
     return tieneAlgunaConciliacionDe(cuentaBancariaId);
+  }
+
+  hayAnteriorA(cuentaBancariaId: string, periodo: Periodo): Promise<boolean> {
+    return hayConciliacionAnteriorA(cuentaBancariaId, periodo);
   }
 
   paresCompensadosPendientes(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]> {
