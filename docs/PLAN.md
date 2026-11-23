@@ -4348,3 +4348,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+- **2026-11-23**:
+  - VC-0c1 (Libro de compras para Ventas): pregunta `libro-de-compras.cifras_para_la_declaracion` (`core/contratos`) y
+    `foto.ventas` en `DeclararPeriodo` (la declaración y la rectificación; la diferencia y el aviso «cambió después de
+    declarar» comparan también las cifras de ventas; sin módulo de ventas activo la foto sale como antes). Migración
+    `0040_factura_especial_de_venta`: motivo de bloqueo nuevo y bloqueo de las `FESP` pendientes de la bandeja. Toda `FESP`
+    recibida es una venta: entra bloqueada en la carga, no se confirma (`dte_es_una_venta`) y vuelve bloqueada al
+    restaurarla o soltarla de su documento. La `FESP` ya registrada como compra no se toca: el cuadre de compras la lista
+    aparte («factura especial de venta registrada como compra», por revisar) y las `FESP` bloqueadas no salen como
+    faltantes de la SAT. Falta: VC-0c2 (remanentes) y VC-0c-c (pantallas).
