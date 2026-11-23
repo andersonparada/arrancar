@@ -1,5 +1,5 @@
 import { and, desc, eq, exists, gte, inArray, lte, sql, type SQL } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { conceptosDeGasto } from '../../../libro-de-compras/infraestructura/persistencia/conceptos-de-gasto.tablas.js';
@@ -18,12 +18,20 @@ const unidadEscrita = alias(unidades, 'unidad_escrita');
 
 const sinSigno = (texto: string): string => texto.replace(/^-/, '');
 
+/** Los filtros que comparan una columna con un valor igual. */
+function filtrosDeIgualdad(filtros: FiltrosDeDocumentos): SQL[] {
+  const iguales = [
+    [documentos.clase, filtros.clase],
+    [documentos.bodegaId, filtros.bodegaId],
+    [documentos.bodegaDeDestinoId, filtros.bodegaDeDestinoId],
+    [documentos.estado, filtros.estado],
+    [documentos.estadoDeTraslado, filtros.estadoDeTraslado],
+  ] as const;
+  return iguales.filter(([, valor]) => valor).map(([columna, valor]) => eq(columna, valor!));
+}
+
 function filtrosDe(filtros: FiltrosDeDocumentos): SQL[] {
-  const condiciones: SQL[] = [];
-  if (filtros.clase) condiciones.push(eq(documentos.clase, filtros.clase));
-  if (filtros.bodegaId) condiciones.push(eq(documentos.bodegaId, filtros.bodegaId));
-  if (filtros.estado) condiciones.push(eq(documentos.estado, filtros.estado));
-  if (filtros.estadoDeTraslado) condiciones.push(eq(documentos.estadoDeTraslado, filtros.estadoDeTraslado));
+  const condiciones: SQL[] = filtrosDeIgualdad(filtros);
   if (filtros.desde) condiciones.push(gte(documentos.fecha, filtros.desde));
   if (filtros.hasta) condiciones.push(lte(documentos.fecha, filtros.hasta));
   if (filtros.articuloId) {
@@ -36,18 +44,17 @@ function filtrosDe(filtros: FiltrosDeDocumentos): SQL[] {
   return condiciones;
 }
 
-/** El nombre del destino de un traslado sale de la función de bodegas: quien envía no tiene asignada esa bodega. */
-const nombreDelDestino = sql<
-  string | null
->`(select n.nombre from inventarios.nombres_de_bodegas(array[${documentos.bodegaDeDestinoId}]::uuid[]) n)`;
+/** El nombre de una bodega sale de la función de bodegas: quien envía no tiene asignado el destino, ni quien recibe el origen. */
+const nombreDe = (bodegaId: AnyPgColumn) =>
+  sql<string | null>`(select n.nombre from inventarios.nombres_de_bodegas(array[${bodegaId}]::uuid[]) n)`;
 
 const cabeceras = () =>
   transaccionEnCurso()
     .select({
       documento: documentos,
-      bodegaNombre: bodegas.nombre,
+      bodegaNombre: sql<string | null>`coalesce(${bodegas.nombre}, ${nombreDe(documentos.bodegaId)})`,
       conceptoNombre: conceptosDeGasto.nombre,
-      destinoNombre: nombreDelDestino,
+      destinoNombre: nombreDe(documentos.bodegaDeDestinoId),
     })
     .from(documentos)
     .leftJoin(bodegas, eq(bodegas.id, documentos.bodegaId))

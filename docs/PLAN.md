@@ -3682,7 +3682,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   con `inventarios.traslados.con_transito = true` deja la salida `en_transito`), `RecibirTraslado` (`POST …/:id/recibir`, `traslados.recibir`,
   solo quien ve el destino; la entrada va completa, con fecha igual o posterior a la salida y hoy si no se escribe; no se
   recibe dos veces: `traslado_ya_recibido`), `AnularTraslado` (`POST …/:id/anular`; en tránsito anula la salida, recibido anula
-  la entrada, devuelve la salida a `en_transito` y la anula; exige ver el origen y, recibido, el destino; una auditoría `anular`
+  la entrada y luego la salida (sin reescribirla antes: la auditoría la guarda como estaba); exige ver el origen y, recibido, el destino; una auditoría `anular`
   `inventarios.traslados` por cada mitad) y `ObtenerBoleta` (`GET /inventarios/documentos/:id/boleta`, con la salida o la
   recepción: número, fecha, origen, destino, artículos, cantidades, quién entrega y quién recibe, **sin costos**). El kardex
   por bodega muestra el traslado con su cantidad y sin valor. **Neutros para el costeo:** las dos mitades son movimientos
@@ -3698,6 +3698,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `GET /inventarios/documentos?estado=vigente&estadoDeTraslado=en_transito`. **Pendiente:** la pantalla de traslados (INV-6c),
   anular solo la recepción de un traslado si hiciera falta, y la revisión de `seguridad` de la función `nombres_de_bodegas`
   y de que el receptor pueda también escribir (no solo leer) la fila de la salida.
+- **2026-11-23 — INV-6, correcciones de la revisión (servidor).** (1) `AnularTraslado` ya no devuelve la salida a `en_transito`
+  antes de anularla: la guardia de la salida mira si su recepción sigue vigente, así que se anula la entrada y luego la salida,
+  y la auditoría `anular` de la salida guarda `estadoDeTraslado: 'recibido'` y su `documentoRelacionadoId`, como estaba.
+  (2) Inactivar una bodega que es origen o destino de un traslado `en_transito` vigente da 422 `bodega_con_traslados_en_transito`
+  (`ConsultasDeUsoDelKardex.bodegaConTrasladosEnTransito`; la existencia de mercadería ya se revisaba). (3) Migración
+  `0007_inv6_recepcion_de_traslado`: la función `inventarios.recepcion_de_traslado(salida_id)` (`security definer`, solo fecha y
+  usuario de la recepción vigente de una salida de la empresa activa; sin `execute` para `public`; **para revisión de
+  `seguridad`**, junto a `nombres_de_bodegas`) hace que la boleta del remitente, que no ve la entrada del destino, traiga
+  `recibidoPor` y `fechaDeRecepcion`. (4) `GET /inventarios/traslados/destinos` (`traslados.crear`): id y nombre de las bodegas
+  activas de la empresa, para que quien solo ve su origen elija el destino (`ListarDestinos`, lee `nombres_de_bodegas`). (5) El
+  filtro `bodegaDeDestinoId` en `GET /inventarios/documentos` hace la lista «Por recibir» de una bodega:
+  `?estadoDeTraslado=en_transito&estado=vigente&bodegaDeDestinoId=<bodega>`. (6) `bodegaNombre` de un documento usa
+  `nombres_de_bodegas` cuando la bodega no se ve (el receptor ve de dónde viene el traslado). Pruebas: casos de uso y
+  `inventarios-traslados-visibilidad.api.prueba.ts`.
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

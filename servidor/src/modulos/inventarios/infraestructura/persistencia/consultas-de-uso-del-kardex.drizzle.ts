@@ -1,6 +1,7 @@
-import { and, eq, gt, sql } from 'drizzle-orm';
+import { and, eq, gt, or, sql } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { ConsultasDeUsoDelKardex } from '../../aplicacion/puertos/consultas-de-uso-del-kardex.js';
+import { documentos } from './documentos.tablas.js';
 import { existencias } from './existencias.tablas.js';
 import { movimientos } from './movimientos.tablas.js';
 import { saldosDeArticulos } from './saldos-de-articulos.tablas.js';
@@ -34,6 +35,23 @@ export class ConsultasDeUsoDelKardexDrizzle implements ConsultasDeUsoDelKardex {
       .select({ bodegaId: existencias.bodegaId })
       .from(existencias)
       .where(and(eq(existencias.bodegaId, bodegaId), gt(existencias.cantidad, '0')))
+      .limit(1);
+    return filas.length > 0;
+  }
+
+  /** Lee con la seguridad por bodega: quien ve la bodega ve todo traslado que sale de ella o llega a ella. */
+  async bodegaConTrasladosEnTransito(bodegaId: string): Promise<boolean> {
+    const filas = await transaccionEnCurso()
+      .select({ id: documentos.id })
+      .from(documentos)
+      .where(
+        and(
+          eq(documentos.clase, 'salida_de_traslado'),
+          eq(documentos.estado, 'vigente'),
+          eq(documentos.estadoDeTraslado, 'en_transito'),
+          or(eq(documentos.bodegaId, bodegaId), eq(documentos.bodegaDeDestinoId, bodegaId)),
+        ),
+      )
       .limit(1);
     return filas.length > 0;
   }

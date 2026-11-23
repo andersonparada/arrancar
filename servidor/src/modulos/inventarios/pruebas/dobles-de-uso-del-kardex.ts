@@ -5,6 +5,7 @@ export class UsoDelKardexEnMemoria implements ConsultasDeUsoDelKardex {
   readonly articulosConMovimientos = new Set<string>();
   readonly articulosConExistencias = new Set<string>();
   readonly bodegasConExistencias = new Set<string>();
+  readonly bodegasConTrasladosEnTransito = new Set<string>();
 
   async articuloConMovimientos(articuloId: string): Promise<boolean> {
     return this.articulosConMovimientos.has(articuloId);
@@ -16,5 +17,9 @@ export class UsoDelKardexEnMemoria implements ConsultasDeUsoDelKardex {
 
   async bodegaConExistencias(bodegaId: string): Promise<boolean> {
     return this.bodegasConExistencias.has(bodegaId);
+  }
+
+  async bodegaConTrasladosEnTransito(bodegaId: string): Promise<boolean> {
+    return this.bodegasConTrasladosEnTransito.has(bodegaId);
   }
 }

@@ -8,14 +8,20 @@ import type { DocumentoGuardado } from '../../puertos/repositorio-de-documentos.
 import { AnularDocumento, motivoValido, type AnulacionPedida } from '../movimientos/anular-documento.js';
 import type { DependenciasDeTraslados } from './dependencias-de-traslados.js';
 
-/** Una salida de traslado ya recibida no se anula sola: primero su recepción (la anula este caso de uso). */
-const sinRecepcionVigente = async (documento: DocumentoGuardado): Promise<void> => {
-  if (documento.estadoDeTraslado === 'recibido') {
+/**
+ * Una salida de traslado cuya recepción sigue vigente no se anula sola: primero su recepción (la anula este caso de uso,
+ * que por eso no reescribe la salida: la auditoría la guarda tal como estaba, recibida y ligada a su entrada).
+ */
+const sinRecepcionVigente =
+  (documentos: DependenciasDeTraslados['documentos']) =>
+  async (documento: DocumentoGuardado): Promise<void> => {
+    if (documento.estadoDeTraslado !== 'recibido' || !documento.documentoRelacionadoId) return;
+    const entrada = await documentos.buscar(documento.documentoRelacionadoId);
+    if (entrada?.estado !== 'vigente') return;
     throw new TrasladoYaRecibido(
       'El traslado ya se recibió: anule el traslado completo para anular también la recepción.',
     );
-  }
-};
+  };
 
 /** Anula un traslado entero (§3.8): en tránsito, su salida; recibido, la entrada y luego la salida. */
 export class AnularTraslado {
@@ -23,7 +29,11 @@ export class AnularTraslado {
   private readonly anularEntrada: AnularDocumento;
 
   constructor(private readonly dependencias: DependenciasDeTraslados) {
-    this.anularSalida = new AnularDocumento(dependencias, 'salida_de_traslado', sinRecepcionVigente);
+    this.anularSalida = new AnularDocumento(
+      dependencias,
+      'salida_de_traslado',
+      sinRecepcionVigente(dependencias.documentos),
+    );
     this.anularEntrada = new AnularDocumento(dependencias, 'entrada_de_traslado');
   }
 
@@ -46,7 +56,7 @@ export class AnularTraslado {
   }
 
   private async anular(operador: Operador, pedido: AnulacionPedida): Promise<EventoDominio[]> {
-    const { almacen, documentos } = this.dependencias;
+    const { almacen } = this.dependencias;
     const antes = await this.buscar(pedido.documentoId);
     await almacen.bloquear((await almacen.movimientosDelDocumento(antes.id)).map((m) => m.articuloId));
     const salida = await this.buscar(pedido.documentoId);
@@ -57,7 +67,6 @@ export class AnularTraslado {
       ...pedido,
       documentoId: entrada.id,
     });
-    await documentos.cambiarTraslado(salida.id, { estadoDeTraslado: 'en_transito', documentoRelacionadoId: null });
     return [...deLaEntrada, ...(await this.anularSalida.anularEnLaTransaccion(operador, pedido))];
   }
 

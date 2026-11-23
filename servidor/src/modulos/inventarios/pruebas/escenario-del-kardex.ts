@@ -129,7 +129,10 @@ export class EscenarioDelKardex {
     return {
       ...this.dependencias,
       transito: this.transito,
-      traslados: { boleta: async () => Promise.reject(new Error('No aplica')) },
+      traslados: {
+        boleta: async () => Promise.reject(new Error('No aplica')),
+        destinos: async () => Promise.reject(new Error('No aplica')),
+      },
     };
   }
 

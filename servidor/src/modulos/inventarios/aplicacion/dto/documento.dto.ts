@@ -68,6 +68,8 @@ export interface VistaDelKardex {
 export interface FiltrosDeDocumentos {
   clase?: ClaseDeDocumento;
   bodegaId?: string;
+  /** Para los traslados: la bodega a la que van (la lista «Por recibir» de quien recibe). */
+  bodegaDeDestinoId?: string;
   articuloId?: string;
   estado?: EstadoDeDocumento;
   /** Los traslados `en_transito` son la lista «Por recibir» de la bodega de destino. */

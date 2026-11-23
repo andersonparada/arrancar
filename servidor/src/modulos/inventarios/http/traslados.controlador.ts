@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { AnularTraslado } from '../aplicacion/casos-uso/traslados/anular-traslado.js';
+import type { ListarDestinos } from '../aplicacion/casos-uso/traslados/listar-destinos.js';
 import type { ObtenerBoleta } from '../aplicacion/casos-uso/traslados/obtener-boleta.js';
 import type { RecibirTraslado } from '../aplicacion/casos-uso/traslados/recibir-traslado.js';
 import type { TrasladarArticulos } from '../aplicacion/casos-uso/traslados/trasladar-articulos.js';
@@ -13,6 +14,7 @@ export interface CasosDeUsoDeTraslados {
   recibir: RecibirTraslado;
   anular: AnularTraslado;
   boleta: ObtenerBoleta;
+  destinos: ListarDestinos;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
@@ -44,4 +46,6 @@ export class TrasladosControlador {
 
   boleta = (solicitud: FastifyRequest<{ Params: ParamsDocumento }>) =>
     this.casosDeUso.boleta.ejecutar(operadorDe(solicitud), solicitud.params.documentoId);
+
+  destinos = (solicitud: FastifyRequest) => this.casosDeUso.destinos.ejecutar(operadorDe(solicitud));
 }

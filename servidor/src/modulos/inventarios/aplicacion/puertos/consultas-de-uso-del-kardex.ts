@@ -10,4 +10,6 @@ export interface ConsultasDeUsoDelKardex {
   articuloConExistencias(articuloId: string): Promise<boolean>;
   /** Si la bodega tiene cantidad mayor que cero de algún artículo. */
   bodegaConExistencias(bodegaId: string): Promise<boolean>;
+  /** Si hay una salida de traslado vigente en tránsito que sale de la bodega o va hacia ella. */
+  bodegaConTrasladosEnTransito(bodegaId: string): Promise<boolean>;
 }

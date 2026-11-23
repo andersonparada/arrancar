@@ -185,6 +185,16 @@ describe('anular', () => {
     ).toBe(true);
   });
 
+  it('la auditoría de la salida recibida la guarda como estaba: recibida y ligada a su entrada', async () => {
+    const traslado = await e.trasladar('50', { fecha: '2026-09-03' });
+    const entradaId = e.kardex.documentosGuardados.get(traslado.id)!.documentoRelacionadoId;
+
+    await e.anularTraslado(traslado.id);
+
+    const deLaSalida = e.auditoria.entradas.find((a) => a.registroId === traslado.id)!;
+    expect(deLaSalida.anterior).toMatchObject({ estadoDeTraslado: 'recibido', documentoRelacionadoId: entradaId });
+  });
+
   it('no se anula si lo recibido ya se gastó en el destino', async () => {
     const traslado = await e.trasladar('50', { fecha: '2026-09-03' });
     await e.registrarSalida('40', { fecha: '2026-09-04', bodegaId: OTRA_BODEGA });

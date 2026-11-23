@@ -58,6 +58,7 @@ export const esquemaParamsArticulo = z.object({ articuloId: z.uuid() });
 export const esquemaFiltrosDeDocumentos = z.object({
   clase: z.enum(CLASES_DE_DOCUMENTO).optional(),
   bodegaId: z.uuid().optional(),
+  bodegaDeDestinoId: z.uuid().optional(),
   articuloId: z.uuid().optional(),
   estado: z.enum(['vigente', 'anulado']).optional(),
   estadoDeTraslado: z.enum(ESTADOS_DE_TRASLADO).optional(),

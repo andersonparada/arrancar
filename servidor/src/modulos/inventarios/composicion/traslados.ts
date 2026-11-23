@@ -1,5 +1,6 @@
 import { AnularTraslado } from '../aplicacion/casos-uso/traslados/anular-traslado.js';
 import type { DependenciasDeTraslados } from '../aplicacion/casos-uso/traslados/dependencias-de-traslados.js';
+import { ListarDestinos } from '../aplicacion/casos-uso/traslados/listar-destinos.js';
 import { ObtenerBoleta } from '../aplicacion/casos-uso/traslados/obtener-boleta.js';
 import { RecibirTraslado } from '../aplicacion/casos-uso/traslados/recibir-traslado.js';
 import { TrasladarArticulos } from '../aplicacion/casos-uso/traslados/trasladar-articulos.js';
@@ -26,6 +27,7 @@ export function rutasDeTraslados() {
       recibir: new RecibirTraslado(dependencias),
       anular: new AnularTraslado(dependencias),
       boleta: new ObtenerBoleta(dependencias),
+      destinos: new ListarDestinos(dependencias),
     }),
   );
 }

@@ -50,6 +50,13 @@
       "when": 1795469180270,
       "tag": "0006_inv6_traslados",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795471776300,
+      "tag": "0007_inv6_recepcion_de_traslado",
+      "breakpoints": true
     }
   ]
 }

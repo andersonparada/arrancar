@@ -2,6 +2,7 @@ import { eq, sql } from 'drizzle-orm';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
+import type { DestinoDeTrasladoDto } from '../../aplicacion/dto/destino-de-traslado.dto.js';
 import type { BoletaDeTrasladoDto, RenglonDeBoletaDto } from '../../aplicacion/dto/boleta-de-traslado.dto.js';
 import type { RenglonDeDocumentoDto } from '../../aplicacion/dto/documento.dto.js';
 import type { ConsultasDeTraslados } from '../../aplicacion/puertos/consultas-de-traslados.js';
@@ -32,14 +33,14 @@ const conAutor = () =>
 
 type Fila = Awaited<ReturnType<typeof conAutor>>[number];
 
-/** La boleta de un traslado: nunca lleva costos y sus nombres de bodega salen aunque no se tengan asignadas. */
+/** Las lecturas de un traslado: la boleta nunca lleva costos y sus nombres de bodega salen aunque no se tengan asignadas. */
 export class ConsultasDeTrasladosDrizzle implements ConsultasDeTraslados {
   private readonly deDocumentos = new ConsultasDeDocumentosDrizzle();
 
   async boleta(documentoId: string): Promise<BoletaDeTrasladoDto> {
     const salida = await this.salidaDe(documentoId);
     const documento = salida.documento;
-    const entrada = documento.documentoRelacionadoId ? await this.buscar(documento.documentoRelacionadoId) : null;
+    const recepcion = await this.recepcionDe(documento.id);
     const { renglones } = await this.deDocumentos.obtener(documento.id);
     return {
       documentoId: documento.id,
@@ -50,8 +51,8 @@ export class ConsultasDeTrasladosDrizzle implements ConsultasDeTraslados {
       destino: await this.nombreDeBodega(documento.bodegaDeDestinoId),
       entregadoPor: nombreCompleto(salida.nombres, salida.apellidos),
       entregadoA: documento.entregadoA,
-      recibidoPor: entrada ? nombreCompleto(entrada.nombres, entrada.apellidos) : null,
-      fechaDeRecepcion: entrada && entrada.documento.estado === 'vigente' ? entrada.documento.fecha : null,
+      recibidoPor: recepcion?.recibidoPor ?? null,
+      fechaDeRecepcion: recepcion?.fecha ?? null,
       observaciones: documento.observaciones,
       renglones: renglones.map(sinCostos),
     };
@@ -67,6 +68,28 @@ export class ConsultasDeTrasladosDrizzle implements ConsultasDeTraslados {
     const salida = documentoRelacionadoId ? await this.buscar(documentoRelacionadoId) : null;
     if (!salida) throw new RecursoNoEncontrado('El traslado');
     return salida;
+  }
+
+  /** Quién recibió y cuándo, por una función acotada: quien solo ve el origen no ve la entrada del destino. */
+  private async recepcionDe(salidaId: string): Promise<{ recibidoPor: string | null; fecha: string } | null> {
+    const transaccion = transaccionEnCurso();
+    const { rows } = await transaccion.execute<{ fecha: string; recibido_por: string }>(
+      sql`select fecha::text as fecha, recibido_por from inventarios.recepcion_de_traslado(${salidaId}::uuid)`,
+    );
+    if (!rows[0]) return null;
+    const [usuario] = await transaccion
+      .select({ nombres: usuarios.nombres, apellidos: usuarios.apellidos })
+      .from(usuarios)
+      .where(eq(usuarios.id, rows[0].recibido_por));
+    return { recibidoPor: usuario ? nombreCompleto(usuario.nombres, usuario.apellidos) : null, fecha: rows[0].fecha };
+  }
+
+  /** Las bodegas activas de la empresa con su nombre, sin el alcance de bodegas: el destino se elige sin tenerlo asignado. */
+  async destinos(): Promise<DestinoDeTrasladoDto[]> {
+    const { rows } = await transaccionEnCurso().execute<{ id: string; nombre: string }>(
+      sql`select id, nombre from inventarios.nombres_de_bodegas() where activo order by nombre`,
+    );
+    return rows;
   }
 
   private async buscar(id: string): Promise<Fila | null> {
