@@ -10,7 +10,9 @@ import type {
   ConsultasDelPeriodo,
   RepositorioDePeriodos,
 } from '../../puertos/puertos-de-periodos.js';
-import type { DependenciasParaArmarElLibro, LibroArmado } from '../libro/consultar-libro.js';
+import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { CifrasDeVentas } from '../../puertos/cifras-de-ventas.js';
+import { armarLibro, type DependenciasParaArmarElLibro, type LibroArmado } from '../libro/consultar-libro.js';
 
 /** Lo que comparten los casos de uso de períodos: el libro (para la foto), el historial, el ajuste y el rastro. */
 export interface DependenciasDePeriodos extends DependenciasParaArmarElLibro {
@@ -18,6 +20,7 @@ export interface DependenciasDePeriodos extends DependenciasParaArmarElLibro {
   periodos: RepositorioDePeriodos;
   consultasDelPeriodo: ConsultasDelPeriodo;
   ajuste: AjusteDelControl;
+  cifrasDeVentas: CifrasDeVentas;
   auditoria: Auditoria;
   reloj: Reloj;
   publicadorEventos: PublicadorEventos;
@@ -32,4 +35,15 @@ export function fotoDelLibro(armado: LibroArmado): FotoDelPeriodo {
     huella: huellaDelLibro(armado.libro.filas),
     resumen: dtoDelLibro(armado.libro, armado).resumen as unknown as Record<string, unknown>,
   };
+}
+
+/** La foto del período con el libro de hoy y las cifras de ventas que responden los módulos de ventas. */
+export async function fotoDelPeriodoDeHoy(
+  dependencias: DependenciasDePeriodos,
+  operador: Operador,
+  periodo: string,
+): Promise<FotoDelPeriodo> {
+  const foto = fotoDelLibro(await armarLibro(dependencias, operador, periodo));
+  const ventas = await dependencias.cifrasDeVentas.delPeriodo(operador, periodo);
+  return ventas.length > 0 ? { ...foto, ventas } : foto;
 }

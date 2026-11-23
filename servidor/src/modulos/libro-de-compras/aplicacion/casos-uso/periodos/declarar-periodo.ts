@@ -13,8 +13,8 @@ import {
 import { dtoDeDeclaracion, dtoDePeriodo, type ResultadoDeCambioDePeriodoDto } from '../../dto/periodo.dto.js';
 import type { DeclaracionGuardada } from '../../puertos/puertos-de-periodos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
-import { armarLibro, periodoDelLibro } from '../libro/consultar-libro.js';
-import { fotoDelLibro, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
+import { periodoDelLibro } from '../libro/consultar-libro.js';
+import { fotoDelPeriodoDeHoy, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
 import { revisionDelPeriodo } from './revision-del-periodo.js';
 
 interface Dependencias extends DependenciasDePeriodos {
@@ -97,7 +97,7 @@ export class DeclararPeriodo {
     datos: Awaited<ReturnType<DeclararPeriodo['datosDeLaDeclaracion']>>,
   ): Promise<DeclaracionGuardada> {
     const { periodos } = this.dependencias;
-    const foto = fotoDelLibro(await armarLibro(this.dependencias, operador, periodo));
+    const foto = await fotoDelPeriodoDeHoy(this.dependencias, operador, periodo);
     const previas = (await periodos.historial(periodo)).filter((declaracion) => declaracion.evento !== 'reapertura');
     const evento = eventoDeLaDeclaracion(previas.length);
     const diferencia = evento === 'rectificacion' ? await this.diferencia(previas.at(-1)!, foto) : null;

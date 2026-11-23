@@ -12,6 +12,23 @@ export interface FotoDelPeriodo {
   huella: string;
   /** El resumen mensual del libro (totales por columna, por código DTE, crédito del período...). */
   resumen: Record<string, unknown>;
+  /** Las cifras de ventas que respondieron los módulos de ventas (vacío o ausente si no hay ninguno activo). */
+  ventas?: CifrasDeVentasEnLaFoto[];
+}
+
+/** Una cifra de ventas tal como se guarda en la foto. */
+export interface CifraDeVentasEnLaFoto {
+  clave: string;
+  etiqueta: string;
+  tipo: 'monto' | 'cantidad';
+  valor: string;
+}
+
+/** Lo que respondió un módulo de ventas sobre el período. */
+export interface CifrasDeVentasEnLaFoto {
+  modulo: string;
+  clave: string;
+  cifras: CifraDeVentasEnLaFoto[];
 }
 
 export interface CambioDeLaFoto {
@@ -47,6 +64,9 @@ function aplanar(valor: unknown, clave: string, salida: Map<string, string>): vo
 function cifrasDe(foto: FotoDelPeriodo): Map<string, string> {
   const cifras = new Map<string, string>([['documentos', String(foto.documentos)]]);
   aplanar(foto.resumen, 'resumen', cifras);
+  for (const { modulo, clave, cifras: deVentas } of foto.ventas ?? []) {
+    for (const cifra of deVentas) cifras.set(`${clave}[${modulo}].${cifra.clave}`, cifra.valor);
+  }
   return cifras;
 }
 

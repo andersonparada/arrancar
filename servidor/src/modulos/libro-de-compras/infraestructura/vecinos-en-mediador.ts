@@ -1,7 +1,10 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import '../../core/contratos/empresas.contratos.js';
+import '../../core/contratos/libro-de-compras.contratos.js';
 import '../../core/contratos/terceros.contratos.js';
 import { mediador } from '../../core/mediador/contexto.js';
+import type { CifrasDeVentasEnLaFoto } from '../dominio/periodos/foto-del-periodo.js';
+import type { CifrasDeVentas } from '../aplicacion/puertos/cifras-de-ventas.js';
 import type { IdentidadDeLaEmpresa } from '../aplicacion/puertos/consultas-del-libro.js';
 import type {
   CreadorDeProveedores,
@@ -59,5 +62,15 @@ export class IdentidadDeLaEmpresaEnMediador implements IdentidadDeLaEmpresa {
 export class CreadorDeProveedoresEnMediador implements CreadorDeProveedores {
   crear(operador: Operador, pedido: PedidoDeProveedorNuevo): Promise<ProveedorDeLaBandeja> {
     return mediador.enviar(operador, 'terceros.crear_proveedor_desde_dte', pedido);
+  }
+}
+
+/** Libro de compras pregunta a todos las cifras de ventas del período; responden solo los módulos activos. */
+export class CifrasDeVentasEnMediador implements CifrasDeVentas {
+  async delPeriodo(operador: Operador, periodo: string): Promise<CifrasDeVentasEnLaFoto[]> {
+    const respuestas = await mediador.preguntarATodos(operador, 'libro-de-compras.cifras_para_la_declaracion', {
+      periodo,
+    });
+    return respuestas.map(({ respuesta }) => respuesta);
   }
 }

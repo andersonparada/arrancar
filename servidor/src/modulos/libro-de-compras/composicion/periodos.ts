@@ -10,7 +10,7 @@ import { ConsultasDelLibroDrizzle } from '../infraestructura/persistencia/consul
 import { ConsultasDelPeriodoDrizzle } from '../infraestructura/persistencia/consultas-del-periodo.drizzle.js';
 import { RepositorioDeDatosFiscalesDeEmpresaDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales-de-empresa.drizzle.js';
 import { RepositorioDePeriodosDrizzle } from '../infraestructura/persistencia/repositorio-de-periodos.drizzle.js';
-import { IdentidadDeLaEmpresaEnMediador } from '../infraestructura/vecinos-en-mediador.js';
+import { CifrasDeVentasEnMediador, IdentidadDeLaEmpresaEnMediador } from '../infraestructura/vecinos-en-mediador.js';
 
 function dependenciasDePeriodos() {
   const compartidas = dependenciasCompartidas();
@@ -25,6 +25,7 @@ function dependenciasDePeriodos() {
     periodos: new RepositorioDePeriodosDrizzle(),
     consultasDelPeriodo: new ConsultasDelPeriodoDrizzle(),
     ajuste: new AjusteDelControlEnConfiguracion(),
+    cifrasDeVentas: new CifrasDeVentasEnMediador(),
   };
 }
 

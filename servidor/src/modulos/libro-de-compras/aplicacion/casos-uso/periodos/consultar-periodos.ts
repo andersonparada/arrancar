@@ -9,8 +9,8 @@ import {
   type PeriodosDelAnioDto,
 } from '../../dto/periodo.dto.js';
 import type { DeclaracionGuardada } from '../../puertos/puertos-de-periodos.js';
-import { armarLibro, periodoDelLibro } from '../libro/consultar-libro.js';
-import { fotoDelLibro, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
+import { periodoDelLibro } from '../libro/consultar-libro.js';
+import { fotoDelPeriodoDeHoy, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
 import { revisionDelPeriodo } from './revision-del-periodo.js';
 
 const MESES = Array.from({ length: 12 }, (_, indice) => indice + 1);
@@ -64,7 +64,7 @@ export class ObtenerPeriodo {
 
   /** El libro de hoy contra la foto de la última declaración: «cambió después de declarar». */
   private async cambios(operador: Operador, ultima: DeclaracionGuardada): Promise<CambioDesdeLaDeclaracionDto> {
-    const actual = fotoDelLibro(await armarLibro(this.dependencias, operador, ultima.periodo));
+    const actual = await fotoDelPeriodoDeHoy(this.dependencias, operador, ultima.periodo);
     return {
       contraLaSecuencia: ultima.secuencia,
       ...diferenciaDeFotos(ultima.foto!, actual),

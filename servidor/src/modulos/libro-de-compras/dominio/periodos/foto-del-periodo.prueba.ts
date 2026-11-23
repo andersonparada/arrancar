@@ -76,3 +76,40 @@ describe('diferencia entre dos fotos', () => {
     expect(diferenciaDeFotos(foto(), foto({ huella: 'c'.repeat(64) }))).toEqual({ cambios: [], huellaCambio: true });
   });
 });
+
+describe('diferencia de las cifras de ventas de la foto', () => {
+  const ventas = (debito: string, cantidad: string): Partial<FotoDelPeriodo> => ({
+    ventas: [
+      {
+        modulo: 'libro-de-ventas',
+        clave: 'ventas',
+        cifras: [
+          { clave: 'debito', etiqueta: 'Débito fiscal', tipo: 'monto', valor: debito },
+          { clave: 'operaciones', etiqueta: 'Operaciones', tipo: 'cantidad', valor: cantidad },
+        ],
+      },
+    ],
+  });
+
+  it('compara también las cifras de ventas, montos y cantidades', () => {
+    const { cambios } = diferenciaDeFotos(foto(ventas('10.00', '2')), foto(ventas('25.50', '3')));
+
+    expect(cambios).toEqual([
+      { clave: 'ventas[libro-de-ventas].debito', anterior: '10.00', actual: '25.50', cambio: '15.50' },
+      { clave: 'ventas[libro-de-ventas].operaciones', anterior: '2', actual: '3', cambio: '1' },
+    ]);
+  });
+
+  it('una foto sin ventas contra una con ventas cuenta lo que falta como cero', () => {
+    const { cambios } = diferenciaDeFotos(foto(), foto(ventas('10.00', '2')));
+
+    expect(cambios.map((c) => [c.clave, c.anterior])).toEqual([
+      ['ventas[libro-de-ventas].debito', '0.00'],
+      ['ventas[libro-de-ventas].operaciones', '0'],
+    ]);
+  });
+
+  it('las mismas cifras de ventas no dan diferencia', () => {
+    expect(diferenciaDeFotos(foto(ventas('10.00', '2')), foto(ventas('10.00', '2'))).cambios).toEqual([]);
+  });
+});
