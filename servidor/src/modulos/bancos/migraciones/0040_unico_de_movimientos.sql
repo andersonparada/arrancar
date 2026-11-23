@@ -1,0 +1,1 @@
+ALTER TABLE "bancos"."movimientos" ADD CONSTRAINT "movimientos_id_empresa_unico" UNIQUE("id","empresa_id");

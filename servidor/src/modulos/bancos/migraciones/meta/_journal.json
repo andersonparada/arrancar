@@ -274,6 +274,13 @@
       "when": 1795057343166,
       "tag": "0038_impresion_de_cheques",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1795473916222,
+      "tag": "0040_unico_de_movimientos",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,2 @@
+ALTER TABLE "core"."archivos" ADD CONSTRAINT "archivos_id_empresa_unico" UNIQUE("id","empresa_id");--> statement-breakpoint
+ALTER TABLE "core"."empresas" ADD CONSTRAINT "empresas_id_cuenta_unico" UNIQUE("id","cuenta_id");

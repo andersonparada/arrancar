@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, index, integer, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { check, index, integer, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 import { idPrimario, politicaPorEmpresa } from '../../../base-datos/columnas.js';
 import { empresas } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
@@ -36,6 +36,8 @@ export const archivos = esquemaCore.table(
   },
   (t) => [
     index('archivos_empresa_idx').on(t.empresaId),
+    /** Para las llaves compuestas `(archivo_id, empresa_id)` de otros módulos: el archivo es de la misma empresa (A-9). */
+    unique('archivos_id_empresa_unico').on(t.id, t.empresaId),
     /** Para la depuración de archivos huérfanos (`core.rutas_de_archivos_registradas`). */
     index('archivos_ruta_original_idx').on(t.rutaOriginal),
     index('archivos_ruta_miniatura_idx').on(t.rutaMiniatura),

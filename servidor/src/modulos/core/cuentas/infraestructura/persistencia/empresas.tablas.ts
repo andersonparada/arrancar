@@ -1,4 +1,4 @@
-import { boolean, char, index, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, char, index, primaryKey, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 import {
   autoria,
@@ -33,6 +33,8 @@ export const empresas = esquemaCore.table(
   },
   (t) => [
     index('empresas_cuenta_idx').on(t.cuentaId),
+    /** Para las llaves compuestas `(empresa_id, cuenta_id)` de otros módulos: la cuenta no puede ser otra (A-9). */
+    unique('empresas_id_cuenta_unico').on(t.id, t.cuentaId),
     ...politicasDeEscrituraPorCuenta({ sinBorrar: true, lecturaPorCuenta: true }),
   ],
 );
