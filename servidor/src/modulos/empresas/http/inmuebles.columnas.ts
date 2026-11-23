@@ -1,4 +1,5 @@
 import type { Columna, OpcionDeReferencia } from '../../core/intercambio/aplicacion/columnas.js';
+import { columnasDeValoresDeInmueble } from './inmuebles.valores.columnas.js';
 
 type OpcionesDeReferencias = Record<'localidadId', () => Promise<OpcionDeReferencia[]>>;
 
@@ -85,11 +86,12 @@ const columnasDeLaLocalidad = (opciones: OpcionesDeReferencias): Columna[] => [
   { clave: 'observaciones', titulo: 'Observaciones', requerido: false, tipo: 'texto' },
 ];
 
-/** Las columnas del Excel de los inmuebles: los mismos datos del formulario, en el mismo orden (sin valores). */
+/** Las columnas del Excel de los inmuebles: los mismos datos del formulario, en el mismo orden, y al final el valor vigente de cada fuente. */
 export const columnasDeInmuebles = (opciones: OpcionesDeReferencias): Columna[] => [
   ...columnasDelRegistro,
   ...columnasDeLaTitularidad,
   ...columnasDeLaUbicacion,
   ...columnasDeLaEscritura,
   ...columnasDeLaLocalidad(opciones),
+  ...columnasDeValoresDeInmueble,
 ];

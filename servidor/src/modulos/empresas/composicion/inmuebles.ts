@@ -1,11 +1,18 @@
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
+import { rutasDelModulo } from '../../core/modulos-sistema/rutas-del-modulo.js';
 import { crearIntercambio } from '../../core/intercambio/contexto.js';
 import { validadorDeZod } from '../../core/intercambio/http/rutas-de-intercambio.js';
 import { opcionesDe } from '../../core/intercambio/aplicacion/columnas.js';
 import { ConsultasLocalidadesDrizzle } from '../infraestructura/persistencia/consultas-localidades.drizzle.js';
-import type { InmuebleDto, SolicitudDeInmueble } from '../aplicacion/dto/inmueble.dto.js';
 import { columnasDeInmuebles } from '../http/inmuebles.columnas.js';
-import { esquemaInmueble } from '../http/inmuebles.esquemas-http.js';
+import { esquemaInmuebleConValores } from '../http/inmuebles.valores.esquemas-http.js';
+import type { FilaDeInmuebleEnExcel, SolicitudDeInmuebleEnExcel } from '../aplicacion/valores-en-excel.js';
+import {
+  CrearInmuebleConValores,
+  ListarInmueblesConValores,
+} from '../aplicacion/casos-uso/inmuebles/inmuebles-en-excel.js';
+import { ConsultasValoresDeInmuebleDrizzle } from '../infraestructura/persistencia/consultas-valores-de-inmueble.drizzle.js';
+import { casosDeUsoDeValores, dependenciasDeValores, rutasDeValoresDeInmueble } from './valores-de-inmueble.js';
 import { ActualizarInmueble } from '../aplicacion/casos-uso/inmuebles/actualizar-inmueble.js';
 import { CrearInmueble } from '../aplicacion/casos-uso/inmuebles/crear-inmueble.js';
 import { EliminarInmueble } from '../aplicacion/casos-uso/inmuebles/eliminar-inmueble.js';
@@ -37,14 +44,26 @@ const casosDeUso = (dependencias: Dependencias) => ({
   eliminar: new EliminarInmueble(dependencias),
 });
 
-/** Exportar e importar en Excel; cada fila importada pasa por las mismas reglas que el formulario. */
-function intercambioDeInmuebles(casos: ReturnType<typeof casosDeUso>, _dependencias: Dependencias) {
-  return crearIntercambio<InmuebleDto, SolicitudDeInmueble>({
+/** Exportar e importar en Excel; cada fila importada pasa por las mismas reglas que el formulario, con sus valores. */
+function intercambioDeInmuebles(casos: ReturnType<typeof casosDeUso>, dependencias: Dependencias) {
+  const { unidadDeTrabajo, consultas } = dependencias;
+  const listar = new ListarInmueblesConValores({
+    unidadDeTrabajo,
+    consultas,
+    valores: new ConsultasValoresDeInmuebleDrizzle(),
+    reloj: dependenciasCompartidas().reloj,
+  });
+  const crear = new CrearInmuebleConValores({
+    unidadDeTrabajo,
+    crear: casos.crear,
+    registrarValor: casosDeUsoDeValores(dependenciasDeValores()).registrar,
+  });
+  return crearIntercambio<FilaDeInmuebleEnExcel, SolicitudDeInmuebleEnExcel>({
     nombre: 'Inmuebles',
     columnas: columnasDeInmuebles({ localidadId: opcionesDe(new ConsultasLocalidadesDrizzle(), 'nombre') }),
-    validar: validadorDeZod(esquemaInmueble),
-    listar: (operador) => casos.listar.ejecutar(operador),
-    crear: (operador, solicitud) => casos.crear.ejecutar(operador, solicitud),
+    validar: validadorDeZod(esquemaInmuebleConValores),
+    listar: (operador) => listar.ejecutar(operador),
+    crear: (operador, solicitud) => crear.ejecutar(operador, solicitud),
   });
 }
 
@@ -52,5 +71,8 @@ function intercambioDeInmuebles(casos: ReturnType<typeof casosDeUso>, _dependenc
 export function rutasDeInmuebles() {
   const dependencias = dependenciasDeInmuebles();
   const casos = casosDeUso(dependencias);
-  return rutasInmuebles(new InmueblesControlador(casos), intercambioDeInmuebles(casos, dependencias));
+  return rutasDelModulo([
+    rutasInmuebles(new InmueblesControlador(casos), intercambioDeInmuebles(casos, dependencias)),
+    rutasDeValoresDeInmueble(),
+  ]);
 }

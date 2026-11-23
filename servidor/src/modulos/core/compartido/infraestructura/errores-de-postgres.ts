@@ -36,6 +36,8 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   localidades_establecimiento_sat_unico: `Ya existe una localidad con ese código de establecimiento SAT. ${PEDIR_ACCESO_A_LOCALIDADES}`,
   inmuebles_nombre_unico: `Ya existe un inmueble con ese nombre. ${PEDIR_ACCESO_AL_INMUEBLE}`,
   inmuebles_registro_unico: `Ese inmueble ya está registrado (mismo registro, departamento, finca, folio y libro). ${PEDIR_ACCESO_AL_INMUEBLE}`,
+  valores_de_inmueble_fecha_unico:
+    'Ya hay un valor de esa fuente con esa fecha. Un valor no se edita: registre otro con otra fecha.',
   activos_codigo_unico: 'Ya existe un activo con ese código.',
   documentos_sat_unico: MENSAJE_DOCUMENTO_DE_LA_CUENTA,
   documentos_autorizacion_fel_unica: MENSAJE_DOCUMENTO_DE_LA_CUENTA,
