@@ -19,6 +19,16 @@ export const UNICOS_DE_CATALOGOS: Readonly<Record<string, UnicoRepetido>> = {
   unidades_simbolo_unico: { mensaje: 'Ya existe una unidad con ese símbolo.', campo: 'simbolo' },
   lotes_codigo_unico: { mensaje: 'Ya existe un lote con ese código en este artículo.', campo: 'codigo' },
   clases_nombre_unico: { mensaje: 'Ya existe una clase de activo con ese nombre.', campo: 'nombre' },
+  tipos_de_parcela_nombre_unico: { mensaje: 'Ya existe un tipo de parcela con ese nombre.', campo: 'nombre' },
+  mediciones_fecha_unica: {
+    mensaje: 'Ya hay una medición vigente de esa parcela con esa fecha: anúlela o use otra fecha.',
+    campo: 'vigenteDesde',
+  },
+  parcelas_codigo_unico: { mensaje: 'Ya existe una parcela con ese código.', campo: 'codigo' },
+  parcelas_nombre_unico: {
+    mensaje: 'Ya existe una parcela con ese nombre en esa localidad.',
+    campo: 'nombre',
+  },
 };
 
 /** Los mensajes por restricción, para sumarlos a los demás. */

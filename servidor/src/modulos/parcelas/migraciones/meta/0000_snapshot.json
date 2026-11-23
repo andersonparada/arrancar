@@ -1,0 +1,928 @@
+{
+  "id": "3eb5381f-5309-4733-9ce4-da35c9ca3be3",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "parcelas.mediciones": {
+      "name": "mediciones",
+      "schema": "parcelas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parcela_id": {
+          "name": "parcela_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vigente_desde": {
+          "name": "vigente_desde",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fuente": {
+          "name": "fuente",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "superficie_total_m2": {
+          "name": "superficie_total_m2",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "superficie_util_m2": {
+          "name": "superficie_util_m2",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cantidad_original": {
+          "name": "cantidad_original",
+          "type": "numeric(16, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unidad_original": {
+          "name": "unidad_original",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "varas_por_lado_de_cuerda": {
+          "name": "varas_por_lado_de_cuerda",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "documento": {
+          "name": "documento",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "archivo_id": {
+          "name": "archivo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'vigente'"
+        },
+        "anulada_en": {
+          "name": "anulada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulada_por": {
+          "name": "anulada_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "mediciones_fecha_unica": {
+          "name": "mediciones_fecha_unica",
+          "columns": [
+            {
+              "expression": "parcela_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vigente_desde",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"parcelas\".\"mediciones\".\"estado\" = 'vigente'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mediciones_archivo_unico": {
+          "name": "mediciones_archivo_unico",
+          "columns": [
+            {
+              "expression": "archivo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"parcelas\".\"mediciones\".\"archivo_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mediciones_parcela_idx": {
+          "name": "mediciones_parcela_idx",
+          "columns": [
+            {
+              "expression": "parcela_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vigente_desde",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"parcelas\".\"mediciones\".\"estado\" = 'vigente'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "mediciones_empresa_id_empresas_id_fk": {
+          "name": "mediciones_empresa_id_empresas_id_fk",
+          "tableFrom": "mediciones",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mediciones_archivo_id_archivos_id_fk": {
+          "name": "mediciones_archivo_id_archivos_id_fk",
+          "tableFrom": "mediciones",
+          "tableTo": "archivos",
+          "schemaTo": "core",
+          "columnsFrom": ["archivo_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "mediciones_parcela_fk": {
+          "name": "mediciones_parcela_fk",
+          "tableFrom": "mediciones",
+          "tableTo": "parcelas",
+          "schemaTo": "parcelas",
+          "columnsFrom": ["parcela_id", "empresa_id"],
+          "columnsTo": ["id", "empresa_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "mediciones_id_empresa_unico": {
+          "name": "mediciones_id_empresa_unico",
+          "nullsNotDistinct": false,
+          "columns": ["id", "empresa_id"]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "mediciones_fuente_valida": {
+          "name": "mediciones_fuente_valida",
+          "value": "\"parcelas\".\"mediciones\".\"fuente\" in ('escritura', 'plano_topografico', 'gps', 'estimacion', 'otra')"
+        },
+        "mediciones_superficie_valida": {
+          "name": "mediciones_superficie_valida",
+          "value": "\"parcelas\".\"mediciones\".\"superficie_total_m2\" > 0 and \"parcelas\".\"mediciones\".\"superficie_util_m2\" > 0 and \"parcelas\".\"mediciones\".\"superficie_util_m2\" <= \"parcelas\".\"mediciones\".\"superficie_total_m2\""
+        },
+        "mediciones_cantidad_positiva": {
+          "name": "mediciones_cantidad_positiva",
+          "value": "\"parcelas\".\"mediciones\".\"cantidad_original\" > 0"
+        },
+        "mediciones_unidad_valida": {
+          "name": "mediciones_unidad_valida",
+          "value": "\"parcelas\".\"mediciones\".\"unidad_original\" in ('m2', 'hectarea', 'manzana', 'cuerda', 'vara_cuadrada', 'caballeria')"
+        },
+        "mediciones_varas_validas": {
+          "name": "mediciones_varas_validas",
+          "value": "(\"parcelas\".\"mediciones\".\"unidad_original\" = 'cuerda') = (\"parcelas\".\"mediciones\".\"varas_por_lado_de_cuerda\" is not null) and (\"parcelas\".\"mediciones\".\"varas_por_lado_de_cuerda\" is null or \"parcelas\".\"mediciones\".\"varas_por_lado_de_cuerda\" between 1 and 100)"
+        },
+        "mediciones_documento_valido": {
+          "name": "mediciones_documento_valido",
+          "value": "\"parcelas\".\"mediciones\".\"documento\" is null or char_length(trim(\"parcelas\".\"mediciones\".\"documento\")) between 1 and 150"
+        },
+        "mediciones_estado_valido": {
+          "name": "mediciones_estado_valido",
+          "value": "\"parcelas\".\"mediciones\".\"estado\" in ('vigente', 'anulada')"
+        },
+        "mediciones_anulacion_completa": {
+          "name": "mediciones_anulacion_completa",
+          "value": "(\"parcelas\".\"mediciones\".\"estado\" = 'anulada') = (\"parcelas\".\"mediciones\".\"anulada_en\" is not null and \"parcelas\".\"mediciones\".\"anulada_por\" is not null and \"parcelas\".\"mediciones\".\"motivo_de_anulacion\" is not null)"
+        },
+        "mediciones_motivo_valido": {
+          "name": "mediciones_motivo_valido",
+          "value": "\"parcelas\".\"mediciones\".\"motivo_de_anulacion\" is null or char_length(trim(\"parcelas\".\"mediciones\".\"motivo_de_anulacion\")) between 1 and 300"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "parcelas.parcelas_de_inmuebles": {
+      "name": "parcelas_de_inmuebles",
+      "schema": "parcelas",
+      "columns": {
+        "parcela_id": {
+          "name": "parcela_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inmueble_id": {
+          "name": "inmueble_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "superficie_m2": {
+          "name": "superficie_m2",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "parcelas_de_inmuebles_inmueble_idx": {
+          "name": "parcelas_de_inmuebles_inmueble_idx",
+          "columns": [
+            {
+              "expression": "inmueble_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "parcelas_de_inmuebles_empresa_id_empresas_id_fk": {
+          "name": "parcelas_de_inmuebles_empresa_id_empresas_id_fk",
+          "tableFrom": "parcelas_de_inmuebles",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "parcelas_de_inmuebles_parcela_fk": {
+          "name": "parcelas_de_inmuebles_parcela_fk",
+          "tableFrom": "parcelas_de_inmuebles",
+          "tableTo": "parcelas",
+          "schemaTo": "parcelas",
+          "columnsFrom": ["parcela_id", "empresa_id"],
+          "columnsTo": ["id", "empresa_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "parcelas_de_inmuebles_inmueble_fk": {
+          "name": "parcelas_de_inmuebles_inmueble_fk",
+          "tableFrom": "parcelas_de_inmuebles",
+          "tableTo": "inmuebles",
+          "schemaTo": "empresas",
+          "columnsFrom": ["inmueble_id", "empresa_id"],
+          "columnsTo": ["id", "empresa_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "parcelas_de_inmuebles_pk": {
+          "name": "parcelas_de_inmuebles_pk",
+          "columns": ["parcela_id", "inmueble_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "parcelas_de_inmuebles_superficie_valida": {
+          "name": "parcelas_de_inmuebles_superficie_valida",
+          "value": "\"parcelas\".\"parcelas_de_inmuebles\".\"superficie_m2\" is null or \"parcelas\".\"parcelas_de_inmuebles\".\"superficie_m2\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "parcelas.parcelas": {
+      "name": "parcelas",
+      "schema": "parcelas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "localidad_id": {
+          "name": "localidad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parcela_madre_id": {
+          "name": "parcela_madre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nivel": {
+          "name": "nivel",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_id": {
+          "name": "tipo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codigo": {
+          "name": "codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "forma_de_tenencia": {
+          "name": "forma_de_tenencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "superficie_total_m2": {
+          "name": "superficie_total_m2",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "superficie_util_m2": {
+          "name": "superficie_util_m2",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latitud": {
+          "name": "latitud",
+          "type": "numeric(9, 6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitud": {
+          "name": "longitud",
+          "type": "numeric(9, 6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "colindancia_norte": {
+          "name": "colindancia_norte",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "colindancia_sur": {
+          "name": "colindancia_sur",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "colindancia_oriente": {
+          "name": "colindancia_oriente",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "colindancia_poniente": {
+          "name": "colindancia_poniente",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "parcelas_nombre_unico": {
+          "name": "parcelas_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "localidad_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "parcelas_localidad_idx": {
+          "name": "parcelas_localidad_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "localidad_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "activo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "parcelas_madre_idx": {
+          "name": "parcelas_madre_idx",
+          "columns": [
+            {
+              "expression": "parcela_madre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"parcelas\".\"parcelas\".\"parcela_madre_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "parcelas_tipo_idx": {
+          "name": "parcelas_tipo_idx",
+          "columns": [
+            {
+              "expression": "tipo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "parcelas_empresa_id_empresas_id_fk": {
+          "name": "parcelas_empresa_id_empresas_id_fk",
+          "tableFrom": "parcelas",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "parcelas_localidad_fk": {
+          "name": "parcelas_localidad_fk",
+          "tableFrom": "parcelas",
+          "tableTo": "localidades",
+          "schemaTo": "empresas",
+          "columnsFrom": ["localidad_id", "empresa_id"],
+          "columnsTo": ["id", "empresa_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "parcelas_tipo_fk": {
+          "name": "parcelas_tipo_fk",
+          "tableFrom": "parcelas",
+          "tableTo": "tipos_de_parcela",
+          "schemaTo": "parcelas",
+          "columnsFrom": ["tipo_id", "empresa_id"],
+          "columnsTo": ["id", "empresa_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "parcelas_madre_fk": {
+          "name": "parcelas_madre_fk",
+          "tableFrom": "parcelas",
+          "tableTo": "parcelas",
+          "schemaTo": "parcelas",
+          "columnsFrom": ["parcela_madre_id", "empresa_id", "localidad_id"],
+          "columnsTo": ["id", "empresa_id", "localidad_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "parcelas_codigo_unico": {
+          "name": "parcelas_codigo_unico",
+          "nullsNotDistinct": false,
+          "columns": ["empresa_id", "codigo"]
+        },
+        "parcelas_id_empresa_unico": {
+          "name": "parcelas_id_empresa_unico",
+          "nullsNotDistinct": false,
+          "columns": ["id", "empresa_id"]
+        },
+        "parcelas_id_empresa_localidad_unico": {
+          "name": "parcelas_id_empresa_localidad_unico",
+          "nullsNotDistinct": false,
+          "columns": ["id", "empresa_id", "localidad_id"]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "alcance_empresas_localidades": {
+          "name": "alcance_empresas_localidades",
+          "as": "RESTRICTIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or localidad_id in (\n      select a.localidad_id from empresas.accesos_a_localidades a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
+          "withCheck": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or localidad_id in (\n      select a.localidad_id from empresas.accesos_a_localidades a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        }
+      },
+      "checkConstraints": {
+        "parcelas_codigo_valido": {
+          "name": "parcelas_codigo_valido",
+          "value": "\"parcelas\".\"parcelas\".\"codigo\" ~ '^[A-Z0-9-]{1,20}$'"
+        },
+        "parcelas_nombre_valido": {
+          "name": "parcelas_nombre_valido",
+          "value": "char_length(trim(\"parcelas\".\"parcelas\".\"nombre\")) between 1 and 120"
+        },
+        "parcelas_tenencia_valida": {
+          "name": "parcelas_tenencia_valida",
+          "value": "\"parcelas\".\"parcelas\".\"forma_de_tenencia\" in ('propia', 'posesion', 'copropiedad', 'arrendada', 'usufructo', 'comodato', 'aparceria', 'otra')"
+        },
+        "parcelas_nivel_valido": {
+          "name": "parcelas_nivel_valido",
+          "value": "\"parcelas\".\"parcelas\".\"nivel\" between 1 and 5"
+        },
+        "parcelas_nivel_y_madre": {
+          "name": "parcelas_nivel_y_madre",
+          "value": "(\"parcelas\".\"parcelas\".\"nivel\" = 1) = (\"parcelas\".\"parcelas\".\"parcela_madre_id\" is null)"
+        },
+        "parcelas_madre_distinta": {
+          "name": "parcelas_madre_distinta",
+          "value": "\"parcelas\".\"parcelas\".\"parcela_madre_id\" is null or \"parcelas\".\"parcelas\".\"parcela_madre_id\" <> \"parcelas\".\"parcelas\".\"id\""
+        },
+        "parcelas_superficie_completa": {
+          "name": "parcelas_superficie_completa",
+          "value": "(\"parcelas\".\"parcelas\".\"superficie_total_m2\" is null) = (\"parcelas\".\"parcelas\".\"superficie_util_m2\" is null)"
+        },
+        "parcelas_superficie_valida": {
+          "name": "parcelas_superficie_valida",
+          "value": "\"parcelas\".\"parcelas\".\"superficie_total_m2\" is null or (\"parcelas\".\"parcelas\".\"superficie_total_m2\" > 0 and \"parcelas\".\"parcelas\".\"superficie_util_m2\" > 0 and \"parcelas\".\"parcelas\".\"superficie_util_m2\" <= \"parcelas\".\"parcelas\".\"superficie_total_m2\")"
+        },
+        "parcelas_punto_completo": {
+          "name": "parcelas_punto_completo",
+          "value": "(\"parcelas\".\"parcelas\".\"latitud\" is null) = (\"parcelas\".\"parcelas\".\"longitud\" is null)"
+        },
+        "parcelas_punto_valido": {
+          "name": "parcelas_punto_valido",
+          "value": "\"parcelas\".\"parcelas\".\"latitud\" is null or (\"parcelas\".\"parcelas\".\"latitud\" between -90 and 90 and \"parcelas\".\"parcelas\".\"longitud\" between -180 and 180)"
+        },
+        "parcelas_colindancia_norte_valida": {
+          "name": "parcelas_colindancia_norte_valida",
+          "value": "\"parcelas\".\"parcelas\".\"colindancia_norte\" is null or char_length(trim(\"parcelas\".\"parcelas\".\"colindancia_norte\")) between 1 and 300"
+        },
+        "parcelas_colindancia_sur_valida": {
+          "name": "parcelas_colindancia_sur_valida",
+          "value": "\"parcelas\".\"parcelas\".\"colindancia_sur\" is null or char_length(trim(\"parcelas\".\"parcelas\".\"colindancia_sur\")) between 1 and 300"
+        },
+        "parcelas_colindancia_oriente_valida": {
+          "name": "parcelas_colindancia_oriente_valida",
+          "value": "\"parcelas\".\"parcelas\".\"colindancia_oriente\" is null or char_length(trim(\"parcelas\".\"parcelas\".\"colindancia_oriente\")) between 1 and 300"
+        },
+        "parcelas_colindancia_poniente_valida": {
+          "name": "parcelas_colindancia_poniente_valida",
+          "value": "\"parcelas\".\"parcelas\".\"colindancia_poniente\" is null or char_length(trim(\"parcelas\".\"parcelas\".\"colindancia_poniente\")) between 1 and 300"
+        },
+        "parcelas_observaciones_validas": {
+          "name": "parcelas_observaciones_validas",
+          "value": "\"parcelas\".\"parcelas\".\"observaciones\" is null or char_length(trim(\"parcelas\".\"parcelas\".\"observaciones\")) between 1 and 500"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "parcelas.tipos_de_parcela": {
+      "name": "tipos_de_parcela",
+      "schema": "parcelas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "tipos_de_parcela_nombre_unico": {
+          "name": "tipos_de_parcela_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "tipos_de_parcela_empresa_id_empresas_id_fk": {
+          "name": "tipos_de_parcela_empresa_id_empresas_id_fk",
+          "tableFrom": "tipos_de_parcela",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "tipos_de_parcela_id_empresa_unico": {
+          "name": "tipos_de_parcela_id_empresa_unico",
+          "nullsNotDistinct": false,
+          "columns": ["id", "empresa_id"]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "parcelas": "parcelas"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
