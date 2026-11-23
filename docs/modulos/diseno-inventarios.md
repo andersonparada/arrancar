@@ -1257,7 +1257,7 @@ texto.
 | INV-5c | Por recibir | frontend |
 | **INV-6** | Traslados con y sin tránsito, neutros para el costeo (§7.2), boleta; prueba de que un traslado con PEPS no cambia el orden de consumo y de que lo que viaja sigue en el valor | backend — **hecho** (2026-11-23, migración `0006_inv6_traslados`; la bitácora de `PLAN.md` dice cómo se resolvió la visibilidad del destino; correcciones de la revisión con la migración `0007_inv6_recepcion_de_traslado`: destinos elegibles, «Por recibir» por bodega de destino, boleta completa para el remitente y guarda de bodegas con traslados en tránsito) |
 | INV-6c | Traslados | frontend |
-| **INV-7** | Saldos iniciales, pregunta de EM-2, aviso de fecha de inicio, Excel | backend |
+| **INV-7** | Saldos iniciales, pregunta de EM-2, aviso de fecha de inicio, Excel | backend — **hecho** (2026-11-23, migraciones `0008_inv7_saldos_iniciales` y `0009_inv7_reubicar_saldos_iniciales`; queda el aviso del umbral de Activos fijos con AFI-9; ver la bitácora de `PLAN.md`) |
 | INV-7c | Saldos iniciales de inventario | frontend |
 | **INV-8** | Cierres y existencias al cierre (con el renglón «En tránsito interno»); revisar, cerrar, reabrir; eventos del bus | backend |
 | INV-8c | Cierre de inventario | frontend |

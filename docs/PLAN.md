@@ -3716,6 +3716,45 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `inventarios.traslados.con_transito`: con tránsito lista todas las bodegas activas (`nombres_de_bodegas`); sin tránsito, solo
   las activas que la seguridad por bodega deja ver al usuario (§3.5, §6.7), así no se revelan bodegas ajenas ni se ofrecen
   opciones que darían 422 `bodega_fuera_de_alcance`. Prueba de API para ambos modos.
+- **2026-11-23 — INV-7 (Inventarios, servidor): saldos iniciales, pregunta de EM-2, aviso de la fecha de inicio y Excel.**
+  Migraciones `0008_inv7_saldos_iniciales` (clase `saldo_inicial` en el `check` de documentos; `movimientos.fecha_de_capa`
+  con su `check` `<= fecha` e índice parcial; único parcial `documentos_saldo_inicial_por_bodega_unico`: un documento vigente
+  por bodega) y `0009_inv7_reubicar_saldos_iniciales` (función `security definer` **para revisión de seguridad**, ver abajo).
+  **Rutas** `GET/POST /inventarios/saldos-iniciales`, `PUT/DELETE …/:movimientoId`, `GET …/exportar`, `…/plantilla`,
+  `POST …/importar` con los permisos `inventarios.saldos-iniciales.ver/.crear/.editar/.eliminar/.importar/.exportar`.
+  **Registrar** (`RegistrarSaldoInicial`): un renglón por llamada (artículo, bodega, lote, cantidad en cualquier unidad, costo
+  total, fecha de la capa); solo con fecha de inicio, carga abierta, ningún cierre (`MesesCerrados.hayAlguno()`, hoy siempre falso
+  hasta INV-8) y el método de costeo **ya elegido** (`metodo_de_costeo_sin_elegir`); va al documento `saldo_inicial` vigente de la
+  bodega (se crea con el primero, fecha = día anterior al inicio, saltándose `fecha_anterior_al_inicio`) y reutiliza
+  `RegistradorDeDocumento` (ahora acepta un documento existente y la causa del recálculo). El lote se elige por id o se escribe
+  por código con su vencimiento (se busca y, si no existe, se crea; otro vencimiento = 400). Con PEPS la capa nace con la
+  **fecha real de compra** (`fecha_de_capa`, que también reconoce un saldo inicial sin mirar el documento): el motor ordena las
+  capas por ella (`MovimientoDeCosto.fechaDeCapa`), así una capa anotada después pero más antigua sale primero; sin fecha propia
+  usa el día del documento. **Corregir y eliminar** (con la carga abierta): el movimiento deja de ser vigente
+  (`desactivarMovimiento`; los renglones de un documento vigente muestran solo los vigentes), el costo se recalcula una vez con
+  causa `saldo_inicial_corregido` (`existencia_negativa` si algo posterior lo consumió) y la auditoría guarda el renglón
+  (`corregir` / `eliminar`); si un documento se queda sin renglones se anula (auditoría `anular` con su motivo fijo). Los dos
+  candados del artículo se toman antes de releer el renglón. **Respuesta a `empresas.revisar_cierre_de_carga`**
+  (`RevisarCierreDeCargaEnInventarios`): `sin_saldos_iniciales`, `existencias_sin_costo`, `lotes_vencidos` y
+  `sin_conteo_de_respaldo` (todos avisos, nunca piden motivo), con las cifras de artículos con existencia, valor total, por tipo y
+  por bodega (hasta 200); lee los movimientos **sin el alcance por bodega** (reconoce el saldo por `fecha_de_capa`) y los nombres
+  de bodega con `nombres_de_bodegas`, así quien cierra sin ver todas las bodegas recibe lo de toda la empresa (prueba de API).
+  **Aviso `empresas.fecha_de_inicio_por_cambiar`** (`ValidarFechaDeInicioEnInventarios`): rechaza con
+  `inventario_con_fecha_fuera_de_la_carga` si hay un cierre, un movimiento vigente que no es saldo con fecha anterior a la nueva
+  o una capa de saldo con fecha propia igual o posterior; si no, la función `inventarios.reubicar_saldos_iniciales(date)` mueve
+  documentos y movimientos al nuevo día anterior. **PARA REVISIÓN DE SEGURIDAD:** la función es `security definer`, usa solo
+  `app.empresa_id` (nunca un parámetro), no lee ni devuelve datos y existe porque los documentos llevan alcance por bodega y quien
+  cambia la fecha puede no ver todas (un `UPDATE` normal dejaría sin mover las bodegas ajenas); sin `execute` para `public`.
+  **Excel:** columnas Artículo (código), Bodega (código), Lote, Vencimiento del lote, Cantidad, Unidad, Costo total y Fecha de la
+  capa; cada fila pasa por `RegistrarSaldoInicial` (todo o nada, ensayo, 5,000 filas del motor). **Decisiones del programador:**
+  (1) un renglón por solicitud y el documento por bodega se agranda, en vez de mandar el documento entero; (2) el listado, la
+  exportación y la API de saldos muestran los costos a quien tiene `saldos-iniciales.ver` / `.exportar` (son el dato que esa
+  pantalla captura; `costos.ver` no aplica); (3) `hayConteos()` y `hayAlguno()` son constantes falsas hasta INV-9 e INV-8; (4) un
+  cambio de fecha que mueve la capa por defecto se detecta porque su `fecha_de_capa` es igual a la del movimiento. **Pendiente:**
+  el aviso del umbral de capitalización en cada renglón de `repuestos` y `suministros` (AFI-9, necesita la orden de Activos
+  fijos), la pantalla (INV-7c) y que el cierre mensual (INV-8) lea los saldos. Pruebas: dominio y casos de uso en memoria
+  (`saldo-inicial.prueba.ts`, `saldos-iniciales.prueba.ts`) y de API (`inventarios-saldos-iniciales*.api.prueba.ts`: registro,
+  PEPS, corregir, eliminar, cuadre del kardex, cierre de la carga, fecha de inicio, Excel, alcance por bodega y reglas de la base).
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de
