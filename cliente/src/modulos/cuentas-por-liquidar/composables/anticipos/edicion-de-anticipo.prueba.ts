@@ -60,6 +60,11 @@ describe('errores antes de enviar', () => {
     expect(erroresDelAnticipo(completa({ monto: '12.345' }), HOY).monto).toContain('dos decimales');
   });
 
+  it('un monto que no cabe dice que es demasiado grande, no que tiene mal los decimales', () => {
+    expect(erroresDelAnticipo(completa({ monto: '99999999999999' }), HOY).monto).toContain('demasiado grande');
+    expect(erroresDelAnticipo(completa({ monto: '999999999999.99' }), HOY).monto).toBeUndefined();
+  });
+
   it('la entrega no es futura ni la fecha límite anterior a ella', () => {
     expect(erroresDelAnticipo(completa({ fecha: '2026-12-01' }), HOY).fecha).toContain('futura');
     expect(erroresDelAnticipo(completa({ fechaLimite: '2026-11-01' }), HOY).fechaLimite).toContain('anterior');

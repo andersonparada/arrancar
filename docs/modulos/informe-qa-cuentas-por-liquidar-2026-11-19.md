@@ -46,12 +46,12 @@ de CL-2 y CL-4, que ya pasan.
 | 1 | Media | En la ficha de un anticipo vencido el aviso «El anticipo N venció el… aún tiene Q… por justificar» salía **dos veces** | Corregido |
 | 2 | Baja | La ayuda de «Fecha límite» decía «será el 2026-12-04» (formato ISO) en vez de 04/12/2026 | Corregido |
 | 3 | Baja | El motivo del cheque anulado desde Cuentas por liquidar quedaba «Anulado desde Cuentas por liquidar: Anulado desde Cuentas por liquidar: …» en Bancos (el módulo y Bancos ponían el rótulo) | Corregido en Cuentas por liquidar; igual en Cuentas por pagar (pendiente) |
-| 4 | Media | Un usuario con `anticipos.crear` pero sin `terceros.ver` abre «Entregar un anticipo» y el beneficiario solo dice «Sin resultados», sin explicar; tampoco puede usar el filtro de beneficiario | Abierto (decisión) |
-| 5 | Media | CL-R1 suma con signo un anticipo gastado de más: con uno de −Q 4,285.50 el total «por justificar» de Juan salió −Q 3,585.50 y «Dentro del plazo» −Q 4,185.50 | `it.fails` |
-| 6 | Baja | En celular la cifra grande «Por justificar Q 400.00» se parte en dos líneas («Q 400.0 / 0») a 390 px | Abierto |
-| 7 | Baja | Al liquidar con devolución no se preselecciona la cuenta de depósito aunque haya una sola (la entrega sí preselecciona la chequera) | Abierto |
+| 4 | Media | Un usuario con `anticipos.crear` pero sin `terceros.ver` abre «Entregar un anticipo» y el beneficiario solo dice «Sin resultados», sin explicar; tampoco puede usar el filtro de beneficiario | Corregido el 2026-11-23: catálogo propio `GET /cuentas-por-liquidar/beneficiarios` |
+| 5 | Media | CL-R1 suma con signo un anticipo gastado de más: con uno de −Q 4,285.50 el total «por justificar» de Juan salió −Q 3,585.50 y «Dentro del plazo» −Q 4,185.50 | Corregido el 2026-11-23: lo gastado de más va aparte como «a reembolsar» (la prueba pasó a `it`) |
+| 6 | Baja | En celular la cifra grande «Por justificar Q 400.00» se parte en dos líneas («Q 400.0 / 0») a 390 px | Corregido el 2026-11-23 |
+| 7 | Baja | Al liquidar con devolución no se preselecciona la cuenta de depósito aunque haya una sola (la entrega sí preselecciona la chequera) | Corregido el 2026-11-23 |
 | 8 | Baja | «Es empleado de la empresa» queda encendido en cada entrega: hay que apagarlo cada vez para quien no lo es (el tercero no lo recuerda) | Abierto |
-| 9 | Baja | En «Gasto sin documento» un monto como 99999999999999 da «Escriba el monto con hasta dos decimales.» (el problema es el tamaño) | Abierto |
+| 9 | Baja | En «Gasto sin documento» un monto como 99999999999999 da «Escriba el monto con hasta dos decimales.» (el problema es el tamaño) | Corregido el 2026-11-23 |
 | 10 | Baja | Al liquidar en cuotas, tras un rechazo del servidor el aviso rojo de arriba no se limpia si el siguiente intento falla por otro campo | Abierto |
 | 11 | Cosmética | Impresión: «Beneficiario:Juan…» sin espacio tras los dos puntos; la confirmación dice «cobrarlo en cuotas en 6 cuotas»; el Excel de CL-R1 dice «1 anticipos, 1 beneficiarios, 1 vencidos»; un anticipo anulado muestra «Agregue las facturas…»; las tablas con y sin documento no alinean sus columnas | Abierto |
 | 12 | Observación | El selector de beneficiarios ofrece también terceros de tipo empresa (un proveedor); una nota de débito se acepta sin referencia (el diseño la pedía «con referencia»); el corte de CL-R1 acepta fechas futuras (2999-01-01) | Abierto (decisión) |

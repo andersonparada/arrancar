@@ -177,7 +177,8 @@ describe('la confirmación', () => {
     alEscribirNoLiquidado(edicion, FALTAN_300, '100');
     const texto = resumenDeLaLiquidacion(edicion, anticipo, nombres);
     expect(texto).toContain('100.00 quedan sin liquidar');
-    expect(texto).toContain('en 5 cuotas');
+    expect(texto).toContain('cobrarlo en 5 cuotas');
+    expect(texto).not.toContain('en cuotas en');
     expect(texto).toContain('auditoría');
   });
 

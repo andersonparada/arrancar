@@ -22,3 +22,6 @@ export function centavosDelServidor(monto: string): number {
 /** Suma montos de texto con dos decimales sin errores de punto flotante. */
 export const sumarMontos = (montos: readonly string[]): string =>
   textoDeCentavos(montos.reduce((total, monto) => total + centavosDelServidor(monto), 0));
+
+/** Lo más que cabe en un monto de dinero: 999,999,999,999.99 (`numeric(14,2)`), en centavos. */
+export const MONTO_MAXIMO_EN_CENTAVOS = 99_999_999_999_999;

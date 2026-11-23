@@ -1041,7 +1041,7 @@ uno por módulo a la vez.
 | **CL-4** (liquidar) — **hecho el 2026-11-19 (servidor; la impresión es del cliente, CL-5)** | Liquidar (devuelto, reembolso, no liquidado), desglose, reabrir, impresión | CL-3 |
 | **CL-5** (cliente) — **hecho el 2026-11-19 (cliente; más las listas de cuentas, chequeras y conceptos que piden sus ventanas)** | Pantallas de §11 | CL-4 |
 | **CL-6** (reportes) — **hecho el 2026-11-19 (servidor y cliente de los dos reportes)** | CL-R1 y CL-R2 | CL-4 |
-| **CL-7** (QA) — **hecho el 2026-11-19 (informe en `informe-qa-cuentas-por-liquidar-2026-11-19.md`; 3 correcciones triviales, 1 `it.fails`, abiertos el error 4 y los menores)** | Viático con dos facturas y un gasto sin documento; devolución; reembolso; no liquidado en cuotas (5 o más) y como renta (solo empleado); vencidos con bloqueo; anular desde Bancos (rechazo con gastos); factura con retención (bandeja; asignada con permiso y motivo) | CL-5 y CL-6 |
+| **CL-7** (QA) — **hecho el 2026-11-19; correcciones del 2026-11-23: errores 4 y 5 y los bajos 6, 7, 9 y 11 (parte); ver la bitácora de PLAN.md** | Viático con dos facturas y un gasto sin documento; devolución; reembolso; no liquidado en cuotas (5 o más) y como renta (solo empleado); vencidos con bloqueo; anular desde Bancos (rechazo con gastos); factura con retención (bandeja; asignada con permiso y motivo) | CL-5 y CL-6 |
 | CC-AP / CL-AP (después) | Fondos y anticipos que ya existían a la fecha de inicio (`origen = 'saldo_inicial'`, carga abierta) y su respuesta a `empresas.revisar_cierre_de_carga` | Si el usuario elige CC-p = A; con EM-2 |
 
 ## 15. Preguntas para el usuario

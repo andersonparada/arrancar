@@ -1,6 +1,6 @@
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { Anticipo } from '../../servicios/tipos-de-anticipos';
-import { NOMBRES_DE_DESTINO } from '../anticipos/ficha-de-anticipo';
+import { textoDelDestino } from '../anticipos/ficha-de-anticipo';
 import { cuadreDeLaLiquidacion, type EdicionDeLiquidacion } from './edicion-de-liquidacion';
 
 /** Los nombres que el resumen necesita y solo el formulario conoce. */
@@ -12,8 +12,8 @@ export interface NombresDeLaLiquidacion {
 function fraseDeLoNoLiquidado(edicion: EdicionDeLiquidacion): string {
   const monto = formatearMonto(edicion.noLiquidado);
   if (edicion.destino === '') return `${monto} quedan sin liquidar.`;
-  const cuotas = edicion.destino === 'cobrar' ? ` en ${edicion.cuotas} cuotas` : '';
-  return `${monto} quedan sin liquidar: ${NOMBRES_DE_DESTINO[edicion.destino].toLowerCase()}${cuotas}. Queda en la auditoría con su motivo.`;
+  const destino = textoDelDestino(edicion.destino, edicion.destino === 'cobrar' ? Number(edicion.cuotas) : null);
+  return `${monto} quedan sin liquidar: ${destino.toLowerCase()}. Queda en la auditoría con su motivo.`;
 }
 
 function fraseDelReembolso(

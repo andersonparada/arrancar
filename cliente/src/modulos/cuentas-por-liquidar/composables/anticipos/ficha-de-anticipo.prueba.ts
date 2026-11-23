@@ -86,7 +86,9 @@ describe('los datos de la ficha', () => {
       'Destino de lo no liquidado',
       'Motivo',
     ]);
-    expect(detalles.find(({ etiqueta }) => etiqueta === 'Destino de lo no liquidado')?.valor).toContain('5 cuotas');
+    expect(detalles.find(({ etiqueta }) => etiqueta === 'Destino de lo no liquidado')?.valor).toBe(
+      'Cobrarlo en 5 cuotas',
+    );
     expect(detallesDeLaLiquidacion(anticipoDeEjemplo())).toEqual([]);
   });
 

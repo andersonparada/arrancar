@@ -15,7 +15,7 @@ import type { Gasto } from '../servicios/tipos-de-gastos';
 import AvisosDeLaPantalla from './AvisosDeLaPantalla.vue';
 
 /** Los gastos del anticipo, del más antiguo al más nuevo; quitar solo se ofrece si hay permiso y el anticipo está abierto. */
-defineProps<{ gastos: Gasto[]; puedeQuitar: boolean }>();
+withDefaults(defineProps<{ gastos: Gasto[]; puedeQuitar: boolean; abierto?: boolean }>(), { abierto: true });
 defineEmits<{ quitar: [gasto: Gasto] }>();
 </script>
 
@@ -26,7 +26,11 @@ defineEmits<{ quitar: [gasto: Gasto] }>();
       v-if="gastos.length === 0"
       :icono="Receipt"
       titulo="Todavía no hay gastos"
-      descripcion="Agregue las facturas que el beneficiario vaya entregando, o anote un gasto sin documento. Así se ve cuánto falta por justificar."
+      :descripcion="
+        abierto
+          ? 'Agregue las facturas que el beneficiario vaya entregando, o anote un gasto sin documento. Así se ve cuánto falta por justificar.'
+          : 'Este anticipo no llegó a tener gastos.'
+      "
     />
     <ul v-else class="space-y-3">
       <li v-for="gasto in gastos" :key="gasto.id">
