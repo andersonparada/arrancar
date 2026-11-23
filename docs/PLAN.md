@@ -4348,3 +4348,22 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+- **2026-11-23 — Inventarios, cliente de INV-2c, INV-4c e INV-5c (tanda 9).** Sobre la API ya hecha, sin tocar el
+  servidor. **Bodegas** (INV-2c): lista, formulario en página con localidad y usuario responsable, ficha con los usuarios
+  con acceso, ventana de asignación (copia de la de Localidades) y Excel; las localidades y los usuarios del formulario
+  solo se piden a quien tiene `empresas.localidades.ver` o `bodegas.asignar` (sin el permiso el campo no se ofrece y lo
+  guardado se conserva). **Existencias y kardex** (INV-4c): tarjetas por artículo con total y por bodega (valor y costo solo si
+  el servidor los manda), y una pantalla de kardex por artículo con existencias por bodega y lote; quien no ve todas las bodegas
+  elige una (el servidor no le da el kardex de la empresa). **Movimientos:** lista con filtros, ficha imprimible con anulación
+  (motivo obligatorio y resumen de lo que pasará) y formularios de entrada y salida con renglones, lote (FEFO propuesto en las
+  salidas), unidad de empaque, lector de códigos de barras (el lector escribe y pulsa Intro; escanear dos veces suma la
+  cantidad) y confirmación con resumen. **Política de costeo:** método vigente, historia y elegir método mientras ningún
+  movimiento lo haya usado. **Por recibir** (INV-5c): líneas agrupadas por documento, recibir en lote lo marcado (bodega, lote
+  existente o nuevo, cantidad con unidad, monto; «Repartir» divide una línea en varios artículos; el cliente revisa que lo
+  recibido de una línea no pase de su pendiente), descartar con la advertencia de V-8, devolución a proveedor y rebaja de costo
+  desde las notas de crédito. Formatos nuevos en el core: `formatearCantidadDeInventario` (2 a 4 decimales) y
+  `formatearCostoUnitario` (2 a 6). **No se hizo / queda anotado:** la **salida a obra o mantenimiento de activos fijos**
+  (la API no recibe `activoFijoId`); la bandeja no filtra por proveedor ni por período (la API lo permite, falta un selector
+  de proveedores); el servidor no lista las líneas descartadas, así que «Devolver a la bandeja» solo está disponible para
+  lo descartado en la visita actual (hace falta un `GET` de descartes para listarlas todas); «Cambiar método» con la autorización
+  de la SAT, salidas especiales, traslados, ajustes, conteos, cierres y los reportes siguen sin pantalla (sus pasos).
