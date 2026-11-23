@@ -94,11 +94,26 @@ describe('cuerpoDeDeclaracion', () => {
   });
 
   it('envía lo escrito sin espacios sobrantes', () => {
-    expect(cuerpoDeDeclaracion({ formulario: 'SAT-2046', numero: ' AB12 ', fecha: '2026-10-05' })).toEqual({
+    const edicion = {
+      formulario: 'SAT-2046' as const,
+      numero: ' AB12 ',
+      fecha: '2026-10-05',
+      remanenteAnterior: ' 25.5 ',
+    };
+
+    expect(cuerpoDeDeclaracion(edicion)).toEqual({
       formulario: 'SAT-2046',
       numeroDeFormulario: 'AB12',
       fechaDePresentacion: '2026-10-05',
+      remanenteDeRetencionesAnterior: '25.5',
     });
+  });
+
+  it('el remanente que escribe el navegador como número se envía como texto, y el cero cuenta', () => {
+    const cuerpo = cuerpoDeDeclaracion({ ...declaracionVacia(), remanenteAnterior: 0 });
+
+    expect(cuerpo).toEqual({ remanenteDeRetencionesAnterior: '0' });
+    expect(cuerpoDeDeclaracion({ ...declaracionVacia(), remanenteAnterior: null })).toEqual({});
   });
 
   it('ofrece primero el formulario del régimen', () => {

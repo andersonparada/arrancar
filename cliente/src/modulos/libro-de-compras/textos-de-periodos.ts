@@ -86,6 +86,9 @@ export const VENTANA_DE_DECLARACION = {
   numeroAyuda: 'Letras y números, sin espacios. Puede anotarlo después declarando de nuevo.',
   fecha: 'Fecha de presentación (opcional)',
   fechaAyuda: 'No puede ser anterior al mes siguiente al período.',
+  remanente: 'Remanente de retenciones del mes anterior (opcional)',
+  remanenteAyuda:
+    'Solo si es el primer mes que declara en Arrancar: lo que le quedó de retenciones (SAT-2237) o de constancias (SAT-2046) a favor. Los meses siguientes se toma solo de la declaración anterior.',
   boton: 'Declarar',
   botonRectificacion: 'Registrar rectificación',
   exito: 'Período declarado.',

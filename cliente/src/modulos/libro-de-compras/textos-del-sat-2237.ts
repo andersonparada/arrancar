@@ -29,3 +29,26 @@ export const VENTANA_DEL_SAT_2237 = {
   sinProveedores: 'No hay compras de este tipo en el período.',
   sinFormulario: 'Este período no lleva SAT-2237',
 } as const;
+
+export const SECCION_DE_VENTAS = {
+  titulo: 'Ventas del período',
+  ayuda: 'Lo que responde Libro de ventas para este mes: lo mismo que se guarda al declarar.',
+  cifra: 'Cifra',
+  valor: 'Valor',
+  remanentesTitulo: 'Retenciones y remanente',
+  remanentesAyuda:
+    'El remanente de retenciones va aparte del remanente del crédito fiscal. La casilla exacta del formulario se confirmará con una captura de la SAT: por ahora son cifras de apoyo.',
+  impuestoAPagar: 'Impuesto por pagar',
+  retenciones: {
+    delPeriodo: 'Retenciones del período',
+    anterior: 'Remanente de retenciones anterior',
+    impuestoDelMes: 'Impuesto del mes (débito menos crédito fiscal)',
+    alSiguiente: 'Remanente de retenciones para el mes siguiente',
+  },
+  constancias: {
+    delPeriodo: 'Constancias del período',
+    anterior: 'Saldo de constancias anterior',
+    impuestoDelMes: 'Impuesto del mes (5 % de los ingresos)',
+    alSiguiente: 'Saldo de constancias para el mes siguiente',
+  },
+} as const;

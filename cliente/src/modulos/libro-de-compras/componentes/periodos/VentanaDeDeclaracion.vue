@@ -54,6 +54,14 @@ const formularios = opcionesDeFormulario();
         :ayuda="textos.fechaAyuda"
         :error="errores.fechaDePresentacion"
       />
+      <CampoTexto
+        v-model="edicion.remanenteAnterior"
+        :etiqueta="textos.remanente"
+        :ayuda="textos.remanenteAyuda"
+        :error="errores.remanenteDeRetencionesAnterior"
+        tipo="number"
+        paso="0.01"
+      />
     </form>
     <template #pie>
       <BotonBase variante="secundario" :deshabilitado="enviando" @click="$emit('cerrar')">Cancelar</BotonBase>

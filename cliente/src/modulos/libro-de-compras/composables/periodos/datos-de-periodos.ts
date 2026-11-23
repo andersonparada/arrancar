@@ -94,9 +94,16 @@ export interface DeclaracionEnEdicion {
   formulario: FormularioDeDeclaracion | '';
   numero: string;
   fecha: string;
+  /** El remanente de retenciones (o saldo de constancias) del mes anterior, en quetzales. */
+  remanenteAnterior: string | number | null;
 }
 
-export const declaracionVacia = (): DeclaracionEnEdicion => ({ formulario: '', numero: '', fecha: '' });
+export const declaracionVacia = (): DeclaracionEnEdicion => ({
+  formulario: '',
+  numero: '',
+  fecha: '',
+  remanenteAnterior: '',
+});
 
 /** El cuerpo para la API: lo que se dejó vacío no se envía (el servidor propone). */
 export function cuerpoDeDeclaracion(edicion: DeclaracionEnEdicion): DatosDeDeclaracion {
@@ -104,6 +111,8 @@ export function cuerpoDeDeclaracion(edicion: DeclaracionEnEdicion): DatosDeDecla
   if (edicion.formulario) cuerpo.formulario = edicion.formulario;
   if (edicion.numero.trim()) cuerpo.numeroDeFormulario = edicion.numero.trim();
   if (edicion.fecha) cuerpo.fechaDePresentacion = edicion.fecha;
+  const remanente = String(edicion.remanenteAnterior ?? '').trim();
+  if (remanente) cuerpo.remanenteDeRetencionesAnterior = remanente;
   return cuerpo;
 }
 
