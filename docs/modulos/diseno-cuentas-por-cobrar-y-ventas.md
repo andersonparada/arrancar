@@ -1118,7 +1118,7 @@ siguiente al programar.
 | Paso | Qué | Quién | Depende de | Espera del usuario |
 |---|---|---|---|---|
 | **VC-0a** (hecho 2026-11-19) | Terceros, migración `0010_clientes_para_ventas`: único `clientes_id_cuenta_unico (id, cuenta_id)`, aviso `terceros.cliente_guardado` con secciones, orden `terceros.crear_cliente_desde_dte` (§4.1); pruebas de la llave entre cuentas, del aviso y de la orden (CF no crea nada) | backend | — | — |
-| VC-0a-c | Secciones aportadas en el formulario y la ficha de Clientes | frontend | VC-0a | — |
+| VC-0a-c (hecho 2026-11-23) | Secciones aportadas en el formulario y la ficha de Clientes | frontend | VC-0a | — |
 | **VC-0b** (hecho 2026-11-23, con correcciones de la revisión) | Bancos, migración `0039_cobros_a_clientes`: conceptos de sistema de cobro (como la `0037`), mapa de nota marcada por módulo (`marcadaParaModulo`), conceptos reservados de `cuentas-por-cobrar`, `RevisorDeCambios` con el mapa (§4.2); pruebas | backend | — (CCL-B1 ya está en `main`) | — |
 | VC-0b-c (hecho 2026-11-23) | `marcadaParaModulo` en las pantallas de Bancos (etiqueta «Para Cuentas por cobrar») | frontend | VC-0b | — |
 | **VC-0c1** | Libro de compras: pregunta `cifras_para_la_declaracion` y `foto.ventas` (§3.3, §4.3); migración `0040_factura_especial_de_venta` (bloqueo de toda `FESP` en recibidos, y las pendientes que ya estén); la `FESP` registrada como compra en el cuadre; pruebas con un doble que responde | backend | — | — |

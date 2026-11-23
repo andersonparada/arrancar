@@ -19,18 +19,8 @@ const props = defineProps<{ papel: PapelTercero; terceroId?: string }>();
 const router = useRouter();
 const sesion = usarSesion();
 const formulario = usarFormularioDeTercero(props.papel, props.terceroId ?? null);
-const {
-  datos,
-  papeles,
-  contactos,
-  categorias,
-  departamentos,
-  municipios,
-  esNuevo,
-  nombreActual,
-  secciones,
-  proveedorId,
-} = formulario;
+const { datos, papeles, contactos, categorias, departamentos, municipios, esNuevo, nombreActual, secciones, idsPapel } =
+  formulario;
 const ventana = VENTANA_DEL_PAPEL[props.papel];
 const permisosDelPapel = PERMISOS_DEL_PAPEL[props.papel];
 const puedeGestionarElPapel = sesion.puede(esNuevo ? permisosDelPapel.crear : permisosDelPapel.editar);
@@ -63,10 +53,10 @@ async function guardar(): Promise<void> {
     </TarjetaBase>
 
     <SeccionesAportadas
-      v-if="papel === 'proveedor' && puedeGestionarElPapel"
+      v-if="puedeGestionarElPapel"
       v-model="secciones"
-      en="proveedor"
-      :registro-id="proveedorId"
+      :en="papel"
+      :registro-id="idsPapel[papel]"
       :errores="formulario.errores.value"
       tarjetas
     />

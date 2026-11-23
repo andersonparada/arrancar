@@ -74,6 +74,7 @@ const editar = () =>
       @editar="papeles.abrir('cliente')"
       @quitar="papeles.quitar('cliente')"
     />
+    <SeccionesEnLaFicha v-if="ficha.cliente" en="cliente" :registro-id="ficha.cliente.id" />
     <TarjetaDePapel
       titulo="Proveedor"
       :icono="Briefcase"
@@ -97,7 +98,7 @@ const editar = () =>
     <VentanaDePapel
       v-model="papeles.edicion.papeles"
       v-model:secciones="papeles.edicion.secciones"
-      :proveedor-id="ficha?.proveedor?.id ?? null"
+      :papel-id="ficha?.[papeles.edicion.abierta ?? 'cliente']?.id ?? null"
       :errores="papeles.errores.value"
       :papel="papeles.edicion.abierta"
       :categorias="categorias"

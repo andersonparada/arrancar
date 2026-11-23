@@ -4357,6 +4357,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   renombrado de la `0039` se saltaba y el concepto con movimientos quedaba adoptado por la clave `cobro_a_cliente`
   (notas marcadas para un módulo posiblemente inexistente). Ahora siempre se renombra: «(anterior)» si está libre y, si
   no, «(anterior <id>)» (no choca con `conceptos_nombre_unico`); el INSERT siembra el de sistema. Prueba API con ambos.
+- **2026-11-23 — VC-0a-c (cliente): secciones aportadas en Clientes.** `DondeSeAporta` suma `'cliente'`; el formulario de
+  Clientes (alta y edición), la ventana «Papel de cliente» de la ficha y la ficha misma muestran y guardan las secciones de
+  los módulos activos igual que en Proveedores (`secciones` viaja en el alta y en `PUT /api/terceros/:id/cliente`;
+  `asignarCliente` acepta `secciones`). `altaCompleta` envía las secciones con cualquier papel. `VentanaDePapel` recibe
+  `papelId` en vez de `proveedorId`. Aún ningún módulo aporta una sección a `cliente` (llegan con LV-1c y CXC); sin
+  secciones, las pantallas no cambian. Pruebas: alta con secciones y filtro de `seccionesDe` por `cliente`.
 - **2026-11-23 — VC-0b y VC-0b-c: Bancos listo para Cuentas por cobrar.** Migración `0039_cobros_a_clientes` (como la
   `0037`: por nombre normalizado, alinea, reactiva, inserta y es repetible) con los conceptos de sistema `cobro_a_cliente`,
   `cobro_a_cliente_de_activo`, `devolucion_a_cliente` y `cheque_rechazado` (este ya existía como sugerido y pasa a

@@ -43,6 +43,13 @@ describe('secciones que un módulo aporta', () => {
     expect(seccionesDe(modulos, 'proveedor', () => false)).toEqual([]);
   });
 
+  it('las de Clientes no se mezclan con las de Proveedores', () => {
+    const deVentas = [modulo('libro-de-ventas', [seccion({ en: 'cliente', titulo: 'Datos fiscales (ventas)' })])];
+
+    expect(seccionesDe(deVentas, 'cliente', () => true).map(({ modulo: m }) => m)).toEqual(['libro-de-ventas']);
+    expect(seccionesDe(deVentas, 'proveedor', () => true)).toEqual([]);
+  });
+
   it('con el mismo orden, respeta el del índice de módulos', () => {
     const empatados = [modulo('primero', [seccion({ titulo: 'A' })]), modulo('segundo', [seccion({ titulo: 'B' })])];
 
