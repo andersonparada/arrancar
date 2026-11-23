@@ -49,12 +49,12 @@ export class ActualizarEmpresa {
     const { unidadDeTrabajo, repositorio, consultas, alcance, avisos } = this.dependencias;
     const enLaEmpresa = { ...operador, empresaId };
     return unidadDeTrabajo.ejecutar(enLaEmpresa, async () => {
+      await alcance.exigirAcceso(operador, empresaId);
       const empresa = await repositorio.buscarEnCuenta(
         Identificador.desde(empresaId),
         Identificador.desde(operador.cuentaId),
       );
       if (!empresa) throw new RecursoNoEncontrado('La empresa');
-      await alcance.exigirAcceso(operador, empresaId);
       const anterior = await consultas.obtenerEnCuenta(empresaId, operador.cuentaId);
       const motivoDelNit = exigirParaCambiarElNit(anterior, this.datosDelNit(cambio));
 

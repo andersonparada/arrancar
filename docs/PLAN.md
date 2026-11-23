@@ -4360,8 +4360,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   tenía `empresas.editar`: se asigna a mano (el acceso total lo recibe). **Inscrita (§3.9):** `estaInscrita` y
   `situacionDeInscripcion` en `core/compartido/dominio/inscripcion-fiscal.ts` (regla pura; `CF` no cuenta). Quien la use leerá
   el historial de `libro_de_compras.datos_fiscales_de_empresa` con `usaTablasDe` (lo hace VCJ-1).
-- **2026-11-23**: VCJ-0d, correcciones de la revisión. `RepositorioEmpresas.buscarEnCuenta` bloquea la fila (`for update`): ya no se
+- **2026-11-23**: VCJ-0d, correcciones de la revisión. `RepositorioEmpresas.buscarEnCuenta` bloquea la fila (`for no key update`: serializa a dos editores sin chocar con el `for key share` de las inserciones con llave foránea a la empresa; el acceso a la empresa se valida antes de bloquear): ya no se
   puede deshacer una corrección de NIT con una edición simultánea sin permiso, motivo ni rastro (prueba de concurrencia). Las pruebas de API del NIT ahora dan al editor acceso a las empresas que crean (antes daban 404).
-  **Orden de unión:** Bancos `0040` deja el hueco de la `0039` de VC-0b; Drizzle solo aplica migraciones con `when` mayor al de la
-  última aplicada, así que **VC-0b (`0039`, `when` menor) se une antes que VCJ-0d**; si se invirtiera, VC-0b debe regenerar su
-  migración con `when` posterior al de la `0040`. Se agrega el paso VCJ-0e (cliente de Empresas con el motivo del NIT).
+  **Orden de unión:** Bancos `0040` se regeneró sobre la `0039` de VC-0b (`prevId` 9fc19450…, `when` posterior); **VC-0b (`0039`) se une antes que VCJ-0d**: sin ella `0040` no encadena (en esta rama `drizzle-kit` solo cuadra con la `0039` presente). Se agrega el paso VCJ-0e (cliente de Empresas con el motivo del NIT).
