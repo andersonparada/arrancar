@@ -1,0 +1,370 @@
+{
+  "id": "bb8d6582-8c80-458b-b7e3-2c66311836d8",
+  "prevId": "49cbd78c-7b67-4847-a57f-91142636597a",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "libro_de_ventas.conceptos_de_ingreso": {
+      "name": "conceptos_de_ingreso",
+      "schema": "libro_de_ventas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clave_de_sistema": {
+          "name": "clave_de_sistema",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "conceptos_de_ingreso_nombre_unico": {
+          "name": "conceptos_de_ingreso_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "conceptos_de_ingreso_clave_unica": {
+          "name": "conceptos_de_ingreso_clave_unica",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "clave_de_sistema",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"libro_de_ventas\".\"conceptos_de_ingreso\".\"clave_de_sistema\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "conceptos_de_ingreso_empresa_activo_idx": {
+          "name": "conceptos_de_ingreso_empresa_activo_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "activo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "conceptos_de_ingreso_empresa_id_empresas_id_fk": {
+          "name": "conceptos_de_ingreso_empresa_id_empresas_id_fk",
+          "tableFrom": "conceptos_de_ingreso",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "conceptos_de_ingreso_id_empresa_unico": {
+          "name": "conceptos_de_ingreso_id_empresa_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "conceptos_de_ingreso_nombre_largo": {
+          "name": "conceptos_de_ingreso_nombre_largo",
+          "value": "char_length(btrim(\"libro_de_ventas\".\"conceptos_de_ingreso\".\"nombre\")) between 1 and 80"
+        },
+        "conceptos_de_ingreso_tipo": {
+          "name": "conceptos_de_ingreso_tipo",
+          "value": "\"libro_de_ventas\".\"conceptos_de_ingreso\".\"tipo\" in ('bien', 'servicio')"
+        },
+        "conceptos_de_ingreso_clave": {
+          "name": "conceptos_de_ingreso_clave",
+          "value": "\"libro_de_ventas\".\"conceptos_de_ingreso\".\"clave_de_sistema\" in ('venta_de_activo_fijo')"
+        },
+        "conceptos_de_ingreso_sistema_activo": {
+          "name": "conceptos_de_ingreso_sistema_activo",
+          "value": "\"libro_de_ventas\".\"conceptos_de_ingreso\".\"clave_de_sistema\" is null or \"libro_de_ventas\".\"conceptos_de_ingreso\".\"activo\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "libro_de_ventas.datos_fiscales_de_cliente": {
+      "name": "datos_fiscales_de_cliente",
+      "schema": "libro_de_ventas",
+      "columns": {
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        },
+        "agente_de_retencion_iva": {
+          "name": "agente_de_retencion_iva",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ninguno'"
+        },
+        "exporta_productos_agropecuarios": {
+          "name": "exporta_productos_agropecuarios",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "retiene_isr": {
+          "name": "retiene_isr",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "retiene_iva_a_pequeno_contribuyente": {
+          "name": "retiene_iva_a_pequeno_contribuyente",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "datos_fiscales_de_cliente_cuenta_idx": {
+          "name": "datos_fiscales_de_cliente_cuenta_idx",
+          "columns": [
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "datos_fiscales_de_cliente_cuenta_id_cuentas_id_fk": {
+          "name": "datos_fiscales_de_cliente_cuenta_id_cuentas_id_fk",
+          "tableFrom": "datos_fiscales_de_cliente",
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "cuenta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "datos_fiscales_de_cliente_cliente_fk": {
+          "name": "datos_fiscales_de_cliente_cliente_fk",
+          "tableFrom": "datos_fiscales_de_cliente",
+          "tableTo": "clientes",
+          "schemaTo": "terceros",
+          "columnsFrom": [
+            "cliente_id",
+            "cuenta_id"
+          ],
+          "columnsTo": [
+            "id",
+            "cuenta_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_cuenta": {
+          "name": "aislamiento_por_cuenta",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
+          "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "datos_fiscales_de_cliente_agente": {
+          "name": "datos_fiscales_de_cliente_agente",
+          "value": "\"libro_de_ventas\".\"datos_fiscales_de_cliente\".\"agente_de_retencion_iva\" in ('ninguno', 'exportador', 'contribuyente_especial', 'sector_publico', 'otro')"
+        },
+        "datos_fiscales_de_cliente_exportador": {
+          "name": "datos_fiscales_de_cliente_exportador",
+          "value": "\"libro_de_ventas\".\"datos_fiscales_de_cliente\".\"agente_de_retencion_iva\" = 'exportador' or not \"libro_de_ventas\".\"datos_fiscales_de_cliente\".\"exporta_productos_agropecuarios\""
+        },
+        "datos_fiscales_de_cliente_iva_a_pequeno": {
+          "name": "datos_fiscales_de_cliente_iva_a_pequeno",
+          "value": "\"libro_de_ventas\".\"datos_fiscales_de_cliente\".\"agente_de_retencion_iva\" <> 'ninguno' or not \"libro_de_ventas\".\"datos_fiscales_de_cliente\".\"retiene_iva_a_pequeno_contribuyente\""
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "libro_de_ventas": "libro_de_ventas"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

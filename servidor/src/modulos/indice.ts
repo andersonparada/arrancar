@@ -10,6 +10,7 @@ import { moduloCuentasPorLiquidar } from './cuentas-por-liquidar/modulo.js';
 import { moduloActivosFijos } from './activos-fijos/modulo.js';
 import { moduloInventarios } from './inventarios/modulo.js';
 import { moduloMultimoneda } from './multimoneda/modulo.js';
+import { moduloLibroDeVentas } from './libro-de-ventas/modulo.js';
 // generador: importaciones
 
 /** Módulos instalados. `npm run generar -- modulo <clave>` suma uno nuevo en la marca. */
@@ -25,5 +26,6 @@ export const definicionesModulos: readonly DefinicionModulo[] = [
   moduloActivosFijos,
   moduloInventarios,
   moduloMultimoneda,
+  moduloLibroDeVentas,
   // generador: modulos
 ];
