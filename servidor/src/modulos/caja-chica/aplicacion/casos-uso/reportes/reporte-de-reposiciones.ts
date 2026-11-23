@@ -22,8 +22,12 @@ const NOMBRES_DE_FORMA: Record<FormaDeReposicion, string> = {
   compensada_al_cerrar: 'Compensada al cerrar',
 };
 
-const respaldoDe = ({ reposicion, referenciaDeBancos }: ReposicionDeReporte): string =>
-  [NOMBRES_DE_FORMA[reposicion.forma], referenciaDeBancos].filter(Boolean).join(' ');
+/** «Cheque 3»: Bancos ya escribe «Cheque» en la referencia del cheque, así que no se repite el nombre de la forma. */
+function respaldoDe({ reposicion, referenciaDeBancos }: ReposicionDeReporte): string {
+  const nombre = NOMBRES_DE_FORMA[reposicion.forma];
+  if (referenciaDeBancos?.toLowerCase().startsWith(nombre.toLowerCase())) return referenciaDeBancos;
+  return [nombre, referenciaDeBancos].filter(Boolean).join(' ');
+}
 
 /** Lo deducible y lo no deducible de cada concepto, en centavos, por orden de concepto. */
 function conceptosDe({ lineas }: { lineas: ReposicionDeReporte['lineas'] }): ConceptoDeReposicionesDto[] {

@@ -57,6 +57,7 @@ const volver = { texto: 'Fondos de caja chica', ruta: { name: 'caja-chica.fondos
       <div class="space-y-6">
         <ResumenDelFondo :partes="ficha.ecuacion.value" :avisos="ficha.fondo.value.avisos" />
         <SeccionDeRetenciones
+          v-if="acciones.abierto"
           :documentos="ficha.conRetencion.value"
           @asignar="comprobantes.asignacion.pedir([$event], ficha.fondo.value)"
         />
