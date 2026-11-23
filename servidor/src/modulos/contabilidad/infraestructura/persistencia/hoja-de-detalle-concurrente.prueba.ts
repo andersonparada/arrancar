@@ -14,7 +14,7 @@ import { cuentas as cuentasDeSuscriptor } from '../../../core/cuentas/infraestru
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { definicionesModulos } from '../../../indice.js';
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import { cuentas } from './cuentas.tablas.js';
 
 let contexto: ContextoEmpresa;
@@ -89,5 +89,67 @@ describe('disparador cuentas_hoja_de_detalle con dos conexiones', () => {
 
     const error = (await cambio) as DatabaseError | undefined;
     expect(error?.code).toBe('23514');
+  });
+
+  it('quien cambia a la cuenta superior con for no key update espera la hija en curso y la ve al seguir', async () => {
+    const [otra] = await enTransaccionSegura(contexto, (tx) =>
+      tx
+        .insert(cuentas)
+        .values({
+          empresaId: contexto.empresaId,
+          codigo: '2',
+          nombre: 'Pasivo',
+          nivel: 1,
+          naturaleza: 'acreedora',
+          tipo: 'balance',
+          esDeDetalle: false,
+        })
+        .returning(),
+    );
+    let soltar!: () => void;
+    const puerta = new Promise<void>((resolver) => (soltar = resolver));
+    const hija = enTransaccionSegura(contexto, async (tx) => {
+      await tx.insert(cuentas).values({
+        empresaId: contexto.empresaId,
+        codigo: '2.1',
+        nombre: 'Hija pasivo',
+        nivel: 2,
+        padreId: otra!.id,
+        naturaleza: 'acreedora',
+        tipo: 'balance',
+        esDeDetalle: false,
+      });
+      await puerta;
+    });
+    await espera(300);
+    const hijasVistas = enTransaccionSegura(contexto, async (tx) => {
+      await tx.select().from(cuentas).where(eq(cuentas.id, otra!.id)).for('no key update');
+      const [fila] = await tx.select({ total: count() }).from(cuentas).where(eq(cuentas.padreId, otra!.id));
+      return fila!.total;
+    });
+    await espera(500);
+    soltar();
+    await hija;
+    expect(await hijasVistas).toBe(1);
+  });
+
+  it('quien le crea una hija toma for share de la cuenta superior y espera a quien la está cambiando', async () => {
+    let soltar!: () => void;
+    const puerta = new Promise<void>((resolver) => (soltar = resolver));
+    const cambio = enTransaccionSegura(contexto, async (tx) => {
+      await tx.select().from(cuentas).where(eq(cuentas.id, padreId)).for('no key update');
+      await puerta;
+    });
+    await espera(300);
+    let leyo = false;
+    const lectura = enTransaccionSegura(contexto, (tx) =>
+      tx.select().from(cuentas).where(eq(cuentas.id, padreId)).for('share'),
+    ).then(() => (leyo = true));
+    await espera(500);
+    expect(leyo).toBe(false);
+    soltar();
+    await cambio;
+    await lectura;
+    expect(leyo).toBe(true);
   });
 });

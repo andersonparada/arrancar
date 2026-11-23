@@ -17,6 +17,20 @@ export class RepositorioCuentasDrizzle implements RepositorioCuentas {
     return fila ? mapeadorDeCuenta.aEntidad(fila) : null;
   }
 
+  async buscarParaCambiar(id: CuentaId): Promise<Cuenta | null> {
+    const [fila] = await transaccionEnCurso()
+      .select()
+      .from(cuentas)
+      .where(eq(cuentas.id, id.valor))
+      .for('no key update');
+    return fila ? mapeadorDeCuenta.aEntidad(fila) : null;
+  }
+
+  async buscarPorCodigoParaCompartir(codigo: string): Promise<Cuenta | null> {
+    const [fila] = await transaccionEnCurso().select().from(cuentas).where(eq(cuentas.codigo, codigo)).for('share');
+    return fila ? mapeadorDeCuenta.aEntidad(fila) : null;
+  }
+
   async tieneHijas(id: CuentaId): Promise<boolean> {
     const [fila] = await transaccionEnCurso()
       .select({ total: count() })

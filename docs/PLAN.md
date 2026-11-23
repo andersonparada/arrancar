@@ -4390,3 +4390,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     `compartido` al crear cuentas, para que una máscara nueva y la primera cuenta no se crucen sin verse. Pendiente de
     decisión: qué pasa con `inicios.fecha` cuando la empresa cambia su fecha de inicio (hoy queda distinta sin aviso y
     solo se detecta al cambiar la fecha del inicio; opciones: vetar el cambio o avisar por el mediador).
+  - Segunda corrección de la revisión de CT-1: la regla «`tipo` igual al del padre» tenía la misma carrera. `ActualizarCuenta`
+    lee la cuenta con `buscarParaCambiar` (`FOR NO KEY UPDATE`) antes de `tieneHijas`, y al crear se lee al padre con
+    `buscarPorCodigoParaCompartir` (`FOR SHARE`), que choca con el bloqueo del otro lado. Pruebas con dos conexiones.

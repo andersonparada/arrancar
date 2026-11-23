@@ -16,6 +16,14 @@ export class CuentasEnMemoria implements RepositorioCuentas, ConsultasCuentas {
     return [...this.registros.values()].find((cuenta) => cuenta.codigo === codigo) ?? null;
   }
 
+  async buscarParaCambiar(id: CuentaId): Promise<Cuenta | null> {
+    return this.buscar(id);
+  }
+
+  async buscarPorCodigoParaCompartir(codigo: string): Promise<Cuenta | null> {
+    return this.buscarPorCodigo(codigo);
+  }
+
   async tieneHijas(id: CuentaId): Promise<boolean> {
     return [...this.registros.values()].some((cuenta) => cuenta.instantanea().padreId?.valor === id.valor);
   }

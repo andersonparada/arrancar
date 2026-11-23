@@ -43,7 +43,7 @@ export async function ubicacionDeCuentaNueva(
   const mascara = await mascaraDeLaEmpresa(inicios);
   mascara.nivelDe(codigo.trim());
   const codigoDelPadre = mascara.codigoDelPadre(codigo.trim());
-  const padre = codigoDelPadre ? await repositorio.buscarPorCodigo(codigoDelPadre) : null;
+  const padre = codigoDelPadre ? await repositorio.buscarPorCodigoParaCompartir(codigoDelPadre) : null;
   if (codigoDelPadre && !padre) throw new CuentaInvalida(`Falta la cuenta superior ${codigoDelPadre}.`);
   return { mascara, padre };
 }

@@ -1,10 +1,12 @@
 import { auditarCambioDeEstado } from '../../../../core/compartido/aplicacion/auditoria.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
+import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Cuenta } from '../../../dominio/cuenta.js';
 import { CuentaConHijas, CuentaInvalida } from '../../../dominio/errores.js';
 import { datosDeCuenta } from '../../datos-de-cuenta.js';
 import type { CuentaDto, SolicitudDeCuenta } from '../../dto/cuenta.dto.js';
-import { cuentaExistente, ubicacionDeCuentaExistente, type DependenciasDeCuentas } from './dependencias-de-cuentas.js';
+import { ubicacionDeCuentaExistente, type DependenciasDeCuentas } from './dependencias-de-cuentas.js';
 
 interface CambioDeCuenta {
   cuentaId: string;
@@ -23,7 +25,8 @@ export class ActualizarCuenta {
   ejecutar(operador: Operador, { cuentaId, solicitud }: CambioDeCuenta): Promise<CuentaDto> {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      const cuenta = await cuentaExistente(repositorio, cuentaId);
+      const cuenta = await repositorio.buscarParaCambiar(Identificador.desde(cuentaId));
+      if (!cuenta) throw new RecursoNoEncontrado('La cuenta');
       const anterior = await consultas.obtener(cuentaId);
       await this.exigirHijasCoherentes(cuenta, solicitud);
       cuenta.cambiarDatos(datosDeCuenta(solicitud), await ubicacionDeCuentaExistente(this.dependencias, cuenta));
