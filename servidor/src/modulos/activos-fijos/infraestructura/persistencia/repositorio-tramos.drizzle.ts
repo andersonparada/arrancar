@@ -4,6 +4,7 @@ import type { RepositorioTramos, TramosDeCambio, TramosNuevos } from '../../apli
 import type { TramoCalculado, TramoGuardado } from '../../dominio/depreciacion/tramo.js';
 import { cuotas } from './cuotas.tablas.js';
 import { divisiones } from './divisiones.tablas.js';
+import { horaReal } from './hora-real.js';
 import { mejoras } from './mejoras.tablas.js';
 import { mapeadorDeTramo } from './tramo.mapeador.js';
 import { tramos } from './tramos.tablas.js';
@@ -22,7 +23,7 @@ export class RepositorioTramosDrizzle implements RepositorioTramos {
     if (nuevos.length === 0) return;
     await transaccionEnCurso()
       .insert(tramos)
-      .values(nuevos.map((tramo) => mapeadorDeTramo.aFila(empresaId, activoId, tramo)));
+      .values(nuevos.map((tramo) => ({ ...mapeadorDeTramo.aFila(empresaId, activoId, tramo), creadoEn: horaReal() })));
   }
 
   async vigentesDeActivo(activoId: string): Promise<TramoCalculado[]> {
@@ -53,7 +54,9 @@ export class RepositorioTramosDrizzle implements RepositorioTramos {
           ),
         );
       const fila = mapeadorDeTramo.aFila(empresaId, activoId, tramo);
-      await transaccion.insert(tramos).values({ ...fila, mejoraId, divisionId: divisionId ?? null });
+      await transaccion
+        .insert(tramos)
+        .values({ ...fila, mejoraId, divisionId: divisionId ?? null, creadoEn: horaReal() });
     }
   }
 

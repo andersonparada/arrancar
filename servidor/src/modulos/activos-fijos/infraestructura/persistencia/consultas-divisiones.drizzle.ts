@@ -38,8 +38,8 @@ const delActivo = (activoId: string): SQL =>
 
 /**
  * Los movimientos que impiden anular una división (§6.11): de los dos activos, lo creado después de ella. Las filas de la
- * propia división (costos, tramos) llevan su `division_id` y no cuentan. `creado_en` de una división es la hora real; el
- * de lo demás, la del inicio de su transacción, siempre posterior a una división ya confirmada.
+ * propia división (costos, tramos) llevan su `division_id` y no cuentan. Todos los `creado_en` que se comparan son la hora
+ * real (`horaReal`) y se guardan con el activo bloqueado, así que lo posterior a la división tiene siempre una hora mayor.
  */
 const MOVIMIENTOS_POSTERIORES = (divisionId: string) => sql`
   with d as (
@@ -58,6 +58,8 @@ const MOVIMIENTOS_POSTERIORES = (divisionId: string) => sql`
         and (x.activo_origen_id in (d.origen, d.nuevo) or x.activo_nuevo_id in (d.origen, d.nuevo)))
     or exists (select 1 from activos_fijos.tramos t, d
       where t.vigente and t.division_id is null and t.activo_id in (d.origen, d.nuevo) and t.creado_en > d.desde)
+    or exists (select 1 from activos_fijos.costos c, d
+      where c.estado = 'vigente' and c.division_id is null and c.activo_id in (d.origen, d.nuevo) and c.creado_en > d.desde)
     or exists (select 1 from activos_fijos.cuotas q, d
       where q.vigente and (q.activo_id = d.nuevo or (q.activo_id = d.origen and q.periodo >= d.periodo)))
   ) as hay`;

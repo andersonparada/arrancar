@@ -51,6 +51,7 @@ export class SaldosEnMemoria implements RepositorioSaldosIniciales, ConsultasSal
   conflictos: ConflictosConLaFechaDeInicio = {
     saldosConFechaPosterior: 0,
     otrosConAdquisicionAnterior: 0,
+    saldosConDivisiones: 0,
     hayCierres: false,
   };
 

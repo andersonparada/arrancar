@@ -120,10 +120,12 @@ describe('el aviso de cambio de la fecha de inicio', () => {
     ['un cierre de depreciación', { hayCierres: true }],
     ['saldos con fechas desde la fecha nueva', { saldosConFechaPosterior: 2 }],
     ['activos de otro origen con adquisición anterior', { otrosConAdquisicionAnterior: 1 }],
+    ['saldos con divisiones vigentes', { saldosConDivisiones: 1 }],
   ])('rechaza el cambio por %s y no reubica nada', async (_caso, conflicto) => {
     e.saldos.conflictos = {
       saldosConFechaPosterior: 0,
       otrosConAdquisicionAnterior: 0,
+      saldosConDivisiones: 0,
       hayCierres: false,
       ...conflicto,
     };

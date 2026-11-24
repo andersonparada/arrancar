@@ -5,6 +5,7 @@ import type { RepositorioCostos } from '../../aplicacion/puertos/repositorio-cos
 import type { Costo, CostoId } from '../../dominio/costo.js';
 import { activos } from './activos.tablas.js';
 import { costos } from './costos.tablas.js';
+import { horaReal } from './hora-real.js';
 import { mapeadorDeCosto } from './costo.mapeador.js';
 import { enTandas } from './en-tandas.js';
 
@@ -15,7 +16,9 @@ export class RepositorioCostosDrizzle implements RepositorioCostos {
   async agregarVarios(nuevos: readonly Costo[]): Promise<void> {
     const transaccion = transaccionEnCurso();
     for (const tanda of enTandas(nuevos)) {
-      await transaccion.insert(costos).values(tanda.map((costo) => mapeadorDeCosto.aFila(costo)));
+      await transaccion
+        .insert(costos)
+        .values(tanda.map((costo) => ({ ...mapeadorDeCosto.aFila(costo), creadoEn: horaReal() })));
     }
   }
 

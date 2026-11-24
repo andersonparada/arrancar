@@ -14,7 +14,7 @@ export const DEPRECIACION = '/api/activos-fijos/depreciacion';
 export async function grupoEnUso(
   cuenta: CuentaDePrueba,
   claseId: string,
-  { cantidad, monto }: { cantidad: number; monto: string },
+  { cantidad, monto, inicioDeUso = '2026-09-10' }: { cantidad: number; monto: string; inicioDeUso?: string },
 ): Promise<string> {
   const creado = await cuenta.propietario.post(
     ACTIVOS,
@@ -29,7 +29,7 @@ export async function grupoEnUso(
     documentoDeSoporte: 'Factura 100',
   });
   const puesto = await cuenta.propietario.post(`${ACTIVOS}/${id}/poner-en-uso`, {
-    fechaDeInicioDeUso: '2026-09-10',
+    fechaDeInicioDeUso: inicioDeUso,
     porcentajeFiscal: '20.00',
     vidaUtilContableMeses: 60,
     valorResidual: '0.00',

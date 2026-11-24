@@ -14,7 +14,8 @@ export interface AvisoDeFechaDeInicio {
 /**
  * Responde al aviso `empresas.fecha_de_inicio_por_cambiar`, que llega dentro de la transacción de Empresas (§8). Rechaza
  * el cambio si algún saldo inicial tendría adquisición o inicio de uso igual o posterior a la fecha nueva, si algún
- * activo de otro origen quedaría con adquisición anterior a ella o si ya hay un cierre de depreciación. Si no,
+ * activo de otro origen quedaría con adquisición anterior a ella, si algún saldo tiene una división vigente (sus tramos
+ * no se reubican) o si ya hay un cierre de depreciación. Si no,
  * actualiza el día de corte de los saldos y el mes de arranque de sus tramos (en la misma transacción de Empresas).
  */
 export class ValidarFechaDeInicioEnActivosFijos {
@@ -29,6 +30,10 @@ export class ValidarFechaDeInicioEnActivosFijos {
       if (conflictos.saldosConFechaPosterior > 0)
         throw new ActivosConFechaFueraDeLaCarga(
           `${conflictos.saldosConFechaPosterior} saldos iniciales de activos fijos tienen adquisición o inicio de uso desde esa fecha.`,
+        );
+      if (conflictos.saldosConDivisiones > 0)
+        throw new ActivosConFechaFueraDeLaCarga(
+          `${conflictos.saldosConDivisiones} saldos iniciales de activos fijos ya se dividieron: anule esas divisiones antes de cambiar la fecha.`,
         );
       if (conflictos.otrosConAdquisicionAnterior > 0)
         throw new ActivosConFechaFueraDeLaCarga(

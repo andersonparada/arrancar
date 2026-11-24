@@ -6,6 +6,7 @@ import type { Activo } from '../../../dominio/activo.js';
 import { MesCerrado } from '../../../dominio/errores-de-depreciacion.js';
 import { DivisionConMovimientosPosteriores, DivisionNoAnulable } from '../../../dominio/errores-de-division.js';
 import type { Division, DivisionId } from '../../../dominio/division.js';
+import { periodoDe } from '../../../dominio/depreciacion/meses.js';
 import type { DivisionDto } from '../../dto/division.dto.js';
 import { RECURSO_DE_DIVISIONES, type DependenciasDeDivisiones } from './dependencias-de-divisiones.js';
 import { eventoDeDivisionAnulada } from './eventos-de-divisiones.js';
@@ -26,7 +27,7 @@ export class AnularDivision {
   constructor(private readonly dependencias: DependenciasDeDivisiones) {}
 
   /**
-   * Anula una división (`divisiones.anular`, I-9 a): solo con su mes abierto y si ninguno de los dos activos tiene, después
+   * Anula una división (`divisiones.anular`, I-9 a): solo con el mes de su fecha abierto (aunque el `periodo` de los tramos sea el siguiente) y si ninguno de los dos activos tiene, después
    * de ella, cuotas, traslados (salvo el alta), mejoras, otros cambios de tramos, bajas ni otra división. Anula los costos
    * que cedió, deja sin efecto sus tramos (y repone los que sustituyó), borra el activo nuevo con su alta y devuelve la
    * cantidad y el residual al origen. La fila queda anulada con el código del activo nuevo. Audita `anular` con la división
@@ -84,11 +85,11 @@ export class AnularDivision {
     await cierres.bloquear('compartido');
     const division = await divisiones.buscar(Identificador.desde(divisionId) as DivisionId);
     if (!division) throw new RecursoNoEncontrado('La división');
-    const { estado, activoOrigenId, activoNuevoId, periodo } = division.instantanea();
+    const { estado, activoOrigenId, activoNuevoId, fecha } = division.instantanea();
     if (estado === 'anulada' || !activoNuevoId) throw new DivisionNoAnulable();
     const [origen, nuevo] = await this.bloquear(activoOrigenId, activoNuevoId);
     const ultimo = await cierres.ultimoMesCerrado();
-    if (ultimo && periodo <= ultimo) throw new MesCerrado(periodo);
+    if (ultimo && periodoDe(fecha) <= ultimo) throw new MesCerrado(periodoDe(fecha));
     if (await consultasDeDivisiones.hayMovimientosPosteriores(divisionId))
       throw new DivisionConMovimientosPosteriores();
     return { division, origen, nuevo };

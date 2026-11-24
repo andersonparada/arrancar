@@ -1423,11 +1423,15 @@ dos decimales.
 - `POST …/activos/:id/dividir` y `…/:id/separar-en-unidades` (`divisiones.crear`, 201) y `POST …/divisiones/:id/anular`
   (`divisiones.anular`). `DivisorDeActivos` es el servicio que AFI-6 y AFI-8 reutilizarán con las causas `traslado`, `baja` e
   `inventario`. Separar en unidades acepta códigos escritos (sin repetirse ni usarse) y propone el resto en un bloque.
-- Anular: mes abierto y sin, después de la división, traslados (salvo el alta), mejoras, otros cambios de tramos, bajas, cuotas del
-  activo nuevo ni otra división (comparando `creado_en`; el de las divisiones es `clock_timestamp()`, así las de «separar en
-  unidades» se deshacen de la última a la primera). Anula los costos cedidos (rastro), apaga los tramos y repone los que sustituyeron,
+- Anular: mes de la **fecha** de la división abierto (no el de su `periodo`, que con `mes_siguiente` puede ser el siguiente) y sin,
+  después de la división, traslados (salvo el alta), mejoras, costos, otros cambios de tramos, bajas, cuotas del activo nuevo ni
+  otra división. Se compara `creado_en`, que en divisiones, tramos, costos, mejoras y traslados es la hora real
+  (`clock_timestamp()`, `horaReal()`): así lo guardado por una transacción que esperó el candado del activo es posterior a la
+  división, y las de «separar en unidades» (y sus tramos) se deshacen de la última a la primera. Anula los costos cedidos (rastro), apaga los tramos y repone los que sustituyeron,
   borra el activo nuevo con sus costos, tramos y alta, y devuelve la cantidad y el residual. Audita `anular` con la división y las
   fichas de los dos activos; la ficha del activo trae `divisiones`.
+- Cambiar la fecha de inicio de la carga se rechaza si algún saldo inicial tiene una división vigente (`reubicar` no mueve sus
+  tramos de división): hay que anularla antes.
 - Decisiones: no se divide un saldo inicial con costo fiscal distinto del contable o de su base (`saldo_inicial_con_diferencias`: la
   diferencia no tiene dónde caer) ni un activo con costos negativos por grupo; un activo con divisiones no se elimina, no cambia su
   cantidad a mano ni vuelve a construcción (`activo_con_divisiones`); la baja con fecha anterior a una división se rechaza

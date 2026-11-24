@@ -4433,4 +4433,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ni un activo con costos negativos; un activo con divisiones no se elimina, no cambia su cantidad a mano ni vuelve a
   construcción; la baja anterior a una división se rechaza. Pruebas: 15 y 27 del dominio, 16 de persistencia y 25 de API (cierre,
   baja, anular y separar con el centavo). Pendiente: AFI-6 (traslado y baja parciales), AFI-8 y AFI-6c (pantallas).
+- **2026-11-23 — AFI-5, correcciones de la revisión.** `creado_en` de divisiones, tramos, costos, mejoras y traslados pasa a la hora
+  real (`horaReal()`, `clock_timestamp()`): arregla que anular la última de «Separar en unidades» repusiera el tramo equivocado (todos
+  compartían `now()`) y la carrera de un movimiento que esperó el candado del activo y quedaba con hora anterior a la división.
+  Anular también se bloquea con costos vigentes posteriores en cualquiera de los dos activos, y compara el mes de la **fecha** de la
+  división con el último cierre (no su `periodo`). Cambiar la fecha de inicio de la carga se rechaza si un saldo tiene divisiones
+  vigentes. Pruebas: 3 de API nuevas (orden de anulaciones con cuotas, costo posterior, mes de la fecha) y 1 unitaria.
 
