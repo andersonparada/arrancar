@@ -4,16 +4,19 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
-import { ligaNueva, type LigaEnEdicion } from '../../composables/parcelas/edicion-de-parcela';
+import { indiceEnviado, ligaNueva, type LigaEnEdicion } from '../../composables/parcelas/edicion-de-parcela';
 
 /**
  * Los inmuebles que abarca la parcela: una fila por inmueble, con los m² de esa finca que abarca (opcional). Una fila
  * sin inmueble elegido no se manda.
  */
 const props = defineProps<{ opciones: OpcionDeRegistro[]; error?: string; errores?: Record<string, string> }>();
-/** El error del servidor de un campo de una fila: llega como `inmuebles.<fila>.<campo>`. */
-const errorDe = (indice: number, campo: string): string | undefined => props.errores?.[`inmuebles.${indice}.${campo}`];
+/** El error del servidor de un campo de una fila: llega como `inmuebles.<fila enviada>.<campo>`: se traduce a la fila de la pantalla. */
 const ligas = defineModel<LigaEnEdicion[]>({ required: true });
+const errorDe = (indice: number, campo: string): string | undefined => {
+  const enviado = indiceEnviado(ligas.value, indice);
+  return enviado === null ? undefined : props.errores?.[`inmuebles.${enviado}.${campo}`];
+};
 const quitar = (indice: number): void => {
   ligas.value = ligas.value.filter((_liga, posicion) => posicion !== indice);
 };

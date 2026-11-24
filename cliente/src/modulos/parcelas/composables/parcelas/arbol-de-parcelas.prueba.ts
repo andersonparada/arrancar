@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { NodoDeParcela } from '../../servicios/parcelas.api';
-import { agruparPorLocalidad, idsConHijas, superficieDelNodo } from './arbol-de-parcelas';
+import { agruparPorLocalidad, idsConHijas, sumasDeSubparcelas, superficieDelNodo } from './arbol-de-parcelas';
 
 const nodo = (id: string, cambios: Partial<NodoDeParcela> = {}): NodoDeParcela => ({
   id,
@@ -126,5 +126,41 @@ describe('parcelas inactivas y suma en la tarjeta', () => {
 describe('contraer todo', () => {
   it('lista solo las parcelas que tienen subparcelas, en cualquier nivel', () => {
     expect(idsConHijas([madre, nodo('sola')])).toEqual(['a', 'a1']);
+  });
+});
+
+describe('árbol filtrado por texto: no se inventan sumas', () => {
+  const sinMedicion = nodo('lote', { hijas: [nodo('l1', { nivel: 2, superficieTotalM2: '30.00' })] });
+
+  it('sin sumas, una madre sin medición no muestra suma y la localidad no tiene total', () => {
+    const [grupo] = agruparPorLocalidad([sinMedicion], new Set(), false);
+
+    expect(grupo!.filas[0]).toMatchObject({ superficieTotalM2: null, esSumaDeSubparcelas: false });
+    expect(grupo!.filas[1]).toMatchObject({ superficieTotalM2: '30.00' });
+    expect(grupo!.superficieTotalM2).toBeNull();
+  });
+
+  it('una nieta sin su abuela en la lista no se cuenta dos veces', () => {
+    const abuela = nodo('ab', { superficieTotalM2: '100.00' });
+    const nieta = nodo('ni', { nivel: 3, superficieTotalM2: '20.00' });
+
+    expect(agruparPorLocalidad([nieta], new Set(), false)[0]!.superficieTotalM2).toBeNull();
+    expect(agruparPorLocalidad([abuela, nieta], new Set(), false)[0]!.superficieTotalM2).toBeNull();
+  });
+});
+
+describe('sumas de subparcelas para la ficha', () => {
+  it('da la suma a toda profundidad de las madres sin medición, y nada a las demás', () => {
+    const arbol = nodo('r', {
+      hijas: [
+        nodo('m', { nivel: 2, hijas: [nodo('x', { nivel: 3, superficieTotalM2: '2.00' })] }),
+        nodo('y', { superficieTotalM2: '3.00' }),
+      ],
+    });
+
+    expect([...sumasDeSubparcelas([arbol])]).toEqual([
+      ['r', '5.00'],
+      ['m', '2.00'],
+    ]);
   });
 });

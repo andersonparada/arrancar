@@ -45,6 +45,9 @@ const { filtros, grupos, cargando, intercambio } = lista;
       @expandir="lista.expandirTodo"
     />
 
+    <p v-if="lista.sinSumas.value && !cargando" class="mb-3 text-sm text-tierra-500">
+      Con una búsqueda escrita no se calculan las sumas de superficie: quite el texto para verlas completas.
+    </p>
     <p v-if="cargando" class="text-sm text-tierra-500" role="status">Cargando…</p>
     <EstadoVacio
       v-else-if="!grupos.length && lista.hayFiltros.value"

@@ -47,10 +47,32 @@ export function superficieDelNodo(nodo: NodoDeParcela): number | null {
 
 const contarNodos = (nodo: NodoDeParcela): number => 1 + nodo.hijas.reduce((suma, hija) => suma + contarNodos(hija), 0);
 
+/** Cómo se dibuja el árbol: qué está colapsado y si las sumas se pueden calcular (el árbol llegó completo). */
+interface OpcionesDelArbol {
+  colapsadas: ReadonlySet<string>;
+  conSumas: boolean;
+}
+
+/**
+ * Las superficies calculadas (suma de las subparcelas activas, a toda profundidad) de las parcelas activas que no
+ * tienen medición propia y cuyas subparcelas sí suman algo. Sirve a la ficha, que recibe el árbol completo de su
+ * localidad, para mostrar lo mismo que la lista.
+ */
+export function sumasDeSubparcelas(raices: NodoDeParcela[]): Map<string, string> {
+  const sumas = new Map<string, string>();
+  const recorrer = (nodo: NodoDeParcela): void => {
+    const suma = nodo.activo && nodo.superficieTotalM2 === null ? superficieMostrada(nodo) : null;
+    if (suma !== null) sumas.set(nodo.id, centesimasATexto(suma));
+    nodo.hijas.forEach(recorrer);
+  };
+  raices.forEach(recorrer);
+  return sumas;
+}
+
 /** Las filas de un nodo y, si no está colapsado, las de sus subparcelas debajo, cada una un nivel más adentro. */
-function filasDe(nodo: NodoDeParcela, profundidad: number, colapsadas: ReadonlySet<string>): FilaDelArbol[] {
-  const colapsada = colapsadas.has(nodo.id);
-  const suma = nodo.superficieTotalM2 === null ? superficieMostrada(nodo) : null;
+function filasDe(nodo: NodoDeParcela, profundidad: number, opciones: OpcionesDelArbol): FilaDelArbol[] {
+  const colapsada = opciones.colapsadas.has(nodo.id);
+  const suma = opciones.conSumas && nodo.superficieTotalM2 === null ? superficieMostrada(nodo) : null;
   const fila: FilaDelArbol = {
     nodo,
     profundidad,
@@ -60,19 +82,26 @@ function filasDe(nodo: NodoDeParcela, profundidad: number, colapsadas: ReadonlyS
     esSumaDeSubparcelas: suma !== null,
   };
   if (colapsada) return [fila];
-  return [fila, ...nodo.hijas.flatMap((hija) => filasDe(hija, profundidad + 1, colapsadas))];
+  return [fila, ...nodo.hijas.flatMap((hija) => filasDe(hija, profundidad + 1, opciones))];
 }
 
-/** Agrupa las raíces del árbol por localidad, en el orden en que llegaron, con sus totales. */
-export function agruparPorLocalidad(raices: NodoDeParcela[], colapsadas: ReadonlySet<string>): GrupoDeLocalidad[] {
+/**
+ * Agrupa las raíces del árbol por localidad, en el orden en que llegaron, con sus totales. Con `conSumas` en falso (la
+ * lista llegó filtrada por texto, así que faltan parcelas) no se suma nada: ni en las madres ni en la localidad.
+ */
+export function agruparPorLocalidad(
+  raices: NodoDeParcela[],
+  colapsadas: ReadonlySet<string>,
+  conSumas = true,
+): GrupoDeLocalidad[] {
   const porLocalidad = new Map<string, NodoDeParcela[]>();
   for (const raiz of raices) porLocalidad.set(raiz.localidadId, [...(porLocalidad.get(raiz.localidadId) ?? []), raiz]);
   return [...porLocalidad.values()].map((nodos) => {
-    const total = sumar(nodos.map(superficieDelNodo));
+    const total = conSumas ? sumar(nodos.map(superficieDelNodo)) : null;
     return {
       localidadId: nodos[0]!.localidadId,
       localidadNombre: nodos[0]!.localidadNombre,
-      filas: nodos.flatMap((nodo) => filasDe(nodo, 0, colapsadas)),
+      filas: nodos.flatMap((nodo) => filasDe(nodo, 0, { colapsadas, conSumas })),
       cantidad: nodos.reduce((suma, nodo) => suma + contarNodos(nodo), 0),
       superficieTotalM2: total === null ? null : centesimasATexto(total),
     };

@@ -3,7 +3,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { Medicion } from '../../servicios/mediciones.api';
 import type { FichaDeParcela } from '../../servicios/parcelas.api';
 import { detallesDeMedicion } from '../mediciones/detalles-de-medicion';
-import { detallesDeParcela, enlacesDelPunto, insigniaDeParcela, resumenDeParcela } from './detalles-de-parcela';
+import {
+  detallesDeParcela,
+  enlacesDelPunto,
+  insigniaDeParcela,
+  resumenDeParcela,
+  superficieCalculadaDe,
+} from './detalles-de-parcela';
 import { inmueblesParaElegir, nombreDeMadre, opcionesDeParcela } from './usar-referencias-de-parcela';
 
 // Los formatos de cantidades y fechas leen la sesión (Pinia).
@@ -149,5 +155,21 @@ describe('opciones de los selectores', () => {
     expect(opcionesDeParcela(fuentes, null, []).tipoId.map(({ valor }) => valor)).toEqual([null, 't1']);
     expect(opcionesDeParcela(fuentes, 't2', []).tipoId.map(({ valor }) => valor)).toEqual([null, 't1', 't2']);
     expect(opcionesDeParcela(fuentes, null, []).parcelaMadreId[0]).toMatchObject({ valor: null });
+  });
+});
+
+describe('superficie calculada en la ficha', () => {
+  const madre: FichaDeParcela = { ...parcela, superficieTotalM2: null };
+
+  it('una madre sin medición muestra la suma de sus subparcelas, con la misma etiqueta que la lista', () => {
+    const calculada = superficieCalculadaDe(madre, new Map([['p-1', '5.00']]));
+    const detalle = detallesDeParcela(madre, mostrar, calculada).find((d) => d.etiqueta.startsWith('Superficie total'));
+
+    expect(detalle).toEqual({ etiqueta: 'Superficie total (suma de subparcelas)', valor: '5.00 m²' });
+  });
+
+  it('con medición propia o sin suma conocida no hay superficie calculada', () => {
+    expect(superficieCalculadaDe(parcela, new Map([['p-1', '5.00']]))).toBeUndefined();
+    expect(superficieCalculadaDe(madre, new Map())).toBeUndefined();
   });
 });

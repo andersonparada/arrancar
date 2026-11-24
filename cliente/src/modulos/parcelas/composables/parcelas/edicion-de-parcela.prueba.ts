@@ -7,6 +7,7 @@ import {
   datosDeParcela,
   edicionDe,
   edicionDeParcela,
+  indiceEnviado,
   ligaNueva,
   mensajeDeInactivacion,
 } from './edicion-de-parcela';
@@ -104,5 +105,23 @@ describe('confirmación de inactivar', () => {
     expect(mensajeDeInactivacion('Potrero 1', 0)).not.toContain('subparcela');
     expect(mensajeDeInactivacion('Potrero 1', 1)).toContain('1 subparcela activa');
     expect(mensajeDeInactivacion('Potrero 1', 3)).toContain('3 subparcelas activas');
+  });
+});
+
+describe('índice de una fila de inmuebles en el servidor', () => {
+  const filas = [
+    { inmuebleId: null, superficieM2: '' },
+    { inmuebleId: 'a', superficieM2: '100' },
+    { inmuebleId: 'b', superficieM2: '9999999999999' },
+  ];
+
+  it('cuenta solo las filas que se mandan: la B va en la posición 1 aunque esté en la tercera fila', () => {
+    expect(indiceEnviado(filas, 1)).toBe(0);
+    expect(indiceEnviado(filas, 2)).toBe(1);
+  });
+
+  it('una fila sin inmueble no se manda, así que no tiene error', () => {
+    expect(indiceEnviado(filas, 0)).toBeNull();
+    expect(indiceEnviado(filas, 7)).toBeNull();
   });
 });

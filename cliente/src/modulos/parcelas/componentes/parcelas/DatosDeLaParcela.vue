@@ -9,12 +9,18 @@ import {
   enlacesDelPunto,
   insigniaDeParcela,
   resumenDeParcela,
+  superficieCalculadaDe,
   type MostrarSuperficie,
 } from '../../composables/parcelas/detalles-de-parcela';
 import type { FichaDeParcela, Parcela } from '../../servicios/parcelas.api';
 
 /** La pestaña «Datos» de la ficha: los avisos del servidor, los datos de la parcela, su punto en el mapa y sus subparcelas. */
-const props = defineProps<{ parcela: FichaDeParcela; subparcelas: Parcela[]; mostrar: MostrarSuperficie }>();
+const props = defineProps<{
+  parcela: FichaDeParcela;
+  subparcelas: Parcela[];
+  mostrar: MostrarSuperficie;
+  sumas: ReadonlyMap<string, string>;
+}>();
 const emit = defineEmits<{ nuevaSubparcela: [] }>();
 const enlaces = computed(() => enlacesDelPunto(props.parcela));
 </script>
@@ -32,7 +38,7 @@ const enlaces = computed(() => enlacesDelPunto(props.parcela));
       </li>
     </ul>
 
-    <DatosDelRegistro :detalles="detallesDeParcela(parcela, mostrar)" />
+    <DatosDelRegistro :detalles="detallesDeParcela(parcela, mostrar, superficieCalculadaDe(parcela, sumas))" />
     <p v-if="enlaces" class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
       <a
         :href="enlaces.mapa"
@@ -67,7 +73,7 @@ const enlaces = computed(() => enlacesDelPunto(props.parcela));
         <li v-for="hija in subparcelas" :key="hija.id">
           <TarjetaDeRegistro
             :titulo="`${hija.codigo} · ${hija.nombre}`"
-            :detalles="resumenDeParcela(hija, mostrar)"
+            :detalles="resumenDeParcela(hija, mostrar, superficieCalculadaDe(hija, sumas))"
             permiso="parcelas.parcelas.editar"
             :inactivo="!hija.activo"
             :insignia="insigniaDeParcela(hija)"

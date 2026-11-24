@@ -4431,3 +4431,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `parcelas.parcelas.ver` y `.crear` ya puede registrar parcelas; el tipo inactivo que la parcela tiene se conserva. (5) La
   ficha de una parcela inactiva no ofrece «Agregar subparcela»; si la madre de la dirección no se puede usar se avisa y se
   quita, y si falla la carga de la lista no se toca. (6) El selector de madre va en orden de árbol (`ordenarComoArbol`).
+- **2026-11-23 — Parcelas PA-1c: segunda ronda de correcciones.** (1) El error de una fila de inmuebles se busca con el
+  índice que el servidor vio (`indiceEnviado`: solo cuentan las filas con inmueble) y no con el de la pantalla. (2) La ficha
+  trae el árbol activo completo de su localidad y de ahí sale la suma de subparcelas (a toda profundidad) de la parcela y de
+  sus tarjetas de subparcelas, con la misma etiqueta que la lista. (3) Con texto de búsqueda el árbol llega incompleto: ni las
+  madres ni la localidad muestran sumas (aviso en la lista); sin texto, como antes. Decisión: cálculo en el cliente sobre el
+  árbol completo en vez de un campo nuevo del servidor; si el árbol de una localidad crece mucho, mover la suma al servidor.

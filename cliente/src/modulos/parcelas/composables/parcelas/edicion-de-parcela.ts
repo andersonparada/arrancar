@@ -115,6 +115,15 @@ export const datosDeParcela = (edicion: EdicionDeParcela, medicion: EdicionDeMed
   medicion: edicion.conMedicion ? datosDeMedicion(medicion) : null,
 });
 
+/**
+ * Qué fila del servidor corresponde a una fila de la pantalla: `cambioDeParcela` no manda las filas sin inmueble, así
+ * que `inmuebles.<n>` del servidor cuenta solo las que sí. `null` si esa fila no se mandó (no puede tener error).
+ */
+export function indiceEnviado(ligas: LigaEnEdicion[], indiceEnPantalla: number): number | null {
+  if (!ligas[indiceEnPantalla]?.inmuebleId) return null;
+  return ligas.slice(0, indiceEnPantalla).filter((liga) => liga.inmuebleId).length;
+}
+
 /** Una fila más para ligar un inmueble. */
 export const ligaNueva = (): LigaEnEdicion => ({ inmuebleId: null, superficieM2: '' });
 

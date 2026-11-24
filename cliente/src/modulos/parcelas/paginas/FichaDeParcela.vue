@@ -51,6 +51,7 @@ const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: 'parcelas.pa
         :parcela="registro"
         :subparcelas="ficha.subparcelas.value"
         :mostrar="ficha.mostrar"
+        :sumas="ficha.sumas.value"
         @nueva-subparcela="ficha.nuevaSubparcela"
       />
       <MedicionesDeLaParcela

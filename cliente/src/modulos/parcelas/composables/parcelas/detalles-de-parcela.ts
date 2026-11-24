@@ -13,6 +13,15 @@ export interface SuperficieCalculada {
   esSuma: boolean;
 }
 
+/** La superficie calculada de una parcela sin medición propia, si el árbol dice cuánto suman sus subparcelas. */
+export function superficieCalculadaDe(
+  parcela: Parcela,
+  sumas: ReadonlyMap<string, string>,
+): SuperficieCalculada | undefined {
+  const suma = parcela.superficieTotalM2 === null ? sumas.get(parcela.id) : undefined;
+  return suma === undefined ? undefined : { metrosCuadrados: suma, esSuma: true };
+}
+
 /**
  * Lo que muestra la tarjeta de una parcela en la lista: lo que la identifica. Con `calculada`, la superficie total es
  * la suma de las subparcelas (la parcela no tiene medición propia) y la etiqueta lo dice.
@@ -48,12 +57,16 @@ const colindancias = (parcela: Parcela): DetalleDeRegistro[] => [
 ];
 
 /** Todos los datos de la parcela para la pestaña «Datos» de su ficha, ya con formato. */
-export const detallesDeParcela = (parcela: FichaDeParcela, mostrar: MostrarSuperficie): DetalleDeRegistro[] => [
+export const detallesDeParcela = (
+  parcela: FichaDeParcela,
+  mostrar: MostrarSuperficie,
+  calculada?: SuperficieCalculada,
+): DetalleDeRegistro[] => [
   { etiqueta: 'Localidad', valor: formatearTexto(parcela.localidadNombre) },
   { etiqueta: 'Código', valor: formatearTexto(parcela.codigo) },
   { etiqueta: 'Parcela madre', valor: formatearTexto(parcela.parcelaMadreCodigo) },
   { etiqueta: 'Nivel', valor: formatearTexto(parcela.nivel) },
-  ...resumenDeParcela(parcela, mostrar),
+  ...resumenDeParcela(parcela, mostrar, calculada),
   { etiqueta: 'Punto en el mapa', valor: formatearTexto(punto(parcela)) },
   ...colindancias(parcela),
   { etiqueta: 'Observaciones', valor: formatearTexto(parcela.observaciones), largo: true },
