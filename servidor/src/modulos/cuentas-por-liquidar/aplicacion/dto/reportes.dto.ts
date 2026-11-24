@@ -9,8 +9,10 @@ export interface AnticipoPorLiquidarDto {
   fecha: string;
   fechaLimite: string;
   monto: string;
-  /** Lo que faltaba por justificar al corte. */
+  /** Lo que faltaba por justificar al corte (nunca negativo). */
   porJustificar: string;
+  /** Lo gastado de más al corte: la empresa debe reembolsarlo; no resta de lo por justificar. */
+  aReembolsar: string;
   diasDesdeLaEntrega: number;
   diasVencido: number;
   vencido: boolean;
@@ -26,6 +28,7 @@ export interface BeneficiarioPorLiquidarDto {
   vencidos: number;
   monto: string;
   porJustificar: string;
+  aReembolsar: string;
   anticipos: AnticipoPorLiquidarDto[];
 }
 
@@ -47,6 +50,7 @@ export interface ReporteDeAnticiposPorLiquidarDto {
     vencidos: number;
     monto: string;
     porJustificar: string;
+    aReembolsar: string;
     /** Lo por justificar de los anticipos vencidos. */
     porJustificarVencido: string;
   };

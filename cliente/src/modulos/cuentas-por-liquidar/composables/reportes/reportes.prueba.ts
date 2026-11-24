@@ -63,6 +63,7 @@ describe('CL-R1: anticipos por liquidar', () => {
         vencidos: 1,
         monto: '2500.00',
         porJustificar: '2000.00',
+        aReembolsar: '0.00',
         porJustificarVencido: '700.00',
       },
     } as ReporteDeAnticiposPorLiquidar;
@@ -70,6 +71,16 @@ describe('CL-R1: anticipos por liquidar', () => {
     expect(cifras[0]).toEqual({ etiqueta: 'Por justificar', valor: formatearMonto('2000.00'), destacado: true });
     expect(cifras[1]!.valor).toBe(formatearMonto('700.00'));
     expect(cifras[2]).toMatchObject({ etiqueta: 'Anticipos', valor: '3' });
+    expect(cifras.some(({ etiqueta }) => etiqueta.includes('reembolsar'))).toBe(false);
+  });
+
+  it('muestra lo gastado de más aparte, sin restarlo de lo por justificar', () => {
+    const reporte = {
+      total: { anticipos: 2, vencidos: 0, monto: '300.00', porJustificar: '200.00', aReembolsar: '300.00' },
+    } as ReporteDeAnticiposPorLiquidar;
+    const cifras = totalesDeAnticiposPorLiquidar(reporte);
+    expect(cifras[0]!.valor).toBe(formatearMonto('200.00'));
+    expect(cifras.at(-1)).toEqual({ etiqueta: 'A reembolsar a beneficiarios', valor: formatearMonto('300.00') });
   });
 });
 

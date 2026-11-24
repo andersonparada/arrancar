@@ -1,7 +1,7 @@
 import { textoONulo } from '@/modulos/core/utilidades/edicion';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { ClaseDeAnticipo, SolicitudDeEntrega } from '../../servicios/tipos-de-anticipos';
-import { centavosDe, textoDeCentavos } from '../dinero';
+import { centavosDe, MONTO_MAXIMO_EN_CENTAVOS, textoDeCentavos } from '../dinero';
 import { sumarDias } from '../reportes/fechas-de-reportes';
 import { NOMBRES_DE_CLASE } from './lista-de-anticipos';
 import type { FormaDeMedio } from './opciones-de-medios';
@@ -57,6 +57,8 @@ export const fechaLimitePropuesta = (fecha: string, dias: number): string => (fe
 function erroresDelMonto(edicion: EdicionDeAnticipo): Record<string, string> {
   const centavos = centavosDe(edicion.monto);
   if (centavos === null) return { monto: 'Escriba el monto con hasta dos decimales, por ejemplo 1500.00.' };
+  if (centavos > MONTO_MAXIMO_EN_CENTAVOS)
+    return { monto: 'El monto es demasiado grande: no puede pasar de 999,999,999,999.99.' };
   return centavos > 0 ? {} : { monto: 'Escriba el monto del anticipo: debe ser mayor que cero.' };
 }
 

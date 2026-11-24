@@ -1,6 +1,5 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
-import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { alDejarDeEscribir } from '@/modulos/core/composables/al-dejar-de-escribir';
 import { apiAnticipos, type AnticipoResumen, type ConsultaDeAnticipos } from '../../servicios/anticipos.api';
 import { apiOpciones } from '../../servicios/opciones.api';
@@ -36,12 +35,10 @@ function usarPeticionDeAnticipos(construirConsulta: () => ConsultaDeAnticipos) {
   return { anticipos, total, totalPorJustificar, cargando, cargar };
 }
 
-/** Los beneficiarios para filtrar la lista; sin permiso de ver terceros, el filtro no se ofrece. */
+/** Los beneficiarios para filtrar la lista (el catálogo propio del módulo, sin pedir `terceros.ver`). */
 function usarBeneficiariosParaFiltrar() {
-  const sesion = usarSesion();
   const beneficiarios = ref<{ valor: string; texto: string }[]>([]);
   onMounted(async () => {
-    if (!sesion.puede('terceros.ver')) return;
     const terceros = await apiOpciones.beneficiarios().catch(() => []);
     beneficiarios.value = [
       { valor: '', texto: 'Todos los beneficiarios' },

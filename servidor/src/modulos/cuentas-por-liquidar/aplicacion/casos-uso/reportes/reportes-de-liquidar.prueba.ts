@@ -88,6 +88,7 @@ describe('CL-R1: anticipos por liquidar', () => {
       vencidos: 2,
       monto: '2500.00',
       porJustificar: '2000.00',
+      aReembolsar: '0.00',
       porJustificarVencido: '1500.00',
     });
     expect(resultado.porTramo.map((t) => [t.tramo, t.cantidad])).toEqual([

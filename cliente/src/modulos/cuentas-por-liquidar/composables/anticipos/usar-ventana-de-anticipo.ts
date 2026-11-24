@@ -149,7 +149,6 @@ function propiedadesDeLaVentana({ resultado, vencidos }: Estado, catalogos: Cata
     beneficiarios: catalogos.beneficiarios.value,
     usuarios: catalogos.usuarios.value,
     puedeElegirUsuario: catalogos.puedeElegirUsuario.value,
-    puedeVerTerceros: catalogos.puedeVerTerceros.value,
     puedeCrearTerceros: catalogos.puedeCrearTerceros.value,
     cargando: catalogos.cargando.value,
   };

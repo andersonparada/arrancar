@@ -10,6 +10,8 @@ export interface AnticipoPorLiquidar {
   fechaLimite: string;
   monto: string;
   porJustificar: string;
+  /** Lo gastado de más: la empresa debe reembolsarlo; no resta de lo por justificar. */
+  aReembolsar: string;
   diasDesdeLaEntrega: number;
   diasVencido: number;
   vencido: boolean;
@@ -24,6 +26,7 @@ export interface BeneficiarioPorLiquidar {
   vencidos: number;
   monto: string;
   porJustificar: string;
+  aReembolsar: string;
   anticipos: AnticipoPorLiquidar[];
 }
 
@@ -45,6 +48,7 @@ export interface ReporteDeAnticiposPorLiquidar {
     vencidos: number;
     monto: string;
     porJustificar: string;
+    aReembolsar: string;
     porJustificarVencido: string;
   };
   leyendas: string[];

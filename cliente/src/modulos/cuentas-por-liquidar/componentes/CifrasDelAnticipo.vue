@@ -15,8 +15,8 @@ defineProps<{ ficha: Pick<Anticipo, 'monto' | 'gastado' | 'porJustificar' | 'est
       <div v-for="cifra in cifrasDelAnticipo(ficha)" :key="cifra.etiqueta" class="min-w-0">
         <dt class="text-xs text-tierra-500">{{ cifra.etiqueta }}</dt>
         <dd
-          class="mt-0.5 break-words font-semibold"
-          :class="cifra.enfasis ? 'text-xl sm:text-2xl' : 'text-base sm:text-lg'"
+          class="mt-0.5 whitespace-nowrap font-semibold"
+          :class="cifra.enfasis ? 'text-lg sm:text-2xl' : 'text-base sm:text-lg'"
         >
           {{ cifra.valor }}
         </dd>

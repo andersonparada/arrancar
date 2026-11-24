@@ -41,23 +41,23 @@ const linea = 'mt-10 border-t border-black pt-1 text-xs';
     <dl class="grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
       <div>
         <dt class="inline font-semibold">Beneficiario:</dt>
-        <dd class="inline">{{ anticipo.beneficiario }}</dd>
+        <dd class="ml-1 inline">{{ anticipo.beneficiario }}</dd>
       </div>
       <div>
         <dt class="inline font-semibold">Entrega:</dt>
-        <dd class="inline">{{ formatearFecha(anticipo.fecha) }}</dd>
+        <dd class="ml-1 inline">{{ formatearFecha(anticipo.fecha) }}</dd>
       </div>
       <div>
         <dt class="inline font-semibold">Documento en Bancos:</dt>
-        <dd class="inline">{{ documentoDelAnticipo(anticipo.forma, anticipo.movimiento.numero) }}</dd>
+        <dd class="ml-1 inline">{{ documentoDelAnticipo(anticipo.forma, anticipo.movimiento.numero) }}</dd>
       </div>
       <div v-if="anticipo.liquidacion">
         <dt class="inline font-semibold">Liquidación:</dt>
-        <dd class="inline">{{ formatearFecha(anticipo.liquidacion.fecha) }}</dd>
+        <dd class="ml-1 inline">{{ formatearFecha(anticipo.liquidacion.fecha) }}</dd>
       </div>
       <div class="sm:col-span-2">
         <dt class="inline font-semibold">Para:</dt>
-        <dd class="inline">{{ anticipo.descripcion }}</dd>
+        <dd class="ml-1 inline">{{ anticipo.descripcion }}</dd>
       </div>
     </dl>
 

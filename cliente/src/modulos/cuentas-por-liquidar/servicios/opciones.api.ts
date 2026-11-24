@@ -59,9 +59,9 @@ export class ApiOpciones {
     return this.http.obtener<ConceptoParaGasto[]>(`${RUTA}/conceptos-de-gasto`);
   }
 
-  /** Los terceros activos de la cuenta (necesita `terceros.ver`). */
+  /** Los terceros activos de la cuenta; basta poder ver o entregar anticipos, no hace falta `terceros.ver`. */
   beneficiarios() {
-    return this.http.obtener<Beneficiario[]>('/terceros', { activo: true });
+    return this.http.obtener<Beneficiario[]>(`${RUTA}/beneficiarios`);
   }
 
   /** Alta rápida: solo el nombre; lo demás se completa en Terceros (necesita `terceros.crear`). */

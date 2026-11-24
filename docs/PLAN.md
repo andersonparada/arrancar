@@ -4355,3 +4355,17 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-23**: Ventas/Caja y Cuentas por cobrar pasan a ser un solo módulo, «Ventas y cobros» (clave `cuentas-por-cobrar`, sin
   reescribir migraciones), con Inventarios opcional y Libro de ventas aparte. Validado por contador y seguridad (30 hallazgos
   incorporados); respuestas VU-P1 a VU-P9 en `diseno-ventas-y-caja.md` §24.9. Inventarios: P-1, P-3 e INV-A16 = a.
+- **2026-11-23 (CL-7, correcciones de la revisión):** (media) el total «por justificar» de la lista de anticipos suma `greatest(…, 0)`: un
+  anticipo gastado de más aporta cero, igual que CL-R1, con y sin corte (prueba nueva de API). (media) `GET …/beneficiarios` entrega el
+  catálogo completo (terceros activos con NIT) solo con `anticipos.crear`; con solo `anticipos.ver` devuelve únicamente a los
+  beneficiarios que ya tienen anticipos en la empresa, sin NIT.
+- **2026-11-23 (CL-7, correcciones de la QA de Cuentas por liquidar):** (media) el beneficiario ya no depende de `terceros.ver`: ruta
+  nueva `GET /api/cuentas-por-liquidar/beneficiarios` (terceros activos por nombre; pide `anticipos.crear` o `anticipos.ver`), que
+  usan la ventana de entregar y el filtro de la lista; se quitó el aviso de «pida el permiso Ver terceros». (media) CL-R1 ya no resta lo
+  gastado de más: `porJustificar` nunca es negativo y lo de más va aparte como `aReembolsar` por anticipo, beneficiario y total, en
+  pantalla (cifra «A reembolsar a beneficiarios» y nota por beneficiario), impresión y Excel (columna nueva «A reembolsar»); las `it.fails`
+  pasaron a `it`. Bajos corregidos: cifra grande sin partirse en celular (6), cuenta de depósito preseleccionada si hay una sola (7),
+  monto demasiado grande con mensaje propio (9), «Beneficiario: Juan» con espacio, «Cobrarlo en 6 cuotas», plurales del Excel y gasto
+  vacío de un anticipo anulado (11). Siguen abiertos: «Es empleado» encendido en cada entrega (8, el tercero no lo recuerda), aviso rojo que no
+  se limpia entre intentos (10, es del almacén de avisos del core) y alinear las tablas con y sin documento (11); y de decisión: terceros de
+  tipo empresa en el selector, nota de débito sin referencia y corte futuro de CL-R1 (12).

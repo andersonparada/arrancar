@@ -28,6 +28,7 @@ export interface SolicitudDeAnticiposPorLiquidar {
 
 export const LEYENDAS_DE_ANTICIPOS_POR_LIQUIDAR = [
   'Lo por justificar es lo que el beneficiario aún debía sustentar con documentos al corte (monto menos los gastos de entonces).',
+  'Si se gastó más de lo entregado, lo de más no resta de lo que otros deben: se muestra aparte como reembolso a favor del beneficiario.',
   'La antigüedad cuenta los días pasados de la fecha límite. Un anticipo cuenta hasta que se liquida o se anula.',
 ];
 
@@ -36,6 +37,7 @@ const TOPE_DE_ANTICIPOS = 10_000;
 
 function anticipoDelReporte({ anticipo, gastadoCentavos }: FilaDeAnticipo, corte: string): AnticipoPorLiquidarDto {
   const diasVencido = Math.max(0, diasEntre(anticipo.fechaLimite, corte));
+  const pendiente = porJustificar(anticipo, gastadoCentavos);
   return {
     id: anticipo.id,
     numero: numeroDelAnticipo(anticipo.numero, anticipo.anioDeNumero),
@@ -43,7 +45,8 @@ function anticipoDelReporte({ anticipo, gastadoCentavos }: FilaDeAnticipo, corte
     fecha: anticipo.fecha,
     fechaLimite: anticipo.fechaLimite,
     monto: deCentavos(anticipo.montoCentavos),
-    porJustificar: deCentavos(porJustificar(anticipo, gastadoCentavos)),
+    porJustificar: deCentavos(Math.max(0, pendiente)),
+    aReembolsar: deCentavos(Math.max(0, -pendiente)),
     diasDesdeLaEntrega: Math.max(0, diasEntre(anticipo.fecha, corte)),
     diasVencido,
     vencido: diasVencido > 0,
@@ -66,6 +69,7 @@ function beneficiarioDelReporte(
     vencidos: anticipos.filter((a) => a.vencido).length,
     monto: sumar(anticipos, (a) => a.monto),
     porJustificar: sumar(anticipos, (a) => a.porJustificar),
+    aReembolsar: sumar(anticipos, (a) => a.aReembolsar),
     anticipos,
   };
 }
@@ -101,6 +105,7 @@ function totalDelReporte(beneficiarios: BeneficiarioPorLiquidarDto[]): TotalDelR
     vencidos: todos.filter((a) => a.vencido).length,
     monto: sumar(todos, (a) => a.monto),
     porJustificar: sumar(todos, (a) => a.porJustificar),
+    aReembolsar: sumar(todos, (a) => a.aReembolsar),
     porJustificarVencido: sumar(
       todos.filter((a) => a.vencido),
       (a) => a.porJustificar,

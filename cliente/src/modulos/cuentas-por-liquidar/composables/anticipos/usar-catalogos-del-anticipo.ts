@@ -18,7 +18,7 @@ function usarListasDelAnticipo() {
     cargando.value = true;
     try {
       medios.value = await apiOpciones.mediosParaEntregar(fecha);
-      if (sesion.puede('terceros.ver')) terceros.value = await apiOpciones.beneficiarios();
+      terceros.value = await apiOpciones.beneficiarios();
       if (sesion.puede('usuarios.ver') && usuarios.value.length === 0) usuarios.value = await apiUsuarios.listar();
     } catch (error) {
       usarAvisos().error(error instanceof Error ? error.message : 'No se pudieron cargar las cuentas de Bancos.');
@@ -50,7 +50,6 @@ export function usarCatalogosDelAnticipo() {
     actualizarSaldos,
     nombreDelBeneficiario,
     beneficiarios: computed(() => opcionesDeBeneficiarios(terceros.value)),
-    puedeVerTerceros: computed(() => sesion.puede('terceros.ver')),
     puedeCrearTerceros: computed(() => sesion.puede('terceros.crear')),
     usuarios: computed(() => opcionesDeUsuarios(usuarios.value, sesion.empresa?.id ?? null)),
     puedeElegirUsuario: computed(() => sesion.puede('usuarios.ver') && usuarios.value.length > 0),

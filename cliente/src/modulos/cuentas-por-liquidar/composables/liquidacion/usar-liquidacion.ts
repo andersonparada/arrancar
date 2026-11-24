@@ -59,6 +59,7 @@ function usarLoEscrito({ anticipo, medios }: Datos) {
     if (!actual) return;
     Object.assign(edicion, edicionDeLiquidacionInicial(actual, fechaDeHoy()));
     edicion.medioDelReembolso = medioPorOmision(edicion.formaDelReembolso, medios.value);
+    edicion.cuentaDelDeposito = medioPorOmision('nota_de_debito', medios.value);
   });
   watch(
     () => edicion.formaDelReembolso,

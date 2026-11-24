@@ -1,7 +1,7 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { Gasto, SolicitudDeGastoSinDocumento } from '../../servicios/tipos-de-gastos';
-import { centavosDe, textoDeCentavos } from '../dinero';
+import { centavosDe, MONTO_MAXIMO_EN_CENTAVOS, textoDeCentavos } from '../dinero';
 
 export const MAXIMO_DE_LA_DESCRIPCION_DEL_GASTO = 300;
 export const MAXIMO_DE_PAGADO_A = 150;
@@ -40,6 +40,8 @@ export function erroresDelGastoSinDocumento(edicion: EdicionDeGastoSinDocumento,
   const errores = erroresDeLosTextos(edicion);
   const centavos = centavosDe(edicion.monto);
   if (centavos === null) errores.monto = 'Escriba el monto con hasta dos decimales, por ejemplo 45.50.';
+  else if (centavos > MONTO_MAXIMO_EN_CENTAVOS)
+    errores.monto = 'El monto es demasiado grande: no puede pasar de 999,999,999,999.99.';
   else if (centavos <= 0) errores.monto = 'Escriba el monto: debe ser mayor que cero.';
   if (!edicion.fecha) errores.fecha = 'Escriba la fecha del gasto.';
   else if (edicion.fecha > hoy) errores.fecha = 'El gasto no puede tener fecha futura.';

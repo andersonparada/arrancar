@@ -55,7 +55,12 @@ const volver = {
       <DatosDelRegistro :detalles="detallesDeLaLiquidacion(ficha)" />
     </SeccionDeFicha>
     <SeccionDeFicha titulo="Gastos">
-      <SeccionDeGastos :gastos="gastos" :puede-quitar="ficha.estado === 'abierto'" @quitar="acciones.quitar" />
+      <SeccionDeGastos
+        :gastos="gastos"
+        :puede-quitar="ficha.estado === 'abierto'"
+        :abierto="ficha.estado === 'abierto'"
+        @quitar="acciones.quitar"
+      />
     </SeccionDeFicha>
     <SeccionDeFicha titulo="Datos del anticipo">
       <DatosDelRegistro :detalles="detallesDelAnticipo(ficha)" />

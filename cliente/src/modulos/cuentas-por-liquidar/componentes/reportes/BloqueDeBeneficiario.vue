@@ -25,6 +25,9 @@ defineProps<{ beneficiario: BeneficiarioPorLiquidar }>();
       <p class="text-right">
         <span class="block text-lg font-semibold tabular-nums">{{ formatearMonto(beneficiario.porJustificar) }}</span>
         <span class="block text-xs text-tierra-500 dark:text-tierra-300">por justificar</span>
+        <span v-if="Number(beneficiario.aReembolsar) > 0" class="block text-xs text-tierra-600 dark:text-tierra-300">
+          y {{ formatearMonto(beneficiario.aReembolsar) }} a reembolsarle
+        </span>
       </p>
     </div>
     <ul class="mt-3 divide-y divide-tierra-100 text-sm dark:divide-tierra-700">
@@ -43,7 +46,10 @@ defineProps<{ beneficiario: BeneficiarioPorLiquidar }>();
         </span>
         <span class="tabular-nums">
           de {{ formatearMonto(anticipo.monto) }} ·
-          <strong>{{ formatearMonto(anticipo.porJustificar) }}</strong>
+          <strong v-if="Number(anticipo.aReembolsar) > 0">
+            gastado de más: {{ formatearMonto(anticipo.aReembolsar) }} a reembolsar
+          </strong>
+          <strong v-else>{{ formatearMonto(anticipo.porJustificar) }}</strong>
         </span>
       </li>
     </ul>

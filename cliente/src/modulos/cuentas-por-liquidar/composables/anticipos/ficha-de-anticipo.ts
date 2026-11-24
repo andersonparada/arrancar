@@ -15,6 +15,12 @@ export const NOMBRES_DE_DESTINO: Record<DestinoDeNoLiquidado, string> = {
   perdida: 'Pérdida para la empresa',
 };
 
+/** El destino de lo no liquidado dicho en una frase; si se cobra, con sus cuotas («Cobrarlo en 6 cuotas»). */
+export function textoDelDestino(destino: DestinoDeNoLiquidado, cuotas: number | null): string {
+  if (destino !== 'cobrar' || !cuotas) return NOMBRES_DE_DESTINO[destino];
+  return `Cobrarlo en ${cuotas} ${cuotas === 1 ? 'cuota' : 'cuotas'}`;
+}
+
 /** Los datos del anticipo en su ficha. */
 export function detallesDelAnticipo(anticipo: Anticipo): DetalleDeRegistro[] {
   const detalles: DetalleDeRegistro[] = [
@@ -62,8 +68,7 @@ type Liquidacion = NonNullable<Anticipo['liquidacion']>;
 function detallesDeLoNoLiquidado(liquidacion: Liquidacion): DetalleDeRegistro[] {
   const detalles: DetalleDeRegistro[] = [{ etiqueta: 'Sin liquidar', valor: formatearMonto(liquidacion.noLiquidado) }];
   if (liquidacion.destinoDeNoLiquidado) {
-    const cuotas = liquidacion.cuotas ? ` en ${liquidacion.cuotas} cuotas` : '';
-    const valor = `${NOMBRES_DE_DESTINO[liquidacion.destinoDeNoLiquidado]}${cuotas}`;
+    const valor = textoDelDestino(liquidacion.destinoDeNoLiquidado, liquidacion.cuotas);
     detalles.push({ etiqueta: 'Destino de lo no liquidado', valor });
   }
   if (liquidacion.motivoDeNoLiquidado) {

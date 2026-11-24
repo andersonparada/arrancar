@@ -25,7 +25,7 @@ const gastoQueCuenta = (corte?: string): SQL =>
 const gastado = (corte?: string): SQL =>
   sql`coalesce((select sum(case when g.resta then -g.monto else g.monto end) from ${gastos} g where g.anticipo_id = ${anticipos.id} and ${gastoQueCuenta(corte)}), 0)`;
 
-/** Lo que falta por justificar: al corte, el monto menos lo gastado entonces; hoy, solo en los anticipos abiertos. */
+/** Lo que falta por justificar (en el total de la lista lo gastado de más no resta, como en CL-R1): al corte, el monto menos lo gastado entonces; hoy, solo en los anticipos abiertos. */
 const porJustificar = (corte?: string): SQL =>
   corte
     ? sql`(${anticipos.monto} - ${gastado(corte)})`
@@ -57,7 +57,7 @@ const columnasDeLaLista = (corte?: string) => ({
   numeroDelDocumento: sql<number>`coalesce(${cheques.numero}, ${movimientos.numero})`.mapWith(Number),
   gastado: sql<string>`${gastado(corte)}::text`,
   total: sql<number>`count(*) over ()`.mapWith(Number),
-  totalPorJustificar: sql<string>`coalesce(sum(${porJustificar(corte)}) over (), 0)::text`,
+  totalPorJustificar: sql<string>`coalesce(sum(greatest(${porJustificar(corte)}, 0)) over (), 0)::text`,
 });
 
 /** Los abiertos y los de un corte, por fecha límite (los más atrasados primero); el resto, del más reciente al más viejo. */
