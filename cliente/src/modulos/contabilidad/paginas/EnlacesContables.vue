@@ -4,6 +4,7 @@ import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
+import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/AccionesDeIntercambio.vue';
 import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import TarjetaDeRol from '../componentes/TarjetaDeRol.vue';
@@ -29,7 +30,15 @@ const permisosDeExcel = { importar: 'contabilidad.enlaces.importar', exportar: '
       />
     </EncabezadoPagina>
 
-    <template v-if="!e.cargando.value">
+    <EstadoVacio
+      v-if="!e.cargando.value && e.fallo.value"
+      :icono="TriangleAlert"
+      titulo="No se pudieron traer los enlaces"
+      descripcion="Revise su conexión e intente de nuevo. No se perdió nada."
+    >
+      <BotonBase @click="e.cargar">Reintentar</BotonBase>
+    </EstadoVacio>
+    <template v-else-if="!e.cargando.value">
       <p
         class="mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
         :class="

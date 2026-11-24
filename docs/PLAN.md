@@ -4452,3 +4452,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     faltante. (4) El catálogo de roles trae `opcional` (hoy solo `iva_no_acreditable`): no cuenta como faltante y la tarjeta explica
     que sin cuenta va al costo de la línea. (5) Si fallan las llaves de un rol, se distinguen de «ninguna»: se avisa y no se marca
     ningún enlace como huérfano. Pruebas: cliente 29 → 37 en el módulo, servidor con casos de máscara y `opcional`.
+  - **Segunda corrección (2026-11-23)**: (1) Enlaces usa `marcarFalloDeCarga`: un fallo al cargar muestra un estado de error con
+    «Reintentar», sin el resumen de faltantes ni «Todos los roles tienen su cuenta». (2) Un rol con llave sin cuenta general falta
+    si no se conocen sus registros (`null`) o si ningún registro conocido tiene enlace: un enlace huérfano no cubre el rol y un
+    enlace en un solo registro sin conocer los demás sigue faltando, así «solo lo que falta» no lo oculta. (3) «Quitar el enlace»
+    explica la consecuencia real (`consecuenciaDeQuitar`, función pura): opcional va al costo de cada línea, con cuenta general
+    el registro pasa a usarla, sin respaldo queda por contabilizar con error. Pruebas del módulo: 37 → 42.

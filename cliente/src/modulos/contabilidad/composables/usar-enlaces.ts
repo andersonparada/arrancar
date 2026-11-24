@@ -6,12 +6,14 @@ import { apiCuentas, type Cuenta } from '../servicios/cuentas.api';
 import { apiEnlaces, type RolDeEnlace } from '../servicios/enlaces.api';
 import {
   agruparPorModulo,
+  consecuenciaDeQuitar,
   cuentasEnlazables,
   faltantesDelRol,
   totalDeFaltantes,
   type FilaDeEnlace,
   type LlavesDelRol,
 } from './edicion-de-enlaces';
+import { marcarFalloDeCarga } from './marcar-fallo-de-carga';
 
 interface Datos {
   roles: RolDeEnlace[];
@@ -50,10 +52,10 @@ const confirmarCambio = (avisos: Avisos, fila: FilaDeEnlace, nueva: Cuenta): Pro
     textoConfirmar: 'Cambiar',
   });
 
-const confirmarQuitar = (avisos: Avisos, fila: FilaDeEnlace): Promise<boolean> =>
+const confirmarQuitar = (avisos: Avisos, rol: RolDeEnlace, fila: FilaDeEnlace): Promise<boolean> =>
   avisos.confirmar({
     titulo: 'Quitar el enlace',
-    mensaje: `«${fila.nombre}» dejará de usar ${fila.enlace?.cuentaCodigo} ${fila.enlace?.cuentaNombre}. Lo que llegue de los módulos para este rol quedará por contabilizar con un error hasta que lo enlace de nuevo.`,
+    mensaje: `«${fila.nombre}» dejará de usar ${fila.enlace?.cuentaCodigo} ${fila.enlace?.cuentaNombre}. ${consecuenciaDeQuitar(rol, fila)}`,
     textoConfirmar: 'Quitar',
     peligroso: true,
   });
@@ -95,7 +97,7 @@ function usarCambiosDeEnlace(datos: Ref<Datos>, cuentas: ComputedRef<Cuenta[]>) 
 
   async function quitar(rol: RolDeEnlace, fila: FilaDeEnlace): Promise<void> {
     const enlace = fila.enlace;
-    if (!enlace || !(await confirmarQuitar(avisos, fila))) return;
+    if (!enlace || !(await confirmarQuitar(avisos, rol, fila))) return;
     await sobreLaFila(rol, fila, async () => {
       await apiEnlaces.quitar(enlace.id);
       return 'Enlace quitado.';
@@ -108,8 +110,9 @@ function usarCambiosDeEnlace(datos: Ref<Datos>, cuentas: ComputedRef<Cuenta[]>) 
 /** Los enlaces contables: roles por módulo, lo que falta y elegir, cambiar o quitar la cuenta de cada fila. */
 export function usarEnlaces(puedeVerCuentas: boolean) {
   const soloFaltantes = ref(false);
+  const fallo = ref(false);
   const { datos, cargando, cargar } = usarCarga<Datos>(
-    () => traerTodo(puedeVerCuentas),
+    marcarFalloDeCarga(() => traerTodo(puedeVerCuentas), fallo),
     { roles: [], cuentas: [], llaves: {} },
     'No se pudieron traer los enlaces.',
   );
@@ -121,5 +124,5 @@ export function usarEnlaces(puedeVerCuentas: boolean) {
   });
   const cambios = usarCambiosDeEnlace(datos, cuentas);
   const intercambio = usarIntercambio(apiEnlaces.intercambio, cargar);
-  return { grupos, faltantes, cuentas, cargando, soloFaltantes, datos, intercambio, ...cambios };
+  return { grupos, faltantes, cuentas, cargando, fallo, cargar, soloFaltantes, datos, intercambio, ...cambios };
 }

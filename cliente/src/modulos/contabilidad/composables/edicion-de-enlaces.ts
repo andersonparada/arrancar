@@ -106,18 +106,34 @@ export function filasDeRol(rol: RolDeEnlace, llaves: LlavesDelRol): FilaDeEnlace
   return [filaGeneral, ...filasDeLlaves(rol, llaves), ...filasHuerfanas(rol, llaves)];
 }
 
+/** Cuántos registros conocidos del rol tienen enlace propio; un enlace huérfano no cubre nada. */
+const registrosCubiertos = (rol: RolDeEnlace, llaves: LlaveDeEnlace[]): number =>
+  llaves.filter((llave) => enlaceDe(rol, llave.llave)).length;
+
 /**
  * Cuántas cuentas faltan por elegir en un rol. Un rol opcional nunca falta (sin enlace se contabiliza con otra regla).
- * Un rol con llave sin cuenta general falta por cada registro sin enlace; si no hay ninguno que lo cubra (el módulo no
- * ofrece registros, o no se pudieron traer), falta la cuenta general, porque la búsqueda terminaría en `falta_enlace`.
+ * Un rol con llave sin cuenta general falta por cada registro sin enlace. Si no queda ninguno por cubrir, solo está
+ * completo cuando algún registro conocido tiene enlace; si el módulo no ofrece registros, o no se pudieron traer (no
+ * se puede comprobar), falta la cuenta general, porque la búsqueda terminaría en `falta_enlace`.
  */
 export function faltantesDelRol(rol: RolDeEnlace, llaves: LlavesDelRol): number {
   if (rol.opcional) return 0;
   if (!rol.admiteLlave) return rol.enlaces.length === 0 ? 1 : 0;
   if (rol.enlaces.some((enlace) => enlace.llave === null)) return 0;
+  if (llaves === null) return 1;
   const sinEnlace = llavesSinEnlace(rol, llaves).length;
   if (sinEnlace > 0) return sinEnlace;
-  return rol.enlaces.length === 0 ? 1 : 0;
+  return registrosCubiertos(rol, llaves) === 0 ? 1 : 0;
+}
+
+/** Lo que pasa con lo que llegue de los módulos si se quita el enlace de la fila, según las reglas de búsqueda. */
+export function consecuenciaDeQuitar(rol: RolDeEnlace, fila: FilaDeEnlace): string {
+  if (rol.opcional)
+    return 'Este rol es opcional: sin enlace el importe se suma al costo de cada línea y no se detiene nada.';
+  const general = enlaceDe(rol, null);
+  if (fila.llave !== null && general)
+    return `Lo de este registro pasará a usar la cuenta general ${general.cuentaCodigo} ${general.cuentaNombre}.`;
+  return 'Lo que llegue de los módulos para este rol quedará por contabilizar con un error hasta que lo enlace de nuevo.';
 }
 
 /** El total de cuentas que faltan por elegir en todos los roles. */

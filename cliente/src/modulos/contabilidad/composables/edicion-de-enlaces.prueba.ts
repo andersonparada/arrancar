@@ -3,6 +3,7 @@ import type { Enlace, LlaveDeEnlace, RolDeEnlace } from '../servicios/enlaces.ap
 import { cuentaDePrueba } from './cuentas-de-prueba';
 import {
   agruparPorModulo,
+  consecuenciaDeQuitar,
   cuentasEnlazables,
   faltantesDelRol,
   filasDeRol,
@@ -91,8 +92,20 @@ describe('roles con llave', () => {
     const conEnlace = { ...conLlave, enlaces: [enlace('cuenta_bancaria', 'a')] };
     expect(filasDeRol(conEnlace, null).some((f) => f.huerfana)).toBe(false);
     expect(faltantesDelRol(conLlave, null)).toBe(1);
-    expect(faltantesDelRol(conEnlace, null)).toBe(0);
+    expect(faltantesDelRol(conEnlace, null)).toBe(1);
+    expect(faltantesDelRol({ ...conLlave, enlaces: [enlace('cuenta_bancaria', null)] }, null)).toBe(0);
     expect(totalDeFaltantes([conLlave], {})).toBe(1);
+  });
+
+  it('un enlace huérfano no cubre el rol', () => {
+    const soloHuerfano = { ...conLlave, enlaces: [enlace('cuenta_bancaria', 'borrada')] };
+    expect(faltantesDelRol(soloHuerfano, [])).toBe(1);
+  });
+
+  it('un enlace en un solo registro sin conocer los demás sigue faltando', () => {
+    const conUno = { ...conLlave, enlaces: [enlace('cuenta_bancaria', 'a')] };
+    expect(faltantesDelRol(conUno, null)).toBe(1);
+    expect(faltantesDelRol(conUno, llaves)).toBe(1);
   });
 
   it('un rol opcional no cuenta como faltante ni se marca', () => {
@@ -136,5 +149,26 @@ describe('agrupar y elegir cuentas', () => {
     ];
     expect(rolesDeAuxiliarDeLaCuenta(roles, 'c9')).toEqual(['Proveedores']);
     expect(rolesDeAuxiliarDeLaCuenta(roles, 'otra')).toEqual([]);
+  });
+});
+
+describe('consecuenciaDeQuitar', () => {
+  const conLlave = rol('cuenta_bancaria', { admiteLlave: true });
+  const fila = (llave: string | null) => ({ llave, nombre: 'x', enlace: null, huerfana: false, falta: false });
+
+  it('en un rol opcional el importe va al costo de cada línea', () => {
+    expect(consecuenciaDeQuitar(rol('iva_no_acreditable', { opcional: true }), fila(null))).toContain(
+      'costo de cada línea',
+    );
+  });
+
+  it('con cuenta general, el registro pasa a usarla', () => {
+    const conGeneral = { ...conLlave, enlaces: [enlace('cuenta_bancaria', null), enlace('cuenta_bancaria', 'a')] };
+    expect(consecuenciaDeQuitar(conGeneral, fila('a'))).toContain('cuenta general 1.1');
+  });
+
+  it('sin respaldo queda por contabilizar con error', () => {
+    expect(consecuenciaDeQuitar(conLlave, fila('a'))).toContain('con un error');
+    expect(consecuenciaDeQuitar(rol('x'), fila(null))).toContain('con un error');
   });
 });
