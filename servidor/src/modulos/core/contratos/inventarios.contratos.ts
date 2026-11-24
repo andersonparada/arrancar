@@ -2,7 +2,7 @@
  * Eventos de `inventarios` (ver `docs/modulos/diseno-inventarios.md` §9), de después de confirmar, para la futura
  * Contabilidad y quien quiera escucharlos. El dinero va en centavos enteros (quetzales) y las cantidades como texto con
  * 4 decimales en la unidad base del artículo. Los de este paso: recepciones, devoluciones, rebajas, entradas manuales,
- * salidas por consumo, traslados, anulaciones y recálculos; los de ajustes y cierres llegan con sus pasos.
+ * salidas por consumo, traslados, anulaciones, recálculos y cierres de mes; los de ajustes llegan con su paso.
  */
 type TipoDeInventario = string;
 
@@ -93,6 +93,45 @@ declare module '../eventos/bus-eventos.js' {
         diferenciaAbsorbidoCentavos: number;
         diferenciaAResultadosCentavos: number;
       }[];
+    };
+    /**
+     * Se cerró un mes del inventario: sus existencias valuadas quedaron congeladas. Contabilidad puede cuadrar contra
+     * `valorTotalCentavos` y `porTipo` (centavos de quetzal). `periodo` es `aaaa-mm-01`.
+     */
+    'inventarios.mes_cerrado': DatosDelMes;
+    /** Se reabrió el último mes cerrado (con motivo): la foto del mes dejó de valer. */
+    'inventarios.mes_reabierto': DatosDelMes;
+  }
+}
+
+/** Un mes del inventario con su valor y el valor por tipo de inventario. */
+interface DatosDelMes {
+  empresaId: string;
+  periodo: string;
+  valorTotalCentavos: number;
+  porTipo: { tipoDeInventario: TipoDeInventario; valorCentavos: number }[];
+}
+
+/** Un hallazgo que otro módulo reporta al revisar el cierre de un mes del inventario. */
+export interface HallazgoDeOtroModuloEnElCierre {
+  /** Código propio del módulo que lo dice. */
+  codigo: string;
+  /** `bloquea` impide cerrar el mes; `aviso` solo informa. */
+  nivel: 'bloquea' | 'aviso';
+  /** Texto final, ya armado por el módulo. */
+  mensaje: string;
+}
+
+declare module './mediador.contratos.js' {
+  interface PreguntasEntreModulos {
+    /**
+     * Antes de cerrar un mes del inventario, Inventarios pregunta a los demás módulos activos qué saben que afecte
+     * ese cierre (por ejemplo, materiales que salieron hacia una obra y no se han capitalizado). `periodo` es
+     * `aaaa-mm-01`; el operador lleva la empresa del cierre. Quien no tiene nada que decir responde `null`.
+     */
+    'inventarios.revisar_cierre_del_mes': {
+      datos: { empresaId: string; periodo: string };
+      respuesta: { nombreDelModulo: string; hallazgos: HallazgoDeOtroModuloEnElCierre[] } | null;
     };
   }
 }

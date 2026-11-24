@@ -9,6 +9,7 @@ export type DatosDeCostoAjustado = EventosDominio['inventarios.costo_ajustado'];
 export type DatosDeTrasladoRegistrado = EventosDominio['inventarios.traslado_registrado'];
 export type DatosDeDocumentoAnulado = EventosDominio['inventarios.documento_anulado'];
 export type DatosDeCostoRecalculado = EventosDominio['inventarios.costo_recalculado'];
+export type DatosDeMes = EventosDominio['inventarios.mes_cerrado'];
 
 /** Entró mercadería por una recepción o una entrada manual. Se publica tras confirmar. */
 export class EntradaRegistrada extends EventoDominio<DatosDeEntradaRegistrada> {
@@ -69,6 +70,24 @@ export class CostoRecalculado extends EventoDominio<DatosDeCostoRecalculado> {
   readonly nombre = 'inventarios.costo_recalculado';
 
   constructor(datos: DatosDeCostoRecalculado) {
+    super(datos);
+  }
+}
+
+/** Se cerró un mes del inventario. Se publica tras confirmar. */
+export class MesDeInventarioCerrado extends EventoDominio<DatosDeMes> {
+  readonly nombre = 'inventarios.mes_cerrado';
+
+  constructor(datos: DatosDeMes) {
+    super(datos);
+  }
+}
+
+/** Se reabrió el último mes cerrado del inventario. Se publica tras confirmar. */
+export class MesDeInventarioReabierto extends EventoDominio<DatosDeMes> {
+  readonly nombre = 'inventarios.mes_reabierto';
+
+  constructor(datos: DatosDeMes) {
     super(datos);
   }
 }
