@@ -18,14 +18,14 @@ import {
   MovimientoMarcadoEnConciliacion,
   MovimientoSinNumero,
   MovimientoYaRevertido,
-  NoEsUnaNota,
   NoEsUnSaldoInicial,
   NoSeCorrigeUnInverso,
   NoSeEliminaUnInverso,
   NoSeEliminaUnMovimientoRevertido,
   NoSeRevierteUnInverso,
 } from './errores.js';
-import { MovimientoDeOtroModulo, NotaNoMarcable } from './errores-de-origen.js';
+import { MovimientoDeOtroModulo } from './errores-de-origen.js';
+import { exigirClaseDeMovimiento, exigirNotaMarcable } from './exigencias-de-movimiento.js';
 import { desligarDelOrigen, ligarAlOrigen } from './ligadura-de-cheque-de-apertura.js';
 import type { OrigenDeMovimiento } from './origen-de-movimiento.js';
 import {
@@ -179,11 +179,7 @@ export class Movimiento extends Entidad<MovimientoId> {
    * @throws NoEsUnaNota si se esperaba una nota y es el saldo inicial; NoEsUnSaldoInicial si es al revés.
    */
   exigirClase(esSaldoInicial: boolean): void {
-    if (this.propiedades.saldoInicial && !esSaldoInicial) throw new NoEsUnaNota();
-    if (!this.propiedades.saldoInicial && esSaldoInicial) throw new NoEsUnSaldoInicial();
-    const { parteDeApertura } = this.propiedades;
-    if (esSaldoInicial && parteDeApertura !== null && parteDeApertura !== 'saldo_global')
-      throw new NoEsUnSaldoInicial();
+    exigirClaseDeMovimiento(this.propiedades, esSaldoInicial);
   }
 
   /**
@@ -257,9 +253,7 @@ export class Movimiento extends Entidad<MovimientoId> {
    * @throws NotaNoMarcable si no lo es.
    */
   exigirNotaDeDebitoMarcable(): void {
-    const { tipo, saldoInicial, transferenciaId, moduloDeOrigen } = this.propiedades;
-    const suelta = tipo === 'debito' && !saldoInicial && transferenciaId === null && moduloDeOrigen === null;
-    if (!suelta || this.esInverso || this.estaAnulado || this.estaRevertido) throw new NotaNoMarcable();
+    exigirNotaMarcable(this.propiedades, ['debito']);
   }
 
   /**
@@ -267,9 +261,7 @@ export class Movimiento extends Entidad<MovimientoId> {
    * @throws NotaNoMarcable si no lo es.
    */
   exigirNotaSueltaVigente(): void {
-    const { tipo, saldoInicial, transferenciaId, moduloDeOrigen } = this.propiedades;
-    const suelta = tipo !== 'cheque' && !saldoInicial && transferenciaId === null && moduloDeOrigen === null;
-    if (!suelta || this.esInverso || this.estaAnulado || this.estaRevertido) throw new NotaNoMarcable();
+    exigirNotaMarcable(this.propiedades, ['debito', 'credito']);
   }
 
   /** @throws MovimientoMarcadoEnConciliacion si `conciliacionId` no es nulo. */
