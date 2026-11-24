@@ -1,3 +1,4 @@
+import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { Comprobante } from '../../../dominio/comprobantes.js';
 import { desglosarLaReposicion, totalDeLaReposicion } from '../../../dominio/desglose-de-reposicion.js';
@@ -11,6 +12,7 @@ import type {
 } from '../../../dominio/reposiciones.js';
 import type { DesgloseDeReposicionDto, ReposicionDto, ReposicionResumenDto } from '../../dto/reposiciones.dto.js';
 import { comprobanteDto } from '../comprobantes/armado-del-comprobante.js';
+import type { LibroParaReponer } from '../../puertos/puertos-de-reposiciones.js';
 
 /** Un comprobante con lo que aporta a la reposición, firmado: lo que resta (nota de crédito, sobrante) va negativo. */
 export interface ComprobanteFirmado {
@@ -99,3 +101,18 @@ export const lineasEmitidas = (firmados: readonly ComprobanteFirmado[]): LineaDe
     conActivoFijo: comprobante.conActivoFijo,
     deducible: comprobante.documento?.enElLibro ?? false,
   }));
+
+/**
+ * Marca como procesados los documentos del libro de lo que se repone. Los que el emisor ya anuló (comprobante «documento
+ * anulado, por resolver») se saltan: el libro no marca uno anulado y el efectivo se repone igual.
+ */
+export async function marcarProcesadosEnElLibro(
+  libro: LibroParaReponer,
+  operador: Operador,
+  firmados: readonly ComprobanteFirmado[],
+): Promise<void> {
+  for (const { comprobante } of firmados) {
+    if (comprobante.documentoDeCompraId === null || comprobante.motivoDocumentoAnulado !== null) continue;
+    await libro.marcarProcesado(operador, comprobante.documentoDeCompraId, true);
+  }
+}

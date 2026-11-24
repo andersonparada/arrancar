@@ -95,6 +95,45 @@ describe('comprobantes de un vale provisional ya liquidado', () => {
     expect(comprobante).toMatchObject({ estado: 'vigente' });
     expect(comprobante.motivo_documento_anulado).toBe('El emisor anuló la FEL en la SAT');
   });
+
+  /** El vale liquidado cuya factura el emisor anuló en la SAT: el libro la anula y el comprobante queda por resolver. */
+  async function valeConFelAnulada(nombre: string) {
+    const datos = await valeLiquidado(nombre);
+    const anulada = await e.propietario().post(`/api/libro-de-compras/documentos/${datos.documentoId}/anular`, {
+      causa: 'fel_anulada_por_el_emisor',
+      motivo: 'El emisor anuló la FEL en la SAT',
+    });
+    expect(anulada.estado, JSON.stringify(anulada.cuerpo)).toBe(200);
+    return datos;
+  }
+
+  it('lo pendiente con una FEL anulada por el emisor se repone igual, sin marcar el documento anulado', async () => {
+    const { fondo, comprobanteId } = await valeConFelAnulada('Caja que repone con la FEL anulada');
+    const pendientes = (await e.delFondo(fondo.id)).elementos.map((c: any) => c.id);
+
+    const respuesta = await e.propietario().post(`${RUTA_DE_FONDOS}/${fondo.id}/reposiciones`, {
+      comprobanteIds: pendientes,
+      forma: 'cheque',
+      chequeraId: e.caja.chequeraId,
+    });
+
+    // Antes respondía 422 documento_ya_anulado y el fondo no se podía reponer ni cerrar.
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
+    expect(pendientes).toContain(comprobanteId);
+    expect(await comprobanteEnBase(comprobanteId)).toMatchObject({ estado: 'vigente' });
+    expect(await v.ficha(fondo.id)).toMatchObject({ pendienteDeReponer: '0.00' });
+  });
+
+  it('cerrar un fondo con una FEL anulada por el emisor liquida lo pendiente en la reposición compensada', async () => {
+    const { fondo } = await valeConFelAnulada('Caja que cierra con la FEL anulada');
+
+    const respuesta = await e
+      .propietario()
+      .post(`${RUTA_DE_FONDOS}/${fondo.id}/cerrar`, { motivo: 'Ya no se necesita' });
+
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(200);
+    expect(respuesta.cuerpo).toMatchObject({ estado: 'cerrado', pendienteDeReponer: '0.00' });
+  });
 });
 
 describe('arqueo: el acta nombra a quien lo hizo', () => {
