@@ -37,7 +37,7 @@ const causas = opcionesDeCausa();
         etiqueta="Fecha en que la SAT anuló el documento"
         requerido
         :maximo="edicion.hasta"
-        ayuda="La que dice el DTE anulado en la SAT; define el mes en que se registra la baja."
+        ayuda="La que dice el DTE anulado en la SAT. No cambia el mes: el IVA sale del mes de la emisión."
         :error="errores.fechaDeAnulacion"
       />
       <CampoTexto

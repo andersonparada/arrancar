@@ -73,7 +73,7 @@ export const CAUSAS_DE_ANULACION: Record<CausaDeAnulacion, string> = {
 };
 
 export const AYUDA_DE_ANULAR =
-  'Anular el registro no anula la factura en la SAT. Si ya la anuló allá, escoja «Se anuló en la SAT». Pasado el plazo de la SAT solo se corrige con una nota de crédito.';
+  'Anular el registro no anula el DTE en la SAT: mientras siga vigente allá, su IVA cuenta. Si ya lo anuló allá, escoja «Se anuló en la SAT». Si solo se equivocó al capturar, anúlelo aquí y registre de nuevo el documento correcto; la nota de crédito es para ventas que sí se hicieron y cambiaron.';
 
 export const FORMULARIO_DE_DOCUMENTO = {
   registrar: 'Registrar documento',
