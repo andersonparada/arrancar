@@ -4401,5 +4401,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `cuentas-por-pagar-pagos-cheque-de-apertura(-baja).api.prueba.ts`. Decisiones del programador: ruta propia en vez de
   `POST /pagos` con la forma (cada forma especial tiene la suya y su permiso: nota ligada, apertura), el pago de apertura no manda
   aviso de pago al proveedor, y las listas de cheques para elegir (posfechados sin ligar y en circulación) quedan para AP-5.
-  **Verificación pendiente:** al programar, el PostgreSQL de desarrollo estaba inalcanzable (el puente de Docker sin conexión) y
-  las pruebas de API no se pudieron correr; sí pasan `tsc`, ESLint, Prettier y las unitarias.
+  **Verificado (2026-11-23):** las dos suites de API corren contra PostgreSQL real (23 pruebas en verde). Al correrlas se
+  corrigieron cuatro errores de las pruebas, no del código: un cheque con un solo concepto no guarda desglose, cerrar la carga
+  pide motivo (y su prueba va al final porque cierra la empresa para las demás), un cargo de otro proveedor responde 400
+  `cargo_no_disponible`, y el cheque en circulación de la referencia necesita el saldo de su cuenta.

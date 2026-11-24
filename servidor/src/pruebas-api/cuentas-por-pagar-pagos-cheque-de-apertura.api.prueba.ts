@@ -91,7 +91,8 @@ describe('pagar con el cheque de apertura', () => {
       documento_de_origen_id: respuesta.cuerpo.id,
       concepto: 'pago_a_proveedor',
     });
-    expect(await desgloseDe(movimientoId)).toEqual([{ clave: 'pago_a_proveedor', monto: '600.00' }]);
+    // Todo el cheque va a un solo concepto, el del movimiento: no hay reparto que guardar.
+    expect(await desgloseDe(movimientoId)).toEqual([]);
     expect(await fichaDelCargo(e, cargoId)).toMatchObject({
       saldo: '700.00',
       comprometido: '600.00',
@@ -141,18 +142,6 @@ describe('pagar con el cheque de apertura', () => {
     expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
     expect(respuesta.cuerpo.avisos.some((a: string) => a.includes('Otra Persona Individual'))).toBe(true);
   });
-
-  it('sirve con la carga inicial cerrada: no cambia ningún saldo al corte', async () => {
-    const { proveedor, cargoId, movimientoId } = await escenario();
-    const ruta = `/api/empresas/${e.mundo.escenario.cuenta.empresaId}/carga-inicial`;
-    const cierre = await e.propietario().post(`${ruta}/cerrar`, {});
-    expect(cierre.estado, JSON.stringify(cierre.cuerpo)).toBe(200);
-
-    const respuesta = await ligarCheque(e, { proveedor, movimientoId, cargoId, monto: '600.00' });
-
-    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
-    expect(respuesta.cuerpo.fecha).toBe(haceDias(-10));
-  });
 });
 
 describe('lo que rechaza', () => {
@@ -174,7 +163,8 @@ describe('lo que rechaza', () => {
 
     const respuesta = await ligarCheque(e, { proveedor, movimientoId, cargoId: ajeno, monto: '600.00' });
 
-    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(409);
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(400);
+    expect(respuesta.cuerpo.error.codigo).toBe('cargo_no_disponible');
     expect((await movimientoEnBase(movimientoId)).modulo_de_origen).toBeNull();
   });
 
@@ -265,5 +255,22 @@ describe('la bancarización', () => {
       [proveedor.proveedorId, fecha],
     );
     expect(delMes[0]!.n).toBe('1');
+  });
+});
+
+/** Al final: cerrar la carga inicial es definitivo para el resto de las pruebas de esta empresa. */
+describe('con la carga inicial cerrada', () => {
+  it('sirve igual: no cambia ningún saldo al corte', async () => {
+    const { proveedor, cargoId, movimientoId } = await escenario();
+    const ruta = `/api/empresas/${e.mundo.escenario.cuenta.empresaId}/carga-inicial`;
+    const cierre = await e.propietario().post(`${ruta}/cerrar`, {
+      motivo: 'Sin el dato de los libros anteriores',
+    });
+    expect(cierre.estado, JSON.stringify(cierre.cuerpo)).toBe(200);
+
+    const respuesta = await ligarCheque(e, { proveedor, movimientoId, cargoId, monto: '600.00' });
+
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
+    expect(respuesta.cuerpo.fecha).toBe(haceDias(-10));
   });
 });

@@ -6,7 +6,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { busEventos } from '../modulos/core/eventos/bus-eventos.js';
-import { agregarPartida, partida } from './soporte/apertura-por-api.js';
+import { agregarPartida, guardarSaldo, partida } from './soporte/apertura-por-api.js';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import {
   fichaDelCargo,
@@ -242,6 +242,7 @@ describe('la referencia de la cuenta de apertura a un cheque en circulación', (
 
   async function chequeEnCirculacion(): Promise<string> {
     const cuentaId = await crearCuentaSinSaldo(e.propietario());
+    await guardarSaldo(e.propietario(), cuentaId, '500.00');
     const agregada = await agregarPartida(
       e.propietario(),
       cuentaId,
