@@ -4348,3 +4348,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
   costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
   Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.
+- **2026-11-23**: VCJ-0a (Ventas y caja, paso 0a). `DefinicionModulo.usaTablasDe` declara los módulos a cuyas tablas apunta
+  o que lee un módulo y que pueden estar apagados. Cuenta para el orden del migrador, para `verificarDeclaracion` (deben
+  estar registrados) y para la prueba de llaves entre esquemas; `validarActivacion` y `validarDesactivacion` siguen
+  leyendo solo `dependeDe`. Pruebas de orden, de ciclos, de verificación y de activación. Sin migración.

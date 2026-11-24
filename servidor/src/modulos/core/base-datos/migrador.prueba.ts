@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import type { DefinicionModulo } from '../modulos-sistema/definicion-modulo.js';
 import { nombreEsquemaDe, ordenarPorDependencias } from './migrador.js';
 
-const modulo = (clave: string, dependeDe: string[] = []): DefinicionModulo => ({
+const modulo = (clave: string, dependeDe: string[] = [], usaTablasDe: string[] = []): DefinicionModulo => ({
   clave,
   nombre: clave,
   descripcion: '',
   permisos: [],
   dependeDe,
+  usaTablasDe,
 });
 
 describe('ordenarPorDependencias', () => {
@@ -40,6 +41,28 @@ describe('ordenarPorDependencias', () => {
   it('los módulos esenciales no dependen entre sí', () => {
     const esencial = (clave: string) => ({ ...modulo(clave), esencial: true });
     expect(() => ordenarPorDependencias([modulo('core'), esencial('a'), esencial('b')])).not.toThrow();
+  });
+
+  it('migra los módulos de usaTablasDe antes del que los declara', () => {
+    const orden = ordenarPorDependencias([
+      modulo('ventas', ['inventarios'], ['cartera', 'libro']),
+      modulo('cartera', ['terceros'], ['libro']),
+      modulo('libro'),
+      modulo('inventarios', [], ['libro']),
+      modulo('terceros'),
+      modulo('core'),
+    ]).map((m) => m.clave);
+
+    expect(orden.indexOf('libro')).toBeLessThan(orden.indexOf('inventarios'));
+    expect(orden.indexOf('libro')).toBeLessThan(orden.indexOf('cartera'));
+    expect(orden.indexOf('cartera')).toBeLessThan(orden.indexOf('ventas'));
+    expect(orden.indexOf('inventarios')).toBeLessThan(orden.indexOf('ventas'));
+  });
+
+  it('detecta ciclos que pasan por usaTablasDe', () => {
+    expect(() => ordenarPorDependencias([modulo('core'), modulo('a', [], ['b']), modulo('b', ['a'])])).toThrow(
+      /circular/,
+    );
   });
 
   it('detecta dependencias circulares', () => {

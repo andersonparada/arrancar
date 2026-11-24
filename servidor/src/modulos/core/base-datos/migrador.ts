@@ -34,12 +34,14 @@ async function otorgarPermisosAplicacion(conexion: pg.Client, esquema: string): 
 
 /**
  * Claves de los módulos que se migran antes que `modulo`: el núcleo y, si el módulo
- * no es esencial, también los esenciales (que siempre están activos) y su `dependeDe`.
+ * no es esencial, también los esenciales (que siempre están activos), su `dependeDe` y su `usaTablasDe`.
  */
 function dependenciasDeMigracion(modulo: DefinicionModulo, modulos: readonly DefinicionModulo[]): string[] {
   if (modulo.clave === 'core') return [];
   const esenciales = modulo.esencial ? [] : modulos.filter((m) => m.esencial).map((m) => m.clave);
-  return ['core', ...esenciales, ...(modulo.dependeDe ?? [])].filter((clave) => clave !== modulo.clave);
+  return ['core', ...esenciales, ...(modulo.dependeDe ?? []), ...(modulo.usaTablasDe ?? [])].filter(
+    (clave) => clave !== modulo.clave,
+  );
 }
 
 /**

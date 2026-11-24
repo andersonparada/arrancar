@@ -66,6 +66,13 @@ export interface DefinicionModulo {
   esencial?: boolean;
   /** Claves de los módulos que deben estar activos para usar este. */
   dependeDe?: readonly string[];
+  /**
+   * Módulos a cuyas tablas apunta o que lee, y que pueden estar inactivos. Quien lo declara debe
+   * comportarse bien si no lo están: leer es seguro (la tabla existe y RLS la limita); enviarle
+   * una orden lanza `ModuloNoDisponible`. Cuenta para el orden del migrador y para la prueba de
+   * llaves entre esquemas, no para activar ni desactivar.
+   */
+  usaTablasDe?: readonly string[];
   permisos: readonly DefinicionPermiso[];
   recursosConAlcance?: readonly DefinicionRecursoConAlcance[];
   configuracion?: readonly DefinicionConfiguracion[];
