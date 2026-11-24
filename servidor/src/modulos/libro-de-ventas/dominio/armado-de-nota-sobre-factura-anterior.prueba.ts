@@ -74,6 +74,31 @@ describe('una nota sobre una factura del sistema anterior', () => {
     expect(conIva.documento.totales.iva).toBe(1200);
   });
 
+  it('IVA 0 sobre una venta exenta de una factura en régimen general no da aviso falso', () => {
+    const exenta = desdeAnterior({
+      ivaDelDte: 0,
+      lineas: [{ ...solicitud().lineas[0]!, claseFiscal: 'exenta' }],
+    });
+
+    const { documento, avisos } = armarDocumentoDeVenta(
+      exenta,
+      contexto({ fechaDeInicio: '2026-01-01', regimenDeLaFacturaAnterior: enGeneral }),
+    );
+
+    expect(documento.totales.iva).toBe(0);
+    expect(avisos.join(' ')).not.toContain('no concuerda');
+  });
+
+  it('una nota con IVA sobre una factura de un régimen sin débito se registra y avisa', () => {
+    const { documento, avisos } = armarDocumentoDeVenta(
+      desdeAnterior({ ivaDelDte: 1200 }),
+      contexto({ fechaDeInicio: '2026-01-01', regimen: enPequeno, regimenDeLaFacturaAnterior: enPequeno }),
+    );
+
+    expect(documento.totales.iva).toBe(1200);
+    expect(avisos.join(' ')).toContain('no concuerda');
+  });
+
   it('sin IVA del DTE usa el régimen del mes de la factura, no el de la nota', () => {
     const contextoDe = (anteriorEn: ContextoDelArmado['regimenDeLaFacturaAnterior']) =>
       contexto({ fechaDeInicio: '2026-01-01', regimen: enGeneral, regimenDeLaFacturaAnterior: anteriorEn });

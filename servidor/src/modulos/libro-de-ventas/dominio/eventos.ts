@@ -31,7 +31,11 @@ export interface DatosDeAnulacion {
   documentoId: string;
   empresaId: string;
   destino: DestinoDeDocumentoDeVenta | null;
+  /** La fecha de anulación: la de la SAT con esa causa, o la del registro interno; no cambia el período fiscal. */
   fechaDeAnulacion: string;
+  /** El mes de la emisión (primer día): el débito anulado sale de ese mes, no del de la anulación. */
+  periodo: string;
+  fechaDeEmision: string;
 }
 
 /** Un documento quedó anulado (sigue en el libro como rastro, con montos en cero). Se publica tras confirmar. */

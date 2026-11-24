@@ -17,6 +17,15 @@ export class CausaDeAnulacionInvalida extends DatoInvalido {
   }
 }
 
+/** Si la FEL se anuló en la SAT, hay que escribir la fecha en que ocurrió: no se presume. */
+export class FechaDeAnulacionRequerida extends DatoInvalido {
+  readonly codigo = 'fecha_de_anulacion_requerida';
+
+  constructor() {
+    super('Escriba la fecha en que la SAT anuló la FEL.');
+  }
+}
+
 /** La fecha de anulación no puede ser anterior a la emisión ni futura. */
 export class FechaDeAnulacionInvalida extends DatoInvalido {
   readonly codigo = 'fecha_de_anulacion_invalida';

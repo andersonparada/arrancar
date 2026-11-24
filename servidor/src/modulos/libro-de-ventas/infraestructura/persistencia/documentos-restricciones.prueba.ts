@@ -12,6 +12,7 @@ import {
   insertar,
   prepararBase,
   restriccionQueViola,
+  usuarioId,
 } from './documentos.soporte.js';
 
 beforeAll(prepararBase);
@@ -78,7 +79,7 @@ describe('documentos: restricciones de forma', () => {
 });
 
 describe('documentos: números únicos', () => {
-  it('el número no se repite aunque el documento esté anulado, pero otra familia o empresa puede usarlo', async () => {
+  it('el número no se repite mientras el documento esté vigente, pero otra familia o empresa puede usarlo', async () => {
     const base = documento({ serie: 'U', numero: '100' });
     await insertar(base);
 
@@ -92,6 +93,43 @@ describe('documentos: números únicos', () => {
     expect(await restriccionQueViola(repetido)).toBe('documentos_serie_y_numero_unicos');
     await expect(otraFamilia).resolves.toBeTruthy();
     await expect(otraEmpresa).resolves.toBeTruthy();
+  });
+
+  const anulado = (causa: 'fel_anulada_en_la_sat' | 'error_de_captura' | 'no_corresponde_a_la_empresa') =>
+    ({
+      estado: 'anulado',
+      anuladoEn: new Date(),
+      anuladoPor: usuarioId,
+      motivoDeAnulacion: 'Prueba',
+      causaDeAnulacion: causa,
+      fechaDeAnulacion: '2026-03-20',
+    }) as const;
+
+  it('el número anulado en la SAT no se reutiliza, pero el anulado por error de captura sí', async () => {
+    await insertar(documento({ serie: 'V', numero: '1', ...anulado('fel_anulada_en_la_sat') }));
+    await insertar(documento({ serie: 'V', numero: '2', ...anulado('error_de_captura') }));
+    await insertar(documento({ serie: 'V', numero: '3', ...anulado('no_corresponde_a_la_empresa') }));
+
+    const enLaSat = insertar(documento({ serie: 'V', numero: '1' }));
+    const correcto = insertar(documento({ serie: 'V', numero: '2' }));
+    const ajeno = insertar(documento({ serie: 'V', numero: '3' }));
+
+    expect(await restriccionQueViola(enLaSat)).toBe('documentos_serie_y_numero_unicos');
+    await expect(correcto).resolves.toBeTruthy();
+    await expect(ajeno).resolves.toBeTruthy();
+  });
+
+  it('la autorización FEL de un registro anulado por error de captura se puede volver a registrar', async () => {
+    const libre = crypto.randomUUID();
+    const ocupada = crypto.randomUUID();
+    await insertar(documento({ tipoDte: 'FACT', autorizacionFel: libre, ...anulado('error_de_captura') }));
+    await insertar(documento({ tipoDte: 'FACT', autorizacionFel: ocupada, ...anulado('fel_anulada_en_la_sat') }));
+
+    const otraVez = insertar(documento({ tipoDte: 'FACT', autorizacionFel: libre }));
+    const repetida = insertar(documento({ tipoDte: 'FACT', autorizacionFel: ocupada }));
+
+    await expect(otraVez).resolves.toBeTruthy();
+    expect(await restriccionQueViola(repetida)).toBe('documentos_autorizacion_fel_unica');
   });
 
   it('la autorización FEL no se repite en la empresa', async () => {

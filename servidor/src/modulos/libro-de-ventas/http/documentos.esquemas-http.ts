@@ -90,7 +90,7 @@ export const esquemaFiltroDeDocumentos = z.object({
 export const esquemaAnulacionDeDocumento = z.object({
   causa: z.enum(CAUSAS_DE_ANULACION),
   motivo: z.string().trim().min(1, 'Campo obligatorio.'),
-  /** La fecha en que la SAT anuló el DTE; sin dato, hoy. */
+  /** La fecha en que la SAT anuló el DTE: obligatoria con la causa `fel_anulada_en_la_sat` (el dominio lo exige) y sin efecto con las otras. */
   fechaDeAnulacion: z.iso.date().nullish(),
 });
 

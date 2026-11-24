@@ -55,7 +55,7 @@ export class AnularDocumentoDeVenta {
   constructor(private readonly dependencias: Dependencias) {}
 
   /**
-   * @throws RecursoNoEncontrado, MotivoDeAnulacionInvalido, CausaDeAnulacionInvalida, FechaDeAnulacionInvalida,
+   * @throws RecursoNoEncontrado, MotivoDeAnulacionInvalido, CausaDeAnulacionInvalida, FechaDeAnulacionRequerida, FechaDeAnulacionInvalida,
    *   DocumentoYaAnulado, DocumentoConNotasVigentes, NotaDeDebitoSostieneNotasDeCredito, PeriodoDeclarado,
    *   DestinoInactivo, o el error de la cartera si rechaza la anulación (por ejemplo, porque ya tiene cobros).
    */
@@ -71,13 +71,15 @@ export class AnularDocumentoDeVenta {
         fecha: peticion.fechaDeAnulacion ?? null,
       }),
     );
-    const { id, destino, anulacion } = resultado.documento;
+    const { id, destino, anulacion, periodo, fechaEmision } = resultado.documento;
     await publicadorEventos.publicar([
       new DocumentoDeVentaAnulado({
         documentoId: id,
         empresaId: operador.empresaId,
         destino,
         fechaDeAnulacion: anulacion!.fecha,
+        periodo,
+        fechaDeEmision: fechaEmision,
       }),
     ]);
     return resultado;
@@ -90,7 +92,7 @@ export class AnularDocumentoDeVenta {
     exigirAnulable(guardado.hechos);
     const { ficha } = guardado;
     const hoy = await reloj.hoy(operador);
-    const fecha = fechaDeAnulacionValida(peticion.fecha, { emision: ficha.fechaEmision, hoy });
+    const fecha = fechaDeAnulacionValida(peticion, { emision: ficha.fechaEmision, hoy });
     const avisosDelPeriodo = await revisarElPeriodo(control, ficha.periodo);
     await exigirQueLasNotasSigaCabiendo(repositorio, guardado);
     const { causa, motivo } = peticion;

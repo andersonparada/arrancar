@@ -167,7 +167,7 @@ describe('registrar una factura', () => {
 });
 
 describe('anular', () => {
-  it('deja el rastro en la auditoría con el motivo y cómo estaba, y el número no se reutiliza', async () => {
+  it('deja el rastro en la auditoría con el motivo y cómo estaba, y el número queda libre para el documento correcto', async () => {
     const original = await registrar({ serie: 'ANU', numero: '1' });
 
     const respuesta = await propietario().post(`${RUTA}/${original.id}/anular`, {
@@ -186,7 +186,7 @@ describe('anular', () => {
       anterior: { numero: '1' },
     });
     const repetido = await propietario().post(RUTA, documentoDeVentaDePrueba(escenario, { serie: 'ANU', numero: '1' }));
-    expect(repetido.cuerpo.error.codigo).toBe('documento_repetido');
+    expect(repetido.estado).toBe(201);
     expect(
       (await propietario().post(`${RUTA}/${original.id}/anular`, { causa: 'error_de_captura', motivo: 'x' })).cuerpo
         .error.codigo,

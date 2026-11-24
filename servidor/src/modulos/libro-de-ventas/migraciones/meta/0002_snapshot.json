@@ -661,6 +661,7 @@
             }
           ],
           "isUnique": true,
+          "where": "(\"libro_de_ventas\".\"documentos\".\"causa_de_anulacion\" is null or \"libro_de_ventas\".\"documentos\".\"causa_de_anulacion\" = 'fel_anulada_en_la_sat')",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -682,7 +683,7 @@
             }
           ],
           "isUnique": true,
-          "where": "\"libro_de_ventas\".\"documentos\".\"autorizacion_fel\" is not null",
+          "where": "\"libro_de_ventas\".\"documentos\".\"autorizacion_fel\" is not null and (\"libro_de_ventas\".\"documentos\".\"causa_de_anulacion\" is null or \"libro_de_ventas\".\"documentos\".\"causa_de_anulacion\" = 'fel_anulada_en_la_sat')",
           "concurrently": false,
           "method": "btree",
           "with": {}

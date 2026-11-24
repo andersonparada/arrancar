@@ -6,11 +6,12 @@ import {
   DocumentoProcesado,
   DocumentoYaAnulado,
   FechaDeAnulacionInvalida,
+  FechaDeAnulacionRequerida,
   MotivoDeAnulacionInvalido,
   NotaDeDebitoSostieneNotasDeCredito,
 } from './errores-de-baja.js';
 import type { FacturaConNotas } from './reglas-de-notas.js';
-import { notasDeCreditoCaben } from './tope-de-notas.js';
+import { medirElTopeDeNotasDeCredito } from './tope-de-notas.js';
 
 const MAXIMO_DEL_MOTIVO = 300;
 
@@ -86,13 +87,19 @@ export function causaDeAnulacionValida(causa: string): CausaDeAnulacion {
 }
 
 /**
- * La fecha de anulación es la del DTE en la SAT o la de hoy; no antes de la emisión ni después de hoy.
- * @throws FechaDeAnulacionInvalida
+ * La fecha de anulación. Con la causa `fel_anulada_en_la_sat` es la fecha real en que la SAT anuló el DTE: se exige y
+ * nunca se presume. Con las otras causas no hay acto de la SAT: es la del registro interno (hoy). No va antes de la
+ * emisión ni después de hoy. No cambia el período fiscal: el DTE anulado sale del débito del mes de su emisión.
+ * @throws FechaDeAnulacionRequerida o FechaDeAnulacionInvalida
  */
-export function fechaDeAnulacionValida(fecha: string | null, contexto: { emision: string; hoy: string }): string {
-  const elegida = fecha ?? contexto.hoy;
-  if (elegida < contexto.emision || elegida > contexto.hoy) throw new FechaDeAnulacionInvalida();
-  return elegida;
+export function fechaDeAnulacionValida(
+  anulacion: { causa: CausaDeAnulacion; fecha: string | null },
+  contexto: { emision: string; hoy: string },
+): string {
+  if (anulacion.causa !== 'fel_anulada_en_la_sat') return contexto.hoy;
+  if (anulacion.fecha === null) throw new FechaDeAnulacionRequerida();
+  if (anulacion.fecha < contexto.emision || anulacion.fecha > contexto.hoy) throw new FechaDeAnulacionInvalida();
+  return anulacion.fecha;
 }
 
 /**
@@ -108,6 +115,10 @@ export function exigirQueLasNotasDeCreditoSigaCabiendo(
     total: factura.total + factura.totalDeNotasDeDebito - notaDeDebitoQueSeQuita.total,
     iva: factura.iva + factura.ivaDeNotasDeDebito - notaDeDebitoQueSeQuita.iva,
   };
-  const acumulado = { total: factura.totalDeNotasDeCredito, iva: factura.ivaDeNotasDeCredito };
-  if (!notasDeCreditoCaben(tope, acumulado)) throw new NotaDeDebitoSostieneNotasDeCredito();
+  const acumulado = {
+    total: factura.totalDeNotasDeCredito,
+    iva: factura.ivaDeNotasDeCredito,
+    notasDeCredito: factura.cantidadDeNotasDeCredito,
+  };
+  if (!medirElTopeDeNotasDeCredito(tope, acumulado).cabe) throw new NotaDeDebitoSostieneNotasDeCredito();
 }

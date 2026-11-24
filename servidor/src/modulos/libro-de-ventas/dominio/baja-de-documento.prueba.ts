@@ -16,6 +16,7 @@ import {
   DocumentoProcesado,
   DocumentoYaAnulado,
   FechaDeAnulacionInvalida,
+  FechaDeAnulacionRequerida,
   MotivoDeAnulacionInvalido,
   NotaDeDebitoSostieneNotasDeCredito,
 } from './errores-de-baja.js';
@@ -64,13 +65,23 @@ describe('causa, motivo y fecha de la anulación', () => {
     expect(() => causaDeAnulacionValida('porque sí')).toThrow(CausaDeAnulacionInvalida);
   });
 
-  it('la fecha es la de hoy por omisión, y no antes de la emisión ni después de hoy', () => {
+  it('con la FEL anulada en la SAT la fecha es obligatoria y va entre la emisión y hoy', () => {
+    const contexto = { emision: '2026-03-10', hoy: '2026-04-02' };
+    const sat = (fecha: string | null) => ({ causa: 'fel_anulada_en_la_sat' as const, fecha });
+
+    expect(fechaDeAnulacionValida(sat('2026-03-10'), contexto)).toBe('2026-03-10');
+    expect(() => fechaDeAnulacionValida(sat(null), contexto)).toThrow(FechaDeAnulacionRequerida);
+    expect(() => fechaDeAnulacionValida(sat('2026-03-09'), contexto)).toThrow(FechaDeAnulacionInvalida);
+    expect(() => fechaDeAnulacionValida(sat('2026-04-03'), contexto)).toThrow(FechaDeAnulacionInvalida);
+  });
+
+  it('con las otras causas la fecha es la del registro interno (hoy), aunque venga otra', () => {
     const contexto = { emision: '2026-03-10', hoy: '2026-04-02' };
 
-    expect(fechaDeAnulacionValida(null, contexto)).toBe('2026-04-02');
-    expect(fechaDeAnulacionValida('2026-03-10', contexto)).toBe('2026-03-10');
-    expect(() => fechaDeAnulacionValida('2026-03-09', contexto)).toThrow(FechaDeAnulacionInvalida);
-    expect(() => fechaDeAnulacionValida('2026-04-03', contexto)).toThrow(FechaDeAnulacionInvalida);
+    expect(fechaDeAnulacionValida({ causa: 'error_de_captura', fecha: null }, contexto)).toBe('2026-04-02');
+    expect(fechaDeAnulacionValida({ causa: 'no_corresponde_a_la_empresa', fecha: '2026-03-15' }, contexto)).toBe(
+      '2026-04-02',
+    );
   });
 });
 
@@ -80,6 +91,7 @@ describe('anular una nota de débito', () => {
     iva: 1200,
     totalDeNotasDeCredito: 11200,
     ivaDeNotasDeCredito: 1200,
+    cantidadDeNotasDeCredito: 1,
     totalDeNotasDeDebito: 1120,
     ivaDeNotasDeDebito: 120,
   };
@@ -98,6 +110,7 @@ describe('anular una nota de débito', () => {
       iva: 1071,
       totalDeNotasDeCredito: 10000,
       ivaDeNotasDeCredito: 1072,
+      cantidadDeNotasDeCredito: 1,
       totalDeNotasDeDebito: 1000,
       ivaDeNotasDeDebito: 107,
     };
@@ -107,5 +120,19 @@ describe('anular una nota de débito', () => {
     expect(() => exigirQueLasNotasDeCreditoSigaCabiendo(pasada, { total: 1000, iva: 107 })).toThrow(
       NotaDeDebitoSostieneNotasDeCredito,
     );
+  });
+
+  it('anular la nota de débito con dos notas de crédito de Q50.00 sigue cabiendo, como al registrarlas', () => {
+    const dosNotas = {
+      total: 10000,
+      iva: 1071,
+      totalDeNotasDeCredito: 10000,
+      ivaDeNotasDeCredito: 1072,
+      cantidadDeNotasDeCredito: 2,
+      totalDeNotasDeDebito: 1000,
+      ivaDeNotasDeDebito: 107,
+    };
+
+    expect(() => exigirQueLasNotasDeCreditoSigaCabiendo(dosNotas, { total: 1000, iva: 107 })).not.toThrow();
   });
 });

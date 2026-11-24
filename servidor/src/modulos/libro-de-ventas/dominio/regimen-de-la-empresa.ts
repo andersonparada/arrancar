@@ -80,16 +80,21 @@ export const AVISO_DE_IVA_QUE_NO_CONCUERDA_CON_LA_FACTURA_ANTERIOR =
  * El IVA de una nota sobre una factura del sistema anterior, de la que solo se conoce la fecha. El IVA que dice el DTE
  * manda (la SAT ya lo certificó); si el DTE no lo dice, se usa el régimen de la empresa en el mes de la factura (solo el
  * general carga IVA), y sin historial de ese mes, el del mes de la nota. Lo dudoso da un aviso, nunca un bloqueo (§3.4).
+ * El aviso de que no concuerda sale solo con IVA 0 y alguna línea gravada en régimen general, o con IVA en un régimen sin
+ * débito: IVA 0 sobre una venta exenta o de exportación es normal.
  */
 export function tratamientoDeLaNotaSobreFacturaAnterior(datos: {
   ivaDelDte: number | null;
+  /** Alguna línea de la nota es gravada: IVA 0 en régimen general solo es normal si todas son exentas, de exportación o no afectas. */
+  hayLineaGravada: boolean;
   regimenDeLaFactura: RegimenDeIva | null;
   regimenDelMesDeLaNota: RegimenDeIva;
 }): { cobraIva: boolean; avisos: string[] } {
-  const { ivaDelDte, regimenDeLaFactura, regimenDelMesDeLaNota } = datos;
+  const { ivaDelDte, hayLineaGravada, regimenDeLaFactura, regimenDelMesDeLaNota } = datos;
   if (ivaDelDte !== null) {
     const cobraIva = ivaDelDte > 0;
-    const concuerda = regimenDeLaFactura === null || (regimenDeLaFactura === 'general') === cobraIva;
+    const concuerda =
+      regimenDeLaFactura === null || (regimenDeLaFactura === 'general' ? cobraIva || !hayLineaGravada : !cobraIva);
     return { cobraIva, avisos: concuerda ? [] : [AVISO_DE_IVA_QUE_NO_CONCUERDA_CON_LA_FACTURA_ANTERIOR] };
   }
   if (regimenDeLaFactura !== null) return { cobraIva: regimenDeLaFactura === 'general', avisos: [] };

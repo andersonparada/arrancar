@@ -97,8 +97,12 @@ function reglasDeLaNota(
   if (facturaAfectada) {
     const nota = { tipo, clienteId: solicitud.clienteId, fechaEmision };
     exigirFacturaQueAdmiteLaNota(facturaAfectada, nota);
-    exigirQueLaNotaNoSupereLaFactura(facturaAfectada, { tipo, total: totales.total, iva: totales.iva });
-    return avisosDeLaNota(nota, facturaAfectada.fechaEmision);
+    const avisosDelTope = exigirQueLaNotaNoSupereLaFactura(facturaAfectada, {
+      tipo,
+      total: totales.total,
+      iva: totales.iva,
+    });
+    return [...avisosDelTope, ...avisosDeLaNota(nota, facturaAfectada.fechaEmision)];
   }
   if (!facturaAnterior) return [];
   exigirFacturaAnteriorValida(facturaAnterior, { fechaDeInicio: contexto.fechaDeInicio, fechaDeLaNota: fechaEmision });
@@ -112,6 +116,7 @@ function tratamientoDelIva(solicitud: SolicitudArmada, contexto: ContextoDelArma
   if (esNota(tipo) && facturaAnterior && !contexto.facturaAfectada) {
     return tratamientoDeLaNotaSobreFacturaAnterior({
       ivaDelDte: solicitud.ivaDelDte,
+      hayLineaGravada: solicitud.lineas.some((linea) => linea.claseFiscal === 'gravada'),
       regimenDeLaFactura: contexto.regimenDeLaFacturaAnterior?.regimenIva ?? null,
       regimenDelMesDeLaNota: regimen,
     });

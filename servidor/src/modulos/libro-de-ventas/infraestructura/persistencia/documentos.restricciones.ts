@@ -187,19 +187,22 @@ export const llavesDeDocumento = (t: T) => [
   }),
 ];
 
-/** Únicos e índices: el número no se repite ni anulado, la FEL tampoco, y cada llave tiene su índice. */
+/**
+ * Lo que sigue ocupando su número y su autorización FEL: lo vigente y lo anulado en la SAT (su número no se reutiliza).
+ * Lo anulado por error de captura o por no ser de la empresa no estorba al documento correcto.
+ */
+const ocupaSuNumero = (t: T) => sql`(${t.causaDeAnulacion} is null or ${t.causaDeAnulacion} = 'fel_anulada_en_la_sat')`;
+
+/** Únicos e índices: el número y la FEL no se repiten (vigentes o anulados en la SAT) y cada llave tiene su índice. */
 export const indicesDeDocumento = (t: T) => [
   unique('documentos_id_empresa_unico').on(t.id, t.empresaId),
   unique('documentos_destino_unico').on(t.id, t.empresaId, t.destino),
-  uniqueIndex('documentos_serie_y_numero_unicos').on(
-    t.empresaId,
-    sql`coalesce(${t.tipoDte}, ${t.tipo})`,
-    sql`coalesce(${t.serie}, '')`,
-    t.numero,
-  ),
+  uniqueIndex('documentos_serie_y_numero_unicos')
+    .on(t.empresaId, sql`coalesce(${t.tipoDte}, ${t.tipo})`, sql`coalesce(${t.serie}, '')`, t.numero)
+    .where(ocupaSuNumero(t)),
   uniqueIndex('documentos_autorizacion_fel_unica')
     .on(t.empresaId, t.autorizacionFel)
-    .where(sql`${t.autorizacionFel} is not null`),
+    .where(sql`${t.autorizacionFel} is not null and ${ocupaSuNumero(t)}`),
   index('documentos_libro_idx').on(t.empresaId, t.periodo, t.estado),
   index('documentos_cliente_idx').on(t.empresaId, t.clienteId, t.fechaEmision),
   index('documentos_destino_idx')

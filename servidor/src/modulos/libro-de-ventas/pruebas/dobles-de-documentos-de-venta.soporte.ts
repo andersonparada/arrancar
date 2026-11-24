@@ -19,6 +19,18 @@ interface Guardado {
 
 const texto = (centavos: number) => deCentavos(centavos);
 
+/** Como los índices únicos: lo anulado por error de captura o por no ser de la empresa deja libre su número. */
+const ocupaSuNumero = ({ estado, anulacion }: Guardado): boolean =>
+  estado === 'vigente' || anulacion?.causa === 'fel_anulada_en_la_sat';
+
+function esElMismoDocumento(documento: DocumentoDeVenta, clave: ClaveDeDocumentoDeVenta): boolean {
+  const mismoNumero =
+    (documento.tipoDte ?? documento.tipo) === clave.tipoOTipoDte &&
+    (documento.serie ?? '') === (clave.serie ?? '') &&
+    documento.numero === clave.numero;
+  return mismoNumero || (clave.autorizacionFel !== null && documento.autorizacionFel === clave.autorizacionFel);
+}
+
 /** La ficha de un documento tal como la armaría la base, para comprobar los casos de uso sin PostgreSQL. */
 function fichaDe(guardado: Guardado, notas: Guardado[]): DocumentoDeVentaFichaDto {
   const { documento, estado } = guardado;
@@ -111,14 +123,8 @@ export class RepositorioDeDocumentosDeVentaEnMemoria implements RepositorioDeDoc
   }
 
   async buscarRepetido(clave: ClaveDeDocumentoDeVenta): Promise<{ id: string } | null> {
-    const repetido = [...this.guardados.values()].find(({ documento }) => {
-      const mismoNumero =
-        (documento.tipoDte ?? documento.tipo) === clave.tipoOTipoDte &&
-        (documento.serie ?? '') === (clave.serie ?? '') &&
-        documento.numero === clave.numero;
-      const mismaFel = clave.autorizacionFel !== null && documento.autorizacionFel === clave.autorizacionFel;
-      return mismoNumero || mismaFel;
-    });
+    const ocupan = [...this.guardados.values()].filter(ocupaSuNumero);
+    const repetido = ocupan.find(({ documento }) => esElMismoDocumento(documento, clave));
     return repetido ? { id: repetido.documento.id } : null;
   }
 
@@ -157,6 +163,7 @@ export class RepositorioDeDocumentosDeVentaEnMemoria implements RepositorioDeDoc
       iva: documento.totales.iva,
       totalDeNotasDeCredito: suma('nota_de_credito', 'total'),
       ivaDeNotasDeCredito: suma('nota_de_credito', 'iva'),
+      cantidadDeNotasDeCredito: vigentes('nota_de_credito').length,
       totalDeNotasDeDebito: suma('nota_de_debito', 'total'),
       ivaDeNotasDeDebito: suma('nota_de_debito', 'iva'),
     };

@@ -70,12 +70,13 @@ async function sumaDeNotasVigentes(facturaId: string, tipo: 'nota_de_credito' | 
     .select({
       total: sql<string>`coalesce(sum(${documentos.total}), 0)::text`,
       iva: sql<string>`coalesce(sum(${documentos.iva}), 0)::text`,
+      cantidad: sql<string>`count(*)::text`,
     })
     .from(documentos)
     .where(
       and(eq(documentos.documentoAfectadoId, facturaId), eq(documentos.estado, 'vigente'), eq(documentos.tipo, tipo)),
     );
-  return { total: aCentavos(suma!.total), iva: aCentavos(suma!.iva) };
+  return { total: aCentavos(suma!.total), iva: aCentavos(suma!.iva), cantidad: Number(suma!.cantidad) };
 }
 
 /** Documentos de venta en PostgreSQL; la seguridad por empresa (RLS) limita todo a la empresa de la transacción. */
@@ -87,7 +88,10 @@ export class RepositorioDeDocumentosDeVentaDrizzle implements RepositorioDeDocum
     await transaccion.insert(lineasDeDocumento).values(filas.lineas);
   }
 
-  /** Un número anulado tampoco se reutiliza: la búsqueda no distingue el estado. */
+  /**
+   * Ocupan su número lo vigente y lo anulado en la SAT (ese número no se reutiliza); lo anulado por error de captura o
+   * por no ser de la empresa no estorba al documento correcto. Es la misma condición de los índices únicos.
+   */
   async buscarRepetido(clave: ClaveDeDocumentoDeVenta): Promise<{ id: string } | null> {
     const mismoNumero = and(
       sql`coalesce(${documentos.tipoDte}, ${documentos.tipo}) = ${clave.tipoOTipoDte}`,
@@ -98,7 +102,12 @@ export class RepositorioDeDocumentosDeVentaDrizzle implements RepositorioDeDocum
     const [fila] = await transaccionEnCurso()
       .select({ id: documentos.id })
       .from(documentos)
-      .where(sql`(${mismoNumero}) or ${misma}`)
+      .where(
+        and(
+          sql`((${mismoNumero}) or ${misma})`,
+          sql`(${documentos.causaDeAnulacion} is null or ${documentos.causaDeAnulacion} = 'fel_anulada_en_la_sat')`,
+        ),
+      )
       .limit(1);
     return fila ?? null;
   }
@@ -132,6 +141,7 @@ export class RepositorioDeDocumentosDeVentaDrizzle implements RepositorioDeDocum
       iva: aCentavos(fila.iva),
       totalDeNotasDeCredito: credito.total,
       ivaDeNotasDeCredito: credito.iva,
+      cantidadDeNotasDeCredito: credito.cantidad,
       totalDeNotasDeDebito: debito.total,
       ivaDeNotasDeDebito: debito.iva,
     };

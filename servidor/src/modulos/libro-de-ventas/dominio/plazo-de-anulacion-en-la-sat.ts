@@ -3,7 +3,20 @@ import type { CausaDeAnulacionDeVenta } from '../../core/contratos/libro-de-vent
 import type { CalendarioLaboral } from './calendario-laboral.js';
 import { sumarMeses, ultimoDiaDelMes } from './fechas-del-libro.js';
 
-export const AVISO_DE_PLAZO_DE_ANULACION_VENCIDO = 'Ya no se puede anular en la SAT: emita una nota de crédito.';
+export const AVISO_DE_PLAZO_DE_ANULACION_VENCIDO =
+  'Si el DTE está bien, vuelva a registrarlo con los datos correctos; si la venta no procede o cambió, ya no se puede anular en la SAT: emita una nota de crédito.';
+
+const SUGERENCIA_DE_VERIFICAR =
+  ' Verifique en la Agencia Virtual: la SAT podría cerrar la anulación antes de esa fecha.';
+
+/** El aviso de un error de captura dentro del plazo: anular el registro no anula el DTE, que sigue declarando débito. */
+export function avisoDePlazoDeAnulacionVigente(vencimiento: string, enLaProrroga: boolean): string {
+  const [anio, mes, dia] = vencimiento.split('-');
+  return (
+    `Este registro no anula el DTE. Si la venta no procede, anúlelo en la SAT antes del ${dia}/${mes}/${anio}.` +
+    (enLaProrroga ? SUGERENCIA_DE_VERIFICAR : '')
+  );
+}
 
 /**
  * El último día para declarar el IVA de un período: el último día del mes siguiente, corrido al siguiente día hábil
@@ -30,10 +43,14 @@ export interface DatosDelPlazoDeAnulacion {
 /**
  * Desde el 1-09-2023 un DTE solo se anula en la SAT hasta el vencimiento de la declaración mensual del IVA de su
  * período; después solo cabe la nota de crédito. Al anular por `error_de_captura` un documento que sigue vigente en la
- * SAT (o sin dato de la SAT) y cuyo plazo pasó, avisa. No bloquea: solo informa.
+ * SAT (o sin dato de la SAT) avisa que el registro no anula el DTE: dentro del plazo, hasta cuándo anularlo allá (con
+ * la sugerencia de verificar si ya se está en la prórroga por día inhábil); vencido, que lo correcto es volver a
+ * registrarlo o, si la venta no procede, emitir la nota de crédito. No bloquea: solo informa.
  */
 export function avisosDelPlazoDeAnulacion(datos: DatosDelPlazoDeAnulacion, calendario: CalendarioLaboral): string[] {
   if (datos.causa !== 'error_de_captura' || !datos.tieneFel || datos.anuladoEnLaSat) return [];
-  const vencido = datos.hoy > vencimientoDeLaDeclaracionDelIva(datos.periodo, calendario);
-  return vencido ? [AVISO_DE_PLAZO_DE_ANULACION_VENCIDO] : [];
+  const vencimiento = vencimientoDeLaDeclaracionDelIva(datos.periodo, calendario);
+  if (datos.hoy > vencimiento) return [AVISO_DE_PLAZO_DE_ANULACION_VENCIDO];
+  const ultimoDiaDelMesSiguiente = ultimoDiaDelMes(sumarMeses(datos.periodo, 1));
+  return [avisoDePlazoDeAnulacionVigente(vencimiento, datos.hoy > ultimoDiaDelMesSiguiente)];
 }

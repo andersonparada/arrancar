@@ -46,8 +46,20 @@ describe('aviso del plazo de anulación en la SAT', () => {
     expect(avisosDelPlazoDeAnulacion(datos(), calendario)).toEqual([AVISO_DE_PLAZO_DE_ANULACION_VENCIDO]);
   });
 
-  it('el último día del plazo todavía se puede anular', () => {
-    expect(avisosDelPlazoDeAnulacion(datos({ hoy: '2026-04-30' }), calendario)).toEqual([]);
+  it('dentro del plazo avisa que el registro no anula el DTE y hasta cuándo anularlo en la SAT', () => {
+    const [aviso] = avisosDelPlazoDeAnulacion(datos({ hoy: '2026-04-30' }), calendario);
+
+    expect(aviso).toBe(
+      'Este registro no anula el DTE. Si la venta no procede, anúlelo en la SAT antes del 30/04/2026.',
+    );
+  });
+
+  it('en la prórroga por día inhábil sugiere verificar en la Agencia Virtual', () => {
+    // El plazo de abril termina el domingo 31 de mayo y se corre al lunes 1 de junio.
+    const [aviso] = avisosDelPlazoDeAnulacion(datos({ hoy: '2026-06-01', periodo: '2026-04-01' }), calendario);
+
+    expect(aviso).toContain('antes del 01/06/2026');
+    expect(aviso).toContain('Agencia Virtual');
   });
 
   it('solo avisa con la causa error de captura', () => {

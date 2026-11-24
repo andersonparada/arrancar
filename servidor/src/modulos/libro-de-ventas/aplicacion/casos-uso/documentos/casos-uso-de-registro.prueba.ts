@@ -91,12 +91,18 @@ describe('registrar una factura', () => {
     await expect(registrar({ localidadId: crypto.randomUUID() })).rejects.toThrow(RecursoNoEncontrado);
   });
 
-  it('el mismo número no se registra dos veces, ni anulado', async () => {
+  it('el mismo número no se registra dos veces, ni anulado en la SAT, pero sí tras un error de captura', async () => {
     const primera = await registrar({ serie: 'B', numero: '1' });
+    const anular = (documentoId: string, cambios: object) =>
+      e.anular.ejecutar(e.operador, { documentoId, motivo: 'x', ...cambios } as never);
 
     await expect(registrar({ serie: 'B', numero: '1' })).rejects.toThrow(DocumentoRepetido);
-    await e.anular.ejecutar(e.operador, { documentoId: primera.documento.id, causa: 'error_de_captura', motivo: 'x' });
+    await anular(primera.documento.id, { causa: 'fel_anulada_en_la_sat', fechaDeAnulacion: '2026-04-20' });
     await expect(registrar({ serie: 'B', numero: '1' })).rejects.toThrow(DocumentoRepetido);
+
+    const segunda = await registrar({ serie: 'B', numero: '2' });
+    await anular(segunda.documento.id, { causa: 'error_de_captura' });
+    await expect(registrar({ serie: 'B', numero: '2' })).resolves.toBeDefined();
   });
 
   it('el IVA del DTE se acepta dentro de la tolerancia', async () => {

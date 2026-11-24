@@ -69,6 +69,7 @@ const factura = (cambios: Partial<FacturaAfectada> = {}): FacturaAfectada => ({
   iva: 1200,
   totalDeNotasDeCredito: 0,
   ivaDeNotasDeCredito: 0,
+  cantidadDeNotasDeCredito: 0,
   totalDeNotasDeDebito: 0,
   ivaDeNotasDeDebito: 0,
   ...cambios,

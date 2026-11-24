@@ -9,6 +9,7 @@ import {
   DocumentoProcesado,
   DocumentoYaAnulado,
   FechaDeAnulacionInvalida,
+  FechaDeAnulacionRequerida,
   MotivoDeAnulacionInvalido,
   NotaDeDebitoSostieneNotasDeCredito,
 } from '../../../dominio/errores-de-baja.js';
@@ -55,15 +56,36 @@ describe('anular', () => {
     expect(e.publicadorEventos.nombres()).toContain('libro-de-ventas.documento_anulado');
   });
 
-  it('exige causa y motivo, y una fecha de la SAT que no sea anterior a la emisión ni futura', async () => {
+  it('exige causa y motivo', async () => {
     const original = await registrar();
 
     await expect(anular(original.id, { causa: 'porque sí' })).rejects.toThrow(CausaDeAnulacionInvalida);
     await expect(anular(original.id, { motivo: '  ' })).rejects.toThrow(MotivoDeAnulacionInvalido);
-    await expect(anular(original.id, { fechaDeAnulacion: '2026-03-01' })).rejects.toThrow(FechaDeAnulacionInvalida);
-    await expect(anular(original.id, { fechaDeAnulacion: '2026-04-21' })).rejects.toThrow(FechaDeAnulacionInvalida);
-    const { documento } = await anular(original.id, { fechaDeAnulacion: '2026-03-20' });
+  });
+
+  it('con la FEL anulada en la SAT la fecha es obligatoria, no antes de la emisión ni futura, y nunca se presume', async () => {
+    const original = await registrar();
+    const enLaSat = (cambios = {}) => anular(original.id, { causa: 'fel_anulada_en_la_sat', ...cambios });
+
+    await expect(enLaSat()).rejects.toThrow(FechaDeAnulacionRequerida);
+    await expect(enLaSat({ fechaDeAnulacion: null })).rejects.toThrow(FechaDeAnulacionRequerida);
+    await expect(enLaSat({ fechaDeAnulacion: '2026-03-01' })).rejects.toThrow(FechaDeAnulacionInvalida);
+    await expect(enLaSat({ fechaDeAnulacion: '2026-04-21' })).rejects.toThrow(FechaDeAnulacionInvalida);
+    const { documento } = await enLaSat({ fechaDeAnulacion: '2026-03-20' });
     expect(documento.anulacion!.fecha).toBe('2026-03-20');
+    expect(e.publicadorEventos.publicados.at(-1)?.datos).toMatchObject({
+      fechaDeAnulacion: '2026-03-20',
+      fechaDeEmision: documento.fechaEmision,
+      periodo: documento.periodo,
+    });
+  });
+
+  it('con error de captura la fecha es la de hoy y no se presenta como fecha de la SAT', async () => {
+    const original = await registrar();
+
+    const { documento } = await anular(original.id, { fechaDeAnulacion: '2026-03-20' });
+
+    expect(documento.anulacion!.fecha).toBe('2026-04-20');
   });
 
   it('un documento que no existe o ya está anulado no se anula', async () => {
@@ -150,13 +172,22 @@ describe('plazo de anulación en la SAT', () => {
     expect(avisos).toContain(AVISO_DE_PLAZO_DE_ANULACION_VENCIDO);
   });
 
-  it('dentro del plazo, con otra causa o sin FEL no avisa', async () => {
+  it('un error de captura dentro del plazo avisa que el registro no anula el DTE y hasta cuándo anularlo en la SAT', async () => {
     const enPlazo = await conFel({ fechaEmision: '2026-03-15' });
+
+    const { avisos } = await anular(enPlazo.id);
+
+    expect(avisos).toEqual([
+      'Este registro no anula el DTE. Si la venta no procede, anúlelo en la SAT antes del 30/04/2026.',
+    ]);
+  });
+
+  it('con otra causa o sin FEL no avisa del plazo', async () => {
     const otraCausa = await conFel({ fechaEmision: '2026-01-15' });
     const papel = await registrar({ fechaEmision: '2026-01-15' });
+    const enLaSat = { causa: 'fel_anulada_en_la_sat', fechaDeAnulacion: '2026-01-20' };
 
-    expect((await anular(enPlazo.id)).avisos).toEqual([]);
-    expect((await anular(otraCausa.id, { causa: 'fel_anulada_en_la_sat' })).avisos).toEqual([]);
+    expect((await anular(otraCausa.id, enLaSat)).avisos).toEqual([]);
     expect((await anular(papel.id)).avisos).toEqual([]);
   });
 });

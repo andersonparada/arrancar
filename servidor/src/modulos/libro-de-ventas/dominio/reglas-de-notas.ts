@@ -9,7 +9,7 @@ import {
 } from './errores-de-notas.js';
 import { DocumentoInvalido } from './errores-de-documento.js';
 import { venceLaVispera } from './fechas-del-libro.js';
-import { notasDeCreditoCaben } from './tope-de-notas.js';
+import { medirElTopeDeNotasDeCredito } from './tope-de-notas.js';
 import { FAMILIAS_QUE_ADMITEN_NOTA, esNota, type TipoDeDocumento, type TipoDeNota } from './tipos-de-documento.js';
 
 /** Meses de la factura dentro de los que se puede emitir una nota de crédito que rebaje el débito (Ley del IVA, art. 17). */
@@ -99,25 +99,40 @@ export interface FacturaConNotas {
   iva: number;
   totalDeNotasDeCredito: number;
   ivaDeNotasDeCredito: number;
+  /** Cuántas notas de crédito vigentes tiene: cada una redondea su IVA por su cuenta (tolerancia del tope). */
+  cantidadDeNotasDeCredito: number;
   totalDeNotasDeDebito: number;
   ivaDeNotasDeDebito: number;
 }
 
+/** El aviso de que el IVA acumulado de las notas de crédito pasa de la factura por el redondeo de cada nota. */
+export function avisoDeIvaDeNotasPorRedondeo(excesoEnCentavos: number): string {
+  const monto = `Q${Math.floor(excesoEnCentavos / 100)}.${String(excesoEnCentavos % 100).padStart(2, '0')}`;
+  return `El IVA acumulado de las notas de crédito pasa del IVA de la factura por ${monto} (redondeo de cada nota). Se registró el IVA del DTE.`;
+}
+
 /**
  * El tope de las notas de crédito: su suma, en total y en IVA, no pasa de la factura más sus notas de débito vigentes
- * (`notasDeCreditoCaben`: el IVA admite el redondeo de cada nota, hasta Q0.05 sobre el proporcional). La nota de débito
- * aumenta la factura, así que no tiene tope; la de abono tampoco (no toca el débito). La fila de la factura debe estar
+ * (`medirElTopeDeNotasDeCredito`: dos topes absolutos; el IVA admite el redondeo de cada nota). Dentro de la tolerancia
+ * se registra el IVA exacto del DTE y, si pasa del IVA de la factura, devuelve un aviso con los centavos de exceso. La
+ * nota de débito aumenta la factura, así que no tiene tope; la de abono tampoco. La fila de la factura debe estar
  * bloqueada (`for update`) para que dos notas a la vez no se pasen.
  * @throws NotaExcedeLaFactura
  */
 export function exigirQueLaNotaNoSupereLaFactura(
   factura: FacturaConNotas,
   nota: { tipo: TipoDeNota; total: number; iva: number },
-): void {
-  if (nota.tipo !== 'nota_de_credito') return;
+): string[] {
+  if (nota.tipo !== 'nota_de_credito') return [];
   const tope = { total: factura.total + factura.totalDeNotasDeDebito, iva: factura.iva + factura.ivaDeNotasDeDebito };
-  const acumulado = { total: factura.totalDeNotasDeCredito + nota.total, iva: factura.ivaDeNotasDeCredito + nota.iva };
-  if (!notasDeCreditoCaben(tope, acumulado)) throw new NotaExcedeLaFactura();
+  const acumulado = {
+    total: factura.totalDeNotasDeCredito + nota.total,
+    iva: factura.ivaDeNotasDeCredito + nota.iva,
+    notasDeCredito: factura.cantidadDeNotasDeCredito + 1,
+  };
+  const medida = medirElTopeDeNotasDeCredito(tope, acumulado);
+  if (!medida.cabe) throw new NotaExcedeLaFactura();
+  return medida.excesoDeIva > 0 ? [avisoDeIvaDeNotasPorRedondeo(medida.excesoDeIva)] : [];
 }
 
 /** `true` si la nota de crédito se emite pasados los dos meses de su factura (vence la víspera). */

@@ -45,7 +45,12 @@ describe('qué documento carga débito', () => {
 });
 
 describe('nota sobre una factura del sistema anterior', () => {
-  const base = { ivaDelDte: null, regimenDeLaFactura: null, regimenDelMesDeLaNota: 'general' } as const;
+  const base = {
+    ivaDelDte: null,
+    hayLineaGravada: true,
+    regimenDeLaFactura: null,
+    regimenDelMesDeLaNota: 'general',
+  } as const;
 
   it('el IVA del DTE manda; avisa si no concuerda con el régimen de la factura', () => {
     expect(tratamientoDeLaNotaSobreFacturaAnterior({ ...base, ivaDelDte: 0 })).toMatchObject({ cobraIva: false });
@@ -62,6 +67,13 @@ describe('nota sobre una factura del sistema anterior', () => {
     });
     expect(choque.cobraIva).toBe(true);
     expect(choque.avisos).toHaveLength(1);
+  });
+
+  it('IVA 0 en régimen general solo avisa si hay línea gravada', () => {
+    const general = { ...base, ivaDelDte: 0, regimenDeLaFactura: 'general' } as const;
+
+    expect(tratamientoDeLaNotaSobreFacturaAnterior({ ...general, hayLineaGravada: false }).avisos).toEqual([]);
+    expect(tratamientoDeLaNotaSobreFacturaAnterior(general).avisos).toHaveLength(1);
   });
 
   it('sin IVA del DTE decide el régimen del mes de la factura, y sin historial el de la nota con aviso', () => {
