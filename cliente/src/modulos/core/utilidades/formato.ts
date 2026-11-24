@@ -24,7 +24,8 @@ export const formatearFechaHora = (valor: Instante) => formatoDeLaEmpresa().fech
 
 export const formatearMonto = (valor: Numero, moneda?: string) => formatoDeLaEmpresa().monto(valor, moneda);
 
-export const formatearCantidad = (valor: Numero, unidad?: string) => formatoDeLaEmpresa().cantidad(valor, unidad);
+export const formatearCantidad = (valor: Numero, unidad?: string, decimales?: number) =>
+  formatoDeLaEmpresa().cantidad(valor, unidad, decimales);
 
 const DIGITOS_DE_TELEFONO_LOCAL = 8;
 
