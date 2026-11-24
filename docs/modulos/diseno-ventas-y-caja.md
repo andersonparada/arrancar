@@ -2363,7 +2363,7 @@ Mandan sobre las preguntas de §24.7.
 |---|---|
 | VU-P1 | a) Al activar vienen encendidos crédito, cartera y control de existencias; la caja, apagada |
 | VU-P2 | a) Sin caja se acepta efectivo, con «Efectivo por depositar», segunda persona sobre un tope y para devolver, conteo mensual y reporte que no se apaga |
-| VU-P3 | «Se puede vender con inventario y servicios»: una venta puede mezclar artículos de inventario y servicios. Se lee como a) para los bienes: con control de existencias, un bien se liga a su artículo; un servicio no lleva artículo |
+| VU-P3 | «Se puede vender con inventario y servicios»: una venta puede mezclar artículos de inventario y servicios. Confirmado por el usuario: con control de existencias, un bien se liga a su artículo; un servicio no lleva artículo |
 | VU-P4 | a) La cartera no se apaga con saldos: primero se cobra, se acredita o se castiga; mientras tanto se puede apagar solo el crédito |
 | VU-P5 | a) Con la cartera apagada, la factura a crédito se registra en «Clientes sin auxiliar», con alerta |
 | VU-P7 | a) Se puede apagar el control de existencias con mercadería, con conteo a la fecha del cambio y segunda persona; el saldo sigue como inventario periódico |

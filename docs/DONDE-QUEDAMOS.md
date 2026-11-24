@@ -1,6 +1,6 @@
 # Dónde quedamos
 
-Última sesión: **2026-11-19**. Este archivo se reescribe al final de cada paso.
+Última sesión: **2026-11-23**. Este archivo se reescribe al final de cada paso.
 
 Se está implementando `docs/modulos/plan-hallazgos-contables.md` en el orden de su
 sección «Dependencias y orden de implementación» (código con agentes Sonnet;
@@ -8,7 +8,7 @@ decisiones e investigación con Opus).
 
 ## Estado para retomar (se actualiza en cada unión a `main`)
 
-Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop**. Si otra sesión o cuenta retoma, empiece aquí.
+Actualizado: **2026-11-23** (noche). El usuario pidió seguir mañana. Si otra sesión o cuenta retoma, empiece aquí.
 
 **Cómo se trabaja:**
 - **Agentes:** cada paso lo programa Sonnet (`programador-backend`/`-frontend`) en su worktree, con revisión adversarial de Opus
@@ -22,7 +22,7 @@ Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop*
 - **Clientes:** el usuario **no tiene clientes todavía** (2026-11-19). No se frena nada esperando datos reales; lo que solo un
   cliente puede confirmar se revisa con el primero que lo use.
 
-**`main`:** `c5eae433` (subido, 2026-11-19 a media mañana). Suite completa en verde: servidor 8224, cliente 2282, generador 46.
+**`main`:** al 2026-11-23 trae VCJ-0a y el diseño de Ventas y cobros. Última suite: servidor 8229, cliente 2282, generador 46 (tras corregir una prueba de Caja chica se repitieron sus 19 archivos, no toda la del servidor).
 
 **En `main` desde el 2026-11-18:**
 - **Bancos:**
@@ -60,21 +60,40 @@ Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop*
 - **Recomendaciones aceptadas en todos los puntos:** Cuentas por cobrar y Ventas (VC-P1 a VC-P24), Contabilidad (CT-P1 a
   CT-P18), Bancos aprobaciones y tarjeta (§16) y Parcelas (PA-1 a PA-19).
 
-**En curso (2026-11-23):** workflow `arrancar-tanda-9` (run `wf_3c37cfe1-206`, reanudable con `resumeFromRunId`), desde la rama
-`base-tanda9` (`f3792328`). Son 11 cadenas; cada paso lleva revisión de Opus, corrección y segunda revisión si hubo altos o medios:
-- Correcciones de la QA CL-7 → CC-11 (QA, puertos 3311 y 5311).
-- AFI-3 → resto de AFI-4 → AF-9 → AFI-5.
-- Cliente AF-7c y AF-8c.
-- INV-6 → INV-7 → INV-8.
-- Cliente INV-2c, INV-4c e INV-5c.
-- VC-0b (bancos 0039) → cliente de VC-0a.
-- VC-0c1 (libro 0040) → VC-0c2 y VC-0c.
-- VC-0d → LV-1 → LV-2 → LV-1c y LV-2c.
-- CT-0e y CT-0f → CT-1 → CT-2 → CT-1c y CT-2c.
-- AP-1 → AP-2 → AP-3.
-- PA-0b y PA-0bc (empresas 0015) → PA-1 → PA-1c.
+**En curso (2026-11-23, noche): ronda de correcciones de la tanda 9.** Workflow `arrancar-correcciones-tanda-9` (run `wf_a9dc1b60-752`,
+reanudable con `resumeFromRunId` en la misma sesión). La tanda 9 terminó (run `wf_3c37cfe1-206`) con **41 hallazgos abiertos (3 altos, 38
+medios) en 11 de 12 cadenas**: **ninguna rama de la tanda 9 está en `main` todavía**. Cada cadena pasa por contador (si es fiscal),
+corrección, revisión de Opus y segunda vuelta. Hallazgos por cadena: `abiertos-<clave>.json` en el scratchpad de la sesión (se puede
+perder); la copia durable es el resultado del workflow en su `journal.jsonl`.
 
-Al terminar: unir la **última rama de cada cadena** en `integracion`, revisar migraciones, correr la suite y pasar a `main`.
+| Cadena | Pasos | Última rama (`worktree-wf_3c37cfe1-206-…`) |
+|---|---|---|
+| `cl` | Correcciones de la QA CL-7 (limpia) | `-1` |
+| `cc` | CC-11 (QA de Caja chica) | `-43` |
+| `af` | AFI-3, resto de AFI-4, AF-9, AFI-5 | `-122` |
+| `afc` | AF-7c y AF-8c | `-3` |
+| `inv` | INV-6, INV-7, INV-8 | `-126` |
+| `invc` | INV-2c, INV-4c, INV-5c | `-5` |
+| `vcb` | VC-0b (Bancos 0039), VC-0a cliente | `-61` |
+| `vcc` | VC-0c1 (Libro 0040), VC-0c2, VC-0c | `-54` |
+| `lv` | VC-0d, LV-1, LV-2, LV-1c, LV-2c | `-111` |
+| `ct` | CT-0e, CT-0f, CT-1, CT-2, CT-1c, CT-2c | `-100` |
+| `ap` | AP-1, AP-2, AP-3 | `-91` |
+| `pa` | PA-0b, PA-1, PA-1c (Empresas 0015) | `-103` |
+
+**VCJ-0d** (rama `worktree-wf_05a0b7b8-de7-3`, 354 pruebas en verde): se une **después de `vcb`**, porque su Bancos 0040 encadena con la
+0039. Trae core 0037 y Empresas 0016: revisar el orden contra Empresas 0015 de `pa`. Falta su pantalla: pedir el motivo al quitar o
+cambiar el NIT.
+
+**Al retomar:** leer el resultado del workflow; unir en `integracion` la última rama de cada cadena con veredicto `unir`; revisar journals
+(`when`, `idx`, números únicos) y que `bd:generar -w servidor -- <modulo> verificacion` diga «No schema changes»; correr `npm run revisar`
+y `BD_PRUEBAS=arrancar_pruebas_int npm run probar` (0 skipped); pasar a `main`, `bd:migrar` y push.
+
+**Avisos del 2026-11-23:**
+- El puente huérfano de Docker que tapaba el puerto 5433 ya lo borró el usuario. Si vuelve el `ECONNRESET`, revisar `ip route` por dos
+  rutas a `172.19.0.0/16`.
+- `npm run probar` se detiene si falla el servidor: entonces cliente y generador **no corrieron**.
+- Las pruebas que siembran con `current_date` (UTC) pueden fallar después de las 18:00 de Guatemala; usar `HOY`.
 
 **Ventas/Caja (aprobado el 2026-11-23, `docs/modulos/diseno-ventas-y-caja.md`):** no hay módulo Caseta. Ventas/Caja usa **formas de venta**:
 con FEL es formal; sin FEL es de control e informal; una empresa puede tener ambas. Lleva recibos de pago, crédito, turnos, recetas y
@@ -84,17 +103,13 @@ VCJ-0d, desde `base-vcj`. VCJ-0a ya está en `main`; VCJ-0d, hecho y probado, se
 Inventarios opcional. Diseño en `diseno-ventas-y-caja.md` §24 (pasos en §24.5, revisión en §24.8, respuestas VU-P en §24.9). VCJ-1 ya
 no espera a INV-8; solo la descarga (VCJ-3 y VCJ-4i) sigue detrás de VCJ-0b. Prioridad del usuario: **sacar Inventarios**.
 
-**Siguientes pasos al retomar** (todo diseñado y aprobado):
-- **Cuentas por liquidar:** corregir los dos medios de la QA CL-7.
-- **Caja chica:** CC-11 (QA).
-- **Activos fijos:** AF-7c y AF-8c, AFI-3 a AFI-5, AF-9 y siguientes.
-- **Inventarios:** INV-5c (pantalla «Por recibir»), INV-6 (traslados) y siguientes; costos adicionales.
-- **Cuentas por cobrar y Ventas:** VC-0b, VC-0c1 y VC-0d en paralelo; luego LV-1 → LV-2 → LV-3 → LV-5 y CXC-1 en adelante.
-- **Contabilidad:** CT-0e, CT-0f y la cadena CT-1 → CT-2 → CT-3. CT-1p espera la plantilla de cuentas del contador.
-- **Bancos aprobaciones y tarjeta:** AP-1 a AP-3 y AB-1 a AB-6.
-- **Parcelas:** PA-0b y siguientes. AF-P23 necesita una migración nueva de Activos fijos.
-- **Multimoneda:** MM-3d (operación).
-- **Bancos:** IC-11 (QA de impresión con papel real).
+**Siguientes pasos al retomar** (prioridad del usuario: **sacar Inventarios**):
+1. Cerrar la ronda de correcciones y unir a `main` (arriba).
+2. **Inventarios:** INV-6c, INV-7c e INV-8c; INV-9 a INV-12 con sus pantallas (en orden cuando toquen las mismas tablas); INV-13, INV-14,
+   INV-AF, AFI-9 e INV-QA. P-1, P-3 e INV-A16 ya están respondidas (a). INV-P14 sigue en la recomendación c, antes de INV-13.
+3. **Ventas y cobros** (§24.5 del diseño): VCJ-0b tras INV-8. Antes de programar: el contador valida la tabla de liquidaciones ampliada
+   (§24.8-B), seguridad revisa el disparador `preparar_empresa` sobre `core.empresas`, y se coteja el Criterio SAT 1-2023 antes de CXC-3.
+4. **Después:** AF-9c y siguientes, LV-3 en adelante, CT-0a2, CT-0a3 y CT-3, AP-4 y AB-1 a AB-6, TC-1, PA-2, MM-B/L/C, MM-3d e IC-11.
 
 **Pendientes anotados:**
 - **CC-4:** un comprobante con una reposición anulada ya no se puede devolver a la bandeja ni eliminar en el libro; da error
