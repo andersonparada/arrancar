@@ -79,7 +79,10 @@ Al terminar: unir la **última rama de cada cadena** en `integracion`, revisar m
 **Ventas/Caja (aprobado el 2026-11-23, `docs/modulos/diseno-ventas-y-caja.md`):** no hay módulo Caseta. Ventas/Caja usa **formas de venta**:
 con FEL es formal; sin FEL es de control e informal; una empresa puede tener ambas. Lleva recibos de pago, crédito, turnos, recetas y
 producción (módulo `produccion`). VJ-P1 a VJ-P17 aceptadas con la opción recomendada. **Workflow `arrancar-ventas-caja-1`:** VCJ-0a →
-VCJ-0d, desde `base-vcj`. VCJ-1 depende de VCJ-0b, y VCJ-0b espera a INV-8 unido.
+VCJ-0d, desde `base-vcj`. VCJ-0a ya está en `main`; VCJ-0d, hecho y probado, se une después de VC-0b (Bancos 0039).
+**Decisión 2026-11-23:** Ventas/Caja y Cuentas por cobrar son **un solo módulo, «Ventas y cobros»** (clave `cuentas-por-cobrar`), con
+Inventarios opcional. Diseño en `diseno-ventas-y-caja.md` §24 (pasos en §24.5, revisión en §24.8, respuestas VU-P en §24.9). VCJ-1 ya
+no espera a INV-8; solo la descarga (VCJ-3 y VCJ-4i) sigue detrás de VCJ-0b. Prioridad del usuario: **sacar Inventarios**.
 
 **Siguientes pasos al retomar** (todo diseñado y aprobado):
 - **Cuentas por liquidar:** corregir los dos medios de la QA CL-7.

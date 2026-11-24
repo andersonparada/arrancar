@@ -2354,3 +2354,21 @@ Fuentes que dio el contador: [Criterio 1-2023, Vesco](https://vescco.tax/blog/cr
 | S7 | El permiso es `cajas.ver-todas` | `ventas.ver-todas` no existe en §14.1 |
 | S12 | La verificación de llaves se limita a este módulo | Extenderla a todos podría romper módulos ya aprobados, sin relación con este cambio |
 | S14 | La fila se crea con un disparador sobre `core.empresas`, no «al activar el módulo» | `DefinicionModulo` no tiene gancho de activación, y una empresa creada después tampoco lo dispararía. **No hay precedente de un disparador de módulo sobre `core.empresas`**: `seguridad` debe revisarlo en VYC-E1 |
+
+### 24.9 Respuestas del usuario (2026-11-23)
+
+Mandan sobre las preguntas de §24.7.
+
+| # | Respuesta |
+|---|---|
+| VU-P1 | a) Al activar vienen encendidos crédito, cartera y control de existencias; la caja, apagada |
+| VU-P2 | a) Sin caja se acepta efectivo, con «Efectivo por depositar», segunda persona sobre un tope y para devolver, conteo mensual y reporte que no se apaga |
+| VU-P3 | «Se puede vender con inventario y servicios»: una venta puede mezclar artículos de inventario y servicios. Se lee como a) para los bienes: con control de existencias, un bien se liga a su artículo; un servicio no lleva artículo |
+| VU-P4 | a) La cartera no se apaga con saldos: primero se cobra, se acredita o se castiga; mientras tanto se puede apagar solo el crédito |
+| VU-P5 | a) Con la cartera apagada, la factura a crédito se registra en «Clientes sin auxiliar», con alerta |
+| VU-P7 | a) Se puede apagar el control de existencias con mercadería, con conteo a la fecha del cambio y segunda persona; el saldo sigue como inventario periódico |
+| VU-P8 | a) 30 días de bloqueo de autoaprobación |
+| VU-P9 | a) Límite de crédito por empresa |
+
+**Sin preguntar al usuario:** VU-P6 queda en b) (solo el aviso de anticipos) porque aún no hay clientes; se reabre con el primero que
+reciba anticipos por servicios futuros. INV-P14 sigue abierta con la recomendación c), hasta ver la plantilla oficial.
