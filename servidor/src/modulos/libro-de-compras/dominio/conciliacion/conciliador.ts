@@ -1,4 +1,5 @@
 import { esAnteriorALaFechaDeInicio, estaEnPlazoDeCredito } from '../anterioridad-a-la-fecha-de-inicio.js';
+import { esFacturaEspecialDeVenta } from '../factura-especial-de-venta.js';
 import { emparejar, type Parejas } from './emparejar.js';
 import { itemDeLaFila, itemDelDocumento } from './items-de-conciliacion.js';
 import type {
@@ -38,7 +39,7 @@ function clasificarDocumento(
   }
   const item = itemDelDocumento(documento, fila);
   if (fila.estadoSat === 'anulado') return ['anuladoEnLaSatYVigenteAqui', item];
-  if (fila.tipoDte === 'FESP') return ['facturaEspecialDeVentaRegistradaComoCompra', item];
+  if (esFacturaEspecialDeVenta(fila)) return ['facturaEspecialDeVentaRegistradaComoCompra', item];
   return [item.diferencias.length > 0 ? 'conDiferencias' : 'cuadra', item];
 }
 
@@ -48,18 +49,18 @@ function claveDeLaFilaConDocumento(
   documento: DocumentoConciliable,
 ): keyof ResultadoDeConciliacion {
   if (fila.estadoSat === 'anulado') return 'anuladoEnLaSatYVigenteAqui';
-  if (fila.tipoDte === 'FESP') return 'facturaEspecialDeVentaRegistradaComoCompra';
+  if (esFacturaEspecialDeVenta(fila)) return 'facturaEspecialDeVentaRegistradaComoCompra';
   return documento.fueraDelLibro ? 'noVaEnElLibro' : 'registradoEnOtroPeriodo';
 }
 
 /** Una fila vigente que Arrancar no tiene; una anulada o una factura especial (es una venta) no son un faltante. */
-const esFaltante = (fila: FilaConciliable): boolean => fila.estadoSat !== 'anulado' && fila.tipoDte !== 'FESP';
+const esFaltante = (fila: FilaConciliable): boolean => fila.estadoSat !== 'anulado' && !esFacturaEspecialDeVenta(fila);
 
 /** Una compra (no una venta ni una anulada que nadie registró) emitida antes de la fecha de inicio. */
 function esDeUnaCompraAnterior(fila: FilaConciliable, fechaDeInicio: string | null): boolean {
   return (
     esAnteriorALaFechaDeInicio(fila.fechaEmision, fechaDeInicio) &&
-    fila.tipoDte !== 'FESP' &&
+    !esFacturaEspecialDeVenta(fila) &&
     (fila.estado === 'descartado' || fila.estadoSat !== 'anulado')
   );
 }

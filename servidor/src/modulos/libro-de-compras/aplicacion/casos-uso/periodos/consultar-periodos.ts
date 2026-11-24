@@ -11,7 +11,7 @@ import {
 import type { DeclaracionGuardada } from '../../puertos/puertos-de-periodos.js';
 import { periodoDelLibro } from '../libro/consultar-libro.js';
 import { fotoDelPeriodoDeHoy, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
-import { remanenteAnteriorDelPeriodo, saldosDeInicioDeLaFoto } from './remanentes-del-periodo.js';
+import { remanenteAnteriorDelPeriodo } from './remanentes-del-periodo.js';
 import { revisionDelPeriodo } from './revision-del-periodo.js';
 
 const MESES = Array.from({ length: 12 }, (_, indice) => indice + 1);
@@ -70,11 +70,9 @@ export class ObtenerPeriodo {
   private async remanentesVigentes(ultima: DeclaracionGuardada) {
     const formulario = ultima.foto?.remanentes?.formulario ?? ultima.foto?.saldosIniciales?.formulario;
     if (!formulario) return undefined;
-    const propios = saldosDeInicioDeLaFoto(ultima.foto, formulario) ?? undefined;
     const anterior = await remanenteAnteriorDelPeriodo(this.dependencias.periodos, {
       periodo: ultima.periodo,
       formulario,
-      escrito: propios,
     });
     return { formulario, anterior };
   }

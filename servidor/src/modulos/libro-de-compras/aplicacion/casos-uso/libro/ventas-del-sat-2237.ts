@@ -13,6 +13,8 @@ import { remanenteAnteriorDelPeriodo } from '../periodos/remanentes-del-periodo.
 export interface VentasDelFormulario {
   ventas: CifrasDeVentasEnLaFoto[];
   remanentes: RemanentesDeRetenciones | null;
+  /** Por qué no se puede calcular el saldo con que empieza el mes (falta el cierre del anterior); `null` si no falta. */
+  avisoDeSaldos: string | null;
 }
 
 export interface DependenciasDeVentasDelFormulario {
@@ -38,11 +40,11 @@ export async function ventasDelFormulario(
 ): Promise<VentasDelFormulario> {
   const ventas = await dependencias.cifrasDeVentas.delPeriodo(operador, pedido.periodo);
   const { formulario, creditoCentavos } = pedido;
-  if (ventas.length === 0 || formulario === null) return { ventas, remanentes: null };
+  if (ventas.length === 0 || formulario === null) return { ventas, remanentes: null, avisoDeSaldos: null };
   const anterior = await remanenteAnteriorDelPeriodo(dependencias.periodos, {
     periodo: pedido.periodo,
     formulario,
   });
   const entrada = { formulario, ventas, creditoCentavos, anterior };
-  return { ventas, remanentes: calcularRemanentesDeRetenciones(entrada) };
+  return { ventas, remanentes: calcularRemanentesDeRetenciones(entrada), avisoDeSaldos: anterior.aviso ?? null };
 }

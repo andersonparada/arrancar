@@ -30,6 +30,7 @@ export interface FilaConciliable {
   fechaEmision: string;
   nitEmisor: string;
   nombreEmisor: string;
+  nitReceptor: string;
   total: string;
   iva: string;
   idp: string;

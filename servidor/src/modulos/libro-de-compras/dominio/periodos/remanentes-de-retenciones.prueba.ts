@@ -4,6 +4,7 @@ import {
   calcularRemanentesDeRetenciones,
   esFormularioConRemanente,
   llevaCalculoDeRemanente,
+  saldosConocidos,
   type SaldosAnteriores,
 } from './remanentes-de-retenciones.js';
 
@@ -149,6 +150,36 @@ describe('saldo de constancias del SAT-2046', () => {
 
   it('el 5 % se redondea al centavo sin decimales flotantes', () => {
     expect(calcular({ ingresos: '0.30', retenciones_de_iva: '0.00' }, 0)?.impuestoDelMes).toBe('0.02');
+  });
+});
+
+describe('saldos sin dato', () => {
+  const entrada = (anterior: SaldosAnteriores, formulario: 'SAT-2237' | 'SAT-2046' = 'SAT-2237') => ({
+    formulario,
+    ventas: ventas({ debito: '100.00', retenciones_de_iva: '0.00', ingresos: '100.00' }),
+    creditoCentavos: 0,
+    anterior,
+  });
+
+  it('sin el saldo de retenciones o de crédito no se calcula el cierre (no se toma como cero)', () => {
+    expect(calcularRemanentesDeRetenciones(entrada({ retencionesCentavos: null, creditoCentavos: 0 }))).toBeNull();
+    expect(calcularRemanentesDeRetenciones(entrada({ retencionesCentavos: 0, creditoCentavos: null }))).toBeNull();
+  });
+
+  it('el SAT-2046 no necesita el crédito fiscal', () => {
+    const resultado = calcularRemanentesDeRetenciones(
+      entrada({ retencionesCentavos: 0, creditoCentavos: null }, 'SAT-2046'),
+    );
+
+    expect(resultado?.impuestoDelMes).toBe('5.00');
+  });
+
+  it('saldosConocidos pone en cero el crédito del SAT-2046 y exige ambos en el SAT-2237', () => {
+    expect(saldosConocidos('SAT-2046', { retencionesCentavos: 5, creditoCentavos: 9 })).toEqual({
+      retencionesCentavos: 5,
+      creditoCentavos: 0,
+    });
+    expect(saldosConocidos('SAT-2237', { retencionesCentavos: 5, creditoCentavos: null })).toBeNull();
   });
 });
 

@@ -115,7 +115,11 @@ declare module './mediador.contratos.js' {
   interface PreguntasEntreModulos {
     /**
      * Al declarar o rectificar un período, Libro de compras pregunta a todos las cifras de ventas del mes (`periodo` es
-     * `AAAA-MM-01`); responde `null` quien no tenga nada que decir. Lo guarda en `foto.ventas`.
+     * `AAAA-MM-01`); responde `null` quien no tenga nada que decir. Lo guarda en `foto.ventas`. Un mes sin ventas con
+     * el módulo activo y en uso responde las cifras en `0.00` (`debito`, `retenciones_de_iva`, `ingresos`): es un débito
+     * conocido igual a cero y el crédito se acumula (Ley del IVA, art. 21). `null` solo cuando no puede saberlo (por
+     * ejemplo, un mes anterior a empezar a usar el módulo): una lista de cifras vacía se trata como «sin respuesta» y
+     * cortaría la cadena de remanentes.
      */
     'libro-de-compras.cifras_para_la_declaracion': {
       datos: { periodo: string };

@@ -189,28 +189,6 @@ describe('saldos escritos sin respuesta de ventas', () => {
   });
 });
 
-describe('saldos escritos en un mes sin ventas y un mes siguiente con ventas', () => {
-  const ENERO = mesDe(-9);
-  const FEBRERO = mesDe(-8);
-
-  it('el mes sin ventas traslada sus saldos al siguiente, también en el detalle', async () => {
-    await declarar(propietario(), ENERO, {
-      remanenteDeRetencionesAnterior: '10.00',
-      remanenteDeCreditoAnterior: '4.00',
-    });
-    responder(FEBRERO, { debito: '0.00', retenciones_de_iva: '1.00' });
-
-    const declarada = await declarar(propietario(), FEBRERO);
-
-    expect(declarada.cuerpo.declaracion.foto.remanentes).toMatchObject({
-      remanenteAnterior: '10.00',
-      creditoAnterior: '4.00',
-    });
-    const { cambioDesdeLaDeclaracion: cambio } = await detalleDe(propietario(), FEBRERO);
-    expect(cambio.cambios.filter((c: { clave: string }) => c.clave.startsWith('remanentes.'))).toEqual([]);
-  });
-});
-
 describe('pequeño contribuyente electrónico (régimen derogado)', () => {
   it('no lleva cálculo de remanente ni en la pantalla ni en la declaración', async () => {
     const historico = await prepararEscenario(entorno, 'remaelectronico');

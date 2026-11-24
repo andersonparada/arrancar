@@ -14,11 +14,30 @@ export const CIFRAS_DE_VENTAS = {
 /** El pequeño contribuyente paga el 5 % de sus ingresos del mes. */
 const PORCENTAJE_DEL_PEQUENO = 5;
 
-/** Lo que trae de los meses anteriores el período, en centavos: retenciones (o constancias) y crédito fiscal. */
+/**
+ * Lo que trae de los meses anteriores el período, en centavos: retenciones (o constancias) y crédito fiscal. `null` es
+ * «sin dato»: no se sabe con qué saldo cerró el mes previo (no es cero) y no se puede calcular el cierre de este mes.
+ */
 export interface SaldosAnteriores {
-  retencionesCentavos: number;
+  retencionesCentavos: number | null;
   /** El remanente del crédito fiscal que dejó el mes previo (solo cuenta en el SAT-2237). */
+  creditoCentavos: number | null;
+  /** Por qué falta algún saldo y qué hacer; solo cuando falta. */
+  aviso?: string | undefined;
+}
+
+/** Los saldos que el cálculo necesita: las retenciones siempre; el crédito fiscal solo en el SAT-2237. */
+export interface SaldosConocidos {
+  retencionesCentavos: number;
   creditoCentavos: number;
+}
+
+/** `null` si falta algún saldo que el formulario necesita. */
+export function saldosConocidos(formulario: FormularioConRemanente, saldos: SaldosAnteriores): SaldosConocidos | null {
+  const { retencionesCentavos, creditoCentavos } = saldos;
+  if (retencionesCentavos === null) return null;
+  if (formulario === 'SAT-2046') return { retencionesCentavos, creditoCentavos: 0 };
+  return creditoCentavos === null ? null : { retencionesCentavos, creditoCentavos };
 }
 
 export type FormularioConRemanente = 'SAT-2237' | 'SAT-2046';
@@ -55,7 +74,7 @@ export interface EntradaDeRemanentes {
   ventas: CifrasDeVentasEnLaFoto[];
   /** El crédito fiscal del período (solo cuenta en el SAT-2237). */
   creditoCentavos: number;
-  anterior: SaldosAnteriores;
+  anterior: SaldosConocidos;
 }
 
 function sumaDe(ventas: CifrasDeVentasEnLaFoto[], clave: string): number {
@@ -87,10 +106,18 @@ export function llevaCalculoDeRemanente(regimen: string | null | undefined): boo
 
 /**
  * Remanente de retenciones del período: máx(0, retenciones + anterior − impuesto del mes). En el SAT-2237 el impuesto
- * resta también el remanente de crédito fiscal anterior, y el crédito que sobra pasa al mes siguiente. Sin respuesta de ventas no
- * hay nada que calcular (`null`). Función pura, en centavos enteros.
+ * resta también el remanente de crédito fiscal anterior, y el crédito que sobra pasa al mes siguiente. Sin respuesta de ventas
+ * (débito desconocido) o sin alguno de los saldos anteriores no se puede calcular el cierre (`null`). Función pura, en centavos enteros.
  */
-export function calcularRemanentesDeRetenciones(entrada: EntradaDeRemanentes): RemanentesDeRetenciones | null {
+export function calcularRemanentesDeRetenciones(
+  entrada: Omit<EntradaDeRemanentes, 'anterior'> & { anterior: SaldosAnteriores },
+): RemanentesDeRetenciones | null {
+  const anterior = saldosConocidos(entrada.formulario, entrada.anterior);
+  if (!anterior) return null;
+  return calcularConSaldos({ ...entrada, anterior });
+}
+
+function calcularConSaldos(entrada: EntradaDeRemanentes): RemanentesDeRetenciones | null {
   const respondieron = entrada.ventas.some((r) => r.clave === 'ventas' && r.cifras.length > 0);
   if (!respondieron) return null;
   const retenciones = sumaDe(entrada.ventas, CIFRAS_DE_VENTAS.retenciones);

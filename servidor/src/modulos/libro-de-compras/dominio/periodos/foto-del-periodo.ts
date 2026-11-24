@@ -18,10 +18,16 @@ export interface FotoDelPeriodo {
   /** El remanente de retenciones (SAT-2237) o de constancias (SAT-2046); ausente si no hay ventas que lo calculen. */
   remanentes?: RemanentesDeRetenciones;
   /**
-   * Los saldos con que empezó el período cuando no hubo ventas que calcular el remanente (lo que escribió el usuario
-   * no se pierde y una rectificación posterior lo recupera).
+   * Los saldos con que empezó el período cuando no se pudo calcular el remanente (sin ventas o sin algún saldo anterior):
+   * lo que escribió el usuario no se pierde y una rectificación posterior lo recupera. No es el cierre del mes: ese
+   * solo existe en `remanentes`. `null` es un saldo sin dato, y `aviso` dice por qué falta.
    */
-  saldosIniciales?: { formulario: FormularioConRemanente; retenciones: string; credito: string };
+  saldosIniciales?: {
+    formulario: FormularioConRemanente;
+    retenciones: string | null;
+    credito: string | null;
+    aviso?: string;
+  };
 }
 
 /** Una cifra de ventas tal como se guarda en la foto. */

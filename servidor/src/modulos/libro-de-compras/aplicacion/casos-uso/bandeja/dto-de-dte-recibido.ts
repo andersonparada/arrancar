@@ -2,6 +2,7 @@ import {
   esAnteriorALaFechaDeInicio,
   estaEnPlazoDeCredito,
 } from '../../../dominio/anterioridad-a-la-fecha-de-inicio.js';
+import { esFacturaEspecialDeVenta } from '../../../dominio/factura-especial-de-venta.js';
 import type { DteRecibido } from '../../../dominio/dte-recibido.js';
 import type { BorradorDeDteDto, DteRecibidoDto, PropuestaDeDteDto } from '../../dto/dte-recibido.dto.js';
 
@@ -52,8 +53,8 @@ type Marcas = Pick<DteRecibidoDto, 'anteriorALaFechaDeInicio' | 'enPlazoDeCredit
  * una venta no es una compra con crédito fiscal posible: no se marca.
  */
 function marcas(dte: DteRecibido, fechaDeInicio: string | null): Marcas {
-  const { fechaEmision, tipoDte } = dte.instantanea();
-  if (tipoDte === 'FESP') {
+  const { fechaEmision, ...datos } = dte.instantanea();
+  if (esFacturaEspecialDeVenta(datos)) {
     return { anteriorALaFechaDeInicio: false, enPlazoDeCredito: false };
   }
   return {

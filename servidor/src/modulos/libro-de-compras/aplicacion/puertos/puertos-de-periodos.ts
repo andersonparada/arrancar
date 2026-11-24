@@ -73,6 +73,8 @@ export interface RepositorioDePeriodos {
   agregarDeclaracion(empresaId: string, declaracion: DeclaracionNueva): Promise<DeclaracionGuardada>;
   /** De la más vieja a la más nueva. */
   historial(periodo: string): Promise<DeclaracionGuardada[]>;
+  /** Si hay alguna declaración o rectificación de un período anterior al dado (sirve para saber si es el primer mes). */
+  hayDeclaracionesAntesDe(periodo: string): Promise<boolean>;
   filasDelAnio(anio: number): Promise<FilaDePeriodo[]>;
   /** La última declaración o rectificación de cada período del año (sin foto ni diferencia). */
   ultimasDelAnio(anio: number): Promise<DeclaracionGuardada[]>;

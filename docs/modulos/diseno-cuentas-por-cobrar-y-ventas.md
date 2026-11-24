@@ -1131,7 +1131,7 @@ siguiente al programar.
 | LV-3c | Retenciones recibidas y constancias | frontend | LV-3 | — |
 | **LV-4** | Bandeja de DTE emitidos (lote, lector del core, borrador, registrar, descartar, bloqueados incluido `factura_especial_de_compra`, anulados en la SAT); pruebas con `xls-de-prueba.ts` | backend | LV-2 | **Sí: archivo real de «DTE emitidos» (VC-P3)** |
 | LV-4c | Bandeja | frontend | LV-4 | — |
-| **LV-5** | Libro del período (anexo de NABN, columna de FESP, título de auxiliar según el régimen), PDF con folios, cifras para la declaración (respuesta), datos del ISR mensual con la regla de V-6 y `0006` (marca de pagado), límite del pequeño contribuyente, cifras separadas del primario y pecuario | backend | LV-3, VC-0c2, VC-0d | — (el tramo mensual del ISR se confirma con VC-P29 sin bloquear) |
+| **LV-5** | Libro del período (anexo de NABN, columna de FESP, título de auxiliar según el régimen), PDF con folios, cifras para la declaración (respuesta; un mes sin ventas con el módulo en uso responde `debito`, `retenciones_de_iva` e `ingresos` en `0.00`, nunca vacío, y `null` solo si no puede saberlo; con prueba), datos del ISR mensual con la regla de V-6 y `0006` (marca de pagado), límite del pequeño contribuyente, cifras separadas del primario y pecuario | backend | LV-3, VC-0c2, VC-0d | — (el tramo mensual del ISR se confirma con VC-P29 sin bloquear) |
 | LV-5c | Libro y datos para la declaración y el ISR mensual | frontend | LV-5 | — |
 | **LV-5b** | Cuadre SAT contra libro (con el «rectifique ese mes» de V-11) | backend y frontend | LV-4, LV-5 | Lo de LV-4 |
 | **LV-6** | Reportes de §14.1 | backend | LV-5 | — |

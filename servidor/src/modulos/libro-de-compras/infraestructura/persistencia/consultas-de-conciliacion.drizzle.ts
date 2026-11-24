@@ -74,10 +74,10 @@ function documentoConciliable(fila: FilaDeDocumento): DocumentoConciliable {
 }
 
 function filaConciliable(fila: FilaDeDte): FilaConciliable {
-  const { id, autorizacionFel, tipoDte, serie, numero, fechaEmision, nitEmisor, nombreEmisor } = fila;
+  const { id, autorizacionFel, tipoDte, serie, numero, fechaEmision, nitEmisor, nombreEmisor, nitReceptor } = fila;
   const { total, iva, idp, otrosImpuestos, estadoSat, estado, motivoDeBloqueo, motivoDeDescarte } = fila;
   return {
-    ...{ id, autorizacionFel, tipoDte, serie, numero, fechaEmision, nitEmisor, nombreEmisor },
+    ...{ id, autorizacionFel, tipoDte, serie, numero, fechaEmision, nitEmisor, nombreEmisor, nitReceptor },
     ...{ total, iva, idp, otrosImpuestos, estadoSat, estado, motivoDeBloqueo, motivoDeDescarte },
   };
 }

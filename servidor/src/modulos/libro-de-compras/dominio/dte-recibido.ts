@@ -2,6 +2,7 @@ import { DatoInvalido } from '../../core/compartido/dominio/errores.js';
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { DteNoEstaPendiente } from './errores-de-bandeja.js';
+import { esFacturaEspecialDeVenta } from './factura-especial-de-venta.js';
 import { exigirTransicion, type EstadoDeDte, type EstadoDeDteEnLaSat, type MotivoDeBloqueo } from './estado-de-dte.js';
 import type { TipoDte } from './tipos-de-documento.js';
 
@@ -126,9 +127,12 @@ export class DteRecibido extends Entidad<DteRecibidoId> {
     return this.propiedades.estado;
   }
 
-  /** Toda factura especial (`FESP`) que llega a recibidos es una venta de la empresa, no una compra. */
+  /**
+   * Una factura especial (`FESP`) que llega a recibidos es una venta de la empresa, no una compra; salvo la que emitió la
+   * propia empresa (emisor igual al receptor), que es su compra.
+   */
   get esVenta(): boolean {
-    return this.propiedades.tipoDte === 'FESP';
+    return esFacturaEspecialDeVenta(this.propiedades);
   }
 
   /** @throws TransicionDeDteInvalida si ya está registrada. */

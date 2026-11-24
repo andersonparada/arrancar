@@ -36,10 +36,11 @@ export interface PeticionDeDeclaracion {
   fechaDePresentacion?: string | undefined;
   /**
    * El remanente de retenciones (o el saldo de constancias) con que empieza el período, en quetzales. Solo vale cuando
-   * el mes previo no tiene declaración en Arrancar: el primer mes.
+   * el mes previo no dejó un cierre calculado (el primer mes, un mes sin ventas, otro formulario...); vacío es «no lo
+   * cambié» y cero es un dato.
    */
   remanenteDeRetencionesAnterior?: string | undefined;
-  /** El remanente del crédito fiscal del mes anterior, en quetzales; vale en las mismas condiciones que el de retenciones. */
+  /** El remanente del crédito fiscal del mes anterior, en quetzales; vale en las mismas condiciones que el de retenciones (no cuenta en el SAT-2046). */
   remanenteDeCreditoAnterior?: string | undefined;
 }
 
@@ -99,6 +100,8 @@ export class DeclararPeriodo {
     await periodos.marcarDeclarado(operador.empresaId, periodo, operador.usuarioId);
     const declarado = await periodos.buscar(periodo);
     const avisos = (await revisionDelPeriodo(consultasDelPeriodo, periodo)).map((aviso) => aviso.mensaje);
+    const sinSaldo = guardada.foto?.saldosIniciales?.aviso;
+    if (sinSaldo) avisos.push(sinSaldo);
     return {
       periodo: dtoDePeriodo(periodo, { fila: declarado, ultima: guardada, hoy }),
       declaracion: dtoDeDeclaracion(guardada, true),

@@ -78,11 +78,13 @@ export async function fotoDelPeriodoDeHoy(
   };
 }
 
-/** Sin remanente que calcular, la foto guarda al menos con qué saldos empezó el período. */
+/** Sin remanente que calcular, la foto guarda al menos con qué saldos empezó el período (el crédito no cuenta en el SAT-2046). */
 function saldosIniciales({ formulario, anterior }: NonNullable<PedidoDeFoto['remanentes']>) {
+  const monto = (centavos: number | null) => (centavos === null ? null : deCentavos(centavos));
   return {
     formulario,
-    retenciones: deCentavos(anterior.retencionesCentavos),
-    credito: deCentavos(anterior.creditoCentavos),
+    retenciones: monto(anterior.retencionesCentavos),
+    credito: formulario === 'SAT-2046' ? '0.00' : monto(anterior.creditoCentavos),
+    ...(anterior.aviso ? { aviso: anterior.aviso } : {}),
   };
 }

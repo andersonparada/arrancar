@@ -33,6 +33,7 @@ const fila = (cambios: Partial<FilaConciliable> = {}): FilaConciliable => ({
   fechaEmision: '2026-03-10',
   nitEmisor: '576937K',
   nombreEmisor: 'Agro del Norte',
+  nitReceptor: '1234567',
   total: '1120.00',
   iva: '120.00',
   idp: '0.00',
