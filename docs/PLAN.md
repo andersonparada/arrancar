@@ -3777,6 +3777,42 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   esas llaves (`llavesQueSeJuntarian`, con la misma regla de la función) y el aviso se rechaza con
   `inventario_con_fecha_fuera_de_la_carga` y un mensaje que pide corregir la fecha de capa o eliminar los repetidos.
   Sin migración nueva. Pruebas: caso de uso en memoria y API (`inventarios-saldos-iniciales-carga`).
+- **2026-11-23 — INV-8 (Inventarios, servidor): cierres mensuales y existencias al cierre.** Migración `0011_inv8_cierres`
+  (`inventarios.cierres`, PK `(empresa_id, periodo)`, solo `politicaPorEmpresa`; `inventarios.existencias_al_cierre`, con llave
+  al cierre, único parcial `(artículo, bodega, en_tránsito, período) where vigente` y `politicaPorAlcance(bodegas)`).
+  **Rutas** `GET /inventarios/cierres`, `GET …/:periodo/revision`, `GET …/:periodo/existencias`, `POST …/:periodo/cerrar`
+  (con la huella de la revisión, como Activos fijos) y `POST …/:periodo/reabrir`, con los permisos `inventarios.cierres.ver`,
+  `.cerrar` y `.reabrir`; el período es siempre `aaaa-mm-01`. **Orden:** el mes siguiente al último cerrado; el primero, el de
+  la fecha de inicio o el del primer movimiento; no se cierra un mes posterior al mes en curso (`mes_por_llegar`).
+  **Foto** (`dominio/cierre/existencias-del-cierre.ts`, enteros y `BigInt`): se valúa al **último día del mes** con el saldo
+  (cantidad y valor) del último movimiento vigente de cada artículo, aunque ya haya movimientos de meses posteriores; el
+  valor del artículo se reparte entre sus bodegas y su renglón `en_transito_interno` según la cantidad, al costo del artículo en
+  toda la empresa (§3.2), y el último renglón absorbe el redondeo (mitad hacia arriba; si con muchas partes la última quedara en
+  negativo se reparte hacia abajo). Lo que viaja es la salida de un traslado vigente sin recepción vigente a esa fecha (se mira la
+  fecha de la recepción, no el `estado_de_traslado` de hoy), así que recibirlo después no toca la foto. Si las bodegas no suman la
+  cantidad del artículo, `foto_del_cierre_no_cuadra`. Se copian el tipo de inventario, el método que regía ese día y el
+  régimen de ISR (`datos_fiscales_de_empresa`). **Revisar:** bloquea el mes anterior sin cerrar (o futuro), la carga inicial
+  abierta con saldos iniciales y las recepciones vigentes de documentos del libro anulados (R-1); avisa de las líneas de la
+  bandeja con fecha del mes o anterior, los traslados en tránsito y los lotes vencidos con existencia. **Pregunta a los demás
+  módulos** (`preguntarATodos`, `inventarios.revisar_cierre_del_mes`, `{ empresaId, periodo }` → `{ nombreDelModulo,
+  hallazgos: [{ codigo, nivel: bloquea|aviso, mensaje }] }`, declarada en `core/contratos/inventarios.contratos.ts`): lo que
+  respondan entra a la revisión y a la huella; hoy nadie la responde. **Alcance:** revisar, cerrar y reabrir exigen ver todas las
+  bodegas (`cierre_sin_alcance_total`, 422): la foto es de toda la empresa y reabrir actualiza todas sus filas (con alcance
+  parcial la política dejaría algunas vigentes). **Candados:** cerrar y reabrir toman `pg_advisory_xact_lock` exclusivo de
+  `inventarios.cierre:<empresa>`; los documentos ya lo tomaban compartido. `MesesCerradosEnLaBase` (reemplaza al puerto que
+  decía «ninguno cerrado») toma el compartido **antes** de leer `cierres`, porque `exigirCargaAbierta` pregunta `hayAlguno()`
+  antes de bloquear los artículos y un cierre en curso podía colarse. **Reabrir:** solo el último, con motivo; la foto queda
+  `vigente = false` (no se borra); audita `reabrir` con el cierre y su valor por tipo; cerrar audita `cerrar`; ambos publican
+  `inventarios.mes_cerrado` / `mes_reabierto` (`periodo`, `valorTotalCentavos`, `porTipo`). Sin `costos.ver` la foto lleva
+  `costoUnitario` y `valor` en `null`; `cierres.ver` muestra los totales del cierre y de la revisión (es un permiso de
+  contabilidad, como el de depreciación). **Pruebas:** dominio (foto, redondeo, hallazgos, meses), casos de uso en memoria
+  (`cierres.prueba.ts`), y de API: flujo con tránsito, huella y reapertura (`inventarios-cierres`), permisos, alcance, costos y
+  aislamiento (`…-permisos`), hallazgos, pregunta a otros módulos, carga abierta y `saldos_con_cierres` (`…-hallazgos`) y
+  **concurrencia** (`…-concurrencia`: cerrar a la vez que seis documentos del mismo mes —cada uno entra y está en la foto o se
+  rechaza con `mes_cerrado`—, dos cierres del mismo mes, cerrar el siguiente contra reabrir el último, dos reaperturas).
+  **Pendiente:** los avisos de ajustes por aprobar, conteos en curso, el conteo de diciembre (art. 42 num. 3) y deterioros sin
+  revisar entran con INV-9, INV-10 e INV-12 (sus tablas no existen todavía); la pantalla INV-8c; el cambio de método
+  (`CambiarMetodoDeCosteo`) que lee los meses cerrados.
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de
