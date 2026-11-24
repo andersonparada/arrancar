@@ -13,6 +13,6 @@ export interface ConsultasDivisiones {
    * división, traslados (salvo el alta), mejoras, otros cambios de tramos, bajas u otra división (§6.11, I-9).
    */
   hayMovimientosPosteriores(divisionId: string): Promise<boolean>;
-  /** Si el activo tiene alguna mejora o baja, aunque esté anulada: son rastro que se conserva y no se puede borrar. */
-  tieneMejorasOBajas(activoId: string): Promise<boolean>;
+  /** Si el activo tiene mejoras, bajas, traslados (salvo el alta), componentes o divisiones propias, aunque estén anulados: rastro que se conserva. */
+  tieneRastro(activoId: string): Promise<boolean>;
 }

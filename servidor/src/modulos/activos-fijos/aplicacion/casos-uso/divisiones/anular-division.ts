@@ -102,7 +102,7 @@ export class AnularDivision {
     if (ultimo && periodoDe(fecha) <= ultimo) throw new MesCerrado(periodoDe(fecha));
     if (await consultasDeDivisiones.hayMovimientosPosteriores(divisionId))
       throw new DivisionConMovimientosPosteriores();
-    if (await consultasDeDivisiones.tieneMejorasOBajas(nuevo.id.valor)) throw new DivisionConRastroDelNuevo();
+    if (await consultasDeDivisiones.tieneRastro(nuevo.id.valor)) throw new DivisionConRastroDelNuevo();
     return { division, origen, nuevo };
   }
 

@@ -49,11 +49,11 @@ export class DivisionConMovimientosPosteriores extends ReglaDeNegocioInfringida 
   }
 }
 
-/** El activo nuevo tuvo una mejora o una baja, aunque esté anulada: es rastro que se conserva y el activo no se puede borrar. */
+/** El activo nuevo tuvo mejoras, bajas, traslados, componentes o divisiones propias, aunque estén anulados: es rastro que se conserva. */
 export class DivisionConRastroDelNuevo extends DivisionConMovimientosPosteriores {
   constructor() {
     super(
-      'El activo nuevo tuvo una mejora o una baja, aunque esté anulada: ese rastro se conserva y la división ya no se puede anular: la división se conserva; corrija con un movimiento nuevo.',
+      'El activo nuevo tuvo una mejora o una baja, un traslado, un componente o una división propia, aunque estén anulados: ese rastro se conserva y la división ya no se puede anular: la división se conserva; corrija con un movimiento nuevo.',
     );
   }
 }

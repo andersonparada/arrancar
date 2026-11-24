@@ -56,11 +56,11 @@ export class AnularCosto {
     const costo = await costos.buscar(Identificador.desde(costoId) as CostoId);
     if (!costo) throw new RecursoNoEncontrado('El costo');
     costo.exigirAnulable();
-    if (await costos.esAnteriorAUnaDivisionVigente(costoId)) throw new CostoAnteriorADivision();
     const { activoId, lineaDeDocumentoId, montoCentavos } = costo.instantanea();
     if (lineaDeDocumentoId) await costos.bloquearLineas([lineaDeDocumentoId]);
     const [activo] = await repositorio.buscarBloqueando([activoId]);
     if (!activo) throw new RecursoNoEncontrado('El activo');
+    if (await costos.esAnteriorAUnaDivisionVigente(costoId)) throw new CostoAnteriorADivision();
     activo.exigirAdmiteCostos();
     const total = (await costos.totalesVigentes([activoId])).get(activoId) ?? 0;
     if (total - montoCentavos < 0) throw new CostoDeActivoNegativo(activo.instantanea().codigo);

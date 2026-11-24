@@ -96,10 +96,13 @@ export class ConsultasDivisionesDrizzle implements ConsultasDivisiones {
     return resultado.rows[0]?.hay === true;
   }
 
-  async tieneMejorasOBajas(activoId: string): Promise<boolean> {
+  async tieneRastro(activoId: string): Promise<boolean> {
     const resultado = await transaccionEnCurso().execute<{ hay: boolean }>(sql`
       select (exists (select 1 from activos_fijos.mejoras where activo_id = ${activoId})
-        or exists (select 1 from activos_fijos.bajas where activo_id = ${activoId})) as hay`);
+        or exists (select 1 from activos_fijos.bajas where activo_id = ${activoId})
+        or exists (select 1 from activos_fijos.traslados where activo_id = ${activoId} and not es_alta)
+        or exists (select 1 from activos_fijos.divisiones where activo_origen_id = ${activoId})
+        or exists (select 1 from activos_fijos.activos where activo_padre_id = ${activoId})) as hay`);
     return resultado.rows[0]?.hay === true;
   }
 }
