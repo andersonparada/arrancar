@@ -22,7 +22,7 @@ Actualizado: **2026-11-23** (noche). El usuario pidió seguir mañana. Si otra s
 - **Clientes:** el usuario **no tiene clientes todavía** (2026-11-19). No se frena nada esperando datos reales; lo que solo un
   cliente puede confirmar se revisa con el primero que lo use.
 
-**`main`:** al 2026-11-23 trae VCJ-0a y el diseño de Ventas y cobros. Última suite: servidor 8229, cliente 2282, generador 46 (tras corregir una prueba de Caja chica se repitieron sus 19 archivos, no toda la del servidor).
+**`main`:** cierre del 2026-11-23. Suite: servidor 8931, cliente 2508, generador 46 (sin saltadas). Avance por pasos: 75 de 247 (30 %).
 
 **En `main` desde el 2026-11-18:**
 - **Bancos:**
@@ -60,34 +60,24 @@ Actualizado: **2026-11-23** (noche). El usuario pidió seguir mañana. Si otra s
 - **Recomendaciones aceptadas en todos los puntos:** Cuentas por cobrar y Ventas (VC-P1 a VC-P24), Contabilidad (CT-P1 a
   CT-P18), Bancos aprobaciones y tarjeta (§16) y Parcelas (PA-1 a PA-19).
 
-**En curso (2026-11-23, noche): ronda de correcciones de la tanda 9.** Workflow `arrancar-correcciones-tanda-9` (run `wf_a9dc1b60-752`,
-reanudable con `resumeFromRunId` en la misma sesión). La tanda 9 terminó (run `wf_3c37cfe1-206`) con **41 hallazgos abiertos (3 altos, 38
-medios) en 11 de 12 cadenas**: **ninguna rama de la tanda 9 está en `main` todavía**. Cada cadena pasa por contador (si es fiscal),
-corrección, revisión de Opus y segunda vuelta. Hallazgos por cadena: `abiertos-<clave>.json` en el scratchpad de la sesión (se puede
-perder); la copia durable es el resultado del workflow en su `journal.jsonl`.
+**Cierre del 2026-11-23 (noche).** En `main`, con suite completa en verde: CL-7 corregida; INV-6, 7 y 8; INV-2c, 4c y 5c; AFI-3, resto de
+AFI-4, AF-9 y AFI-5; AF-7c y AF-8c; VC-0b y VC-0a cliente; AP-1, 2 y 3; PA-0b, PA-1 y PA-1c; VCJ-0a y VCJ-0d (falta su pantalla: pedir
+el motivo al quitar o cambiar el NIT).
 
-| Cadena | Pasos | Última rama (`worktree-wf_3c37cfe1-206-…`) |
-|---|---|---|
-| `cl` | Correcciones de la QA CL-7 (limpia) | `-1` |
-| `cc` | CC-11 (QA de Caja chica) | `-43` |
-| `af` | AFI-3, resto de AFI-4, AF-9, AFI-5 | `-122` |
-| `afc` | AF-7c y AF-8c | `-3` |
-| `inv` | INV-6, INV-7, INV-8 | `-126` |
-| `invc` | INV-2c, INV-4c, INV-5c | `-5` |
-| `vcb` | VC-0b (Bancos 0039), VC-0a cliente | `-61` |
-| `vcc` | VC-0c1 (Libro 0040), VC-0c2, VC-0c | `-54` |
-| `lv` | VC-0d, LV-1, LV-2, LV-1c, LV-2c | `-111` |
-| `ct` | CT-0e, CT-0f, CT-1, CT-2, CT-1c, CT-2c | `-100` |
-| `ap` | AP-1, AP-2, AP-3 | `-91` |
-| `pa` | PA-0b, PA-1, PA-1c (Empresas 0015) | `-103` |
+**Retenidas en su rama, sin unir** (detalle, decisiones y lo no corregido en `docs/modulos/pendientes-tanda-9.md`):
 
-**VCJ-0d** (rama `worktree-wf_05a0b7b8-de7-3`, 354 pruebas en verde): se une **después de `vcb`**, porque su Bancos 0040 encadena con la
-0039. Trae core 0037 y Empresas 0016: revisar el orden contra Empresas 0015 de `pa`. Falta su pantalla: pedir el motivo al quitar o
-cambiar el NIT.
+| Cadena | Pasos | Rama | Falta |
+|---|---|---|---|
+| `cc` | CC-11 | `worktree-wf_3c37cfe1-206-43` | 1 alto y 2 medios; 3 decisiones del usuario |
+| `vcc` | VC-0c1, VC-0c2, VC-0c (Libro 0040) | `worktree-wf_3c37cfe1-206-54` | 1 medio; 1 decisión |
+| `lv` | VC-0d, LV-1, LV-2, LV-1c, LV-2c | `worktree-wf_3c37cfe1-206-111` | 3 medios; 1 decisión |
+| `ct` | CT-0e, 0f, 1, 2, 1c, 2c | `worktree-wf_3c37cfe1-206-100` | 2 medios; 1 decisión |
 
-**Al retomar:** leer el resultado del workflow; unir en `integracion` la última rama de cada cadena con veredicto `unir`; revisar journals
-(`when`, `idx`, números únicos) y que `bd:generar -w servidor -- <modulo> verificacion` diga «No schema changes»; correr `npm run revisar`
-y `BD_PRUEBAS=arrancar_pruebas_int npm run probar` (0 skipped); pasar a `main`, `bd:migrar` y push.
+Activos fijos ya está en `main`, pero tiene **2 decisiones del usuario** sobre la venta de un bien de control (hoy se rechaza).
+
+**Al retomar:** preguntar las decisiones de `pendientes-tanda-9.md`; corregir las cuatro cadenas con revisión de Opus; unirlas en
+`integracion` trayendo `main` antes (revisar journals, `bd:generar` y la suite de los tres paquetes). Inventarios **no** depende de ellas:
+se puede lanzar ya INV-6c a INV-14.
 
 **Avisos del 2026-11-23:**
 - El puente huérfano de Docker que tapaba el puerto 5433 ya lo borró el usuario. Si vuelve el `ECONNRESET`, revisar `ip route` por dos
@@ -104,7 +94,7 @@ Inventarios opcional. Diseño en `diseno-ventas-y-caja.md` §24 (pasos en §24.5
 no espera a INV-8; solo la descarga (VCJ-3 y VCJ-4i) sigue detrás de VCJ-0b. Prioridad del usuario: **sacar Inventarios**.
 
 **Siguientes pasos al retomar** (prioridad del usuario: **sacar Inventarios**):
-1. Cerrar la ronda de correcciones y unir a `main` (arriba).
+1. Decisiones y correcciones de las cuatro cadenas retenidas (arriba), en paralelo con Inventarios.
 2. **Inventarios:** INV-6c, INV-7c e INV-8c; INV-9 a INV-12 con sus pantallas (en orden cuando toquen las mismas tablas); INV-13, INV-14,
    INV-AF, AFI-9 e INV-QA. P-1, P-3 e INV-A16 ya están respondidas (a). INV-P14 sigue en la recomendación c, antes de INV-13.
 3. **Ventas y cobros** (§24.5 del diseño): VCJ-0b tras INV-8. Antes de programar: el contador valida la tabla de liquidaciones ampliada
