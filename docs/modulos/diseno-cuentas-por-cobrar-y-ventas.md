@@ -808,11 +808,11 @@ cuando el cargo recibe su primera aplicación (antes se puede eliminar en el lib
    `solo_retenciones`: sin movimiento. Forma `cuenta_de_apertura`: solo sobre cargos de saldo inicial, con motivo y permiso
    propio (`cobros.aplicar-a-apertura`), como CxP.
 3. Σ aplicaciones ≤ monto; lo que sobra queda como **saldo a favor** con aviso («quedan Q x a favor del cliente»). Con la
-   configuración de anticipos en `aviso` (VC-P13 a), si el cliente no tenía cargos, el aviso dice **[validación
-   2026-11-19]**: «Si es un anticipo por **servicios**, el IVA nace al recibirlo: debe emitir la factura (Ley del IVA arts.
-   4 y 29). Si es por **bienes**, lo prudente es facturarlo también. Revise con su contador.» Con `factura_obligatoria`,
-   el cobro sin cargos se rechaza (`anticipo_sin_factura`) salvo que se aplique a un documento ya registrado. Qué empresas
-   llevan `factura_obligatoria` por omisión es la pregunta nueva VC-P26.
+   configuración de anticipos en `aviso` (VC-P13 a), si el cliente no tenía cargos, el aviso dice **[corregido el 2026-11-23,
+   Criterio SAT 1-2023, `diseno-ventas-y-caja.md` §24.8-F; falta cotejar el texto oficial]**: «Un anticipo por un servicio futuro puede no facturarse si hay
+   contrato y se documenta con Recibo de Anticipo (Criterio SAT 1-2023). Revise con su contador.» Si es por **bienes**, lo prudente es facturarlo. Con `factura_obligatoria`,
+   el cobro sin cargos **de bienes** se rechaza (`anticipo_sin_factura`) salvo que se aplique a un documento ya registrado; en servicios queda como aviso hasta cotejar el criterio. Qué empresas
+   llevan `factura_obligatoria` por omisión es VC-P26, **reabierta el 2026-11-23** (VU-P6).
 4. Cada retención aplicada: orden `libro-de-ventas.marcar_retencion_descontada` (pone `descontada_en` y `cobro_id`).
 5. Diferencia menor (opcional): un ajuste `diferencia_menor` hasta el tope de la configuración.
 6. Recibo de cobro numerado (imprimible, sin efecto fiscal: «Este recibo no sustituye la factura»).
@@ -1309,7 +1309,7 @@ no se detiene.
 | # | Pregunta | Opciones | Recomendación |
 |---|---|---|---|
 | VC-P25 | **Choca con VC-P23 a.** El contador dice que la foliación propia de ventas solo vale para el régimen general: el **pequeño contribuyente** tiene **un solo libro habilitado** de compras y ventas, y el **primario y pecuario** lleva el **libro electrónico de la SAT** (el de Arrancar es auxiliar, sin folios). ¿Qué hacemos en esos dos regímenes? Y, para el pequeño contribuyente: ¿imprimen el libro habilitado desde Arrancar? | a) Dejar VC-P23 a para todos (foliación propia; el PDF fuera del general dice «Auxiliar»); b) primario y pecuario sin folios, y pequeño contribuyente con **una sola foliación** de compras y ventas (paso LV-8: lo emite Libro de compras, que le pide a Libro de ventas sus filas con una pregunta, porque compras no puede leer ventas); c) primario y pecuario sin folios, y pequeño contribuyente con dos PDF auxiliares («su libro habilitado es uno solo») | **c** si el pequeño contribuyente **no** imprime su libro habilitado desde Arrancar; **b** si lo imprime. En los dos casos, primario y pecuario **sin folios**: foliar un libro que no es el legal confunde. Mientras no responda, rige a |
-| VC-P26 | **Choca con el valor por omisión de VC-P13 a.** El contador dice que en **servicios** el IVA nace al recibir el anticipo, así que facturarlo no es opción del contador, y recomienda `factura_obligatoria` por omisión en las empresas de servicios. Arrancar no sabe qué empresa vende servicios. ¿Cómo queda el valor por omisión? ¿Qué empresas venden servicios con anticipo? | a) `aviso` por omisión en todas (lo aceptado), con el aviso ya corregido, y usted o su contador ponen `factura_obligatoria` en la empresa que venda servicios con anticipo; b) `factura_obligatoria` por omisión en todas; c) `factura_obligatoria` por omisión si la empresa tiene conceptos de ingreso de servicio activos | **a**: no cambia lo aceptado, el aviso ya dice que en servicios es obligatorio, y basta con decirnos qué empresas venden servicios con anticipo para dejarlas en `factura_obligatoria`. La c adivina con un dato que no es para eso (una empresa de bienes puede tener un concepto de servicio) |
+| VC-P26 (**reabierta el 2026-11-23 con el Criterio SAT 1-2023: `diseno-ventas-y-caja.md` §24.8-F y VU-P6; lo que sigue es como se preguntó**) | **Choca con el valor por omisión de VC-P13 a.** El contador dice que en **servicios** el IVA nace al recibir el anticipo, así que facturarlo no es opción del contador, y recomienda `factura_obligatoria` por omisión en las empresas de servicios. Arrancar no sabe qué empresa vende servicios. ¿Cómo queda el valor por omisión? ¿Qué empresas venden servicios con anticipo? | a) `aviso` por omisión en todas (lo aceptado), con el aviso ya corregido, y usted o su contador ponen `factura_obligatoria` en la empresa que venda servicios con anticipo; b) `factura_obligatoria` por omisión en todas; c) `factura_obligatoria` por omisión si la empresa tiene conceptos de ingreso de servicio activos | **a**: no cambia lo aceptado, el aviso ya dice que en servicios es obligatorio, y basta con decirnos qué empresas venden servicios con anticipo para dejarlas en `factura_obligatoria`. La c adivina con un dato que no es para eso (una empresa de bienes puede tener un concepto de servicio) |
 | VC-P27 | ¿Alguna empresa cobra con **tarjeta (POS)**? (VC-P10 lo dejó para «si alguien la usa») | Sí (cuál) / No. Si sí: mande una liquidación real de la adquirente y una constancia de su retención (sin datos sensibles), y confirme que la adquirente se registre como **cliente** en Terceros (es quien retiene y quien liquida) | Si nadie la usa, CXC-5t no se programa; el modelo ya queda abierto desde la `0003`. La liquidación cierra también V-3 |
 | VC-P28 | ¿Alguna empresa recibe **facturas especiales** de sus compradores? ¿Está inscrita en el IVA o es una persona individual sin inscripción? | Sí (cuál y régimen) / No | Es informativa: el diseño ya cubre los dos casos (aviso si está inscrita). Sirve para probar con un caso real |
 | VC-P29 | Pendiente desde L5: una **captura** del SAT-2237 y del SAT-1311 vigentes | — | Con ellas se fijan la casilla del remanente de retenciones, si la nota de abono cuenta en las operaciones y si el tramo de Q30,000 del ISR mensual es del total del mes. No bloquea: VC-0c2 y LV-5 guardan las cifras y se ajusta la casilla después |
@@ -1323,12 +1323,17 @@ Decisión del usuario: Ventas/Caja y Cuentas por cobrar son **un solo módulo**,
 | Clave y esquema (§0) | **Se conservan** `cuentas-por-cobrar` y `cuentas_por_cobrar`, para no reescribir el `check` de `0002_lv2` ni los contratos. Cambia el nombre visible | §24.1 |
 | `dependeDe` (§0, §1, §6.12) | `['terceros']`, con `usaTablasDe: ['inventarios', 'libro-de-ventas', 'libro-de-compras', 'bancos']` | §24.1 |
 | §6.2 `documentos` | Suma lo de §12 de Ventas; la referencia a la venta es `venta_id` **con llave** | §24.4 |
-| §6.3 `cobros` | Suma las formas `caja` y **`directo`**; la referencia de caja son dos columnas **con llave** | §24.3, §24.4 |
-| §8.1 `RecibirDocumento` | Rechaza con `cartera_apagada` si la empresa apagó la cartera. Orden nueva `admite_documentos_nuevos` | §24.3, §24.6 |
-| §8.3 y VC-P10 | «Cobro en efectivo sin depósito» deja de estar fuera: forma `caja` con turno, o `directo` sin caja (VU-P2) | §24.3 |
+| §6.3 `cobros` | Suma las formas `caja` y **`directo`**; llaves, check y columnas nuevas. El rechazo sin movimiento se admite en `directo` | §24.3, §24.8-E, F y L |
+| §6.1 `condiciones_de_cliente` | Límite y días pasan a `condiciones_de_credito`, por empresa (VU-P9) | §24.8-O |
+| §6.6 retenciones | Suma `retenciones_de_venta`, para el contado | §24.8-C |
+| §8.1 `RecibirDocumento` | Rechaza con `cartera_apagada` un documento nuevo; **una nota sobre una factura que ya pasó por la cartera siempre entra**. Orden nueva `admite_documentos_nuevos` | §24.6, §24.8-A |
+| §8.3 y VC-P10 | «Cobro en efectivo sin depósito» deja de estar fuera: forma `caja` con turno, o `directo` sin caja (VU-P2). **Aviso de anticipos corregido** | §24.3, §24.8-E y F |
+| §8.6 Saldo a favor | Cruce entre clases con documento propio; devolver lo que nació de un `directo` exige segunda persona | §24.8-E e I |
+| §8.7 Castigos | Aviso según la clase del cargo | §24.8-G |
+| §10.3 Eventos | `documento_registrado` suma `liquidacion`: ya no se asume Caja sin destino | §24.8-B |
 | §8.8 Avisos y §8.9 | Un solo manejador por mensaje, junto con los de Ventas y caja | §24.4 |
 | §11.1 Permisos | `reportes.*` pasa a `reportes-de-cartera.*`; nuevo `cobros.directo` | §24.1, §24.4 |
-| §11.3 Configuración | Suma `cuentas-por-cobrar.funciones.*` | §24.3 |
+| §11.3 Configuración | Los interruptores **no** son variables: tabla `funciones_de_empresa` | §24.8-K |
 | §13.2 Cliente | Carpeta `cliente/src/modulos/cuentas-por-cobrar/`, compartida con las pantallas de Ventas | §24.1 |
 | §16 Pasos CXC-* | Tabla unificada. **CXC-A desaparece** (entra en VYC-E2 y CXC-3b) | §24.5 |
 | §19, R-1 | Vale también para el interruptor de la empresa. Anular o eliminar un documento viejo sigue funcionando con la cartera apagada | §24.3 |
