@@ -189,6 +189,18 @@ describe('saldos escritos sin respuesta de ventas', () => {
   });
 });
 
+describe('varios meses seguidos sin módulo de ventas', () => {
+  it('no avisa de saldo faltante en ningún mes: sin ventas no hay cierre que calcular', async () => {
+    for (const desplazamiento of [-12, -11, -10, -9]) {
+      const declarada = await declarar(propietario(), mesDe(desplazamiento));
+
+      expect(declarada.estado, JSON.stringify(declarada.cuerpo)).toBe(200);
+      expect(declarada.cuerpo.avisos.filter((aviso: string) => aviso.includes('saldo'))).toEqual([]);
+      expect(declarada.cuerpo.declaracion.foto.saldosIniciales?.aviso).toBeUndefined();
+    }
+  });
+});
+
 describe('pequeño contribuyente electrónico (régimen derogado)', () => {
   it('no lleva cálculo de remanente ni en la pantalla ni en la declaración', async () => {
     const historico = await prepararEscenario(entorno, 'remaelectronico');

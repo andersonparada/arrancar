@@ -74,17 +74,17 @@ export async function fotoDelPeriodoDeHoy(
     ...foto,
     ...(ventas.length > 0 ? { ventas } : {}),
     ...(remanentes ? { remanentes } : {}),
-    ...(pedidos && !remanentes ? { saldosIniciales: saldosIniciales(pedidos) } : {}),
+    ...(pedidos && !remanentes ? { saldosIniciales: saldosIniciales(pedidos, ventas.length > 0) } : {}),
   };
 }
 
 /** Sin remanente que calcular, la foto guarda al menos con qué saldos empezó el período (el crédito no cuenta en el SAT-2046). */
-function saldosIniciales({ formulario, anterior }: NonNullable<PedidoDeFoto['remanentes']>) {
+function saldosIniciales({ formulario, anterior }: NonNullable<PedidoDeFoto['remanentes']>, respondeVentas: boolean) {
   const monto = (centavos: number | null) => (centavos === null ? null : deCentavos(centavos));
   return {
     formulario,
     retenciones: monto(anterior.retencionesCentavos),
     credito: formulario === 'SAT-2046' ? '0.00' : monto(anterior.creditoCentavos),
-    ...(anterior.aviso ? { aviso: anterior.aviso } : {}),
+    ...(respondeVentas && anterior.aviso ? { aviso: anterior.aviso } : {}),
   };
 }
