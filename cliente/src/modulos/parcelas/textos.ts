@@ -9,5 +9,11 @@ export const VENTANAS_PARCELAS = {
     nuevo: 'Nuevo tipo de parcela',
     editar: 'Editar tipo de parcela',
   },
+  parcelas: {
+    titulo: 'Parcelas',
+    descripcion: 'Las fincas, potreros y lotes de la empresa, en árbol por localidad.',
+    nuevo: 'Nueva parcela',
+    editar: 'Editar parcela',
+  },
   // generador: ventanas
 } as const;
