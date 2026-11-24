@@ -131,6 +131,26 @@ describe('nomenclatura: Excel', () => {
   });
 });
 
+describe('nomenclatura: simultaneidad', () => {
+  it('crear una hija de otro tipo y cambiar el tipo del padre a la vez nunca deja una hija incoherente', async () => {
+    const padre = await cuenta.propietario.post(RUTA, datos({ codigo: '8', nombre: 'Padre carrera' }));
+    const hija = (): Promise<{ estado: number }> =>
+      cuenta.propietario.post(RUTA, caja({ codigo: '8.1', nombre: 'Hija carrera' }));
+    const cambio = (): Promise<{ estado: number }> =>
+      cuenta.propietario.put(
+        `${RUTA}/${padre.cuerpo.id}`,
+        datos({ codigo: '8', nombre: 'Padre carrera', tipo: 'resultados' }),
+      );
+
+    await Promise.all([hija(), cambio()]);
+    const arbol = (await cuenta.propietario.get(RUTA)).cuerpo as Array<{ codigo: string; tipo: string }>;
+    const padreFinal = arbol.find((c) => c.codigo === '8');
+    const hijaFinal = arbol.find((c) => c.codigo === '8.1');
+
+    if (hijaFinal) expect(hijaFinal.tipo).toBe(padreFinal?.tipo);
+  });
+});
+
 describe('nomenclatura: permisos', () => {
   it('cada acción exige su permiso', async () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {

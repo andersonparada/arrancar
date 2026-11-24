@@ -223,9 +223,11 @@ incluían. Hoy solo se puede eliminar un documento **no autorizado** (`noEstarAu
 encendido); no hay período contable que lo impida. Regla futura: con Contabilidad activa, eliminar solo se permite con
 el período contable abierto, y entonces un corte de un período cerrado ya no cambia. Tampoco se reconstruye una
 **desautorización** (el reporte usa el estado de autorización de hoy). Leyendas: «Las aplicaciones de notas y los pagos
-reaplicados se muestran como están hoy; el saldo neto de cada proveedor no depende de eso.» y «Un documento eliminado
-después del corte ya no aparece: los cortes pasados que lo incluían cambian.» (decisión tomada sin consultar al
-`contador-guatemala`, por ser solo una advertencia; queda por validar).
+reaplicados se muestran como están hoy; el saldo neto de cada proveedor no depende de eso.» y «Este reporte no incluye
+documentos eliminados, aunque se hayan eliminado después de la fecha de corte. Si ya cerró ese mes con un reporte
+anterior, el saldo puede ser distinto.» (validada por el `contador-guatemala` el 2026-11-23: se muestra siempre mientras
+no exista un aviso condicional, que sería como `registrados_despues_del_corte` con cantidad y monto de lo eliminado
+después; entonces se retira la leyenda fija).
 
 Descartada la alternativa A (estado de hoy, sin columnas nuevas). Pendiente para más adelante (dictamen 3, fuera de
 CP5): marcar las aplicaciones de notas **no vigentes** en vez de borrarlas, para quitar esta limitación (§14).

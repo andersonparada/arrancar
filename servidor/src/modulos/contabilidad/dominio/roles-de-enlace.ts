@@ -9,7 +9,11 @@ export interface DefinicionDeRol {
   admiteLlave: boolean;
   /** Qué elige la llave (para la pantalla): «Cuenta bancaria», «Categoría de proveedor»… */
   nombreDeLlave: string | null;
-  /** Un auxiliar lleva el detalle de la cuenta: al enlazarla queda marcada como cuenta de control. */
+  /**
+   * Un auxiliar lleva el detalle de la cuenta: al enlazarla queda marcada como cuenta de control. Lo es solo si un módulo
+   * responde su saldo por rol y llave, ese módulo registra lo que lo aumenta y lo que lo extingue, y nadie necesita
+   * partida manual en la cuenta en la operación normal (dictamen del contador, §5.3).
+   */
   esDeAuxiliar: boolean;
   /** Sin enlace el hecho se contabiliza igual con otra regla (p. ej. el IVA no acreditable va al costo de la línea). */
   opcional: boolean;
@@ -55,7 +59,7 @@ export const DEFINICIONES_DE_ROLES: Readonly<Record<RolDeCuenta, DefinicionDeRol
   documentos_por_asignar: rol('Documentos por asignar', [COMPRAS, CAJA, LIQUIDAR], { auxiliar: true }),
   puente_compras_de_activos: rol('Puente de compras de activos', [COMPRAS, ACTIVOS]),
   pagos_por_aplicar: rol('Pagos por aplicar', [BANCOS, PAGAR], { auxiliar: true }),
-  saldos_por_regularizar: rol('Saldos por regularizar', [BANCOS, PAGAR], { auxiliar: true }),
+  saldos_por_regularizar: rol('Saldos por regularizar', [BANCOS, PAGAR]),
   efectivo_para_pagos: rol('Efectivo para pagos', [BANCOS, PAGAR], { auxiliar: true }),
   cuenta_bancaria: rol('Cuenta bancaria', [BANCOS, PAGAR, LIQUIDAR, CAJA], {
     llave: 'Cuenta bancaria',
@@ -68,7 +72,7 @@ export const DEFINICIONES_DE_ROLES: Readonly<Record<RolDeCuenta, DefinicionDeRol
   iva_por_rectificar: rol('IVA por rectificar', [COMPRAS]),
   caja_chica: rol('Caja chica', [CAJA], { llave: 'Fondo', auxiliar: true }),
   anticipos_por_liquidar: rol('Anticipos por liquidar', [LIQUIDAR, PAGAR, CAJA], { auxiliar: true }),
-  cuentas_por_cobrar_a_empleados: rol('Cuentas por cobrar a empleados', [LIQUIDAR, PAGAR, CAJA], { auxiliar: true }),
+  cuentas_por_cobrar_a_empleados: rol('Cuentas por cobrar a empleados', [LIQUIDAR, PAGAR, CAJA]),
   perdidas_no_deducibles: rol('Pérdidas no deducibles', [CAJA, LIQUIDAR, PAGAR]),
   otros_ingresos: rol('Otros ingresos', [CAJA, LIQUIDAR, PAGAR]),
   puente_de_apertura: rol('Puente de apertura', PROPIOS),

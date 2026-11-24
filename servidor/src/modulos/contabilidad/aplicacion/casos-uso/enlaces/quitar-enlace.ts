@@ -8,8 +8,8 @@ export class QuitarEnlace {
 
   /**
    * El enlace se lee con `for update`: si otra transacción lo cambia o lo quita al mismo tiempo, esta espera y audita
-   * lo que de verdad borra. Lo que se contabilice después con ese rol quedará con error por falta de enlace. Queda en la auditoría con cómo
-   * estaba.
+   * lo que de verdad borra, y un solo `quitar` por cada baja real. Lo ya contabilizado no cambia; lo que llegue después
+   * usa la cuenta general del rol, el costo de la línea (rol opcional) o queda por contabilizar con error si no hay respaldo.
    * @throws RecursoNoEncontrado si no existe o no es de la empresa.
    */
   ejecutar(operador: Operador, enlaceId: string): Promise<void> {

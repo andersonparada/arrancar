@@ -584,10 +584,22 @@ afecta lo que se contabilice después (se audita, §9.2).
 - El catálogo de roles con sus metadatos vive en `dominio/roles-de-enlace.ts` (nombre, módulos que lo usan, si lleva llave y
   cómo se llama, si es de auxiliar); los nombres de los roles siguen en `core/contratos/contabilidad.contratos.ts`. Todos los
   roles con llave la admiten **opcional**: sin llave el enlace rige para todo el rol (así lo dice la búsqueda de §3.9).
-- Roles de **auxiliar** (su cuenta queda `es_de_control` al enlazar): `proveedores`, `retencion_por_pagar`, `documentos_por_asignar`,
-  `pagos_por_aplicar`, `saldos_por_regularizar`, `efectivo_para_pagos`, `cuenta_bancaria`, `caja_chica`, `anticipos_por_liquidar`,
-  `cuentas_por_cobrar_a_empleados`, `activo_fijo`, `depreciacion_acumulada` y `construcciones_en_curso`. Desmarcarla es
-  editar la cuenta (el aviso al desmarcar es de la pantalla, CT-2c).
+- Roles de **auxiliar** (su cuenta queda `es_de_control` al enlazar). **Criterio del contador (2026-11-23)**: un rol es de
+  auxiliar solo si (1) un módulo responde su saldo por rol y llave en `saldos_de_auxiliares`, (2) ese módulo registra lo que
+  lo aumenta y lo que lo extingue, y (3) en la operación normal nadie necesita partida manual en la cuenta; si el contador la
+  salda a mano como parte de su trabajo, no es de control y se vigila con «saldo distinto de cero» en el cierre. Son:
+  `proveedores`, `retencion_por_pagar`, `documentos_por_asignar`, `pagos_por_aplicar`, `efectivo_para_pagos`,
+  `cuenta_bancaria`, `caja_chica`, `anticipos_por_liquidar`, `activo_fijo`, `depreciacion_acumulada` y
+  `construcciones_en_curso`. Sin marca: `saldos_por_regularizar` (nace de un ajuste de CxP `compensado_con_otra_cuenta` y el
+  contador lo salda con partida manual: su control es como el de `apertura_por_regularizar`, CxP no lo responde en
+  `proposito = cuadratura` y el cierre da `pide_motivo` mientras tenga saldo; la «transitoria R11» de §4.4 es
+  `pagos_por_aplicar`, no este rol), `cuentas_por_cobrar_a_empleados` (ningún módulo registra su recuperación; control
+  sustituto: la cuenta pide tercero; se marca cuando exista Planilla), `iva_credito_fiscal` (la liquidación mensual es partida
+  manual normal; se revisa con el movimiento Debe del mes, dato propio que falta en el contrato), `puente_de_apertura` (su
+  control es dejarlo en 0) y `iva_por_rectificar`, `apertura_por_regularizar`. `puente_compras_de_activos` es de control solo
+  con Activos fijos activo (pendiente: marcarla al activarlo). `retencion_por_pagar` cuadra así: mayor = retenido vigente −
+  enterado vigente (no «constancias no enteradas»; la responde Libro de compras); multas e intereses van a gasto propio.
+  Desmarcarla es editar la cuenta (el aviso al desmarcar es de la pantalla, CT-2c).
 - API: `GET /contabilidad/enlaces` (los roles de los módulos activos con sus enlaces), `GET …/llaves/:rol`, `PUT …/:rol`
   (`{ llave, cuentaId }`: crea el enlace o cambia su cuenta) y `DELETE …/:enlaceId`; `…/exportar`, `…/plantilla` y
   `…/importar`. Cambiar o quitar un enlace exige `contabilidad.enlaces.editar` (no hay permisos `crear` ni `eliminar`, §9.1).

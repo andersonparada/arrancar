@@ -87,7 +87,7 @@ describe('Enlace', () => {
 });
 
 describe('catálogo de roles', () => {
-  it('los roles de auxiliar son los de §5.3, con saldos_por_regularizar (su transitoria cuadra con Cuentas por pagar)', () => {
+  it('los roles de auxiliar son los del dictamen de §5.3; los que el contador salda a mano o nadie extingue no lo son', () => {
     const auxiliares = ROLES_DE_CUENTA.filter((rol) => DEFINICIONES_DE_ROLES[rol].esDeAuxiliar);
 
     expect(auxiliares.sort()).toEqual(
@@ -96,17 +96,24 @@ describe('catálogo de roles', () => {
         'retencion_por_pagar',
         'documentos_por_asignar',
         'pagos_por_aplicar',
-        'saldos_por_regularizar',
         'efectivo_para_pagos',
         'cuenta_bancaria',
         'caja_chica',
         'anticipos_por_liquidar',
-        'cuentas_por_cobrar_a_empleados',
         'activo_fijo',
         'depreciacion_acumulada',
         'construcciones_en_curso',
       ].sort(),
     );
+  });
+
+  it.each([
+    'saldos_por_regularizar',
+    'cuentas_por_cobrar_a_empleados',
+    'iva_credito_fiscal',
+    'puente_de_apertura',
+  ] as const)('%s no es de auxiliar: no se vigila con una cuenta de control', (rol) => {
+    expect(DEFINICIONES_DE_ROLES[rol].esDeAuxiliar).toBe(false);
   });
 
   it('describe todos los roles del contrato, cada uno con al menos un módulo y un nombre', () => {

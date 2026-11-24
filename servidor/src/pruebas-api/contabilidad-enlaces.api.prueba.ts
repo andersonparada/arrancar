@@ -139,6 +139,15 @@ describe('enlaces contables por API', () => {
     expect((await cuenta.propietario.delete(`${RUTA}/${creado.cuerpo.id}`)).estado).toBe(404);
   });
 
+  it('dos quitar simultáneos del mismo enlace: uno lo quita y el otro no lo encuentra', async () => {
+    const enlace = await enlazar('iva_credito_fiscal', cuentas['1.2']!);
+    const quitar = () => cuenta.propietario.delete(`${RUTA}/${enlace.cuerpo.id}`);
+
+    const estados = (await Promise.all([quitar(), quitar()])).map((respuesta) => respuesta.estado);
+
+    expect(estados.sort()).toEqual([204, 404]);
+  });
+
   it('rechaza una llave que no existe, una llave donde no va y una cuenta de mayor', async () => {
     const inventada = await enlazar('cuenta_bancaria', cuentas['1.1']!, crypto.randomUUID());
     const sobra = await enlazar('iva_credito_fiscal', cuentas['1.2']!, 'algo');
