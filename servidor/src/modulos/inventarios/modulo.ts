@@ -10,6 +10,7 @@ import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { rutasDeRecepciones } from './composicion/recepciones.js';
 import { rutasDeTraslados } from './composicion/traslados.js';
 import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
+import { rutasDeCierres } from './composicion/cierres.js';
 import { ALCANCE_DE_BODEGAS } from './infraestructura/persistencia/accesos-a-bodegas.tablas.js';
 // generador: importaciones
 
@@ -113,6 +114,18 @@ export const moduloInventarios: DefinicionModulo = {
       descripcion: 'Importar saldos iniciales de inventario desde Excel (también baja la plantilla)',
     },
     { clave: 'inventarios.saldos-iniciales.exportar', descripcion: 'Exportar saldos iniciales de inventario a Excel' },
+    {
+      clave: 'inventarios.cierres.ver',
+      descripcion: 'Ver los cierres mensuales del inventario y sus existencias valuadas',
+    },
+    {
+      clave: 'inventarios.cierres.cerrar',
+      descripcion: 'Cerrar un mes del inventario: congela sus existencias valuadas (exige ver todas las bodegas)',
+    },
+    {
+      clave: 'inventarios.cierres.reabrir',
+      descripcion: 'Reabrir el último mes cerrado del inventario, con su motivo (exige ver todas las bodegas)',
+    },
     // generador: permisos
   ],
   recursosConAlcance: [
@@ -135,6 +148,7 @@ export const moduloInventarios: DefinicionModulo = {
     rutasDeRecepciones(),
     rutasDeTraslados(),
     rutasDeSaldosIniciales(),
+    rutasDeCierres(),
     // generador: rutas
   ]),
 };

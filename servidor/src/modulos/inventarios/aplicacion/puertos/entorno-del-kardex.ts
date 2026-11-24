@@ -13,9 +13,8 @@ export interface CargaInicial {
 }
 
 /**
- * Los cierres mensuales los crea INV-8; mientras no existan, ningún mes está cerrado. Cuando lleguen, esta pregunta
- * lee `inventarios.cierres` y los candados de cierre (compartido para los documentos, exclusivo para cerrar) ya están
- * tomados en `AlmacenDelKardex.bloquear`.
+ * Los cierres mensuales del inventario (`inventarios.cierres`, INV-8). Las dos preguntas toman antes el candado compartido
+ * del cierre: quien cierra o reabre lo toma exclusivo, así que lo que responden no cambia hasta el fin de la transacción.
  */
 export interface MesesCerrados {
   estaCerrado(periodo: string): Promise<boolean>;

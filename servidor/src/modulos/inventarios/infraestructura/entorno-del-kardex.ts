@@ -7,7 +7,6 @@ import type {
   EstadoDeLaCarga,
   LectorDeTransito,
   LectorDelMetodoInicial,
-  MesesCerrados,
 } from '../aplicacion/puertos/entorno-del-kardex.js';
 import type { MetodoDeCosteo } from '../dominio/costeo/tipos.js';
 
@@ -29,19 +28,5 @@ export class MetodoInicialEnConfiguracion implements LectorDelMetodoInicial {
 export class TransitoEnConfiguracion implements LectorDeTransito {
   conTransito({ cuentaId, empresaId }: Operador): Promise<boolean> {
     return configuracion.lector.obtener<boolean>('inventarios.traslados.con_transito', { cuentaId, empresaId });
-  }
-}
-
-/**
- * Los cierres mensuales los crea INV-8; mientras no existan, ningún mes está cerrado. INV-8 reemplaza esta clase por la
- * que lee `inventarios.cierres`.
- */
-export class MesesCerradosPendientes implements MesesCerrados {
-  async estaCerrado(): Promise<boolean> {
-    return false;
-  }
-
-  async hayAlguno(): Promise<boolean> {
-    return false;
   }
 }

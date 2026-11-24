@@ -11,14 +11,11 @@ import { RegistrarSalida } from '../aplicacion/casos-uso/movimientos/registrar-s
 import type { DependenciasDelKardex } from '../aplicacion/kardex/dependencias-del-kardex.js';
 import { MovimientosControlador } from '../http/movimientos.controlador.js';
 import { rutasMovimientos } from '../http/movimientos.rutas.js';
-import {
-  CargaInicialEnMediador,
-  MesesCerradosPendientes,
-  MetodoInicialEnConfiguracion,
-} from '../infraestructura/entorno-del-kardex.js';
+import { CargaInicialEnMediador, MetodoInicialEnConfiguracion } from '../infraestructura/entorno-del-kardex.js';
 import { AlmacenDelKardexDrizzle } from '../infraestructura/persistencia/almacen-del-kardex.drizzle.js';
 import { CatalogosDelKardexDrizzle } from '../infraestructura/persistencia/catalogos-del-kardex.drizzle.js';
 import { ConsultasDelKardexDrizzle } from '../infraestructura/persistencia/consultas-del-kardex.drizzle.js';
+import { MesesCerradosEnLaBase } from '../infraestructura/persistencia/meses-cerrados.drizzle.js';
 import { ExistenciasPorBodegaDrizzle } from '../infraestructura/persistencia/existencias-por-bodega.drizzle.js';
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { RepositorioDeMetodosDrizzle } from '../infraestructura/persistencia/repositorio-de-metodos.drizzle.js';
@@ -38,7 +35,7 @@ export function dependenciasDelKardex(): DependenciasDelKardex {
     catalogos: new CatalogosDelKardexDrizzle(),
     consultas: new ConsultasDelKardexDrizzle(),
     cargaInicial: new CargaInicialEnMediador(),
-    cierres: new MesesCerradosPendientes(),
+    cierres: new MesesCerradosEnLaBase(),
     metodoInicial: new MetodoInicialEnConfiguracion(),
   };
 }

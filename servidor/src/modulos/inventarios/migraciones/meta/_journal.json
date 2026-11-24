@@ -78,6 +78,13 @@
       "when": 1795476977267,
       "tag": "0010_inv7_saldo_inicial_sin_repetir",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795481406401,
+      "tag": "0011_inv8_cierres",
+      "breakpoints": true
     }
   ]
 }
