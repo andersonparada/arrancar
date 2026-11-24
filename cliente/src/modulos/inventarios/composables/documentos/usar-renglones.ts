@@ -38,6 +38,7 @@ export interface ContextoDeRenglones {
 }
 
 interface ExistenciasDelRenglon {
+  /** Falso sin permiso o si la carga falló: no se sabe qué lotes tienen existencia. */
   puedeVer: boolean;
   conExistencia: ReadonlySet<string>;
 }
@@ -51,9 +52,9 @@ async function existenciasParaElRenglon(
   const { articuloId } = renglon;
   const bodegaId = contexto.bodegaId();
   const { existenciasDeLotes: existencias } = catalogo;
-  await existencias.cargar(articuloId, bodegaId);
+  const cargadas = await existencias.cargar(articuloId, bodegaId);
   if (renglon.articuloId !== articuloId || bodegaId !== contexto.bodegaId()) return null;
-  return { puedeVer: existencias.puedeVer, conExistencia: existencias.conExistencia(articuloId, bodegaId) };
+  return { puedeVer: existencias.puedeVer && cargadas, conExistencia: existencias.conExistencia(articuloId, bodegaId) };
 }
 
 /**
@@ -70,9 +71,9 @@ function usarLotePropuesto(
   const propuestos = new Map<number, string | null>();
   async function proponerLote(renglon: EdicionDeRenglon, respetarElegido = false): Promise<void> {
     if (!contexto.esSalida) return;
-    const { clave, loteId: anterior } = renglon;
     const existencias = await existenciasParaElRenglon(renglon, catalogo, contexto);
     if (!existencias) return;
+    const { clave, loteId: anterior } = renglon;
     const previo = { anterior, propuesto: propuestos.get(clave), respetarElegido };
     const { aMano, conservar } = seConservaElElegido(previo, existencias);
     if (conservar) return;

@@ -220,11 +220,10 @@ describe('permisos y bodegas', () => {
       apellidos: 'Recibe',
       permisos: ['inventarios.recepciones.crear'],
     });
-    const lector = await crearUsuarioConPermisos(entorno, e.cuenta, {
-      nombres: 'Lector',
-      apellidos: 'Facturas',
-      permisos: ['inventarios.recepciones.ver'],
-    });
+    const permisos = ['inventarios.recepciones.ver'];
+    const lector = await crearUsuarioConPermisos(entorno, e.cuenta, { nombres: 'Ana', apellidos: 'Lee', permisos });
+    const id = (await operador.get('/api/sesion')).cuerpo.usuario.id;
+    await propietario().put(`/api/inventarios/bodegas/accesos/${id}`, { bodegaIds: [e.bodegaId] });
 
     const consulta = `${RUTA_RECEPCIONES}?documentoDeCompraId=${propia.documentoId}`;
     const vistas = await operador.get(consulta);

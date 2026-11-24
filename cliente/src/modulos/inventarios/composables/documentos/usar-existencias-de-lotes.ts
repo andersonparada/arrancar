@@ -16,13 +16,17 @@ export function usarExistenciasDeLotes() {
   const puedeVerExistencias = usarSesion().puede('inventarios.existencias.ver');
   const porArticuloYBodega = reactive<Record<string, string[]>>({});
 
-  async function cargar(articuloId: string | null, bodegaId: string | null): Promise<void> {
-    if (!puedeVerExistencias || !articuloId || !bodegaId || porArticuloYBodega[clave(articuloId, bodegaId)]) return;
+  /** Devuelve `true` si las existencias quedaron cargadas (o ya lo estaban); `false` si no se pudieron traer. */
+  async function cargar(articuloId: string | null, bodegaId: string | null): Promise<boolean> {
+    if (!puedeVerExistencias || !articuloId || !bodegaId) return false;
+    if (porArticuloYBodega[clave(articuloId, bodegaId)]) return true;
     try {
       const existencias = await apiExistencias.listar({ articuloId, bodegaId });
       porArticuloYBodega[clave(articuloId, bodegaId)] = idsDeLotesConExistencia(existencias);
+      return true;
     } catch (error) {
       avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar las existencias por lote.');
+      return false;
     }
   }
 

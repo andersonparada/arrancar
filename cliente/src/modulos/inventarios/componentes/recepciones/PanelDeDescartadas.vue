@@ -14,7 +14,7 @@ const emit = defineEmits<{ devolver: [linea: LineaPorRecibir] }>();
   <TarjetaBase v-if="lineas.length" class="mb-4" aria-labelledby="titulo-descartadas">
     <h2 id="titulo-descartadas" class="font-semibold">Descartadas hace un momento</h2>
     <p class="text-sm text-tierra-600 dark:text-tierra-300">
-      Ya no son inventario en el Libro de compras. Si fue un error, devuélvalas a la bandeja.
+      Salieron de la bandeja por recibir. Si fue un error, devuélvalas a la bandeja.
     </p>
     <ul class="mt-2 divide-y divide-tierra-100 dark:divide-tierra-800">
       <li v-for="linea in lineas" :key="linea.lineaId" class="flex flex-wrap items-center justify-between gap-2 py-2">

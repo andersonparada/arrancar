@@ -23,7 +23,7 @@ function catalogoDe(conExistencia: string[], puedeVer = true, detalle = async ()
     articulos: ref([articulo]),
     cargarDetalle: detalle,
     lotesDe: () => [lote('agotado', '2099-01-01'), lote('con', '2099-06-01')],
-    existenciasDeLotes: { cargar: async () => undefined, conExistencia: () => new Set(conExistencia), puedeVer },
+    existenciasDeLotes: { cargar: async () => true, conExistencia: () => new Set(conExistencia), puedeVer },
   } as unknown as CatalogoDeRenglones;
 }
 
@@ -126,5 +126,29 @@ describe('usarRenglones: cambio de bodega y lector', () => {
     liberar();
     await Promise.all([primera, segunda]);
     expect(lista.value.map((r) => [r.cantidad, r.loteId])).toEqual([['2', 'con']]);
+  });
+
+  it('si la carga de existencias falla conserva el lote elegido a mano', async () => {
+    const catalogo = catalogoDe([]);
+    catalogo.existenciasDeLotes.cargar = async () => false;
+    const { lista, acciones } = preparar([renglonNuevo('a1', '1')], true, catalogo);
+    lista.value[0]!.loteId = 'agotado';
+    await acciones.reproponerLotes();
+    expect(lista.value[0]!.loteId).toBe('agotado');
+  });
+
+  it('un lote que el usuario elige mientras carga la existencia no se pisa', async () => {
+    let espera: Promise<void> = Promise.resolve();
+    const catalogo = catalogoDe(['con', 'agotado']);
+    catalogo.existenciasDeLotes.cargar = async () => (await espera, true);
+    const { lista, acciones } = preparar([renglonNuevo('a1', '1')], true, catalogo);
+    await acciones.alElegirArticulo(lista.value[0]!);
+    let liberar = () => {};
+    espera = new Promise<void>((resolver) => (liberar = resolver));
+    const pendiente = acciones.reproponerLotes();
+    lista.value[0]!.loteId = 'con';
+    liberar();
+    await pendiente;
+    expect(lista.value[0]!.loteId).toBe('con');
   });
 });
