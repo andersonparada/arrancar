@@ -4421,3 +4421,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   comparten registrar una nota y anular o eliminar una nota de débito: el total no pasa del tope y el IVA no pasa del
   IVA proporcional al total acumulado más Q0.05 (así varias notas parciales toleran el redondeo de cada una sin
   agotar el total).
+- **2026-11-23 — LV-1c y LV-2c (cliente de Libro de ventas) hechos.** (1) **Clientes recibe secciones de otros módulos**
+  como Proveedores: `DondeSeAporta` suma `'cliente'`; el formulario en página, la ventana del papel y la ficha de
+  Clientes muestran las secciones activas y las envían en `secciones` (alta y edición; `asignarCliente` las acepta).
+  (2) **«Datos fiscales (ventas)»** (`SeccionFiscalDeCliente` y su ficha): agente de retención del IVA (por nombre),
+  exporta productos agropecuarios, retiene ISR y retiene IVA a pequeños contribuyentes; lo que no cabe se apaga solo
+  (sin agente no hay retención de pequeño contribuyente; solo un exportador exporta) y una nota explica qué se
+  propondrá al vender sin calcular nada en el cliente. (3) **Conceptos de ingreso** completos: orden por nombre,
+  inactivar/reactivar y eliminar con confirmación, concepto de sistema solo lectura. (4) **Documentos de venta**: lista
+  con filtros (período, cliente, tipo, destino, estado, búsqueda) y páginas; formulario en página con líneas (concepto,
+  total con IVA, clase fiscal), receptor, FEL, nota con la factura que corrige (o factura anterior), destino si hay
+  cartera, «Registrar y seguir con otro» y aviso al salir con cambios; ficha con totales por columna, líneas, notas,
+  anular (causa y motivo) y eliminar según `puedeAnular`/`puedeEliminar` del servidor. Los motivos de rechazo del
+  servidor quedan a la vista con foco. Pruebas de cliente: lógica pura de datos fiscales, filtros, líneas, edición,
+  baja, detalles y avisos. **Pendientes:** la etiqueta «Con retención» y las retenciones en la ficha llegan con LV-3
+  (el servidor aún no las envía); localidad del DTE y IVA calculado en vivo no se ofrecen (no hay endpoint de vista
+  previa en LV-2); probar de punta a punta en el navegador (`pruebas-qa`).
