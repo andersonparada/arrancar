@@ -4445,3 +4445,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   - Lógica pura con pruebas (37 en el módulo): máscara y código propuesto, árbol y filtro, filas y faltantes de enlaces, inicio.
     Sin cambios en el servidor.
   - Pendiente de cliente: la lista de cuentas se trae completa (sin paginar); está bien hasta unos miles de cuentas.
+  - **Correcciones de la revisión (2026-11-23)**: (1) la Nomenclatura ya no pide `inicio.ver`: nuevo `GET /contabilidad/cuentas/mascara`
+    (`cuentas.ver`) devuelve `{ mascara }`, nulo si no se ha iniciado; el árbol carga con solo ver cuentas. (2) Un fallo al cargar
+    (500, red) ya no se confunde con «sin iniciar»: Inicio y Nomenclatura muestran un estado de error con «Reintentar» y sin
+    formulario editable (así no se pisa lo guardado). (3) Un rol con llave sin cuenta general y sin registros conocidos cuenta como
+    faltante. (4) El catálogo de roles trae `opcional` (hoy solo `iva_no_acreditable`): no cuenta como faltante y la tarjeta explica
+    que sin cuenta va al costo de la línea. (5) Si fallan las llaves de un rol, se distinguen de «ninguna»: se avisa y no se marca
+    ningún enlace como huérfano. Pruebas: cliente 29 → 37 en el módulo, servidor con casos de máscara y `opcional`.

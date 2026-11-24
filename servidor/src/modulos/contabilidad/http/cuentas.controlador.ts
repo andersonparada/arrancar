@@ -4,12 +4,14 @@ import type { ActualizarCuenta } from '../aplicacion/casos-uso/cuentas/actualiza
 import type { CrearCuenta } from '../aplicacion/casos-uso/cuentas/crear-cuenta.js';
 import type { EliminarCuenta } from '../aplicacion/casos-uso/cuentas/eliminar-cuenta.js';
 import type { ListarCuentas } from '../aplicacion/casos-uso/cuentas/listar-cuentas.js';
+import type { ObtenerMascara } from '../aplicacion/casos-uso/cuentas/obtener-mascara.js';
 import type { ObtenerCuenta } from '../aplicacion/casos-uso/cuentas/obtener-cuenta.js';
 import type { CuentaSolicitado, ParamsCuenta } from './cuentas.esquemas-http.js';
 
 export interface CasosDeUsoDeCuentas {
   listar: ListarCuentas;
   obtener: ObtenerCuenta;
+  mascara: ObtenerMascara;
   crear: CrearCuenta;
   actualizar: ActualizarCuenta;
   eliminar: EliminarCuenta;
@@ -20,6 +22,8 @@ export class CuentasControlador {
   constructor(private readonly casosDeUso: CasosDeUsoDeCuentas) {}
 
   listar = (solicitud: FastifyRequest) => this.casosDeUso.listar.ejecutar(operadorDe(solicitud));
+
+  mascara = (solicitud: FastifyRequest) => this.casosDeUso.mascara.ejecutar(operadorDe(solicitud));
 
   obtener = (solicitud: FastifyRequest<{ Params: ParamsCuenta }>) =>
     this.casosDeUso.obtener.ejecutar(operadorDe(solicitud), solicitud.params.cuentaId);

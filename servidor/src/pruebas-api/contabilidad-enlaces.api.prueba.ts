@@ -98,7 +98,11 @@ describe('enlaces contables por API', () => {
     expect(respuesta.cuerpo.find((rol: { rol: string }) => rol.rol === 'cuenta_bancaria')).toMatchObject({
       nombreDeLlave: 'Cuenta bancaria',
       esDeAuxiliar: true,
+      opcional: false,
       enlaces: [],
+    });
+    expect(respuesta.cuerpo.find((rol: { rol: string }) => rol.rol === 'iva_no_acreditable')).toMatchObject({
+      opcional: true,
     });
   });
 

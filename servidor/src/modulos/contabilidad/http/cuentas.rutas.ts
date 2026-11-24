@@ -43,6 +43,7 @@ export function rutasCuentas(
     const ver = proteger({ permiso: 'contabilidad.cuentas.ver' });
 
     app.get(RUTA, { schema: { tags: etiquetas }, preHandler: ver, handler: controlador.listar });
+    app.get(`${RUTA}/mascara`, { schema: { tags: etiquetas }, preHandler: ver, handler: controlador.mascara });
     app.get(`${RUTA}/:cuentaId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
     rutasDeEscritura(app, controlador);
     rutasDeIntercambio(app, { ...EN_EXCEL, intercambio });

@@ -8,6 +8,7 @@ import { ActualizarCuenta } from '../aplicacion/casos-uso/cuentas/actualizar-cue
 import { CrearCuenta } from '../aplicacion/casos-uso/cuentas/crear-cuenta.js';
 import { EliminarCuenta } from '../aplicacion/casos-uso/cuentas/eliminar-cuenta.js';
 import { ListarCuentas } from '../aplicacion/casos-uso/cuentas/listar-cuentas.js';
+import { ObtenerMascara } from '../aplicacion/casos-uso/cuentas/obtener-mascara.js';
 import { ObtenerCuenta } from '../aplicacion/casos-uso/cuentas/obtener-cuenta.js';
 import { CuentasControlador } from '../http/cuentas.controlador.js';
 import { rutasCuentas } from '../http/cuentas.rutas.js';
@@ -28,6 +29,7 @@ type Dependencias = ReturnType<typeof dependenciasDeCuentas>;
 const casosDeUso = (dependencias: Dependencias) => ({
   listar: new ListarCuentas(dependencias),
   obtener: new ObtenerCuenta(dependencias),
+  mascara: new ObtenerMascara(dependencias),
   crear: new CrearCuenta(dependencias),
   actualizar: new ActualizarCuenta(dependencias),
   eliminar: new EliminarCuenta(dependencias),

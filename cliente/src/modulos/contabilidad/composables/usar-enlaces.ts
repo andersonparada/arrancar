@@ -3,19 +3,21 @@ import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiCuentas, type Cuenta } from '../servicios/cuentas.api';
-import { apiEnlaces, type LlaveDeEnlace, type RolDeEnlace } from '../servicios/enlaces.api';
+import { apiEnlaces, type RolDeEnlace } from '../servicios/enlaces.api';
 import {
   agruparPorModulo,
   cuentasEnlazables,
   faltantesDelRol,
   totalDeFaltantes,
   type FilaDeEnlace,
+  type LlavesDelRol,
 } from './edicion-de-enlaces';
 
 interface Datos {
   roles: RolDeEnlace[];
   cuentas: Cuenta[];
-  llaves: Record<string, LlaveDeEnlace[]>;
+  /** `null` = no se pudieron traer los registros de ese rol. */
+  llaves: Record<string, LlavesDelRol>;
 }
 
 type Avisos = ReturnType<typeof usarAvisos>;
@@ -23,11 +25,11 @@ type Avisos = ReturnType<typeof usarAvisos>;
 /** Las cuentas solo se ofrecen a quien puede verlas; sin ellas la pantalla se ve pero no se elige nada. */
 const cuentasSiPuede = (puede: boolean): Promise<Cuenta[]> => (puede ? apiCuentas.listar() : Promise.resolve([]));
 
-/** Los registros que ofrece cada módulo para los roles con llave; si uno falla, ese rol queda solo con lo ya enlazado. */
-async function llavesDe(roles: RolDeEnlace[]): Promise<Record<string, LlaveDeEnlace[]>> {
+/** Los registros que ofrece cada módulo para los roles con llave; si uno falla, queda en `null` para no confundirlo con «ninguno». */
+async function llavesDe(roles: RolDeEnlace[]): Promise<Record<string, LlavesDelRol>> {
   const conLlave = roles.filter((rol) => rol.admiteLlave);
-  const listas = await Promise.all(conLlave.map((rol) => apiEnlaces.llaves(rol.rol).catch(() => [])));
-  return Object.fromEntries(conLlave.map((rol, posicion) => [rol.rol, listas[posicion] ?? []]));
+  const listas = await Promise.all(conLlave.map((rol) => apiEnlaces.llaves(rol.rol).catch(() => null)));
+  return Object.fromEntries(conLlave.map((rol, posicion) => [rol.rol, listas[posicion] ?? null]));
 }
 
 async function traerTodo(puedeVerCuentas: boolean): Promise<Datos> {
@@ -114,7 +116,7 @@ export function usarEnlaces(puedeVerCuentas: boolean) {
   const faltantes = computed(() => totalDeFaltantes(datos.value.roles, datos.value.llaves));
   const cuentas = computed(() => cuentasEnlazables(datos.value.cuentas));
   const grupos = computed(() => {
-    const conFalta = (rol: RolDeEnlace) => faltantesDelRol(rol, datos.value.llaves[rol.rol] ?? []) > 0;
+    const conFalta = (rol: RolDeEnlace) => faltantesDelRol(rol, datos.value.llaves[rol.rol] ?? null) > 0;
     return agruparPorModulo(datos.value.roles.filter((rol) => !soloFaltantes.value || conFalta(rol)));
   });
   const cambios = usarCambiosDeEnlace(datos, cuentas);

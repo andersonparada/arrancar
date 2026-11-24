@@ -918,6 +918,7 @@ inverso»), `periodo_definitivo`, `cuenta_no_es_de_detalle`, `cuenta_inactiva`, 
 | Método y ruta | Permiso |
 |---|---|
 | `GET/PUT /contabilidad/inicio`, `GET /contabilidad/plantillas` | `inicio.*` |
+| `GET /contabilidad/cuentas/mascara` (`{ mascara }`, nulo sin iniciar; la pantalla de nomenclatura no pide `inicio.ver`) | `cuentas.ver` |
 | `GET/POST /contabilidad/cuentas` (árbol o lista con filtros), `PUT …/:id`, `POST …/:id/inactivar`, `/reactivar`, `DELETE …/:id`; `GET …/exportar`, `…/plantilla`, `POST …/importar` | `cuentas.*` |
 | `GET /contabilidad/enlaces` (roles de los módulos activos con su enlace), `GET …/llaves/:rol`, `PUT …/:rol` (`{ llave, cuentaId }`), `DELETE …/:id`; exportar e importar | `enlaces.*` |
 | `GET /contabilidad/partidas` (filtros: fechas, tipo, estado, cuenta, tercero, origen, texto), `GET …/:id` | `partidas.ver` |

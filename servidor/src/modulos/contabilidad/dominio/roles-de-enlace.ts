@@ -11,23 +11,27 @@ export interface DefinicionDeRol {
   nombreDeLlave: string | null;
   /** Un auxiliar lleva el detalle de la cuenta: al enlazarla queda marcada como cuenta de control. */
   esDeAuxiliar: boolean;
+  /** Sin enlace el hecho se contabiliza igual con otra regla (p. ej. el IVA no acreditable va al costo de la línea). */
+  opcional: boolean;
 }
 
 interface Opciones {
   llave?: string;
   auxiliar?: boolean;
+  opcional?: boolean;
 }
 
 const rol = (
   nombre: string,
   modulos: readonly string[],
-  { llave, auxiliar = false }: Opciones = {},
+  { llave, auxiliar = false, opcional = false }: Opciones = {},
 ): DefinicionDeRol => ({
   nombre,
   modulos,
   admiteLlave: llave !== undefined,
   nombreDeLlave: llave ?? null,
   esDeAuxiliar: auxiliar,
+  opcional,
 });
 
 const COMPRAS = 'libro-de-compras';
@@ -42,7 +46,7 @@ const PROPIOS = ['contabilidad'];
 export const DEFINICIONES_DE_ROLES: Readonly<Record<RolDeCuenta, DefinicionDeRol>> = {
   proveedores: rol('Proveedores', [COMPRAS, PAGAR], { llave: 'Categoría de proveedor', auxiliar: true }),
   iva_credito_fiscal: rol('IVA crédito fiscal', [COMPRAS]),
-  iva_no_acreditable: rol('IVA no acreditable', [COMPRAS]),
+  iva_no_acreditable: rol('IVA no acreditable', [COMPRAS], { opcional: true }),
   retencion_por_pagar: rol('Retención por pagar', [COMPRAS, CAJA], {
     llave: 'Regla de retención',
     auxiliar: true,

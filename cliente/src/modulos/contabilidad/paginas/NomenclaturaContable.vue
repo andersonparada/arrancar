@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Flag, ListTree, Plus } from 'lucide-vue-next';
+import { Flag, ListTree, Plus, TriangleAlert } from 'lucide-vue-next';
 import { RouterLink } from 'vue-router';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
@@ -31,11 +31,21 @@ const permisosDeExcel = { importar: 'contabilidad.cuentas.importar', exportar: '
         @exportar="n.intercambio.exportar"
         @importar="n.intercambio.abrir"
       />
-      <BotonBase v-if="puedeCrear && n.inicio.value" :icono="Plus" @click="n.abrirNueva(null)">Nueva cuenta</BotonBase>
+      <BotonBase v-if="puedeCrear && n.iniciada.value" :icono="Plus" @click="n.abrirNueva(null)"
+        >Nueva cuenta</BotonBase
+      >
     </EncabezadoPagina>
 
     <EstadoVacio
-      v-if="!n.cargando.value && !n.inicio.value"
+      v-if="!n.cargando.value && n.fallo.value"
+      :icono="TriangleAlert"
+      titulo="No se pudo traer la nomenclatura"
+      descripcion="Revise su conexión e intente de nuevo. No se perdió nada."
+    >
+      <BotonBase @click="n.cargar">Reintentar</BotonBase>
+    </EstadoVacio>
+    <EstadoVacio
+      v-else-if="!n.cargando.value && !n.iniciada.value"
       :icono="Flag"
       titulo="Primero inicie la contabilidad"
       descripcion="La nomenclatura necesita la fecha de inicio y la máscara de los códigos de cuenta."
@@ -54,7 +64,7 @@ const permisosDeExcel = { importar: 'contabilidad.cuentas.importar', exportar: '
       titulo="Sin cuentas todavía"
       descripcion="Cree la primera cuenta de primer nivel (por ejemplo, 1 Activo) o importe su nomenclatura desde Excel."
     />
-    <template v-else-if="n.inicio.value">
+    <template v-else-if="n.iniciada.value">
       <BarraDeNomenclatura
         v-model:texto="n.texto.value"
         v-model:con-inactivas="n.conInactivas.value"

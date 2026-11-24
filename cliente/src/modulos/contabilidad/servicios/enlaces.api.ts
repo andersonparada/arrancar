@@ -20,6 +20,8 @@ export interface RolDeEnlace {
   admiteLlave: boolean;
   nombreDeLlave: string | null;
   esDeAuxiliar: boolean;
+  /** Sin enlace el hecho se contabiliza igual con otra regla: no cuenta como faltante. */
+  opcional: boolean;
   enlaces: Enlace[];
 }
 

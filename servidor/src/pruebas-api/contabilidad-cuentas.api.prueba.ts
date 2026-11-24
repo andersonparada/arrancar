@@ -145,5 +145,18 @@ describe('nomenclatura: permisos', () => {
     expect((await lector.get(`${RUTA}/exportar`)).estado).toBe(403);
     expect((await lector.get(`${RUTA}/plantilla`)).estado).toBe(403);
     expect((await lector.get(RUTA_INICIO)).estado).toBe(403);
+    expect((await lector.get(`${RUTA}/mascara`)).cuerpo).toEqual({ mascara: '9.9.99.99' });
+  });
+
+  it('la máscara es null antes de iniciar y no pide el permiso del inicio', async () => {
+    const sinIniciar = await empresaConInicio(entorno, {
+      nombre: 'Sin iniciar',
+      usuario: 'propietariosininiciar',
+      modulos: MODULOS,
+    });
+    const respuesta = await sinIniciar.propietario.get(`${RUTA}/mascara`);
+
+    expect(respuesta.estado).toBe(200);
+    expect(respuesta.cuerpo).toEqual({ mascara: null });
   });
 });

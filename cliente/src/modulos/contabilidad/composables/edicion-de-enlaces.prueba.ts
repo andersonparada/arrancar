@@ -27,6 +27,7 @@ const rol = (clave: string, propios: Partial<RolDeEnlace> = {}): RolDeEnlace => 
   admiteLlave: false,
   nombreDeLlave: null,
   esDeAuxiliar: false,
+  opcional: false,
   enlaces: [],
   ...propios,
 });
@@ -71,6 +72,34 @@ describe('roles con llave', () => {
   it('un registro inactivo con enlace se sigue viendo', () => {
     const conInactivo = { ...conLlave, enlaces: [enlace('cuenta_bancaria', 'z')] };
     expect(filasDeRol(conInactivo, llaves).map((f) => f.llave)).toContain('z');
+  });
+
+  it('sin cuenta general ni registros conocidos falta la cuenta general', () => {
+    const caja = rol('caja_chica', { admiteLlave: true });
+    expect(faltantesDelRol(caja, [])).toBe(1);
+    expect(filasDeRol(caja, [])[0]).toMatchObject({ llave: null, falta: true });
+    expect(totalDeFaltantes([caja], { caja_chica: [] })).toBe(1);
+    expect(faltantesDelRol({ ...caja, enlaces: [enlace('caja_chica', null)] }, [])).toBe(0);
+  });
+
+  it('con todos sus registros cubiertos ya no falta la general', () => {
+    const cubierto = { ...conLlave, enlaces: [enlace('cuenta_bancaria', 'a'), enlace('cuenta_bancaria', 'b')] };
+    expect(faltantesDelRol(cubierto, llaves)).toBe(0);
+  });
+
+  it('si no se pudieron traer los registros, no marca huérfanos y avisa lo que falta', () => {
+    const conEnlace = { ...conLlave, enlaces: [enlace('cuenta_bancaria', 'a')] };
+    expect(filasDeRol(conEnlace, null).some((f) => f.huerfana)).toBe(false);
+    expect(faltantesDelRol(conLlave, null)).toBe(1);
+    expect(faltantesDelRol(conEnlace, null)).toBe(0);
+    expect(totalDeFaltantes([conLlave], {})).toBe(1);
+  });
+
+  it('un rol opcional no cuenta como faltante ni se marca', () => {
+    const iva = rol('iva_no_acreditable', { opcional: true });
+    expect(faltantesDelRol(iva, [])).toBe(0);
+    expect(filasDeRol(iva, [])[0]?.falta).toBe(false);
+    expect(totalDeFaltantes([iva], {})).toBe(0);
   });
 
   it('suma los faltantes de todos los roles', () => {

@@ -41,6 +41,11 @@ export class ApiCuentas {
     return intercambioDe(this.http, '/contabilidad/cuentas');
   }
 
+  /** La máscara de los códigos; `null` si la empresa todavía no inició su contabilidad. Pide solo ver cuentas. */
+  mascara() {
+    return this.http.obtener<{ mascara: string | null }>('/contabilidad/cuentas/mascara');
+  }
+
   listar() {
     return this.http.obtener<Cuenta[]>('/contabilidad/cuentas');
   }

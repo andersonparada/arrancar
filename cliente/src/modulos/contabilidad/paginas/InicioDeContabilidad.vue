@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { TriangleAlert } from 'lucide-vue-next';
 import { RouterLink } from 'vue-router';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import CamposDelInicio from '../componentes/CamposDelInicio.vue';
 import { usarInicio } from '../composables/usar-inicio';
@@ -20,7 +22,7 @@ const esNuevo = computed(() => i.datos.value.inicio === null);
     <EncabezadoPagina
       :titulo="VENTANAS_CONTABILIDAD.inicio.titulo"
       :descripcion="
-        esNuevo && !i.cargando.value
+        esNuevo && !i.cargando.value && !i.fallo.value
           ? 'Todavía no se inicia la contabilidad de esta empresa. Elija desde cuándo y cómo se escriben los códigos.'
           : VENTANAS_CONTABILIDAD.inicio.descripcion
       "
@@ -34,7 +36,15 @@ const esNuevo = computed(() => i.datos.value.inicio === null);
       </RouterLink>
     </EncabezadoPagina>
 
-    <TarjetaBase v-if="!i.cargando.value" class="max-w-3xl">
+    <EstadoVacio
+      v-if="!i.cargando.value && i.fallo.value"
+      :icono="TriangleAlert"
+      titulo="No se pudo traer el inicio de la contabilidad"
+      descripcion="Revise su conexión e intente de nuevo. Mientras no se traiga, no se puede editar para no pisar lo guardado."
+    >
+      <BotonBase @click="i.cargar">Reintentar</BotonBase>
+    </EstadoVacio>
+    <TarjetaBase v-else-if="!i.cargando.value" class="max-w-3xl">
       <form id="form-inicio" novalidate @submit.prevent="i.guardar">
         <CamposDelInicio
           v-model="i.formulario.value"

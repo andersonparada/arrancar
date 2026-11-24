@@ -14,6 +14,7 @@ import {
   inicioVacio,
   type FormularioDeInicio,
 } from './edicion-de-inicio';
+import { marcarFalloDeCarga } from './marcar-fallo-de-carga';
 
 interface Datos {
   inicio: InicioContable | null;
@@ -28,16 +29,19 @@ async function tieneCuentas(puede: boolean): Promise<boolean> {
 
 /** Trae el inicio y deja el formulario con lo guardado (o con lo propuesto si todavía no se inició). */
 function usarDatosDelInicio(formulario: Ref<FormularioDeInicio>) {
+  const fallo = ref(false);
   const sesion = usarSesion();
-  return usarCarga<Datos>(
-    async () => {
-      const inicio = await apiInicio.obtener();
-      if (inicio) formulario.value = formularioDelInicio(inicio);
-      return { inicio, hayCuentas: await tieneCuentas(sesion.puede('contabilidad.cuentas.ver')) };
-    },
+  const traer = async (): Promise<Datos> => {
+    const inicio = await apiInicio.obtener();
+    if (inicio) formulario.value = formularioDelInicio(inicio);
+    return { inicio, hayCuentas: await tieneCuentas(sesion.puede('contabilidad.cuentas.ver')) };
+  };
+  const carga = usarCarga<Datos>(
+    marcarFalloDeCarga(traer, fallo),
     { inicio: null, hayCuentas: false },
     'No se pudo traer el inicio de la contabilidad.',
   );
+  return { ...carga, fallo };
 }
 
 const confirmarCambio = (avisos: ReturnType<typeof usarAvisos>): Promise<boolean> =>
@@ -53,7 +57,8 @@ export function usarInicio() {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
   const formulario = ref<FormularioDeInicio>(inicioVacio());
-  const { datos, cargando, cargar } = usarDatosDelInicio(formulario);
+  const carga = usarDatosDelInicio(formulario);
+  const { datos, cargar } = carga;
 
   const avisoMascara = computed(() => avisoDeMascara(formulario.value.mascara));
   const avisoContador = computed(() => avisoDelContador(formulario.value));
@@ -67,5 +72,5 @@ export function usarInicio() {
     await cargar();
   }
 
-  return { formulario, datos, cargando, enviando, errores, avisoMascara, avisoContador, puedeGuardar, guardar };
+  return { formulario, ...carga, enviando, errores, avisoMascara, avisoContador, puedeGuardar, guardar };
 }
