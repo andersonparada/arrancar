@@ -127,8 +127,8 @@ describe('cambiar la fecha de inicio', () => {
   });
 });
 
-describe('cambiar la fecha de inicio con capas que se juntarían', () => {
-  it('se rechaza con un mensaje que dice qué corregir, en vez de un duplicado', async () => {
+describe('cambiar la fecha de inicio con una capa propia que se confundiría con la predeterminada', () => {
+  it('se rechaza con un mensaje que dice qué corregir, en vez de mover la capa en silencio', async () => {
     const anterior = (await e.cuenta.propietario.get(SALDOS_DE_INVENTARIO)).cuerpo.saldos[0];
     await e.cuenta.propietario.put(`${SALDOS_DE_INVENTARIO}/${anterior.id}`, {
       ...datosDeSaldoInicial({ articuloId: anterior.articuloId, bodegaId: anterior.bodegaId }, '100', '200.00'),
@@ -148,7 +148,7 @@ describe('cambiar la fecha de inicio con capas que se juntarían', () => {
     expect(conCapa.estado, JSON.stringify(conCapa.cuerpo)).toBe(201);
     expect(rechazo.estado).toBe(422);
     expect(rechazo.cuerpo.error.codigo).toBe('inventario_con_fecha_fuera_de_la_carga');
-    expect(rechazo.cuerpo.error.mensaje).toContain('misma fecha de capa');
+    expect(rechazo.cuerpo.error.mensaje).toContain('fecha de capa propia');
   });
 });
 

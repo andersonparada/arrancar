@@ -159,14 +159,18 @@ describe('fecha de inicio', () => {
     expect(corregida).toMatchObject({ fechaDeInicio: '2026-02-01', cerrada: false });
   });
 
-  it('avisa a los módulos solo cuando ya había fecha y esta cambia', async () => {
+  it('avisa a los módulos al fijar la primera fecha y cuando esta cambia, no cuando se repite', async () => {
     await fijarFecha('2026-01-01');
+    expect(avisados).toEqual([{ empresaId, fechaDeInicio: '2026-01-01' }]);
     await fijarFecha('2026-01-01');
-    expect(avisados).toEqual([]);
+    expect(avisados).toHaveLength(1);
 
     await fijarFecha('2026-02-01');
 
-    expect(avisados).toEqual([{ empresaId, fechaDeInicio: '2026-02-01' }]);
+    expect(avisados).toEqual([
+      { empresaId, fechaDeInicio: '2026-01-01' },
+      { empresaId, fechaDeInicio: '2026-02-01' },
+    ]);
   });
 
   it('si un módulo rechaza la fecha nueva, el error sale tal cual (la transacción deshace el cambio)', async () => {

@@ -14,7 +14,7 @@ export interface AvisoDeFechaDeInicio {
 /**
  * Responde al aviso `empresas.fecha_de_inicio_por_cambiar`, que llega dentro de la transacción de Empresas (§8). Rechaza
  * el cambio si ya hay un cierre de inventario, si algún movimiento que no es de saldo inicial tiene fecha anterior a la
- * nueva o si alguna capa de saldo inicial tendría fecha igual o posterior. Si no, mueve los documentos de saldo inicial
+ * nueva o si alguna capa propia de saldo inicial tendría fecha igual o posterior al nuevo día anterior (se confundiría con la capa que se mueve con el documento). Si no, mueve los documentos de saldo inicial
  * al nuevo día anterior (de todas las bodegas, vea o no quien cambia la fecha todas).
  */
 export class ValidarFechaDeInicioEnInventarios {
@@ -34,7 +34,7 @@ export class ValidarFechaDeInicioEnInventarios {
       }
       if (conflictos.capasPosteriores > 0) {
         throw new InventarioConFechaFueraDeLaCarga(
-          `${conflictos.capasPosteriores} saldos iniciales de inventario tienen la fecha de su capa desde esa fecha.`,
+          `${conflictos.capasPosteriores} saldos iniciales de inventario tienen una fecha de capa propia igual o posterior al día anterior a esa fecha; quedaría confundida con la capa sin fecha propia. Corrija la fecha de capa de esos renglones.`,
         );
       }
       if (conflictos.llavesQueSeJuntarian > 0) {

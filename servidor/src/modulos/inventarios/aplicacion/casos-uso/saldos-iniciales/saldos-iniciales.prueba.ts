@@ -288,11 +288,11 @@ describe('ValidarFechaDeInicioEnInventarios', () => {
     await expect(e.cambiarFechaDeInicio('2026-09-01')).rejects.toThrow(InventarioConFechaFueraDeLaCarga);
   });
 
-  it('rechaza si dos renglones de la misma llave quedarían con la misma fecha de capa', async () => {
+  it('rechaza si una capa propia quedaría igual al nuevo día anterior y se confundiría con la predeterminada', async () => {
     await e.registrarSaldo('100', '200.00');
     await e.registrarSaldo('50', '80.00', { fechaDeCapa: '2026-06-30' });
 
-    await expect(e.cambiarFechaDeInicio('2026-07-01')).rejects.toThrow(/misma fecha de capa/);
+    await expect(e.cambiarFechaDeInicio('2026-07-01')).rejects.toThrow(/fecha de capa propia/);
     await expect(e.cambiarFechaDeInicio('2026-10-01')).resolves.toBeUndefined();
   });
 });

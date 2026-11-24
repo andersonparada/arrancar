@@ -180,7 +180,7 @@ export class ConsultasDeSaldosInicialesDrizzle implements ConsultasDeSaldosInici
     const { rows } = await transaccionEnCurso().execute<{ anteriores: string; capas: string }>(sql`
       select count(*) filter (where m.fecha_de_capa is null and m.vigente and m.fecha < ${nueva}::date)::text as anteriores,
              count(*) filter (where m.fecha_de_capa is not null and m.vigente and m.fecha_de_capa <> m.fecha
-                                and m.fecha_de_capa >= ${nueva}::date)::text as capas
+                                and m.fecha_de_capa >= ${nueva}::date - 1)::text as capas
         from inventarios.movimientos m`);
     return {
       movimientosAnteriores: Number(rows[0]!.anteriores),

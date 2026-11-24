@@ -31,7 +31,7 @@ export interface LlaveDeRenglon {
 export interface ConflictosConLaFechaDeInicio {
   /** Movimientos vigentes que no son de saldo inicial con fecha anterior a la nueva. */
   movimientosAnteriores: number;
-  /** Saldos iniciales con la fecha de su capa igual o posterior a la nueva. */
+  /** Saldos iniciales con la fecha de su capa igual o posterior al día anterior a la nueva. */
   capasPosteriores: number;
   /** Llaves (artículo, bodega, lote) en que dos o más renglones quedarían con la misma fecha de capa al reubicar. */
   llavesQueSeJuntarian: number;

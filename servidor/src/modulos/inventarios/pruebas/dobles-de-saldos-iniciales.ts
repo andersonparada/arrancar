@@ -134,8 +134,9 @@ export class SaldosEnMemoria implements ConsultasDeSaldosIniciales {
     const vigentes = this.kardex.movimientos.filter((m) => m.vigente);
     return {
       movimientosAnteriores: vigentes.filter((m) => !m.fechaDeCapa && m.fecha < nueva).length,
-      capasPosteriores: vigentes.filter((m) => m.fechaDeCapa && m.fechaDeCapa !== m.fecha && m.fechaDeCapa >= nueva)
-        .length,
+      capasPosteriores: vigentes.filter(
+        (m) => m.fechaDeCapa && m.fechaDeCapa !== m.fecha && m.fechaDeCapa >= diaAnterior(nueva),
+      ).length,
       llavesQueSeJuntarian: this.llavesQueSeJuntarian(nueva),
     };
   }
