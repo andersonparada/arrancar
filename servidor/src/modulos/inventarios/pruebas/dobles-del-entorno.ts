@@ -28,6 +28,10 @@ export class MesesCerradosFijos implements MesesCerrados {
   async hayAlguno(): Promise<boolean> {
     return this.cerrados.length > 0;
   }
+
+  async hayAlgunoSinCandado(): Promise<boolean> {
+    return this.hayAlguno();
+  }
 }
 
 export class MetodoInicialFijo implements LectorDelMetodoInicial {

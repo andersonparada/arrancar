@@ -23,6 +23,10 @@ export class MesesCerradosEnLaBase implements MesesCerrados {
 
   async hayAlguno(): Promise<boolean> {
     await this.bloquearElCierre();
+    return this.hayAlgunoSinCandado();
+  }
+
+  async hayAlgunoSinCandado(): Promise<boolean> {
     const [fila] = await transaccionEnCurso()
       .select({ periodo: cierres.periodo })
       .from(cierres)

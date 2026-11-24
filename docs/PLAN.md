@@ -3824,6 +3824,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   de la bandeja con **fecha de emisión** hasta el último día del mes (filtro nuevo `emitidasHasta` de la consulta, sin
   tocar el `hasta` por período de la pantalla). Pruebas: casos de uso y API (fecha anterior al primer cierre, lista y
   revisión sin costos ni alcance, período del libro posterior a la emisión).
+- **2026-11-23 — INV-8, interbloqueo entre cerrar un mes y cambiar la fecha de inicio.** El aviso
+  `empresas.fecha_de_inicio_por_cambiar` llegaba con la fila de `cargas_iniciales` tomada `for update` y pedía el candado
+  compartido del cierre (`hayAlguno()`); `CerrarMes` toma el candado exclusivo y luego esa fila `for share`: PostgreSQL
+  abortaba una de las dos con 500. Ahora `MesesCerrados.hayAlgunoSinCandado()` (la misma consulta, sin candado) lo usa
+  `ValidarFechaDeInicioEnInventarios`: la fila de la carga ya serializa ambos caminos. `exigirCargaAbierta` conserva
+  `hayAlguno()` con candado. Prueba de API de concurrencia (`inventarios-cierres-fecha-de-inicio-concurrencia`): solo 200 o 422.
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

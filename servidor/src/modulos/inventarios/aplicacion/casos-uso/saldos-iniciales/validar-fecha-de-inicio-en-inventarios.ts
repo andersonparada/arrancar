@@ -24,7 +24,8 @@ export class ValidarFechaDeInicioEnInventarios {
   ejecutar(operador: Operador, aviso: AvisoDeFechaDeInicio): Promise<void> {
     const { unidadDeTrabajo, saldos, cierres } = this.dependencias;
     return unidadDeTrabajo.ejecutar({ ...operador, empresaId: aviso.empresaId }, async () => {
-      if (await cierres.hayAlguno()) throw new InventarioConFechaFueraDeLaCarga('ya hay meses de inventario cerrados.');
+      if (await cierres.hayAlgunoSinCandado())
+        throw new InventarioConFechaFueraDeLaCarga('ya hay meses de inventario cerrados.');
       const conflictos = await saldos.conflictosConLaFechaDeInicio(aviso.fechaDeInicio);
       if (conflictos.movimientosAnteriores > 0) {
         throw new InventarioConFechaFueraDeLaCarga(
