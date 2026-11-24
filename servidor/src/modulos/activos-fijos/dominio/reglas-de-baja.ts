@@ -1,6 +1,6 @@
 import { normalizarNit, esNitValido } from '../../core/compartido/dominio/objetos-valor/nit.js';
 import { BajaInvalida, CausaDeBajaNoPermitida, FechaDeBajaAnteriorAlUso } from './errores-de-baja.js';
-import { CAUSAS_DE_BAJA, type DatosDeBaja, type DatosDeVenta } from './tipos-de-baja.js';
+import { CAUSAS_DE_BAJA, type CausaDeBaja, type DatosDeBaja, type DatosDeVenta } from './tipos-de-baja.js';
 import type { TipoDeRegistro } from './tipos-de-activo.js';
 
 const DESCRIPCION_MAXIMA = 500;
@@ -19,6 +19,9 @@ export interface ContextoDeBaja {
   hoy: string;
 }
 
+/** Lo que el tenedor de un bien ajeno no decide: venderlo, donarlo o darlo por obsoleto. */
+export const CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS: readonly CausaDeBaja[] = ['venta', 'donacion', 'obsolescencia'];
+
 function limpio(valor: string | null, { nombre, maximo }: { nombre: string; maximo: number }): string | null {
   const texto = valor?.trim() ?? '';
   if (texto.length > maximo) throw new BajaInvalida(`${nombre} no puede pasar de ${maximo} caracteres.`);
@@ -32,17 +35,20 @@ function obligatorio(valor: string, opciones: { nombre: string; maximo: number }
 }
 
 /**
- * Los bienes de terceros solo se devuelven, se destruyen, se roban, se extravían o tienen otra causa; no se venden. Un
- * bien de control no se vende como activo: nunca estuvo en el balance y la baja no lleva resultado (§3.2 y §3.4); cómo
- * se registra su venta queda pendiente del dictamen del contador.
+ * Los bienes de terceros solo se devuelven, se destruyen, se roban, se extravían, faltan o tienen otra causa; no se
+ * venden, ni se donan, ni se dan por obsoletos (el tenedor los devuelve). La venta de un bien de control se rechaza
+ * mientras el usuario decide cómo se registra (tiene resultado, IVA e ISR): el mensaje no sugiere otra causa para que no
+ * se oculte el ingreso.
  */
 function exigirCausaDelBien(causa: DatosDeBaja['causa'], tipoDeRegistro: TipoDeRegistro): void {
   const esDeTerceros = tipoDeRegistro === 'de_terceros';
   if (causa === 'devuelto_al_dueno' && !esDeTerceros)
     throw new CausaDeBajaNoPermitida('«Devuelto al dueño» solo vale para los bienes de terceros.');
   if (causa === 'venta' && tipoDeRegistro === 'bien_de_control')
-    throw new CausaDeBajaNoPermitida('Un bien de control no se vende como activo: dé de baja con otra causa.');
-  if (esDeTerceros && ['venta', 'donacion', 'obsolescencia', 'faltante_de_inventario'].includes(causa))
+    throw new CausaDeBajaNoPermitida(
+      'Esta venta aún no se puede registrar aquí; emita la factura y consulte a su contador.',
+    );
+  if (esDeTerceros && CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS.includes(causa))
     throw new CausaDeBajaNoPermitida('Un bien de terceros no se vende ni se dona: devuélvalo a su dueño.');
 }
 

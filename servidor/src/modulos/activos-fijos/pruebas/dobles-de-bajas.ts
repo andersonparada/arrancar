@@ -85,6 +85,8 @@ export class BajasEnMemoria implements RepositorioBajas, ConsultasBajas {
         componentes,
         incisoFiscal: this.incisoFiscal,
         tipoDePersona: this.tipoDePersona,
+        regimenDeIva: 'general',
+        esDeTerceros: activo.tipoDeRegistro === 'de_terceros',
       },
     );
   }

@@ -32,6 +32,7 @@ export const esquemaBaja = z.object({
   destinoDelBien: textoOpcional(300),
   numeroDeDenuncia: textoOpcional(60),
   inventarioId: idOpcional(),
+  tercerosConfirmados: z.array(textoObligatorio(30)).max(100).optional(),
   venta: esquemaVenta.nullish().transform((venta) => venta ?? null),
 });
 

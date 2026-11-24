@@ -10,6 +10,8 @@ export interface ContextoDeBajaDto {
   componentes: ComponenteDeBajaDto[];
   incisoFiscal: DatosParaLosAvisos['incisoFiscal'];
   tipoDePersona: DatosParaLosAvisos['tipoDePersona'];
+  regimenDeIva: DatosParaLosAvisos['regimenDeIva'];
+  esDeTerceros: boolean;
 }
 
 const dinero = (centavos: number | null): string | null => (centavos === null ? null : deCentavos(centavos));
@@ -58,7 +60,10 @@ function avisosDe(baja: PropiedadesDeBaja, contexto: ContextoDeBajaDto): BajaDto
     causa: baja.causa,
     fecha: baja.fecha,
     tieneActa: baja.acta !== null,
-    tieneDenuncia: baja.denunciaArchivoId !== null || baja.numeroDeDenuncia !== null,
+    tipoDeActa: baja.acta?.tipo ?? null,
+    tieneDenuncia: baja.denunciaArchivoId !== null,
+    esDeTerceros: contexto.esDeTerceros,
+    regimenDeIva: contexto.regimenDeIva,
     componentes: contexto.componentes.length,
     incisoFiscal: contexto.incisoFiscal,
     tipoDePersona: contexto.tipoDePersona,

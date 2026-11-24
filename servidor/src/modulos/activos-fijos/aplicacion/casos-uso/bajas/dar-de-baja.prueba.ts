@@ -180,7 +180,7 @@ describe('DarDeBaja: otros tipos de bien y componentes', () => {
 });
 
 describe('DarDeBaja: avisos', () => {
-  it('avisa si falta el acta; robo o extravío sin denuncia; donación y faltante con IVA', async () => {
+  it('avisa si falta el acta; robo sin denuncia; donación y faltante con IVA', async () => {
     const robado = await e.activoEnUso();
     const donado = await e.activoEnUso();
     const faltante = await e.activoEnUso();
@@ -195,12 +195,12 @@ describe('DarDeBaja: avisos', () => {
     expect(donacion.avisos[1]!.mensaje).toContain('puede generar débito de IVA');
   });
 
-  it('un número de denuncia basta para no avisar de la denuncia', async () => {
+  it('el número de denuncia no basta: se pide la certificación de la denuncia', async () => {
     const robado = await e.activoEnUso();
 
-    const robo = await e.darDeBaja(solicitudDeBaja(robado, { causa: 'extravio', numeroDeDenuncia: 'PNC-55' }));
+    const robo = await e.darDeBaja(solicitudDeBaja(robado, { causa: 'robo', numeroDeDenuncia: 'PNC-55' }));
 
-    expect(robo.avisos.map((aviso) => aviso.codigo)).toEqual(['sin_acta']);
+    expect(robo.avisos.map((aviso) => aviso.codigo)).toEqual(['sin_acta', 'sin_denuncia']);
   });
 });
 

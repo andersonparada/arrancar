@@ -15,15 +15,19 @@ import { clases } from './clases.tablas.js';
 
 type FilaDeBaja = typeof bajas.$inferSelect;
 
-/** El tipo de persona de la empresa con la vigencia de la fecha de la baja; `null` si no hay datos fiscales. */
-async function tipoDePersonaEn(fecha: string): Promise<DatosParaLosAvisos['tipoDePersona']> {
+/** El tipo de persona y el régimen de IVA de la empresa con la vigencia de la fecha de la baja; `null` si no hay datos fiscales. */
+async function datosFiscalesEn(fecha: string): Promise<Pick<DatosParaLosAvisos, 'tipoDePersona' | 'regimenDeIva'>> {
   const [fila] = await transaccionEnCurso()
-    .select({ tipo: datosFiscalesDeEmpresa.tipoDePersona })
+    .select({ tipo: datosFiscalesDeEmpresa.tipoDePersona, regimen: datosFiscalesDeEmpresa.regimenIva })
     .from(datosFiscalesDeEmpresa)
     .where(or(isNull(datosFiscalesDeEmpresa.vigenteDesde), lte(datosFiscalesDeEmpresa.vigenteDesde, fecha)))
     .orderBy(sql`${datosFiscalesDeEmpresa.vigenteDesde} desc nulls last`)
     .limit(1);
-  return fila?.tipo === 'individual' || fila?.tipo === 'juridica' ? fila.tipo : null;
+  const tipo = fila?.tipo;
+  return {
+    tipoDePersona: tipo === 'individual' || tipo === 'juridica' ? tipo : null,
+    regimenDeIva: fila?.regimen ?? null,
+  };
 }
 
 /** Los componentes que se dieron de baja junto con el activo: las bajas de su acta cuyo activo es hijo suyo. */
@@ -81,7 +85,8 @@ export class ConsultasBajasDrizzle implements ConsultasBajas {
       },
       componentes: await componentesDe(baja),
       incisoFiscal: fila.incisoFiscal,
-      tipoDePersona: await tipoDePersonaEn(baja.fecha),
+      ...(await datosFiscalesEn(baja.fecha)),
+      esDeTerceros: activo.tipoDeRegistro === 'de_terceros',
     });
   }
 }

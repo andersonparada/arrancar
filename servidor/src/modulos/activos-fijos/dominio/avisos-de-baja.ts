@@ -1,5 +1,5 @@
 import type { IncisoFiscal } from './incisos-fiscales.js';
-import { CAUSAS_CON_DENUNCIA, type CausaDeBaja } from './tipos-de-baja.js';
+import { CAUSAS_CON_DENUNCIA, type CausaDeBaja, type TipoDeActa } from './tipos-de-baja.js';
 
 /** Un aviso: se muestra, nunca bloquea (el efecto fiscal de no tener el documento lo explica el texto). */
 export interface AvisoDeBaja {
@@ -11,7 +11,13 @@ export interface DatosParaLosAvisos {
   causa: CausaDeBaja;
   fecha: string;
   tieneActa: boolean;
+  /** Quién firmó el acta; `null` si no hay (la administrativa es control interno: no sustituye a la notarial). */
+  tipoDeActa: TipoDeActa | null;
+  /** La certificación de la denuncia ratificada, ya subida (no basta el número). */
   tieneDenuncia: boolean;
+  esDeTerceros: boolean;
+  /** Régimen de IVA vigente de la empresa; `null` si no hay datos fiscales. */
+  regimenDeIva: string | null;
   /** Cuántos componentes se dieron de baja junto con este activo. */
   componentes: number;
   incisoFiscal: IncisoFiscal;
@@ -38,9 +44,40 @@ function avisosDeDocumentos(datos: DatosParaLosAvisos): AvisoDeBaja[] {
     avisos.push(
       aviso(
         'sin_denuncia',
-        'Falta la denuncia ante el Ministerio Público o la PNC: sin ella no se respalda el robo o extravío.',
+        'Falta la certificación de la denuncia presentada ante la autoridad policial y ratificada en el juzgado (Ley del IVA, art. 3, num. 7): el número de denuncia no la sustituye.',
       ),
     );
+  return avisos;
+}
+
+const AVISO_DEL_FALTANTE = aviso(
+  'faltante_con_iva',
+  'Un faltante sin causa comprobada genera débito de IVA aunque tenga acta (Ley del IVA, art. 3, num. 7): solo se exceptúa el caso fortuito o de fuerza mayor (acta notarial) o el delito (certificación de la denuncia ratificada). Consulte con su contador.',
+);
+
+const AVISO_DE_ACTA_NOTARIAL = aviso(
+  'destruccion_sin_acta_notarial',
+  'Para respaldar que la destrucción es caso fortuito o de fuerza mayor se exige acta notarial; el acta administrativa sirve de control interno pero no la sustituye (Ley del IVA, art. 3, num. 7).',
+);
+
+const AVISO_DEL_EXTRAVIO = aviso(
+  'extravio_sin_excepcion',
+  'Extraviar un bien no es por sí un delito: el IVA no se exceptúa salvo que pruebe caso fortuito, fuerza mayor o delito (Ley del IVA, art. 3, num. 7).',
+);
+
+const AVISO_DEL_DUENO = aviso(
+  'posible_responsabilidad_ante_el_dueno',
+  'Posible responsabilidad ante el dueño: revise el contrato. El bien no se devolvió y puede deber su reposición o indemnización, que se registra aparte.',
+);
+
+const CAUSAS_DE_PERDIDA = ['faltante_de_inventario', 'destruccion', 'robo', 'extravio', 'otra'];
+
+function avisosDelIvaDePerdidas(datos: DatosParaLosAvisos): AvisoDeBaja[] {
+  const avisos: AvisoDeBaja[] = [];
+  if (datos.causa === 'faltante_de_inventario') avisos.push(AVISO_DEL_FALTANTE);
+  if (datos.causa === 'destruccion' && datos.tipoDeActa !== 'notarial') avisos.push(AVISO_DE_ACTA_NOTARIAL);
+  if (datos.causa === 'extravio') avisos.push(AVISO_DEL_EXTRAVIO);
+  if (datos.esDeTerceros && CAUSAS_DE_PERDIDA.includes(datos.causa)) avisos.push(AVISO_DEL_DUENO);
   return avisos;
 }
 
@@ -53,13 +90,7 @@ function avisosDeLaCausa(datos: DatosParaLosAvisos): AvisoDeBaja[] {
         'La donación de un bien puede generar débito de IVA (Ley del IVA, art. 3): consulte con su contador si debe emitir la factura.',
       ),
     );
-  if (datos.causa === 'faltante_de_inventario' && !datos.tieneActa)
-    avisos.push(
-      aviso(
-        'faltante_con_iva',
-        'Un faltante sin acta puede considerarse una venta o retiro sin factura: puede generar débito de IVA. Consulte con su contador.',
-      ),
-    );
+  avisos.push(...avisosDelIvaDePerdidas(datos));
   if (datos.componentes > 0)
     avisos.push(
       aviso('con_componentes', `También se dieron de baja ${datos.componentes} componente(s) de este activo.`),
@@ -81,10 +112,21 @@ const AVISO_DEL_INMUEBLE = aviso(
   'Desde el 1 de enero de 2027 la venta de inmuebles por personas individuales está exenta de ganancia de capital (Decreto 18-2026, ISR art. 87 num. 4): confirme con su contador si le aplica.',
 );
 
-const AVISO_DEL_IVA = aviso(
-  'venta_con_iva',
-  'La venta genera débito fiscal de IVA: debe estar respaldada por la factura emitida. El cobro se registra en Bancos con el concepto «Venta de activo».',
-);
+const avisoIva = (mensaje: string) => aviso('venta_con_iva', mensaje);
+
+/** El aviso del IVA según el bien y el régimen: la ley grava la primera venta de inmuebles (art. 3, num. 8). */
+function avisoDelIva(datos: DatosParaLosAvisos): AvisoDeBaja {
+  const cobro = 'El cobro se registra en Bancos con el concepto «Venta de activo».';
+  if (esInmueble(datos.incisoFiscal))
+    return avisoIva(
+      `Solo la primera venta de un inmueble genera IVA (Ley del IVA, art. 3, num. 8): revise si lo es y el impuesto que corresponde, y que la venta esté respaldada por su factura. ${cobro}`,
+    );
+  if (datos.regimenDeIva === 'general')
+    return avisoIva(`La venta genera débito fiscal de IVA: debe estar respaldada por la factura emitida. ${cobro}`);
+  if (datos.regimenDeIva === null)
+    return avisoIva(`Revise el IVA que corresponde a esta venta y que esté respaldada por su factura. ${cobro}`);
+  return avisoIva(`La venta se factura y tributa según su régimen: confirme con su contador. ${cobro}`);
+}
 
 /** Ganancia (10 %, aparte) o pérdida (no deducible) de capital según el resultado fiscal. */
 function avisoDelResultado(resultadoFiscalCentavos: number): AvisoDeBaja {
@@ -101,7 +143,7 @@ function avisoDelResultado(resultadoFiscalCentavos: number): AvisoDeBaja {
 
 function avisosDeLaVenta(datos: DatosParaLosAvisos): AvisoDeBaja[] {
   if (datos.causa !== 'venta' || datos.resultadoFiscalCentavos === null) return [];
-  const avisos = [AVISO_DEL_IVA, avisoDelResultado(datos.resultadoFiscalCentavos)];
+  const avisos = [avisoDelIva(datos), avisoDelResultado(datos.resultadoFiscalCentavos)];
   if (datos.incisoFiscal === 'reproductores') avisos.push(AVISO_DEL_REPRODUCTOR);
   const exenta = esInmueble(datos.incisoFiscal) && datos.tipoDePersona === 'individual';
   if (exenta && datos.fecha >= VIGENCIA_DE_LA_EXENCION) avisos.push(AVISO_DEL_INMUEBLE);

@@ -139,6 +139,8 @@ export class CostoAnteriorADivision extends ReglaDeNegocioInfringida {
   readonly codigo = 'costo_anterior_a_division';
 
   constructor() {
-    super('El costo es anterior a una división del activo: anule primero la división y luego este costo.');
+    super(
+      'El costo es anterior a una división del activo: anule primero la división y luego este costo. Si la división ya no se puede anular, reabra el mes o acuda a su contador.',
+    );
   }
 }

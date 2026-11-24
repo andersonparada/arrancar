@@ -4,6 +4,7 @@ import { Mejora } from '../../../dominio/mejora.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   BajaAnteriorAUnaMejora,
+  BienDeTercerosSinConfirmar,
   BienDeTercerosSinDestino,
   BajaDeComponenteConPrincipalDadoDeBaja,
   CausaDeBajaNoPermitida,
@@ -88,23 +89,48 @@ describe('vender un principal con un componente sin libros', () => {
     expect(e.estadoDe(taladro).estado).toBe('dado_de_baja');
   });
 
-  it('un componente de terceros impide vender, donar o dar por faltante al principal: no se inventa su destino', async () => {
+  it('un componente de terceros impide vender, donar o dar por obsoleto al principal: no se inventa su destino', async () => {
     const { principal, clase } = await principalConComponente();
     await e.activoConCosto(clase, null, { ...deTerceros, activoPadreId: principal.id.valor });
 
     await expect(e.vender(solicitudDeVenta(principal))).rejects.toBeInstanceOf(BienDeTercerosSinDestino);
-    for (const causa of ['donacion', 'faltante_de_inventario', 'obsolescencia'] as const)
+    for (const causa of ['donacion', 'obsolescencia'] as const)
       await expect(e.darDeBaja(solicitudDeBaja(principal, { causa }))).rejects.toBeInstanceOf(BienDeTercerosSinDestino);
     expect(e.bajas.registros.size).toBe(0);
   });
 
-  it('un componente de terceros se va con el principal si la causa es una destrucción o un robo', async () => {
+  it('un componente de terceros no hereda en silencio la causa de pérdida: pide confirmarlo', async () => {
+    const { principal, clase } = await principalConComponente();
+    await e.activoConCosto(clase, null, { ...deTerceros, activoPadreId: principal.id.valor });
+
+    for (const causa of ['robo', 'faltante_de_inventario', 'destruccion'] as const)
+      await expect(e.darDeBaja(solicitudDeBaja(principal, { causa }))).rejects.toBeInstanceOf(
+        BienDeTercerosSinConfirmar,
+      );
+    expect(e.bajas.registros.size).toBe(0);
+  });
+
+  it('un componente de terceros confirmado se va con la causa de pérdida, nunca como devuelto al dueño', async () => {
     const { principal, clase } = await principalConComponente();
     const prestado = await e.activoConCosto(clase, null, { ...deTerceros, activoPadreId: principal.id.valor });
 
-    await e.darDeBaja(solicitudDeBaja(principal, { causa: 'robo' }));
+    await e.darDeBaja(
+      solicitudDeBaja(principal, {
+        causa: 'faltante_de_inventario',
+        tercerosConfirmados: [prestado.instantanea().codigo],
+      }),
+    );
 
-    expect(bajasPorActivo().get(prestado.id.valor)!.causa).toBe('robo');
+    expect(bajasPorActivo().get(prestado.id.valor)!.causa).toBe('faltante_de_inventario');
+  });
+
+  it('un bien de terceros solo sí puede darse por faltante de inventario', async () => {
+    const clase = await e.claseDe('herramientas', '25.00');
+    const prestado = await e.activoConCosto(clase, null, deTerceros);
+
+    await e.darDeBaja(solicitudDeBaja(prestado, { causa: 'faltante_de_inventario' }));
+
+    expect(bajasPorActivo().get(prestado.id.valor)!.causa).toBe('faltante_de_inventario');
   });
 
   it('un principal de terceros no se vende aunque tenga un componente propio', async () => {
@@ -122,6 +148,7 @@ describe('vender un principal con un componente sin libros', () => {
     const taladro = await e.activoConCosto(clase, '800.00', { tipoDeRegistro: 'bien_de_control' });
 
     await expect(e.vender(solicitudDeVenta(taladro))).rejects.toBeInstanceOf(CausaDeBajaNoPermitida);
+    await expect(e.vender(solicitudDeVenta(taladro))).rejects.toThrow('consulte a su contador');
   });
 
   it('un bien de terceros solo no se vende', async () => {

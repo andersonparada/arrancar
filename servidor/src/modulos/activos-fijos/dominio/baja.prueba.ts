@@ -182,7 +182,10 @@ describe('avisosDeBaja', () => {
     causa: 'destruccion',
     fecha: '2027-06-10',
     tieneActa: true,
+    tipoDeActa: 'notarial',
     tieneDenuncia: true,
+    esDeTerceros: false,
+    regimenDeIva: 'general',
     componentes: 0,
     incisoFiscal: 'maquinaria_y_vehiculos',
     tipoDePersona: 'juridica',
@@ -194,25 +197,51 @@ describe('avisosDeBaja', () => {
     expect(avisosDeBaja(datos({}))).toEqual([]);
   });
 
-  it('el faltante sin acta avisa del IVA de los faltantes; con acta, no', () => {
-    expect(avisosDeBaja(datos({ causa: 'faltante_de_inventario', tieneActa: false })).map((a) => a.codigo)).toEqual([
-      'sin_acta',
-      'faltante_con_iva',
-    ]);
-    expect(avisosDeBaja(datos({ causa: 'faltante_de_inventario' }))).toEqual([]);
+  const codigos = (cambios: Partial<DatosParaLosAvisos>) => avisosDeBaja(datos(cambios)).map((a) => a.codigo);
+
+  it('el faltante avisa del IVA aunque tenga acta: el acta no elimina el IVA', () => {
+    expect(codigos({ causa: 'faltante_de_inventario', tieneActa: false })).toEqual(['sin_acta', 'faltante_con_iva']);
+    expect(codigos({ causa: 'faltante_de_inventario' })).toEqual(['faltante_con_iva']);
+  });
+
+  it('la destrucción pide acta notarial: la administrativa no la sustituye', () => {
+    expect(codigos({ causa: 'destruccion', tipoDeActa: 'administrativa' })).toEqual(['destruccion_sin_acta_notarial']);
+    expect(codigos({ causa: 'destruccion', tipoDeActa: 'notarial' })).toEqual([]);
+  });
+
+  it('el robo pide la certificación de la denuncia y el extravío no da por hecha la excepción', () => {
+    expect(codigos({ causa: 'robo', tieneDenuncia: false })).toEqual(['sin_denuncia']);
+    expect(codigos({ causa: 'extravio' })).toEqual(['extravio_sin_excepcion']);
+  });
+
+  it('un bien de terceros perdido avisa de la posible responsabilidad ante el dueño', () => {
+    expect(codigos({ causa: 'robo', esDeTerceros: true })).toEqual(['posible_responsabilidad_ante_el_dueno']);
+    expect(codigos({ causa: 'devuelto_al_dueno', esDeTerceros: true })).toEqual([]);
+  });
+
+  it('el aviso del IVA de la venta depende del bien y del régimen, sin afirmar de más', () => {
+    const venta = { causa: 'venta', resultadoFiscalCentavos: 100 } as const;
+    const mensaje = (cambios: Partial<DatosParaLosAvisos>) =>
+      avisosDeBaja(datos({ ...venta, ...cambios })).find((a) => a.codigo === 'venta_con_iva')!.mensaje;
+
+    expect(mensaje({})).toContain('débito fiscal de IVA');
+    expect(mensaje({ incisoFiscal: 'edificios' })).toContain('primera venta');
+    expect(mensaje({ incisoFiscal: 'edificios' })).not.toContain('débito fiscal');
+    expect(mensaje({ regimenDeIva: 'pequeno_contribuyente' })).toContain('según su régimen');
+    expect(mensaje({ regimenDeIva: 'pequeno_contribuyente' })).not.toContain('débito fiscal');
+    expect(mensaje({ regimenDeIva: null })).not.toContain('débito fiscal');
   });
 
   it('la exención de inmuebles solo desde el 1-ene-2027 y para personas individuales', () => {
     const venta = { causa: 'venta', incisoFiscal: 'terrenos', resultadoFiscalCentavos: 100 } as const;
 
-    const codigos = (cambios: Partial<DatosParaLosAvisos>) =>
-      avisosDeBaja(datos({ ...venta, ...cambios })).map((a) => a.codigo);
+    const deVenta = (cambios: Partial<DatosParaLosAvisos>) => codigos({ ...venta, ...cambios });
 
-    expect(codigos({ tipoDePersona: 'individual' })).toContain('inmueble_de_persona_individual');
-    expect(codigos({ tipoDePersona: 'individual', fecha: '2026-12-31' })).not.toContain(
+    expect(deVenta({ tipoDePersona: 'individual' })).toContain('inmueble_de_persona_individual');
+    expect(deVenta({ tipoDePersona: 'individual', fecha: '2026-12-31' })).not.toContain(
       'inmueble_de_persona_individual',
     );
-    expect(codigos({ tipoDePersona: 'juridica' })).not.toContain('inmueble_de_persona_individual');
-    expect(codigos({ tipoDePersona: null })).not.toContain('inmueble_de_persona_individual');
+    expect(deVenta({ tipoDePersona: 'juridica' })).not.toContain('inmueble_de_persona_individual');
+    expect(deVenta({ tipoDePersona: null })).not.toContain('inmueble_de_persona_individual');
   });
 });

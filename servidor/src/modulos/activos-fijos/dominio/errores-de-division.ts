@@ -53,7 +53,7 @@ export class DivisionConMovimientosPosteriores extends ReglaDeNegocioInfringida 
 export class DivisionConRastroDelNuevo extends DivisionConMovimientosPosteriores {
   constructor() {
     super(
-      'El activo nuevo tuvo una mejora o una baja, aunque esté anulada: ese rastro se conserva y la división ya no se puede anular.',
+      'El activo nuevo tuvo una mejora o una baja, aunque esté anulada: ese rastro se conserva y la división ya no se puede anular: la división se conserva; corrija con un movimiento nuevo.',
     );
   }
 }

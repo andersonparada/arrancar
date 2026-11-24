@@ -106,3 +106,15 @@ export class BienDeTercerosSinDestino extends ReglaDeNegocioInfringida {
     );
   }
 }
+
+/** Un componente de terceros va con la baja del principal sin que se confirme su destino: no se hereda la causa en silencio. */
+export class BienDeTercerosSinConfirmar extends ReglaDeNegocioInfringida {
+  readonly codigo = 'bien_de_terceros_sin_confirmar';
+
+  constructor(codigoDelBien: string) {
+    super(
+      `El bien de terceros ${codigoDelBien} es un componente de este activo: confirme que también se perdió o se destruyó con él (no se registra como devuelto) y repita la operación.`,
+      { codigoDelBien },
+    );
+  }
+}

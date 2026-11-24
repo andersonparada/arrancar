@@ -54,7 +54,10 @@ describe('dar de baja', () => {
       resultadoContable: null,
       tieneActa: false,
     });
-    expect(respuesta.cuerpo.avisos.map((a: { codigo: string }) => a.codigo)).toEqual(['sin_acta']);
+    expect(respuesta.cuerpo.avisos.map((a: { codigo: string }) => a.codigo)).toEqual([
+      'sin_acta',
+      'destruccion_sin_acta_notarial',
+    ]);
     const ficha = await fichaDe(id);
     expect(ficha).toMatchObject({ estado: 'dado_de_baja', fechaDeBaja: '2026-11-20' });
     expect(ficha.baja).toMatchObject({ id: respuesta.cuerpo.id, valorEnLibros: '241666.66' });
@@ -76,7 +79,7 @@ describe('dar de baja', () => {
       [b.cuerpo.id],
     );
     expect(filas[0]!.ok).toBe(true);
-    expect(b.cuerpo.avisos.map((x: { codigo: string }) => x.codigo)).toEqual(['sin_acta']);
+    expect(b.cuerpo.avisos.map((x: { codigo: string }) => x.codigo)).toEqual(['sin_acta', 'sin_denuncia']);
   });
 
   it('un activo dado de baja no se da de baja otra vez ni se le registran movimientos', async () => {

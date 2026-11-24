@@ -53,7 +53,7 @@ const periodosDeCuotas = async (activoId: string) =>
 async function nuevaCuenta(): Promise<void> {
   contador += 1;
   const modulos = ['terceros', 'libro-de-compras', 'activos-fijos'];
-  const usuario = `propietariobajasconjuntos${'abcdefgh'[contador]}`;
+  const usuario = `propietariobajasconjuntos${'abcdefghijkl'[contador]}`;
   cuenta = await darDeAltaCuenta(entorno, { nombre: `Bajas conjuntos ${contador}`, usuario, modulos });
   vehiculosId = await claseDe(cuenta, 'Vehículos');
 }
@@ -164,6 +164,52 @@ describe('lo que no se vende', () => {
     const respuesta = await cuenta.propietario.post(BAJAS, venta(control.cuerpo.id));
 
     expect([respuesta.estado, respuesta.cuerpo.error.codigo]).toEqual([422, 'causa_de_baja_no_permitida']);
+  });
+});
+
+describe('bienes de terceros', () => {
+  const deTerceros = {
+    tipoDeRegistro: 'de_terceros',
+    origen: null,
+    propietario: 'Vecino',
+    formaDeTenencia: 'comodato',
+  };
+
+  it('un bien de terceros solo se puede dar por faltante de inventario, sin volverse «devuelto»', async () => {
+    await nuevaCuenta();
+    const creado = await cuenta.propietario.post(ACTIVOS, datosDeActivo(vehiculosId, deTerceros));
+
+    const respuesta = await cuenta.propietario.post(BAJAS, baja(creado.cuerpo.id, { causa: 'faltante_de_inventario' }));
+
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
+    expect(respuesta.cuerpo.causa).toBe('faltante_de_inventario');
+    expect(respuesta.cuerpo.avisos.map((x: { codigo: string }) => x.codigo)).toContain(
+      'posible_responsabilidad_ante_el_dueno',
+    );
+  });
+
+  it('un componente de terceros pide confirmación y no hereda la causa en silencio', async () => {
+    await nuevaCuenta();
+    const principal = await activoEnUso('75000.00');
+    const hijo = await cuenta.propietario.post(
+      ACTIVOS,
+      datosDeActivo(vehiculosId, { ...deTerceros, activoPadreId: principal }),
+    );
+    const codigo = hijo.cuerpo.codigo as string;
+
+    const sinConfirmar = await cuenta.propietario.post(BAJAS, baja(principal, { causa: 'faltante_de_inventario' }));
+    const confirmada = await cuenta.propietario.post(
+      BAJAS,
+      baja(principal, { causa: 'faltante_de_inventario', tercerosConfirmados: [codigo] }),
+    );
+
+    expect([sinConfirmar.estado, sinConfirmar.cuerpo.error.codigo]).toEqual([422, 'bien_de_terceros_sin_confirmar']);
+    expect(confirmada.estado, JSON.stringify(confirmada.cuerpo)).toBe(201);
+    const filas = await comoPropietario<{ causa: string }>(
+      'select causa from activos_fijos.bajas where activo_id = $1',
+      [hijo.cuerpo.id],
+    );
+    expect(filas).toEqual([{ causa: 'faltante_de_inventario' }]);
   });
 });
 

@@ -87,4 +87,6 @@ export interface SolicitudDeBaja {
   numeroDeDenuncia: string | null;
   inventarioId: string | null;
   venta: SolicitudDeVenta | null;
+  /** Códigos de los componentes de terceros cuya pérdida o destrucción con el principal se confirma. */
+  tercerosConfirmados?: string[];
 }

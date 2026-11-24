@@ -1,8 +1,13 @@
 import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
-import { BienDeTercerosSinDestino, PrecioNoRepartible } from '../../../dominio/errores-de-baja.js';
+import {
+  BienDeTercerosSinConfirmar,
+  BienDeTercerosSinDestino,
+  PrecioNoRepartible,
+} from '../../../dominio/errores-de-baja.js';
 import { repartirEnProporcion } from '../../../dominio/resultados-de-venta.js';
 import type { TipoDeRegistro } from '../../../dominio/tipos-de-activo.js';
-import type { CausaDeBaja, DatosDeBaja, DatosDeVenta } from '../../../dominio/tipos-de-baja.js';
+import { CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS } from '../../../dominio/reglas-de-baja.js';
+import type { DatosDeBaja, DatosDeVenta } from '../../../dominio/tipos-de-baja.js';
 import type { SolicitudDeBaja, SolicitudDeVenta } from '../../dto/baja.dto.js';
 
 function ventaEnCentavos(venta: SolicitudDeVenta): DatosDeVenta {
@@ -57,13 +62,6 @@ export function ventasPorActivo(
   return costos.map((_, i) => partes[indices.indexOf(i)] ?? null);
 }
 
-const CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS: readonly CausaDeBaja[] = [
-  'venta',
-  'donacion',
-  'obsolescencia',
-  'faltante_de_inventario',
-];
-
 /** Lo que se sabe de un activo para armar su baja dentro de un acto con otros activos. */
 export interface ParteDeLaBaja {
   codigo: string;
@@ -71,19 +69,24 @@ export interface ParteDeLaBaja {
   venta: DatosDeVenta | null;
   /** Va con su principal (el pedido es el principal; los demás son sus componentes). */
   esComponente: boolean;
+  /** Quien da de baja confirmó el destino de este bien de terceros (su código viene en la solicitud). */
+  confirmado: boolean;
 }
 
 /**
  * Los datos de la baja de un activo en un acto con otros (§3.8). El principal conserva lo pedido y el dominio lo valida
  * (un principal de terceros o de control no se vende). Un componente sin venta propia en una venta queda como «otra»
  * causa (un bien de control se va sin precio). Un componente de terceros no se vende, ni se dona, ni se da por obsoleto
- * o faltante con su principal: no se inventa que se devolvió, se pide resolver su destino antes.
- * @throws BienDeTercerosSinDestino si un componente de terceros no tiene destino en la causa pedida.
+ * con su principal; en las demás causas no hereda la del principal en silencio: quien da de baja confirma cada bien.
+ * @throws BienDeTercerosSinDestino si un componente de terceros iría con una venta, donación u obsolescencia.
+ * @throws BienDeTercerosSinConfirmar si falta confirmar un componente de terceros.
  */
 export function datosDelActivo(datos: DatosDeBaja, parte: ParteDeLaBaja): DatosDeBaja {
-  const { codigo, tipoDeRegistro, venta, esComponente } = parte;
+  const { codigo, tipoDeRegistro, venta, esComponente, confirmado } = parte;
   if (venta || !esComponente) return { ...datos, venta };
-  if (tipoDeRegistro === 'de_terceros' && CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS.includes(datos.causa))
-    throw new BienDeTercerosSinDestino(codigo);
+  if (tipoDeRegistro === 'de_terceros') {
+    if (CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS.includes(datos.causa)) throw new BienDeTercerosSinDestino(codigo);
+    if (!confirmado) throw new BienDeTercerosSinConfirmar(codigo);
+  }
   return datos.causa === 'venta' ? { ...datos, causa: 'otra', venta: null } : datos;
 }
