@@ -136,7 +136,19 @@ export class SaldosEnMemoria implements ConsultasDeSaldosIniciales {
       movimientosAnteriores: vigentes.filter((m) => !m.fechaDeCapa && m.fecha < nueva).length,
       capasPosteriores: vigentes.filter((m) => m.fechaDeCapa && m.fechaDeCapa !== m.fecha && m.fechaDeCapa >= nueva)
         .length,
+      llavesQueSeJuntarian: this.llavesQueSeJuntarian(nueva),
     };
+  }
+
+  private llavesQueSeJuntarian(nueva: string): number {
+    const dia = diaAnterior(nueva);
+    const cuentas = new Map<string, number>();
+    for (const m of this.renglones()) {
+      const capa = m.fechaDeCapa === m.fecha ? dia : m.fechaDeCapa! < dia ? m.fechaDeCapa! : dia;
+      const llave = `${m.articuloId}|${m.bodegaId}|${m.loteId}|${capa}`;
+      cuentas.set(llave, (cuentas.get(llave) ?? 0) + 1);
+    }
+    return [...cuentas.values()].filter((n) => n > 1).length;
   }
 
   async reubicar(nuevaFechaDeInicio: string): Promise<void> {

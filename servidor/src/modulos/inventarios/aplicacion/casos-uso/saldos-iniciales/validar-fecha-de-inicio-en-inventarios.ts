@@ -36,6 +36,11 @@ export class ValidarFechaDeInicioEnInventarios {
           `${conflictos.capasPosteriores} saldos iniciales de inventario tienen la fecha de su capa desde esa fecha.`,
         );
       }
+      if (conflictos.llavesQueSeJuntarian > 0) {
+        throw new InventarioConFechaFueraDeLaCarga(
+          `${conflictos.llavesQueSeJuntarian} artículos con varios saldos iniciales en la misma bodega y lote quedarían con la misma fecha de capa. Corrija la fecha de capa de esos renglones o elimine los repetidos.`,
+        );
+      }
       await saldos.reubicar(aviso.fechaDeInicio);
     });
   }

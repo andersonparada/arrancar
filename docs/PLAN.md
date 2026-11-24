@@ -3770,6 +3770,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   exportar da 403 (lleva el costo de cada renglón); se revoca la decisión (2) de arriba, que contradecía INV-A7. Importar sigue
   con `.importar`: el usuario escribe los costos. Pruebas nuevas: `inventarios-saldos-iniciales-revision.api.prueba.ts` y
   `saldos-iniciales-repetidos.prueba.ts`. **Pendiente:** la pantalla INV-7c debe pedir `costos.ver` para mostrar y capturar montos.
+- **2026-11-23 — INV-7: la fecha de inicio ya no choca con el único de saldos.** Al adelantar la fecha de inicio,
+  `reubicar_saldos_iniciales` podía llevar a la misma fecha de capa dos renglones de la misma llave (artículo, bodega,
+  lote): uno con la capa por defecto y otro con capa propia igual al nuevo día anterior, y el único
+  `movimientos_saldo_inicial_unico` respondía 409 sin decir qué corregir. `conflictosConLaFechaDeInicio` cuenta ahora
+  esas llaves (`llavesQueSeJuntarian`, con la misma regla de la función) y el aviso se rechaza con
+  `inventario_con_fecha_fuera_de_la_carga` y un mensaje que pide corregir la fecha de capa o eliminar los repetidos.
+  Sin migración nueva. Pruebas: caso de uso en memoria y API (`inventarios-saldos-iniciales-carga`).
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

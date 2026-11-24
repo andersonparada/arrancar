@@ -182,7 +182,24 @@ export class ConsultasDeSaldosInicialesDrizzle implements ConsultasDeSaldosInici
              count(*) filter (where m.fecha_de_capa is not null and m.vigente and m.fecha_de_capa <> m.fecha
                                 and m.fecha_de_capa >= ${nueva}::date)::text as capas
         from inventarios.movimientos m`);
-    return { movimientosAnteriores: Number(rows[0]!.anteriores), capasPosteriores: Number(rows[0]!.capas) };
+    return {
+      movimientosAnteriores: Number(rows[0]!.anteriores),
+      capasPosteriores: Number(rows[0]!.capas),
+      llavesQueSeJuntarian: await this.llavesQueSeJuntarian(nueva),
+    };
+  }
+
+  /** Lo que `reubicar_saldos_iniciales` hace con la fecha de la capa, para saber si dos renglones chocarían en el único. */
+  private async llavesQueSeJuntarian(nueva: string): Promise<number> {
+    const { rows } = await transaccionEnCurso().execute<{ llaves: string }>(sql`
+      select count(*)::text as llaves
+        from (select 1 from inventarios.movimientos m
+               where ${SOLO_SALDOS}
+               group by m.articulo_id, m.bodega_id, coalesce(m.lote_id, '00000000-0000-0000-0000-000000000000'::uuid),
+                        case when m.fecha_de_capa = m.fecha then ${nueva}::date - 1
+                             else least(m.fecha_de_capa, ${nueva}::date - 1) end
+              having count(*) > 1) t`);
+    return Number(rows[0]!.llaves);
   }
 
   async reubicar(nuevaFechaDeInicio: string): Promise<void> {

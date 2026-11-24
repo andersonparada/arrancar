@@ -33,6 +33,8 @@ export interface ConflictosConLaFechaDeInicio {
   movimientosAnteriores: number;
   /** Saldos iniciales con la fecha de su capa igual o posterior a la nueva. */
   capasPosteriores: number;
+  /** Llaves (artículo, bodega, lote) en que dos o más renglones quedarían con la misma fecha de capa al reubicar. */
+  llavesQueSeJuntarian: number;
 }
 
 /** Lecturas de los saldos iniciales para pantallas, la revisión del cierre y el aviso de la fecha de inicio. */
