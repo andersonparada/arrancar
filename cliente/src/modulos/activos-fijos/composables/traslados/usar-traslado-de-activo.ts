@@ -89,7 +89,7 @@ export function usarTrasladoDeActivos(alTrasladar: () => Promise<void>) {
   async function abrir(porTrasladar: ActivoPorTrasladar[]): Promise<void> {
     empezar(porTrasladar);
     formulario.errores.value = {};
-    await destinos.cargar();
+    formulario.errores.value = await destinos.cargar();
   }
 
   return {

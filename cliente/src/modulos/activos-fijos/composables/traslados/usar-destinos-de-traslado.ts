@@ -29,11 +29,43 @@ function mantenerCoherente(
   );
 }
 
+/** Una localidad o departamento inactivo no se puede elegir: se quita y se dice en su campo cómo seguir. */
+function limpiarInactivos(edicion: EdicionDeTraslado, ubicaciones: UbicacionesDeActivos): Record<string, string> {
+  const avisos: Record<string, string> = {};
+  const { localidadId, departamentoId } = edicion;
+  if (localidadId && !ubicaciones.localidades.some((l) => l.id === localidadId)) {
+    edicion.localidadId = null;
+    avisos.localidadId = 'La localidad actual está inactiva: elija otra.';
+  }
+  if (departamentoId && !ubicaciones.departamentos.some((d) => d.id === departamentoId)) {
+    edicion.departamentoId = null;
+    avisos.departamentoId = 'El departamento actual está inactivo: elija otro.';
+  }
+  return avisos;
+}
+
 function opcionesDeDestino(ubicaciones: UbicacionesDeActivos, departamentos: { id: string; nombre: string }[]) {
   return {
     localidadId: opcionesDeRegistros([...ubicaciones.localidades].sort(porNombre), (l) => l.nombre, false),
     departamentoId: opcionesDeRegistros(departamentos, (d) => d.nombre, false),
   };
+}
+
+/** Trae las ubicaciones; devuelve los avisos por campo si el destino precargado ya no se puede elegir. */
+async function traerUbicaciones(
+  edicion: Ref<EdicionDeTraslado>,
+  ubicaciones: Ref<UbicacionesDeActivos>,
+  cargadas: Ref<boolean>,
+): Promise<Record<string, string>> {
+  try {
+    ubicaciones.value = await apiActivos.ubicaciones();
+    const avisos = limpiarInactivos(edicion.value, ubicaciones.value);
+    cargadas.value = true;
+    return avisos;
+  } catch (error) {
+    usarAvisos().error(error instanceof Error ? error.message : 'No se pudieron cargar las localidades.');
+    return {};
+  }
 }
 
 /**
@@ -49,15 +81,7 @@ export function usarDestinosDeTraslado(edicion: Ref<EdicionDeTraslado>) {
   );
   const opciones = computed(() => opcionesDeDestino(ubicaciones.value, deLaLocalidad.value));
 
-  async function cargar(): Promise<void> {
-    try {
-      ubicaciones.value = await apiActivos.ubicaciones();
-      cargadas.value = true;
-    } catch (error) {
-      usarAvisos().error(error instanceof Error ? error.message : 'No se pudieron cargar las localidades.');
-    }
-  }
-
+  const cargar = () => traerUbicaciones(edicion, ubicaciones, cargadas);
   const elegido = () => ({
     localidad: nombreDe(ubicaciones.value.localidades, edicion.value.localidadId),
     departamento: nombreDe(ubicaciones.value.departamentos, edicion.value.departamentoId),

@@ -44,6 +44,31 @@ describe('destinos de traslado', () => {
   });
 });
 
+describe('destino precargado inactivo', () => {
+  it('lo quita y avisa en el campo, sin mandarlo al servidor', async () => {
+    vi.spyOn(apiActivos, 'ubicaciones').mockResolvedValue({
+      localidades: [{ id: 'l1', nombre: 'Finca' }],
+      departamentos: [],
+    } as never);
+    const edicion = ref(edicionDeTrasladoNueva('2026-11-20', [{ ...activo, departamentoId: 'dInactivo' }]));
+    const destinos = usarDestinosDeTraslado(edicion);
+    const avisos = await destinos.cargar();
+    await nextTick();
+    expect(edicion.value.departamentoId).toBeNull();
+    expect(edicion.value.localidadId).toBe('l1');
+    expect(avisos.departamentoId).toContain('inactivo');
+    expect(avisos.localidadId).toBeUndefined();
+  });
+
+  it('también quita la localidad inactiva', async () => {
+    vi.spyOn(apiActivos, 'ubicaciones').mockResolvedValue({ localidades: [], departamentos: [] } as never);
+    const edicion = ref(edicionDeTrasladoNueva('2026-11-20', [activo]));
+    const avisos = await usarDestinosDeTraslado(edicion).cargar();
+    expect(edicion.value.localidadId).toBeNull();
+    expect(Object.keys(avisos).sort()).toEqual(['departamentoId', 'localidadId']);
+  });
+});
+
 describe('traslado de un activo en bodega', () => {
   const enBodega = { ...activo, enBodega: true };
 
