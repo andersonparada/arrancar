@@ -27,6 +27,8 @@ export interface RepositorioActivos {
   /** De los códigos dados, los que ya usa un activo (en mayúsculas, porque el código no distingue mayúsculas). */
   codigosUsados(codigos: readonly string[]): Promise<Set<string>>;
   tieneComponentes(id: ActivoId): Promise<boolean>;
-  /** Si tiene traslados además del alta o costos vigentes de líneas del libro (y, con los pasos siguientes, cuotas o bajas). */
+  /** Si tiene traslados además del alta o costos vigentes de líneas del libro (y cuotas, mejoras, bajas o divisiones). */
   tieneMovimientos(id: ActivoId): Promise<boolean>;
+  /** Si es origen o nuevo de alguna división, anulada o no: su cantidad ya no se escribe a mano. */
+  tieneDivisiones(id: ActivoId): Promise<boolean>;
 }

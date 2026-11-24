@@ -5,7 +5,12 @@ import type { PrimerMes } from '../dominio/depreciacion/meses.js';
 import type { TramoCalculado, TramoGuardado } from '../dominio/depreciacion/tramo.js';
 
 /** Un tramo guardado en memoria: los de la prueba traen lo básico; los de una mejora, además, su mejora y su estado. */
-type TramoEnMemoria = TramoCalculado & { mejoraId?: string | null; vigente?: boolean; anulado?: boolean };
+type TramoEnMemoria = TramoCalculado & {
+  mejoraId?: string | null;
+  divisionId?: string | null;
+  vigente?: boolean;
+  anulado?: boolean;
+};
 
 /** Los tramos en memoria, por activo. */
 export class TramosEnMemoria implements RepositorioTramos {
@@ -26,21 +31,29 @@ export class TramosEnMemoria implements RepositorioTramos {
     return this.vigentes(activoId).map((tramo) => ({ ...tramo, id: this.idDe(tramo) }));
   }
 
-  async reemplazar({ activoId, mejoraId, tramos }: TramosDeCambio): Promise<void> {
+  async reemplazar({ activoId, mejoraId, divisionId, tramos }: TramosDeCambio): Promise<void> {
     const lista = this.porActivo.get(activoId) ?? [];
     for (const nuevo of tramos) {
       for (const previo of lista) {
         const igual = previo.libro === nuevo.libro && previo.desdePeriodo === nuevo.desdePeriodo;
         if (igual && previo.vigente !== false) previo.vigente = false;
       }
-      lista.push(this.anotar({ ...nuevo, mejoraId, vigente: true }));
+      lista.push(this.anotar({ ...nuevo, mejoraId, divisionId, vigente: true }));
     }
     this.porActivo.set(activoId, lista);
   }
 
   async anularDeMejora(mejoraId: string): Promise<void> {
+    this.apagarYReponer((tramo) => tramo.mejoraId === mejoraId);
+  }
+
+  async anularDeDivision(divisionId: string): Promise<void> {
+    this.apagarYReponer((tramo) => tramo.divisionId === divisionId);
+  }
+
+  private apagarYReponer(es: (tramo: TramoEnMemoria) => boolean): void {
     for (const lista of this.porActivo.values()) {
-      const apagados = lista.filter((tramo) => tramo.mejoraId === mejoraId && tramo.vigente !== false);
+      const apagados = lista.filter((tramo) => es(tramo) && tramo.vigente !== false);
       for (const apagado of apagados) {
         Object.assign(apagado, { vigente: false, anulado: true });
         const previo = lista

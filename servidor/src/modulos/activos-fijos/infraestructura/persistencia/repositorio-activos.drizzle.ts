@@ -1,4 +1,5 @@
-import { and, asc, eq, inArray, isNotNull, ne, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, ne, or, sql, type SQL } from 'drizzle-orm';
+import type { PgTable } from 'drizzle-orm/pg-core';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { RepositorioActivos } from '../../aplicacion/puertos/repositorio-activos.js';
 import type { Activo, ActivoId } from '../../dominio/activo.js';
@@ -8,6 +9,7 @@ import { bajas } from './bajas.tablas.js';
 import { costos } from './costos.tablas.js';
 import { mejoras } from './mejoras.tablas.js';
 import { cuotas } from './cuotas.tablas.js';
+import { divisiones } from './divisiones.tablas.js';
 import { enTandas } from './en-tandas.js';
 import { tramos } from './tramos.tablas.js';
 import { traslados } from './traslados.tablas.js';
@@ -127,29 +129,33 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
   }
 
   async tieneMovimientos(id: ActivoId): Promise<boolean> {
-    const transaccion = transaccionEnCurso();
-    const [traslado] = await transaccion
-      .select({ id: traslados.id })
-      .from(traslados)
-      .where(and(eq(traslados.activoId, id.valor), ne(traslados.esAlta, true)))
+    const hay = (tabla: PgTable, donde: SQL | undefined) =>
+      transaccionEnCurso()
+        .select({ uno: sql`1` })
+        .from(tabla)
+        .where(donde)
+        .limit(1);
+    const consultas = [
+      hay(traslados, and(eq(traslados.activoId, id.valor), ne(traslados.esAlta, true))),
+      hay(
+        costos,
+        and(eq(costos.activoId, id.valor), eq(costos.estado, 'vigente'), isNotNull(costos.lineaDeDocumentoId)),
+      ),
+      hay(cuotas, eq(cuotas.activoId, id.valor)),
+      hay(mejoras, eq(mejoras.activoId, id.valor)),
+      hay(bajas, eq(bajas.activoId, id.valor)),
+    ];
+    for (const consulta of consultas) if ((await consulta).length > 0) return true;
+    return this.tieneDivisiones(id);
+  }
+
+  async tieneDivisiones(id: ActivoId): Promise<boolean> {
+    const [fila] = await transaccionEnCurso()
+      .select({ id: divisiones.id })
+      .from(divisiones)
+      .where(or(eq(divisiones.activoOrigenId, id.valor), eq(divisiones.activoNuevoId, id.valor)))
       .limit(1);
-    const [costo] = await transaccion
-      .select({ id: costos.id })
-      .from(costos)
-      .where(and(eq(costos.activoId, id.valor), eq(costos.estado, 'vigente'), isNotNull(costos.lineaDeDocumentoId)))
-      .limit(1);
-    const [cuota] = await transaccion
-      .select({ id: cuotas.id })
-      .from(cuotas)
-      .where(eq(cuotas.activoId, id.valor))
-      .limit(1);
-    const [mejora] = await transaccion
-      .select({ id: mejoras.id })
-      .from(mejoras)
-      .where(eq(mejoras.activoId, id.valor))
-      .limit(1);
-    const [baja] = await transaccion.select({ id: bajas.id }).from(bajas).where(eq(bajas.activoId, id.valor)).limit(1);
-    return [traslado, costo, cuota, mejora, baja].some((movimiento) => movimiento !== undefined);
+    return fila !== undefined;
   }
 }
 

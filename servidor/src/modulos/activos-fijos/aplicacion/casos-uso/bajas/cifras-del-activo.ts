@@ -1,6 +1,7 @@
 import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { Activo } from '../../../dominio/activo.js';
 import { BajaAnteriorAUnaMejora } from '../../../dominio/errores-de-baja.js';
+import { BajaAnteriorAUnaDivision } from '../../../dominio/errores-de-division.js';
 import { cifrasDeBaja } from '../../../dominio/depreciacion/cifras-de-baja.js';
 import type { PrimerMes } from '../../../dominio/depreciacion/meses.js';
 import type { CifrasDeBaja } from '../../../dominio/tipos-de-baja.js';
@@ -38,10 +39,20 @@ async function exigirSinMejorasPosteriores(
   if (posterior) throw new BajaAnteriorAUnaMejora(pedido.activo.codigo, posterior.fecha);
 }
 
+/** Una división posterior a la baja movió costo y depreciación acumulada al otro activo: las cifras no cuadrarían (AFI-5). */
+async function exigirSinDivisionesPosteriores(
+  dependencias: DependenciasDeBajas,
+  pedido: { activo: { id: { valor: string }; codigo: string }; fecha: string },
+): Promise<void> {
+  const ultima = await dependencias.consultasDeDivisiones.fechaDeLaUltimaDeActivo(pedido.activo.id.valor);
+  if (ultima && ultima > pedido.fecha) throw new BajaAnteriorAUnaDivision(pedido.activo.codigo, ultima);
+}
+
 /**
  * Lo que valía el activo al día de la baja, para congelarlo (§6.8): costo, costo fiscal, base fiscal y las acumuladas de
  * los dos libros (con la cuota del propio mes si la convención la deprecia). El activo debe estar bloqueado.
  * @throws BajaAnteriorAUnaMejora si el activo tiene una mejora o un costo posterior (por la fecha de la mejora) después de la fecha de la baja.
+ * @throws BajaAnteriorAUnaDivision si el activo tiene una división vigente con fecha posterior a la de la baja.
  */
 export async function cifrasDelActivo(
   dependencias: DependenciasDeBajas,
@@ -52,6 +63,7 @@ export async function cifrasDelActivo(
   const id = propiedades.id.valor;
   const costos = (await dependencias.costos.vigentesDeActivo(id)).map((costo) => costo.instantanea());
   await exigirSinMejorasPosteriores(dependencias, { activo: propiedades, fecha: pedido.fecha });
+  await exigirSinDivisionesPosteriores(dependencias, { activo: propiedades, fecha: pedido.fecha });
   const saldo = await dependencias.saldos.fiscalDeActivo(id);
   const incisoFiscal = await new IncisosDeClases(dependencias.clases).de(propiedades.claseId);
   const ganado = propiedades.valorComoGanadoComun === null ? 0 : aCentavos(propiedades.valorComoGanadoComun);

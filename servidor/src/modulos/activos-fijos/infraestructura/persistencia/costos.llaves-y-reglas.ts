@@ -1,7 +1,13 @@
 import { sql } from 'drizzle-orm';
 import { check, foreignKey, index, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { lineasDeDocumento } from '../../../libro-de-compras/infraestructura/persistencia/lineas-de-documento.tablas.js';
-import { CLASES_DE_COSTO_ELEGIBLES, ESTADOS_DE_COSTO, ORIGENES_DE_COSTO } from '../../dominio/tipos-de-costo.js';
+import {
+  CLASES_DE_COSTO_DE_DIVISION,
+  CLASES_DE_COSTO_ELEGIBLES,
+  ESTADOS_DE_COSTO,
+  ORIGENES_DE_COSTO,
+} from '../../dominio/tipos-de-costo.js';
+import { divisiones } from './divisiones.tablas.js';
 import { activos } from './activos.tablas.js';
 import { mejoras } from './mejoras.tablas.js';
 
@@ -14,6 +20,7 @@ type Columnas = Record<
   | 'documentoDeCompraId'
   | 'lineaDeDocumentoId'
   | 'mejoraId'
+  | 'divisionId'
   | 'monto'
   | 'aplicaAlLibroFiscal'
   | 'motivoFueraDelLibroFiscal'
@@ -47,6 +54,11 @@ export function llavesDeCosto(t: Columnas) {
       columns: [t.mejoraId, t.empresaId],
       foreignColumns: [mejoras.id, mejoras.empresaId],
     }),
+    foreignKey({
+      name: 'costos_division_fk',
+      columns: [t.divisionId, t.empresaId],
+      foreignColumns: [divisiones.id, divisiones.empresaId],
+    }),
   ];
 }
 
@@ -57,6 +69,7 @@ export function indicesDeCosto(t: Columnas) {
     index('costos_activo_estado_idx').on(t.activoId, t.estado),
     index('costos_linea_idx').on(t.lineaDeDocumentoId).where(con(t.lineaDeDocumentoId)),
     index('costos_mejora_idx').on(t.mejoraId).where(con(t.mejoraId)),
+    index('costos_division_idx').on(t.divisionId).where(con(t.divisionId)),
     index('costos_documento_idx').on(t.documentoDeCompraId).where(con(t.documentoDeCompraId)),
     uniqueIndex('costos_archivo_unico').on(t.archivoId).where(con(t.archivoId)),
     uniqueIndex('costos_saldo_inicial_unico')
@@ -75,12 +88,17 @@ function reglasDeValores(t: Columnas) {
     check('costos_origen', sql`${t.origen} in (${enSql(ORIGENES_DE_COSTO)})`),
     check(
       'costos_clase_de_costo',
-      sql`${t.claseDeCosto} in (${enSql([...CLASES_DE_COSTO_ELEGIBLES, 'nota_de_credito', 'nota_de_debito'])})`,
+      sql`${t.claseDeCosto} in (${enSql([...CLASES_DE_COSTO_ELEGIBLES, 'nota_de_credito', 'nota_de_debito', ...CLASES_DE_COSTO_DE_DIVISION])})`,
     ),
     check('costos_estado', sql`${t.estado} in (${enSql(ESTADOS_DE_COSTO)})`),
     check(
       'costos_monto_con_signo',
-      sql`${t.monto} <> 0 and (${t.monto} < 0) = (${t.claseDeCosto} = 'nota_de_credito')`,
+      sql`${t.monto} <> 0 and (${t.monto} < 0) = (${t.claseDeCosto} in ('nota_de_credito', 'division_cedida'))`,
+    ),
+    check('costos_de_division_completo', sql`(${t.origen} = 'division') = (${t.divisionId} is not null)`),
+    check(
+      'costos_clase_de_division',
+      sql`(${t.origen} = 'division') = (${t.claseDeCosto} in (${enSql(CLASES_DE_COSTO_DE_DIVISION)}))`,
     ),
     check(
       'costos_de_linea_completo',
@@ -93,7 +111,7 @@ function reglasDeValores(t: Columnas) {
 function reglasFiscalesYDeAnulacion(t: Columnas) {
   return [
     check('costos_fuera_del_libro_fiscal', sql`${t.aplicaAlLibroFiscal} = (${t.motivoFueraDelLibroFiscal} is null)`),
-    check('costos_fuera_del_libro_solo_manual', sql`${t.aplicaAlLibroFiscal} or ${t.origen} = 'manual'`),
+    check('costos_fuera_del_libro_solo_manual', sql`${t.aplicaAlLibroFiscal} or ${t.origen} in ('manual', 'division')`),
     check('costos_manual_con_soporte', sql`${t.origen} <> 'manual' or ${t.documentoDeSoporte} is not null`),
     check(
       'costos_textos_largos',

@@ -71,6 +71,7 @@ export function armarBajas() {
     bajas,
     consultasDeBajas: bajas,
     consultasDeMejoras: mejoras,
+    consultasDeDivisiones: { fechaDeLaUltimaDeActivo: async () => null },
   };
   const registrador = new RegistradorDeBajas(dependencias);
   const adjuntador = new AdjuntadorDeDocumentos(dependencias);

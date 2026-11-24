@@ -18,6 +18,8 @@ export interface RepositorioCostos {
   vigentesDeActivo(activoId: string): Promise<Costo[]>;
   /** Los costos vigentes de la mejora o el costo posterior. */
   vigentesDeMejora(mejoraId: string): Promise<Costo[]>;
+  /** Los costos vigentes que creó la división (el cedido del origen y el recibido del activo nuevo). */
+  vigentesDeDivision(divisionId: string): Promise<Costo[]>;
   /** Los códigos de los activos con costos vigentes de las líneas del documento (para frenar su anulación). */
   codigosDeActivosConCostosDelDocumento(documentoId: string): Promise<string[]>;
 }

@@ -132,8 +132,28 @@ describe('costos: lo que la base garantiza', () => {
   });
 
   it('la clase de costo y el origen son de la lista', async () => {
-    expect(await restriccion(costo({ claseDeCosto: 'division_cedida' as never }))).toBe('costos_clase_de_costo');
+    expect(await restriccion(costo({ claseDeCosto: 'revaluacion' as never }))).toBe('costos_clase_de_costo');
     expect(await restriccion(costo({ origen: 'inventario' as never }))).toBe('costos_origen');
+  });
+
+  it('un costo de división lleva su división y sus clases propias; las clases de división no van en otros costos (AFI-5)', async () => {
+    const sinDivision = costo({ origen: 'division', claseDeCosto: 'division_recibida', documentoDeSoporte: null });
+    const claseAjena = costo({ claseDeCosto: 'division_recibida' });
+    const conDivisionAjena = costo({ divisionId: crypto.randomUUID() });
+
+    expect(await restriccion(sinDivision)).toBe('costos_de_division_completo');
+    expect(await restriccion(claseAjena)).toBe('costos_clase_de_division');
+    expect(await restriccion(conDivisionAjena)).toBe('costos_de_division_completo');
+  });
+
+  it('lo cedido en una división es negativo y lo recibido, positivo', async () => {
+    const cedidoPositivo = costo({
+      origen: 'division',
+      claseDeCosto: 'division_cedida',
+      divisionId: crypto.randomUUID(),
+    });
+
+    expect(await restriccion(cedidoPositivo)).toBe('costos_monto_con_signo');
   });
 
   it('la anulación va completa: estado, quién, cuándo y por qué', async () => {

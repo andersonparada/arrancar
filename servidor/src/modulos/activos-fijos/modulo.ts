@@ -6,6 +6,7 @@ import { rutasDeBajas } from './composicion/bajas.js';
 import { rutasDeClases } from './composicion/clases.js';
 import { rutasDeBandeja, rutasDeCostos } from './composicion/costos.js';
 import { rutasDeDepreciacion } from './composicion/depreciacion.js';
+import { rutasDeDivisiones } from './composicion/divisiones.js';
 import { rutasDeMejoras } from './composicion/mejoras.js';
 import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 import { rutasDeTraslados } from './composicion/traslados.js';
@@ -92,6 +93,11 @@ export const moduloActivosFijos: DefinicionModulo = {
       descripcion: 'Dar de baja o vender activos con su acta y su denuncia',
     },
     { clave: 'activos-fijos.bajas.anular', descripcion: 'Anular bajas y ventas de activos' },
+    {
+      clave: 'activos-fijos.divisiones.crear',
+      descripcion: 'Dividir activos con cantidad y separarlos en unidades (a mano)',
+    },
+    { clave: 'activos-fijos.divisiones.anular', descripcion: 'Anular divisiones de activos' },
     // generador: permisos
   ],
   configuracion: configuracionDeActivosFijos,
@@ -105,6 +111,7 @@ export const moduloActivosFijos: DefinicionModulo = {
     rutasDeMejoras(),
     rutasDeTraslados(),
     rutasDeBajas(),
+    rutasDeDivisiones(),
     // generador: rutas
   ]),
 };

@@ -1,4 +1,5 @@
 import type { BajaDto } from './baja.dto.js';
+import type { DivisionDto } from './division.dto.js';
 import type { CausaDeTramo } from '../../dominio/depreciacion/tramo.js';
 import type { IncisoFiscal } from '../../dominio/incisos-fiscales.js';
 import type { DatosEditables, UbicacionDeActivo } from '../../dominio/activo.js';
@@ -81,10 +82,12 @@ export interface TramoDto {
   excesoDeNotaDeCredito: string;
 }
 
-/** La ficha del activo: sus datos, su historial de ubicación, los tramos de depreciación vigentes y su baja. */
+/** La ficha del activo: sus datos, su historial de ubicación, los tramos de depreciación vigentes, sus divisiones y su baja. */
 export interface ActivoFichaDto extends ActivoDto {
   traslados: TrasladoDto[];
   tramos: TramoDto[];
+  /** Las divisiones en que el activo fue el origen o el nuevo, de la más reciente a la más antigua (AFI-5). */
+  divisiones: DivisionDto[];
   /** La baja o venta vigente, si el activo está dado de baja. */
   baja: BajaDto | null;
 }

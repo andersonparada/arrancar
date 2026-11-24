@@ -1,8 +1,9 @@
-import { and, eq, lt, sql } from 'drizzle-orm';
+import { and, eq, lt, lte, sql } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { LibroDeDepreciacion } from '../../dominio/depreciacion/tramo.js';
 import { cuotas } from './cuotas.tablas.js';
+import { divisiones } from './divisiones.tablas.js';
 import { saldosIniciales } from './saldos-iniciales.tablas.js';
 
 export type AcumuladaPorLibro = Record<LibroDeDepreciacion, number>;
@@ -41,13 +42,37 @@ async function sumarCuotas(porActivo: PorActivo, periodo: string): Promise<void>
 }
 
 /**
+ * Lo que las divisiones vigentes (con su mes en o antes del período) pasaron de depreciación acumulada: el activo nuevo la
+ * recibe y el origen la cede. Las cuotas de los meses anteriores se quedan en el origen (§7.6).
+ */
+async function sumarDivisiones(porActivo: PorActivo, periodo: string): Promise<void> {
+  const filas = await transaccionEnCurso()
+    .select({
+      origenId: divisiones.activoOrigenId,
+      nuevoId: divisiones.activoNuevoId,
+      contable: divisiones.acumuladaContableSeparada,
+      fiscal: divisiones.acumuladaFiscalSeparada,
+    })
+    .from(divisiones)
+    .where(and(eq(divisiones.estado, 'vigente'), lte(divisiones.periodo, periodo)));
+  for (const { origenId, nuevoId, contable, fiscal } of filas) {
+    if (!nuevoId) continue;
+    sumar(porActivo, { activoId: nuevoId, libro: 'contable' }, aCentavos(contable));
+    sumar(porActivo, { activoId: nuevoId, libro: 'fiscal' }, aCentavos(fiscal));
+    sumar(porActivo, { activoId: origenId, libro: 'contable' }, -aCentavos(contable));
+    sumar(porActivo, { activoId: origenId, libro: 'fiscal' }, -aCentavos(fiscal));
+  }
+}
+
+/**
  * `acumuladaAl` (§7.6) de todos los activos al cierre del mes anterior al período: la depreciación acumulada de su saldo
- * inicial (AF-6) más la suma de sus cuotas vigentes anteriores. Cuando existan las divisiones (AFI-5), se suman aquí las
- * acumuladas recibidas y se restan las cedidas: el cierre, las bajas y la ficha leen de este único lugar.
+ * inicial (AF-6) más la suma de sus cuotas vigentes anteriores, más las acumuladas que recibió en divisiones y menos las
+ * que cedió. El cierre lee de aquí; las bajas y la ficha, de `HistorialDeDepreciacionDrizzle`, con la misma regla.
  */
 export async function acumuladasAntesDe(periodo: string): Promise<Map<string, AcumuladaPorLibro>> {
   const porActivo: PorActivo = new Map();
   await sumarSaldosIniciales(porActivo);
   await sumarCuotas(porActivo, periodo);
+  await sumarDivisiones(porActivo, periodo);
   return porActivo;
 }

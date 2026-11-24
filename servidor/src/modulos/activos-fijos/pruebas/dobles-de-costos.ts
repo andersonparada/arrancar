@@ -79,6 +79,10 @@ export class CostosEnMemoria implements RepositorioCostos, ConsultasCostos {
     return this.vigentes().filter((costo) => costo.instantanea().mejoraId === mejoraId);
   }
 
+  async vigentesDeDivision(divisionId: string): Promise<Costo[]> {
+    return this.vigentes().filter((costo) => costo.instantanea().divisionId === divisionId);
+  }
+
   async codigosDeActivosConCostosDelDocumento(documentoId: string): Promise<string[]> {
     const activoIds = new Set(
       this.vigentes()

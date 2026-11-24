@@ -71,6 +71,13 @@
       "when": 1795476922606,
       "tag": "0009_af9_bajas",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795481034674,
+      "tag": "0010_afi5_divisiones",
+      "breakpoints": true
     }
   ]
 }

@@ -206,8 +206,8 @@ describe('clases por concepto: seguridad y llaves', () => {
   });
 });
 
-describe('auditoría permanente del módulo (migración 0001)', () => {
-  it('los seis recursos están en el catálogo, con la cita del Código Tributario', async () => {
+describe('auditoría permanente del módulo (migraciones 0001 y 0010)', () => {
+  it('los siete recursos están en el catálogo, con la cita del Código Tributario', async () => {
     const filas = await comoPropietario<{ recurso: string; motivo: string }>(
       "select recurso, motivo from core.recursos_de_auditoria_permanente where recurso like 'activos-fijos.%' order by recurso",
     );
@@ -217,6 +217,7 @@ describe('auditoría permanente del módulo (migración 0001)', () => {
       'activos-fijos.bajas',
       'activos-fijos.cierres',
       'activos-fijos.costos',
+      'activos-fijos.divisiones',
       'activos-fijos.mejoras',
       'activos-fijos.saldos-iniciales',
     ]);

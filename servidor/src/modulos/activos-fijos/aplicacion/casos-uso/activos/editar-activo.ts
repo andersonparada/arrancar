@@ -1,3 +1,4 @@
+import { ActivoInvalido } from '../../../dominio/errores-de-activo.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { ActivoFichaDto, SolicitudDeEdicionDeActivo } from '../../dto/activo.dto.js';
 import { claseParaActivo, validarFechaDeAdquisicion, validarPadre } from './comprobaciones-de-activo.js';
@@ -26,6 +27,8 @@ export class EditarActivo {
       if (fecha !== activo.instantanea().fechaDeAdquisicion)
         await validarFechaDeAdquisicion(this.dependencias, { operador, fecha });
       if (padreId !== activo.instantanea().activoPadreId) await validarPadre(this.dependencias, { padreId, activoId });
+      if (solicitud.cantidad !== activo.instantanea().cantidad && (await repositorio.tieneDivisiones(activo.id)))
+        throw new ActivoInvalido('La cantidad ya no se escribe a mano: el activo tiene divisiones.');
       activo.cambiarDatos(solicitud, clase.instantanea().incisoFiscal);
       await repositorio.guardar(activo);
       return consultas.obtener(activoId);
