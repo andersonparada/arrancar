@@ -1,7 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { DestinoDeDocumento } from '../../../dominio/destinos-de-documento.js';
 import { DestinoInactivo } from '../../../dominio/errores-de-baja.js';
-import type { AvisoDeBaja, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
+import type { AvisoDeAnulacion, AvisoDeBaja, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
 
 /** Cómo se llama cada destino ante el usuario. */
 const NOMBRES_DE_DESTINO: Record<DestinoDeDocumento, string> = {
@@ -26,7 +26,7 @@ type BajaPedida = AvisoDeBaja & { origen?: DestinoDeDocumento };
 export async function avisarAnulacion(
   destinos: DestinosDeDocumentos,
   operador: Operador,
-  { origen, ...aviso }: BajaPedida & { motivo: string },
+  { origen, ...aviso }: BajaPedida & Pick<AvisoDeAnulacion, 'motivo' | 'causa'>,
 ): Promise<void> {
   if (origen === aviso.destino) return;
   await exigirDestinoActivo(destinos, operador, aviso.destino);

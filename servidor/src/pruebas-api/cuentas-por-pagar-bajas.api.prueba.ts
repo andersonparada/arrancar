@@ -140,7 +140,12 @@ describe('anular desde Libro de compras', () => {
     const id = await documentos.registrar();
     await anular(id);
     const eventosAntes = publicados.length;
-    const aviso = { documentoId: id, destino: 'cuentas-por-pagar' as const, motivo: 'Otra vez' };
+    const aviso = {
+      documentoId: id,
+      destino: 'cuentas-por-pagar' as const,
+      motivo: 'Otra vez',
+      causa: 'error_de_captura' as const,
+    };
 
     await mediador.avisar(operador, 'libro-de-compras.documento_por_anular', aviso);
     await mediador.avisar(operador, 'libro-de-compras.documento_por_anular', aviso);

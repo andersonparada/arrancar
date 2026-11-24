@@ -1,0 +1,2 @@
+ALTER TABLE "caja_chica"."arqueos" ADD COLUMN "arqueado_por_nombre" text DEFAULT '' NOT NULL;--> statement-breakpoint
+UPDATE "caja_chica"."arqueos" a SET "arqueado_por_nombre" = btrim(u."nombres" || ' ' || u."apellidos") FROM "core"."usuarios" u WHERE u."id" = a."arqueado_por";

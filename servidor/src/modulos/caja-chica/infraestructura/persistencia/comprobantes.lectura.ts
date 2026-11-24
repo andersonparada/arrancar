@@ -84,6 +84,7 @@ function marcasDelComprobante(c: FilaDeComprobante['comprobante']) {
     asignadoEn: c.asignadoEn?.toISOString() ?? null,
     asignadoPor: c.asignadoPor,
     motivoDeAnulacion: c.motivoDeAnulacion,
+    motivoDocumentoAnulado: c.motivoDocumentoAnulado,
   };
 }
 

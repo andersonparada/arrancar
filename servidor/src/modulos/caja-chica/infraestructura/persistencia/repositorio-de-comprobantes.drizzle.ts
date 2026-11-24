@@ -115,6 +115,13 @@ export class RepositorioDeComprobantesDrizzle implements RepositorioDeComprobant
       .where(eq(comprobantes.id, id));
   }
 
+  async marcarDocumentoAnulado(id: string, motivo: string): Promise<void> {
+    await transaccionEnCurso()
+      .update(comprobantes)
+      .set({ motivoDocumentoAnulado: motivo })
+      .where(eq(comprobantes.id, id));
+  }
+
   async eliminar(id: string): Promise<void> {
     await transaccionEnCurso().delete(comprobantes).where(eq(comprobantes.id, id));
   }

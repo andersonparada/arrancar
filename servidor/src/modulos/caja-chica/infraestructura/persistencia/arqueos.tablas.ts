@@ -51,6 +51,8 @@ export const arqueos = esquemaCajaChica.table(
     arqueadoPor: uuid()
       .notNull()
       .references(() => usuarios.id),
+    /** Su nombre completo al contar, copiado: el acta lo imprime y no cambia si después se edita el usuario. */
+    arqueadoPorNombre: text().notNull().default(''),
     /** El custodio vigente al contar, copiado: firma del acta. */
     custodio: text().notNull(),
     custodioUsuarioId: uuid().references(() => usuarios.id, { onDelete: 'set null' }),

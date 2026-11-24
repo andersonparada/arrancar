@@ -45,6 +45,8 @@ export interface ComprobanteDto {
   asignadoEn: string | null;
   asignadoPor: string | null;
   motivoDeAnulacion: string | null;
+  /** Con valor, el emisor anuló la FEL y el comprobante está «documento anulado, por resolver»; el efectivo no cambia. */
+  motivoDocumentoAnulado: string | null;
   /** Está en una reposición vigente (su número); `null` si sigue pendiente. */
   reposicionNumero: number | null;
   documento: DocumentoDelComprobanteDto | null;

@@ -82,6 +82,8 @@ export const comprobantes = esquemaCajaChica.table(
     anuladoEn: timestamp({ withTimezone: true }),
     anuladoPor: uuid(),
     motivoDeAnulacion: text(),
+    /** El emisor anuló la FEL en la SAT y el comprobante ya movió efectivo: sigue vigente, «por resolver». */
+    motivoDocumentoAnulado: text(),
     ...marcasDeTiempo,
     ...autoria,
   },

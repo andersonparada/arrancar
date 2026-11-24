@@ -1,6 +1,7 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import type { DocumentoParaDestino } from '../../core/contratos/libro-de-compras.contratos.js';
 import type {
+  AvisoDeAnulacion,
   AvisoDeBaja,
   CatalogosParaDocumentos,
   ClaveDeDocumento,
@@ -101,7 +102,7 @@ export class DestinosEnMemoria implements DestinosDeDocumentos {
   fallo: Error | null = null;
   /** Los avisos que el destino devuelve al recibir un documento. */
   avisosAlRecibir: string[] = [];
-  readonly avisosDeAnular: Array<AvisoDeBaja & { motivo: string }> = [];
+  readonly avisosDeAnular: Array<AvisoDeAnulacion> = [];
   readonly avisosDeEliminar: AvisoDeBaja[] = [];
   falloAlAnular: Error | null = null;
   falloAlEliminar: Error | null = null;
@@ -116,7 +117,7 @@ export class DestinosEnMemoria implements DestinosDeDocumentos {
     return this.avisosAlRecibir;
   }
 
-  async avisarPorAnular(_operador: Operador, aviso: AvisoDeBaja & { motivo: string }): Promise<void> {
+  async avisarPorAnular(_operador: Operador, aviso: AvisoDeAnulacion): Promise<void> {
     if (this.falloAlAnular) throw this.falloAlAnular;
     this.avisosDeAnular.push(aviso);
   }

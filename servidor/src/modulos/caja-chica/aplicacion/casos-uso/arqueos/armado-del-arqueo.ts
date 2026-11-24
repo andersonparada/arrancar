@@ -38,7 +38,8 @@ export function arqueoDto(por: {
   const { arqueo, comprobante } = por;
   return {
     ...resumenDelArqueo(arqueo),
-    arqueadoPor: arqueo.arqueadoPor,
+    arqueadoPor: arqueo.arqueadoPorNombre,
+    arqueadoPorId: arqueo.arqueadoPor,
     conteo: arqueo.conteo.map(lineaDto),
     montoDelFondo: deCentavos(arqueo.montoDelFondoCentavos),
     pendienteDeReponer: deCentavos(arqueo.pendienteDeReponerCentavos),

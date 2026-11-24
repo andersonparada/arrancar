@@ -21,6 +21,8 @@ interface ArqueoPorGuardar {
   numero: number;
   anio: number;
   operador: Operador;
+  /** Nombre completo de quien arquea. */
+  nombreDelOperador: string;
   pedido: PeticionDeArqueo;
   plan: PlanDelArqueo;
 }
@@ -61,7 +63,9 @@ export class RegistrarArqueo {
     const fondoAntes = plan.diferenciaCentavos === 0 ? null : await this.lector.leer(fondo);
     const { numero, anio } = await this.dependencias.correlativos.siguiente(CLAVE_DE_ARQUEOS, plan.fecha);
     const arqueoId = crypto.randomUUID();
-    await this.dependencias.arqueos.agregar(armarElNuevo({ arqueoId, numero, anio, operador, pedido, plan }));
+    const nombreDelOperador = await this.dependencias.consultas.nombreDelUsuario(operador.usuarioId);
+    const nuevo = armarElNuevo({ arqueoId, numero, anio, operador, nombreDelOperador, pedido, plan });
+    await this.dependencias.arqueos.agregar(nuevo);
     const comprobanteId = await this.ajustar(operador, { arqueoId, numero, pedido, plan, fondoAntes });
     const arqueo = (await this.dependencias.arqueos.buscar(arqueoId))!;
     return {
@@ -107,18 +111,9 @@ function ajusteDelArqueo(
   };
 }
 
-function armarElNuevo({ arqueoId, numero, anio, operador, pedido, plan }: ArqueoPorGuardar): ArqueoNuevo {
+/** Lo que se contó y quién lo firma: cifras del arqueo, custodio y conteo. */
+function cifrasDelNuevo(plan: PlanDelArqueo) {
   return {
-    id: arqueoId,
-    fondoId: pedido.fondoId,
-    numero,
-    anioDeNumero: anio,
-    realizadoEn: plan.realizadoEn,
-    arqueadoPor: operador.usuarioId,
-    custodio: plan.custodio.nombre,
-    custodioUsuarioId: plan.custodio.usuarioId,
-    loHizoElCustodio: plan.elCustodioArquea,
-    conteo: plan.conteo,
     efectivoContadoCentavos: plan.contadoCentavos,
     valoresPorCambiarCentavos: plan.valoresPorCambiarCentavos,
     montoDelFondoCentavos: plan.cifras.montoCentavos,
@@ -126,6 +121,31 @@ function armarElNuevo({ arqueoId, numero, anio, operador, pedido, plan }: Arqueo
     valesAbiertosCentavos: plan.cifras.valesCentavos,
     efectivoEsperadoCentavos: plan.cifras.esperadoCentavos,
     diferenciaCentavos: plan.diferenciaCentavos,
+    custodio: plan.custodio.nombre,
+    custodioUsuarioId: plan.custodio.usuarioId,
+    loHizoElCustodio: plan.elCustodioArquea,
+    conteo: plan.conteo,
+  };
+}
+
+function armarElNuevo({
+  arqueoId,
+  numero,
+  anio,
+  operador,
+  nombreDelOperador,
+  pedido,
+  plan,
+}: ArqueoPorGuardar): ArqueoNuevo {
+  return {
+    ...cifrasDelNuevo(plan),
+    id: arqueoId,
+    fondoId: pedido.fondoId,
+    numero,
+    anioDeNumero: anio,
+    realizadoEn: plan.realizadoEn,
+    arqueadoPor: operador.usuarioId,
+    arqueadoPorNombre: nombreDelOperador,
     comprobantesCompletos: pedido.comprobantesCompletos,
     motivoDeDiferencia: plan.motivo,
     observaciones: pedido.observaciones ?? null,

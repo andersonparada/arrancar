@@ -27,7 +27,9 @@ export interface ArqueoResumenDto {
 
 /** El arqueo completo, para el acta; también es lo que queda en la auditoría como «anterior» al anularlo. */
 export interface ArqueoDto extends ArqueoResumenDto {
+  /** Nombre completo de quien arqueó (el acta lo imprime). */
   arqueadoPor: string;
+  arqueadoPorId: string;
   conteo: LineaDeConteoDto[];
   montoDelFondo: string;
   pendienteDeReponer: string;

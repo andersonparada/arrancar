@@ -65,6 +65,8 @@ export interface RepositorioDeComprobantes {
   /** Limpia fondo, asignación, motivos y marcas, y devuelve la fecha a la de emisión. */
   devolverALaBandeja(id: string, fechaDeEmision: string): Promise<void>;
   anular(id: string, anulacion: AnulacionDelComprobante): Promise<void>;
+  /** Deja el comprobante vigente pero «documento anulado, por resolver» (la FEL la anuló su emisor). */
+  marcarDocumentoAnulado(id: string, motivo: string): Promise<void>;
   /** Borra el comprobante (solo cuando el libro elimina su documento). */
   eliminar(id: string): Promise<void>;
   /** Cuántas notas de crédito vigentes tiene la factura dentro de un fondo (las de la bandeja no la atan). */

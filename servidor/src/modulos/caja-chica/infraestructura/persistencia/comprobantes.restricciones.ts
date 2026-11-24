@@ -29,7 +29,8 @@ type T = Record<
   | 'valeProvisionalId'
   | 'asignadoEn'
   | 'asignadoPor'
-  | 'estado',
+  | 'estado'
+  | 'motivoDocumentoAnulado',
   AnyPgColumn
 >;
 
@@ -93,4 +94,9 @@ export const restriccionesDeMarcas = (t: T) => [
     sql`(${t.fondoId} is null) = (${t.asignadoEn} is null) and (${t.asignadoEn} is null) = (${t.asignadoPor} is null)`,
   ),
   check('comprobantes_estado_valido', sql`${t.estado} in ('vigente', 'anulado')`),
+  check('comprobantes_motivo_documento_anulado_rango', textoRecortado(t.motivoDocumentoAnulado, 300)),
+  check(
+    'comprobantes_documento_anulado_solo_vigente_de_documento',
+    sql`${t.motivoDocumentoAnulado} is null or (${t.clase} = 'documento' and ${t.estado} = 'vigente')`,
+  ),
 ];

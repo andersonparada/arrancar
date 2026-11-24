@@ -29,6 +29,8 @@ export interface ConsultasDeArqueos {
   delFondo(fondoId: string): Promise<Arqueo[]>;
   /** Los comprobantes vigentes del fondo que no están en una reposición vigente (lo que el arqueador revisa). */
   pendientesDelFondo(fondoId: string): Promise<Comprobante[]>;
+  /** El nombre completo del usuario, para copiarlo al acta del arqueo. */
+  nombreDelUsuario(usuarioId: string): Promise<string>;
 }
 
 /** El faltante o el sobrante que nace de un arqueo con diferencia: un comprobante del mismo fondo. */

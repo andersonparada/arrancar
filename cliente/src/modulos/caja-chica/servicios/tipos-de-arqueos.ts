@@ -29,6 +29,7 @@ export interface ArqueoResumen {
 
 export interface Arqueo extends ArqueoResumen {
   arqueadoPor: string;
+  arqueadoPorId: string;
   conteo: LineaDeConteo[];
   montoDelFondo: string;
   pendienteDeReponer: string;

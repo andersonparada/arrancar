@@ -64,6 +64,7 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
       asignadoEn: null,
       asignadoPor: null,
       motivoDeAnulacion: null,
+      motivoDocumentoAnulado: null,
       reposicionNumero: null,
       documento: null,
     };
@@ -154,6 +155,10 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
       sinBancarizar: false,
       fecha: fechaDeEmision,
     });
+  }
+
+  async marcarDocumentoAnulado(id: string, motivo: string): Promise<void> {
+    this.filas.set(id, { ...this.filas.get(id)!, motivoDocumentoAnulado: motivo });
   }
 
   async anular(id: string, anulacion: AnulacionDelComprobante): Promise<void> {

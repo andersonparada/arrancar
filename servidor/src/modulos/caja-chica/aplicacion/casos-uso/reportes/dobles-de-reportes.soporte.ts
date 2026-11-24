@@ -35,6 +35,7 @@ export const comprobante = (cambios: Partial<Comprobante>): Comprobante => ({
   asignadoEn: null,
   asignadoPor: null,
   motivoDeAnulacion: null,
+  motivoDocumentoAnulado: null,
   reposicionNumero: null,
   documento: {
     tipo: 'FACT',
@@ -111,6 +112,7 @@ export const arqueo = (cambios: Partial<Arqueo>): Arqueo => ({
   anioDeNumero: 0,
   realizadoEn: '2026-10-18T15:00:00Z',
   arqueadoPor: 'u1',
+  arqueadoPorNombre: 'Ana Gómez',
   custodio: 'Juan Pérez',
   custodioUsuarioId: null,
   loHizoElCustodio: false,

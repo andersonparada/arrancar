@@ -3,7 +3,11 @@ import '../../core/contratos/cuentas-por-pagar.contratos.js';
 import type { DocumentoParaDestino } from '../../core/contratos/libro-de-compras.contratos.js';
 import { mediador } from '../../core/mediador/contexto.js';
 import type { ModulosActivosDeLaCuenta } from '../../core/mediador/aplicacion/puertos/modulos-activos-de-la-cuenta.js';
-import type { AvisoDeBaja, DestinosDeDocumentos } from '../aplicacion/puertos/puertos-de-documentos.js';
+import type {
+  AvisoDeAnulacion,
+  AvisoDeBaja,
+  DestinosDeDocumentos,
+} from '../aplicacion/puertos/puertos-de-documentos.js';
 import { DESTINOS_DE_DOCUMENTO, type DestinoDeDocumento } from '../dominio/destinos-de-documento.js';
 
 /**
@@ -29,7 +33,7 @@ export class DestinosDeDocumentosEnMediador implements DestinosDeDocumentos {
     return avisos;
   }
 
-  avisarPorAnular(operador: Operador, aviso: AvisoDeBaja & { motivo: string }): Promise<void> {
+  avisarPorAnular(operador: Operador, aviso: AvisoDeAnulacion): Promise<void> {
     return mediador.avisar(operador, 'libro-de-compras.documento_por_anular', aviso);
   }
 

@@ -12,6 +12,7 @@ import type {
 } from '../../aplicacion/puertos/puertos-de-arqueos.js';
 import type { Arqueo } from '../../dominio/arqueos.js';
 import type { Comprobante } from '../../dominio/comprobantes.js';
+import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { arqueos } from './arqueos.tablas.js';
 import { ConsultasDeComprobantesDrizzle } from './consultas-de-comprobantes.drizzle.js';
 
@@ -38,6 +39,7 @@ export function aArqueo(fila: typeof arqueos.$inferSelect): Arqueo {
     anioDeNumero: fila.anioDeNumero,
     realizadoEn: fila.realizadoEn.toISOString(),
     arqueadoPor: fila.arqueadoPor,
+    arqueadoPorNombre: fila.arqueadoPorNombre,
     custodio: fila.custodio,
     custodioUsuarioId: fila.custodioUsuarioId,
     loHizoElCustodio: fila.loHizoElCustodio,
@@ -101,6 +103,14 @@ export class ConsultasDeArqueosDrizzle implements ConsultasDeArqueos {
       .where(eq(arqueos.fondoId, fondoId))
       .orderBy(desc(arqueos.realizadoEn), desc(arqueos.numero));
     return filas.map(aArqueo);
+  }
+
+  async nombreDelUsuario(usuarioId: string): Promise<string> {
+    const [fila] = await transaccionEnCurso()
+      .select({ nombres: usuarios.nombres, apellidos: usuarios.apellidos })
+      .from(usuarios)
+      .where(eq(usuarios.id, usuarioId));
+    return fila ? `${fila.nombres} ${fila.apellidos}`.trim() : usuarioId;
   }
 
   pendientesDelFondo(fondoId: string): Promise<Comprobante[]> {

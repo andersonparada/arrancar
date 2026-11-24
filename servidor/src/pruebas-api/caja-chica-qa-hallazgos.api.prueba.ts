@@ -1,7 +1,6 @@
 /**
  * QA de Caja chica en el navegador (CC-11): lo que la QA encontró y lo que no tenía prueba.
- * - Los casos con `it.fails` son errores abiertos (informe `informe-qa-caja-chica-2026-11-23.md`): al corregirlos, la
- *   prueba pasa y hay que quitarle el `.fails`.
+ * - Cada caso reproduce un error que la QA encontró (informe `informe-qa-caja-chica-2026-11-23.md`).
  * - La bancarización entre un cheque de Cuentas por pagar y una factura de Caja chica al mismo proveedor no tenía prueba.
  */
 
@@ -36,7 +35,7 @@ describe('comprobantes de un vale provisional ya liquidado', () => {
     });
     expect(liquidado.estado, JSON.stringify(liquidado.cuerpo)).toBe(200);
     const gasto = liquidado.cuerpo.comprobantes.find((c: any) => c.clase === 'vale_de_gasto');
-    return { fondo, vale, documentoId, gasto };
+    return { fondo, vale, documentoId, comprobanteId: documento.id as string, gasto };
   }
 
   it('anular el gasto sin factura de un vale liquidado se rechaza, como devolver su factura a la bandeja', async () => {
@@ -77,10 +76,29 @@ describe('comprobantes de un vale provisional ya liquidado', () => {
     expect(await valeEnBase(vale.id)).toMatchObject({ estado: 'liquidado', devuelto: '150.00' });
     expect(await v.ficha(fondo.id)).toMatchObject({ efectivoEsperado: '2650.00', pendienteDeReponer: '350.00' });
   });
+
+  it('si el emisor anuló la FEL, el libro anula igual: la caja no cambia y el comprobante queda por resolver', async () => {
+    const { fondo, vale, documentoId, comprobanteId } = await valeLiquidado(
+      'Caja del vale liquidado con FEL anulada por el emisor',
+    );
+
+    const respuesta = await e.propietario().post(`/api/libro-de-compras/documentos/${documentoId}/anular`, {
+      causa: 'fel_anulada_por_el_emisor',
+      motivo: 'El emisor anuló la FEL en la SAT',
+    });
+
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(200);
+    expect(respuesta.cuerpo.documento.estado).toBe('anulado');
+    expect(await valeEnBase(vale.id)).toMatchObject({ estado: 'liquidado', devuelto: '150.00' });
+    expect(await v.ficha(fondo.id)).toMatchObject({ efectivoEsperado: '2650.00', pendienteDeReponer: '350.00' });
+    const comprobante = await comprobanteEnBase(comprobanteId);
+    expect(comprobante).toMatchObject({ estado: 'vigente' });
+    expect(comprobante.motivo_documento_anulado).toBe('El emisor anuló la FEL en la SAT');
+  });
 });
 
-describe('arqueo: el acta nombra a quien lo hizo (error abierto)', () => {
-  it.fails('arqueadoPor es el nombre de la persona, no su identificador', async () => {
+describe('arqueo: el acta nombra a quien lo hizo', () => {
+  it('arqueadoPor es el nombre de la persona, no su identificador', async () => {
     const e = await EscenarioDeComprobantes.preparar(entorno, 'cajachicaqaarqueo');
     const fondo = await e.abrirFondo('Caja del acta', { monto: '1000.00' });
 
@@ -90,9 +108,10 @@ describe('arqueo: el acta nombra a quien lo hizo (error abierto)', () => {
     });
 
     expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
-    // Hoy trae el uuid del usuario, y la hoja impresa del acta lo imprime tal cual en «Arqueó:».
+    // Antes traía el uuid del usuario y la hoja impresa lo imprimía tal cual en «Arqueó:»; el id sigue aparte.
     expect(respuesta.cuerpo.arqueadoPor).not.toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-/);
     expect(respuesta.cuerpo.arqueadoPor).toMatch(/Dueño/);
+    expect(respuesta.cuerpo.arqueadoPorId).toBe(await e.propietarioId());
   });
 });
 
@@ -134,6 +153,9 @@ describe('bancarización entre Caja chica y Cuentas por pagar', () => {
     // 28,533.93 del cheque + 1,500.00 de la factura de caja chica: 30,033.93, sobre los Q30,000.00 del umbral.
     expect(registrada.cuerpo.avisos).toHaveLength(1);
     expect(registrada.cuerpo.avisos[0]).toMatch(/^Bancarización .* llega a Q\s?30,033\.93/);
+    // El IVA es de la factura, no de la caja: el texto dice quién la pagó.
+    expect(registrada.cuerpo.avisos[0]).toMatch(/\(pagado por Caja chica\)/);
+    expect(registrada.cuerpo.avisos[0]).not.toMatch(/IVA de Caja chica/);
     const comprobantes = (await propietario.get(`${RUTA_DE_FONDOS}/${fondo.cuerpo.id}/comprobantes?estado=pendiente`))
       .cuerpo;
     expect(comprobantes.elementos).toHaveLength(1);

@@ -137,7 +137,7 @@ export class AsignadorDeComprobantes {
       cargos: [
         {
           documentoDeCompraId: comprobante.documentoDeCompraId,
-          etiqueta: `Caja chica, ${etiquetaDelComprobante(comprobante)}`,
+          etiqueta: `${etiquetaDelComprobante(comprobante)} (pagado por Caja chica)`,
           totalCentavos: documento.totalCentavos,
         },
       ],
