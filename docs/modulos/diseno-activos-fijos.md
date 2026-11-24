@@ -1329,7 +1329,7 @@ dos decimales.
 | **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | **Programado** (2026-11-23; migración `0008_af8_boletas_firmadas`; `aBodega`, `marcarOcioso` y el título desde 2026-11-19; ver notas de AF-8) |
 | AF-8c | Traslados y boleta imprimible | frontend | |
 | AFI-4c (con AF-8c) | Entregar y devolver; casilla «A la bodega»; selección múltiple; subir la boleta firmada | frontend | |
-| **AFI-5** (después de AF-7 y AF-8) | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl` (y su uso en cierre, ficha y bajas), dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §7.6 y 50 divisiones de 1, y de integración (cierre después de dividir, baja después de dividir, anular) | backend | |
+| **AFI-5** (después de AF-7 y AF-8) | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl` (y su uso en cierre, ficha y bajas), dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §7.6 y 50 divisiones de 1, y de integración (cierre después de dividir, baja después de dividir, anular) | backend **Programado** (2026-11-23; migración `0010_afi5_divisiones`; sin la división automática de traslado, baja e inventario, que es AFI-6 y AFI-8; notas abajo) |
 | **AF-9** | Bajas y ventas con archivos, tipo de acta, costo fiscal y resultados (A1), avisos de donación y reproductor (V-10, V-12) | backend | **Programado** (2026-11-23; migración `0009_af9_bajas`; sin la baja parcial, que es AFI-6; notas abajo) |
 | **AFI-6** (después de AFI-5 y AF-9) | Traslado y baja con cantidad parcial (división automática) | backend | |
 | AF-9c | Baja y venta (ventanas, actas imprimibles) | frontend | |
@@ -1408,6 +1408,34 @@ dos decimales.
   una parte de un grupo (`cantidad` menor) responde `baja_parcial_no_disponible` hasta AFI-6; `numero` del acta no es único (lo
   comparten el principal y sus componentes); no se dan de baja activos en construcción (se eliminan o se ponen en uso).
 - Falta para AF-9c: ventanas de baja y venta, acta imprimible, subir acta y denuncia, y mostrar los avisos.
+
+**Notas de lo programado en AFI-5 (servidor, migración `0010_afi5_divisiones`):**
+
+- `activos_fijos.divisiones` (§5.15) con sus checks y RLS por empresa; `costos` gana `division_id`, el origen `division` y las clases
+  `division_cedida` (negativa) y `division_recibida`; `tramos` gana `division_id`. La llave del activo nuevo se creó a mano con
+  `on delete set null (activo_nuevo_id)` (drizzle no escribe la lista de columnas): como un `check` exige el activo nuevo mientras la
+  división está vigente, el activo solo se borra al anular. `activos-fijos.divisiones` entra a la auditoría permanente.
+- Cálculo en `dominio/depreciacion/division.ts` (`repartirCifras`, `tramosDeUnaParte`): `round(Q × k / n)` mitad hacia arriba y el
+  sobrante en el origen; prueba con el ejemplo de §7.6 y con 50 divisiones de 1 (no se pierde un centavo y cada pieza agota su
+  pendiente). El `periodo` de la división es el primer mes de sus tramos, `max(mes de la fecha, desde del último tramo)`, y a él
+  se refiere `acumuladaAl`: `acumuladasAntesDe(periodo)` (cierre) y el historial de cada activo (bajas, mejoras, ficha) suman las
+  acumuladas recibidas y restan las cedidas de las divisiones vigentes con `periodo <= mes`.
+- `POST …/activos/:id/dividir` y `…/:id/separar-en-unidades` (`divisiones.crear`, 201) y `POST …/divisiones/:id/anular`
+  (`divisiones.anular`). `DivisorDeActivos` es el servicio que AFI-6 y AFI-8 reutilizarán con las causas `traslado`, `baja` e
+  `inventario`. Separar en unidades acepta códigos escritos (sin repetirse ni usarse) y propone el resto en un bloque.
+- Anular: mes abierto y sin, después de la división, traslados (salvo el alta), mejoras, otros cambios de tramos, bajas, cuotas del
+  activo nuevo ni otra división (comparando `creado_en`; el de las divisiones es `clock_timestamp()`, así las de «separar en
+  unidades» se deshacen de la última a la primera). Anula los costos cedidos (rastro), apaga los tramos y repone los que sustituyeron,
+  borra el activo nuevo con sus costos, tramos y alta, y devuelve la cantidad y el residual. Audita `anular` con la división y las
+  fichas de los dos activos; la ficha del activo trae `divisiones`.
+- Decisiones: no se divide un saldo inicial con costo fiscal distinto del contable o de su base (`saldo_inicial_con_diferencias`: la
+  diferencia no tiene dónde caer) ni un activo con costos negativos por grupo; un activo con divisiones no se elimina, no cambia su
+  cantidad a mano ni vuelve a construcción (`activo_con_divisiones`); la baja con fecha anterior a una división se rechaza
+  (`baja_anterior_a_una_division`); el activo nuevo no copia serie, placa, foto ni observaciones. La fecha de la división
+  no puede ser anterior al inicio de uso (o a la adquisición) ni a un traslado, mejora o división del activo.
+- Pendiente: la vida útil que guarda el activo nuevo (`vida_util_contable_meses`) copia la del origen, pero `aplicarEstimacion` de
+  una mejora posterior la recalcula desde su primer tramo (el de la división) y daría los meses que le faltaban; solo es el dato
+  mostrado (la depreciación usa los tramos). Falta AFI-6c para las pantallas de dividir y separar.
 
 **Notas de lo programado en AF-8 (servidor, sin migración):**
 

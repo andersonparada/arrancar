@@ -4421,4 +4421,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   destino. (4) Un bien de control no se vende como activo (la venta con resultado contradecía §3.2 y §3.4). Los puntos 3 y 4
   quedan **pendientes del dictamen de `contador-guatemala`** (qué destino y qué registro les corresponde); mientras tanto se
   rechazan. Sin migración. Pruebas nuevas: 6 unitarias y 3 de API.
+- **2026-11-23 — AFI-5 (Activos fijos, servidor): divisiones.** Migración `0010_afi5_divisiones`: tabla `divisiones` (§5.15),
+  `division_id` en `costos` y `tramos`, origen `division` y clases `division_cedida` y `division_recibida`, y
+  `activos-fijos.divisiones` en la auditoría permanente. `DividirActivo`, `SepararEnUnidades` (tope 200) y `AnularDivision`
+  (`divisiones.crear` y `.anular`) sobre el servicio `DivisorDeActivos`: el activo nuevo se lleva `round(Q × k / n)` del costo, la
+  acumulada contable y fiscal, el residual y la base del porcentaje, y los dos activos abren un tramo `division` por libro desde el
+  mes de la división; las cuotas ya cerradas se quedan en el origen. `acumuladaAl` suma las acumuladas recibidas y resta las
+  cedidas en el cierre, el historial (bajas, mejoras) y la ficha, que ahora trae `divisiones`. Anular exige mes abierto y ningún
+  movimiento posterior (traslado, mejora, cambio de tramos, baja, cuotas u otra división), borra el activo nuevo y audita con los
+  dos activos. Eventos `activo_dividido` y `division_anulada`. Decisiones: no se divide un saldo inicial con diferencias fiscales
+  ni un activo con costos negativos; un activo con divisiones no se elimina, no cambia su cantidad a mano ni vuelve a
+  construcción; la baja anterior a una división se rechaza. Pruebas: 15 y 27 del dominio, 16 de persistencia y 25 de API (cierre,
+  baja, anular y separar con el centavo). Pendiente: AFI-6 (traslado y baja parciales), AFI-8 y AFI-6c (pantallas).
 
