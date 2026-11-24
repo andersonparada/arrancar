@@ -71,6 +71,8 @@ export interface FiltrosDeDocumentos {
   /** Para los traslados: la bodega a la que van (la lista «Por recibir» de quien recibe). */
   bodegaDeDestinoId?: string;
   articuloId?: string;
+  /** Los documentos que nacen de una factura o nota del libro de compras (las recepciones de una factura). */
+  documentoDeCompraId?: string;
   estado?: EstadoDeDocumento;
   /** Los traslados `en_transito` son la lista «Por recibir» de la bodega de destino. */
   estadoDeTraslado?: EstadoDeTraslado;

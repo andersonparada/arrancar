@@ -60,6 +60,7 @@ export const esquemaFiltrosDeDocumentos = z.object({
   bodegaId: z.uuid().optional(),
   bodegaDeDestinoId: z.uuid().optional(),
   articuloId: z.uuid().optional(),
+  documentoDeCompraId: z.uuid().optional(),
   estado: z.enum(['vigente', 'anulado']).optional(),
   estadoDeTraslado: z.enum(ESTADOS_DE_TRASLADO).optional(),
   desde: fechaOpcional().optional(),

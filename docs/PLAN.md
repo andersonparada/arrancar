@@ -4532,3 +4532,45 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   vacío de un anticipo anulado (11). Siguen abiertos: «Es empleado» encendido en cada entrega (8, el tercero no lo recuerda), aviso rojo que no
   se limpia entre intentos (10, es del almacén de avisos del core) y alinear las tablas con y sin documento (11); y de decisión: terceros de
   tipo empresa en el selector, nota de débito sin referencia y corte futuro de CL-R1 (12).
+- **2026-11-23 — Inventarios, cliente de INV-2c, INV-4c e INV-5c (tanda 9).** Sobre la API ya hecha, sin tocar el
+  servidor. **Bodegas** (INV-2c): lista, formulario en página con localidad y usuario responsable, ficha con los usuarios
+  con acceso, ventana de asignación (copia de la de Localidades) y Excel; las localidades y los usuarios del formulario
+  solo se piden a quien tiene `empresas.localidades.ver` o `bodegas.asignar` (sin el permiso el campo no se ofrece y lo
+  guardado se conserva). **Existencias y kardex** (INV-4c): tarjetas por artículo con total y por bodega (valor y costo solo si
+  el servidor los manda), y una pantalla de kardex por artículo con existencias por bodega y lote; quien no ve todas las bodegas
+  elige una (el servidor no le da el kardex de la empresa). **Movimientos:** lista con filtros, ficha imprimible con anulación
+  (motivo obligatorio y resumen de lo que pasará) y formularios de entrada y salida con renglones, lote (FEFO propuesto en las
+  salidas), unidad de empaque, lector de códigos de barras (el lector escribe y pulsa Intro; escanear dos veces suma la
+  cantidad) y confirmación con resumen. **Política de costeo:** método vigente, historia y elegir método mientras ningún
+  movimiento lo haya usado. **Por recibir** (INV-5c): líneas agrupadas por documento, recibir en lote lo marcado (bodega, lote
+  existente o nuevo, cantidad con unidad, monto; «Repartir» divide una línea en varios artículos; el cliente revisa que lo
+  recibido de una línea no pase de su pendiente), descartar con la advertencia de V-8, devolución a proveedor y rebaja de costo
+  desde las notas de crédito. Formatos nuevos en el core: `formatearCantidadDeInventario` (2 a 4 decimales) y
+  `formatearCostoUnitario` (2 a 6). **No se hizo / queda anotado:** la **salida a obra o mantenimiento de activos fijos**
+  (la API no recibe `activoFijoId`); la bandeja no filtra por proveedor ni por período (la API lo permite, falta un selector
+  de proveedores); el servidor no lista las líneas descartadas, así que «Devolver a la bandeja» solo está disponible para
+  lo descartado en la visita actual (hace falta un `GET` de descartes para listarlas todas); «Cambiar método» con la autorización
+  de la SAT, salidas especiales, traslados, ajustes, conteos, cierres y los reportes siguen sin pantalla (sus pasos).
+- **2026-11-23 — Inventarios, correcciones de la revisión de INV-2c, INV-4c e INV-5c (tanda 9).** **Escanear** un artículo
+  que ya está en otra unidad agrega un renglón nuevo y solo ese se inicializa (antes se reiniciaba la unidad del anterior y
+  el error entraba al kardex sin aviso). **Recepción:** «Repartir» ya no copia «lote nuevo» y cambiar de artículo limpia
+  unidad, lote y lote nuevo (`cambiarDeArticulo`), así no se exige ni se envía un lote que no se ve. **Notas de crédito:**
+  las líneas de una nota también se pueden descartar (con `recepciones.descartar`) cuando no son mercadería. **Devolución:**
+  servidor, aditivo: `GET /inventarios/recepciones?documentoDeCompraId=` (permiso `recepciones.crear`, caso de uso
+  `ListarRecepcionesDeUnaFactura`) da las recepciones vigentes de la factura sin el tope de 500 de la lista de documentos y sin
+  exigir `existencias.ver`; la lista de documentos también acepta el filtro `documentoDeCompraId`. **Permisos de referencias:**
+  artículos, bodegas y conceptos de gasto de los formularios (entrada, salida, recepción) solo se piden con
+  `articulos.ver` y `bodegas.ver`; sin ellos no hay avisos de error por 403 y el formulario dice qué permiso falta
+  (`AvisoDeReferencias`). **Kardex:** sin `bodegas.ver` las bodegas salen de las existencias ya recortadas; sin bodega
+  elegida la pantalla dice «Elija una bodega» en vez de «Sin movimientos». **Lote propuesto (FEFO):** en las salidas solo
+  entre los lotes con existencia en la bodega elegida (`existencias.ver`; sin el permiso no se propone ninguno) y se
+  recalcula al cambiar la bodega. **Salida:** al cambiar la localidad se quita el departamento que no es de la nueva.
+  Queda anotado: el servidor no valida que el departamento pertenezca a la localidad (`exigirReferencias` solo revisa que
+  exista); falta endpoint de existencias por lote con el permiso de salidas para quien no tiene `existencias.ver`.
+
+- **2026-11-23 — Inventarios, segunda corrección de INV-2c, INV-4c e INV-5c (tanda 9).** **Cambio de bodega en una
+  salida:** el lote elegido a mano se conserva si tiene existencia en la bodega nueva o si no se puede saber (sin
+  `existencias.ver`); si ya no tiene, se propone otro y se avisa; el lote que puso el sistema se vuelve a proponer.
+  **Lector de códigos:** `agregarLeido` suma a la cantidad del mismo renglón (sin copiarlo), así el lote propuesto de la
+  primera lectura no se pierde con la segunda. **Descartar notas de crédito:** `LineaPorRecibirDto` suma `esInventario`
+  (aditivo); para una nota sin marca la ventana y los avisos de éxito y de deshacer dicen que el Libro de compras no cambia.

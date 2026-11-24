@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Pencil } from 'lucide-vue-next';
+import { PackageSearch, Pencil } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
@@ -16,6 +17,7 @@ import { VENTANAS_INVENTARIOS } from '../textos';
 
 const props = defineProps<{ articuloId: string }>();
 
+const router = useRouter();
 const ventana = VENTANAS_INVENTARIOS.articulos;
 const { registro, cargando, editar, cambiarEstado, eliminar, conversiones, lotes } = usarFichaDeArticulo(
   props.articuloId,
@@ -28,6 +30,14 @@ const detalles = computed(() => (registro.value ? detallesDeArticulo(registro.va
   <div v-if="registro" class="space-y-4">
     <EncabezadoPagina :titulo="registro.codigo" descripcion="Artículo" :volver="volver">
       <InsigniaBase v-if="!registro.activo" tono="rojo">Inactivo</InsigniaBase>
+      <BotonBase
+        v-permiso="'inventarios.existencias.ver'"
+        variante="secundario"
+        :icono="PackageSearch"
+        @click="router.push({ name: 'inventarios.existencias.kardex', params: { articuloId } })"
+      >
+        Existencias y kardex
+      </BotonBase>
       <BotonBase v-permiso="'inventarios.articulos.editar'" variante="secundario" :icono="Pencil" @click="editar">
         Editar
       </BotonBase>

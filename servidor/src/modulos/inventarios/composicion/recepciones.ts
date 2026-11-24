@@ -5,6 +5,7 @@ import type { DependenciasDeRecepciones } from '../aplicacion/casos-uso/recepcio
 import { DescartarLinea } from '../aplicacion/casos-uso/recepciones/descartar-linea.js';
 import { DevolverLineaALaBandeja } from '../aplicacion/casos-uso/recepciones/devolver-linea-a-la-bandeja.js';
 import { ListarPorRecibir } from '../aplicacion/casos-uso/recepciones/listar-por-recibir.js';
+import { ListarRecepcionesDeUnaFactura } from '../aplicacion/casos-uso/recepciones/listar-recepciones-de-una-factura.js';
 import { RechazarDocumentoConRecepciones } from '../aplicacion/casos-uso/recepciones/rechazar-documento-con-recepciones.js';
 import { RecibirLineas } from '../aplicacion/casos-uso/recepciones/recibir-lineas.js';
 import { RegistrarDevolucionAProveedor } from '../aplicacion/casos-uso/recepciones/registrar-devolucion.js';
@@ -58,6 +59,7 @@ export function rutasDeRecepciones() {
   return rutasRecepciones(
     new RecepcionesControlador({
       listar: new ListarPorRecibir(dependencias),
+      listarDeUnaFactura: new ListarRecepcionesDeUnaFactura(dependencias),
       recibir: new RecibirLineas(dependencias),
       devolver: new RegistrarDevolucionAProveedor(dependencias),
       rebajar: new RegistrarRebajaDeCosto(dependencias),

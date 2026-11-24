@@ -12,6 +12,7 @@ import { crearArticulo, crearBodega, kardexDe } from './soporte/escenario-de-kar
 import {
   lineaDeInventario,
   porRecibir,
+  RUTA_RECEPCIONES,
   prepararRecepciones,
   recibir,
   registrarDocumento,
@@ -207,6 +208,30 @@ describe('permisos y bodegas', () => {
 
     expect(lista.estado).toBe(200);
     expect([recepcion.estado, anular.estado, descartar.estado]).toEqual([403, 403, 403]);
+  });
+
+  it('las recepciones de una factura se ven con el permiso de recibir, solo las de esa factura y vigentes', async () => {
+    const propia = await registrarDocumento(e);
+    const otra = await registrarDocumento(e);
+    const recibida = await recibir(e, [renglonDeRecepcion(e, propia.lineaIds[0]!, { cantidad: '5', monto: '100.00' })]);
+    await recibir(e, [renglonDeRecepcion(e, otra.lineaIds[0]!, { cantidad: '5', monto: '100.00' })]);
+    const operador = await crearUsuarioConPermisos(entorno, e.cuenta, {
+      nombres: 'Operador',
+      apellidos: 'Recibe',
+      permisos: ['inventarios.recepciones.crear'],
+    });
+    const permisos = ['inventarios.recepciones.ver'];
+    const lector = await crearUsuarioConPermisos(entorno, e.cuenta, { nombres: 'Ana', apellidos: 'Lee', permisos });
+    const id = (await operador.get('/api/sesion')).cuerpo.usuario.id;
+    await propietario().put(`/api/inventarios/bodegas/accesos/${id}`, { bodegaIds: [e.bodegaId] });
+
+    const consulta = `${RUTA_RECEPCIONES}?documentoDeCompraId=${propia.documentoId}`;
+    const vistas = await operador.get(consulta);
+    const sinPermiso = await lector.get(consulta);
+
+    expect(vistas.estado, JSON.stringify(vistas.cuerpo)).toBe(200);
+    expect(vistas.cuerpo.map((d: { id: string }) => d.id)).toEqual([recibida.cuerpo.documentos[0].id]);
+    expect(sinPermiso.estado).toBe(403);
   });
 
   it('una bodega que el usuario no tiene asignada no se ve: la recepción se rechaza y su documento no se ve', async () => {

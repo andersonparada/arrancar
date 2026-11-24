@@ -37,6 +37,9 @@ export const esquemaRecepcion = z.object({
   renglones: z.array(renglonDeRecepcion).min(1, 'Agregue al menos un renglón.').max(200),
 });
 
+/** La factura de la que se piden las recepciones vigentes (para elegir qué devolver). */
+export const esquemaFiltrosDeRecepciones = z.object({ documentoDeCompraId: idObligatorio() });
+
 export const esquemaDevolucion = z.object({
   fecha: fechaObligatoria(),
   lineaId: idObligatorio(),
@@ -72,6 +75,7 @@ export const esquemaFiltrosDePorRecibir = z.object({
 
 export const esquemaParamsLinea = z.object({ lineaId: z.uuid() });
 
+export type FiltrosDeRecepcionesSolicitados = z.infer<typeof esquemaFiltrosDeRecepciones>;
 export type RecepcionSolicitada = z.infer<typeof esquemaRecepcion>;
 export type DevolucionSolicitada = z.infer<typeof esquemaDevolucion>;
 export type RebajaSolicitada = z.infer<typeof esquemaRebaja>;

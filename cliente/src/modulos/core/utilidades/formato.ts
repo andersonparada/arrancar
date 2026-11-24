@@ -26,6 +26,14 @@ export const formatearMonto = (valor: Numero, moneda?: string) => formatoDeLaEmp
 
 export const formatearCantidad = (valor: Numero, unidad?: string) => formatoDeLaEmpresa().cantidad(valor, unidad);
 
+/** La cantidad de un artículo de inventario, con hasta 4 decimales (la unidad es opcional). */
+export const formatearCantidadDeInventario = (valor: Numero, unidad?: string) =>
+  formatoDeLaEmpresa().cantidadDeInventario(valor, unidad);
+
+/** El costo de una unidad de inventario, con hasta 6 decimales. */
+export const formatearCostoUnitario = (valor: Numero, moneda?: string) =>
+  formatoDeLaEmpresa().costoUnitario(valor, moneda);
+
 const DIGITOS_DE_TELEFONO_LOCAL = 8;
 
 /**

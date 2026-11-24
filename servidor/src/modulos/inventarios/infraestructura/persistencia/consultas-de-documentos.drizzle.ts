@@ -24,6 +24,7 @@ function filtrosDeIgualdad(filtros: FiltrosDeDocumentos): SQL[] {
     [documentos.clase, filtros.clase],
     [documentos.bodegaId, filtros.bodegaId],
     [documentos.bodegaDeDestinoId, filtros.bodegaDeDestinoId],
+    [documentos.documentoDeCompraId, filtros.documentoDeCompraId],
     [documentos.estado, filtros.estado],
     [documentos.estadoDeTraslado, filtros.estadoDeTraslado],
   ] as const;

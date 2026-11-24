@@ -42,6 +42,19 @@ describe('números', () => {
     expect(sinCentavos.monto('4.70')).toMatch(/^Q\s?4\.70$/);
   });
 
+  it('las cantidades de inventario llevan de 2 a 4 decimales', () => {
+    expect(guatemala.cantidadDeInventario('24.00000000', 'kg')).toBe('24.00 kg');
+    expect(guatemala.cantidadDeInventario('0.5')).toBe('0.50');
+    expect(guatemala.cantidadDeInventario('0.00026')).toBe('0.0003');
+    expect(guatemala.cantidadDeInventario(null)).toBe('—');
+  });
+
+  it('el costo unitario conserva hasta 6 decimales', () => {
+    expect(guatemala.costoUnitario('12.5')).toMatch(/^Q\s?12\.50$/);
+    expect(guatemala.costoUnitario('0.123456')).toMatch(/^Q\s?0\.123456$/);
+    expect(guatemala.costoUnitario('')).toBe('—');
+  });
+
   it('las cantidades pueden llevar su unidad', () => {
     expect(guatemala.cantidad(12.5, 'qq')).toBe('12.50 qq');
     expect(new FormatoRegional({ ...AJUSTES_REGIONALES_PREDETERMINADOS, decimalesCantidades: 0 }).cantidad(40)).toBe(

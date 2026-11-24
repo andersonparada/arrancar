@@ -1,4 +1,4 @@
-import { Warehouse } from 'lucide-vue-next';
+import { ArrowLeftRight, Calculator, PackageCheck, PackageSearch, Warehouse } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_INVENTARIOS } from './textos';
 import { Ruler } from 'lucide-vue-next';
@@ -49,6 +49,82 @@ export const moduloInventarios: DefinicionModuloCliente = {
       props: true,
       meta: { permiso: 'inventarios.articulos.editar', titulo: VENTANAS_INVENTARIOS.articulos.editar },
     },
+    {
+      path: '/inventarios/bodegas',
+      name: 'inventarios.bodegas',
+      component: () => import('./paginas/ListaDeBodegas.vue'),
+      meta: { permiso: 'inventarios.bodegas.ver', titulo: VENTANAS_INVENTARIOS.bodegas.titulo },
+    },
+    {
+      path: '/inventarios/bodegas/nuevo',
+      name: 'inventarios.bodegas.nuevo',
+      component: () => import('./paginas/FormularioDeBodega.vue'),
+      meta: { permiso: 'inventarios.bodegas.crear', titulo: VENTANAS_INVENTARIOS.bodegas.nuevo },
+    },
+    {
+      path: '/inventarios/bodegas/:bodegaId',
+      name: 'inventarios.bodegas.ficha',
+      component: () => import('./paginas/FichaDeBodega.vue'),
+      props: true,
+      meta: { permiso: 'inventarios.bodegas.ver', titulo: VENTANAS_INVENTARIOS.bodegas.titulo },
+    },
+    {
+      path: '/inventarios/bodegas/:bodegaId/editar',
+      name: 'inventarios.bodegas.editar',
+      component: () => import('./paginas/FormularioDeBodega.vue'),
+      props: true,
+      meta: { permiso: 'inventarios.bodegas.editar', titulo: VENTANAS_INVENTARIOS.bodegas.editar },
+    },
+    {
+      path: '/inventarios/existencias',
+      name: 'inventarios.existencias',
+      component: () => import('./paginas/ListaDeExistencias.vue'),
+      meta: { permiso: 'inventarios.existencias.ver', titulo: VENTANAS_INVENTARIOS.existencias.titulo },
+    },
+    {
+      path: '/inventarios/existencias/:articuloId',
+      name: 'inventarios.existencias.kardex',
+      component: () => import('./paginas/KardexDeArticulo.vue'),
+      props: true,
+      meta: { permiso: 'inventarios.existencias.ver', titulo: VENTANAS_INVENTARIOS.existencias.titulo },
+    },
+    {
+      path: '/inventarios/movimientos',
+      name: 'inventarios.movimientos',
+      component: () => import('./paginas/ListaDeMovimientos.vue'),
+      meta: { permiso: 'inventarios.existencias.ver', titulo: VENTANAS_INVENTARIOS.movimientos.titulo },
+    },
+    {
+      path: '/inventarios/movimientos/entrada',
+      name: 'inventarios.movimientos.entrada',
+      component: () => import('./paginas/FormularioDeEntrada.vue'),
+      meta: { permiso: 'inventarios.entradas.crear', titulo: VENTANAS_INVENTARIOS.entrada.titulo },
+    },
+    {
+      path: '/inventarios/movimientos/salida',
+      name: 'inventarios.movimientos.salida',
+      component: () => import('./paginas/FormularioDeSalida.vue'),
+      meta: { permiso: 'inventarios.salidas.crear', titulo: VENTANAS_INVENTARIOS.salida.titulo },
+    },
+    {
+      path: '/inventarios/movimientos/:documentoId',
+      name: 'inventarios.movimientos.ficha',
+      component: () => import('./paginas/FichaDeMovimiento.vue'),
+      props: true,
+      meta: { permiso: 'inventarios.existencias.ver', titulo: VENTANAS_INVENTARIOS.movimientos.titulo },
+    },
+    {
+      path: '/inventarios/politica-de-costeo',
+      name: 'inventarios.politica-de-costeo',
+      component: () => import('./paginas/PoliticaDeCosteo.vue'),
+      meta: { permiso: 'inventarios.metodo-de-costeo.ver', titulo: VENTANAS_INVENTARIOS.politicaDeCosteo.titulo },
+    },
+    {
+      path: '/inventarios/por-recibir',
+      name: 'inventarios.por-recibir',
+      component: () => import('./paginas/PorRecibir.vue'),
+      meta: { permiso: 'inventarios.recepciones.ver', titulo: VENTANAS_INVENTARIOS.porRecibir.titulo },
+    },
     // generador: rutas
   ],
   menu: [
@@ -77,6 +153,41 @@ export const moduloInventarios: DefinicionModuloCliente = {
           icono: Package,
           seccion: 'administracion',
           permiso: 'inventarios.articulos.ver',
+        },
+        {
+          titulo: VENTANAS_INVENTARIOS.bodegas.titulo,
+          ruta: '/inventarios/bodegas',
+          icono: Warehouse,
+          seccion: 'administracion',
+          permiso: 'inventarios.bodegas.ver',
+        },
+        {
+          titulo: VENTANAS_INVENTARIOS.existencias.titulo,
+          ruta: '/inventarios/existencias',
+          icono: PackageSearch,
+          seccion: 'operacion',
+          permiso: 'inventarios.existencias.ver',
+        },
+        {
+          titulo: VENTANAS_INVENTARIOS.movimientos.titulo,
+          ruta: '/inventarios/movimientos',
+          icono: ArrowLeftRight,
+          seccion: 'operacion',
+          permiso: 'inventarios.existencias.ver',
+        },
+        {
+          titulo: VENTANAS_INVENTARIOS.politicaDeCosteo.titulo,
+          ruta: '/inventarios/politica-de-costeo',
+          icono: Calculator,
+          seccion: 'administracion',
+          permiso: 'inventarios.metodo-de-costeo.ver',
+        },
+        {
+          titulo: VENTANAS_INVENTARIOS.porRecibir.titulo,
+          ruta: '/inventarios/por-recibir',
+          icono: PackageCheck,
+          seccion: 'operacion',
+          permiso: 'inventarios.recepciones.ver',
         },
         // generador: menu
       ],

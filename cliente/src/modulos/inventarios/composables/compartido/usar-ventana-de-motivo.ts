@@ -1,0 +1,34 @@
+import { ref } from 'vue';
+import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { faltaElMotivo, motivoVacio } from './motivo';
+
+/**
+ * Una ventana que pide el motivo de una acción (anular, descartar): revisa que haya motivo, ejecuta la acción con él
+ * y, si el servidor la acepta, cierra la ventana y avisa con `alTerminar`, que recibe lo que devolvió la acción.
+ */
+export function usarVentanaDeMotivo<Resultado>(
+  ejecutar: (motivo: string) => Promise<Resultado>,
+  alTerminar: (resultado: Resultado) => Promise<void> | void,
+) {
+  const { enviando, errores, enviar } = usarFormulario();
+  const edicion = ref(motivoVacio());
+
+  function abrir(): void {
+    errores.value = {};
+    edicion.value = { abierta: true, motivo: '' };
+  }
+
+  async function guardar(): Promise<void> {
+    errores.value = faltaElMotivo(edicion.value);
+    if (Object.keys(errores.value).length) return;
+    const salida: { resultado?: Resultado } = {};
+    const aceptado = await enviar(async () => {
+      salida.resultado = await ejecutar(edicion.value.motivo.trim());
+    });
+    if (!aceptado) return;
+    edicion.value.abierta = false;
+    await alTerminar(salida.resultado as Resultado);
+  }
+
+  return { edicion, enviando, errores, abrir, guardar };
+}
