@@ -181,7 +181,7 @@ describe('el reparto por activo fijo', () => {
       { clave: 'pago_a_proveedor', monto: '1120.00' },
       { clave: 'pago_a_proveedor_de_activo', monto: '2240.00' },
     ]);
-    expect(await movimientoDe(e.propietario(), id)).toMatchObject({ marcadaParaCuentasPorPagar: true });
+    expect(await movimientoDe(e.propietario(), id)).toMatchObject({ marcadaParaModulo: 'cuentas-por-pagar' });
   });
 
   it('una nota que queda toda en Inversión sigue marcada, y al anular el pago el reparto vuelve y la fecha contable es hoy', async () => {
@@ -192,7 +192,7 @@ describe('el reparto por activo fijo', () => {
     const pago = (await ligar(id, proveedor.proveedorId, [{ cargoId: activo, monto: '2240.00' }])).cuerpo;
 
     expect(await desgloseDe(id)).toEqual([{ clave: 'pago_a_proveedor_de_activo', monto: '2240.00' }]);
-    expect(await movimientoDe(e.propietario(), id)).toMatchObject({ marcadaParaCuentasPorPagar: true });
+    expect(await movimientoDe(e.propietario(), id)).toMatchObject({ marcadaParaModulo: 'cuentas-por-pagar' });
     const anulado = await anularPago(e.propietario(), pago.id, { motivo: 'Era otro documento' });
 
     expect(anulado.estado, JSON.stringify(anulado.cuerpo)).toBe(200);

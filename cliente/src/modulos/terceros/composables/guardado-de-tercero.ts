@@ -32,7 +32,9 @@ export async function editarTercero(
     apiTerceros.actualizar(id, { ...datos.value, confirmarDuplicado }),
   );
   if (guardado === DESISTIO) return null;
-  if (papelQueCambia === 'cliente') await apiTerceros.asignarCliente(id, papeles.value.cliente);
+  if (papelQueCambia === 'cliente') {
+    await apiTerceros.asignarCliente(id, papeles.value.cliente, seccionesParaEnviar(secciones.value));
+  }
   if (papelQueCambia === 'proveedor') {
     await apiTerceros.asignarProveedor(id, papeles.value.proveedor, seccionesParaEnviar(secciones.value));
   }

@@ -9,10 +9,10 @@ export function finDelMesDeConciliacion(conciliacion: Pick<Conciliacion, 'anio' 
   return `${conciliacion.anio}-${dosDigitos(conciliacion.mes)}-${dosDigitos(ultimo)}`;
 }
 
-type NotaConMarca = Pick<Movimiento, 'id' | 'fecha' | 'marcadaParaCuentasPorPagar' | 'puedeDesmarcar'>;
+type NotaConMarca = Pick<Movimiento, 'id' | 'fecha' | 'marcadaParaModulo' | 'puedeDesmarcar'>;
 
 /**
- * De las notas de la cuenta, las marcadas para Cuentas por pagar que el servidor deja desmarcar y que son candidatas
+ * De las notas de la cuenta, las marcadas para Cuentas por pagar (las de Cuentas por cobrar no) que el servidor deja desmarcar y que son candidatas
  * de esta conciliación, de la más antigua a la más reciente. Si una está ligada a un pago, el servidor la rechaza al
  * desmarcar: aquí no se adivina.
  */
@@ -22,7 +22,7 @@ export function notasMarcadasDeLaConciliacion<T extends NotaConMarca>(
 ): T[] {
   const ids = new Set(candidatos.map((c) => c.id));
   return notas
-    .filter((n) => n.marcadaParaCuentasPorPagar && n.puedeDesmarcar && ids.has(n.id))
+    .filter((n) => n.marcadaParaModulo === 'cuentas-por-pagar' && n.puedeDesmarcar && ids.has(n.id))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
 

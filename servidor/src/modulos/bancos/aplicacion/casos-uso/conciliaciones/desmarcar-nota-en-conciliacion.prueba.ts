@@ -19,7 +19,7 @@ class DesmarcarNotaFalso {
 
   async ejecutar(_operador: unknown, solicitud: unknown): Promise<MovimientoDto> {
     this.recibidos.push(solicitud);
-    return { marcadaParaCuentasPorPagar: false } as MovimientoDto;
+    return { marcadaParaModulo: null } as MovimientoDto;
   }
 }
 
@@ -57,7 +57,7 @@ describe('DesmarcarNotaEnConciliacion', () => {
   it('con la conciliación en proceso y la nota como candidata, delega en desmarcar la nota', async () => {
     const respuesta = await caso.ejecutar(operador, solicitud());
 
-    expect(respuesta.marcadaParaCuentasPorPagar).toBe(false);
+    expect(respuesta.marcadaParaModulo).toBeNull();
     expect(desmarcarNota.recibidos).toEqual([
       { movimientoId: notaId, motivo: 'Sin factura al cierre', conceptoId: 'concepto' },
     ]);

@@ -24,10 +24,10 @@ export interface GrupoMenu {
 }
 
 /** El formulario o la ficha que recibe la sección: el de una empresa o el de un proveedor. */
-export type DondeSeAporta = 'empresa' | 'proveedor';
+export type DondeSeAporta = 'empresa' | 'cliente' | 'proveedor';
 
 /**
- * Sección que un módulo aporta al formulario de Empresas o al de Proveedores (y a la ficha del proveedor). Solo se
+ * Sección que un módulo aporta al formulario de Empresas, de Clientes o de Proveedores (y a la ficha del cliente o del proveedor). Solo se
  * muestra si el módulo está activo. Su valor viaja en `secciones[<clave del módulo>]` del cuerpo del formulario y
  * el servidor lo guarda con el formulario, todo o nada.
  *

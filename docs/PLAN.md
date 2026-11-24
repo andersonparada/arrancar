@@ -4686,3 +4686,31 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   departamento actual: el departamento solo se depura contra la localidad cuando las ubicaciones ya cargaron. El traslado
   de un solo activo conserva si está en la bodega (`enBodega` precarga `aBodega`) y la confirmación avisa si el bien sale de
   ella. Pruebas del composable con la carga pendiente.
+- **2026-11-23 — VC-0b, correcciones de la revisión.** (1) La `0039` ya no adopta por nombre un «Cobros a clientes» con
+  movimientos (ni en `movimientos` ni en `desglose_de_movimientos`): lo renombra «… (anterior)» y siembra el de sistema;
+  así ninguna nota existente queda marcada para un módulo inexistente. (2) `cheque_rechazado` es reservado de
+  `cuentas-por-cobrar` (servidor y cliente): se sigue eligiendo y corrigiendo a mano sin el módulo. (3)
+  `CONCEPTO_QUE_MARCA_PARA_MODULO` incluye el tipo de nota y `moduloMarcado` lo exige (pago: débito; cobro: crédito).
+- **2026-11-23 — VC-0b, segunda corrección de la revisión.** Si la empresa ya tenía «Cobros a clientes (anterior)», el
+  renombrado de la `0039` se saltaba y el concepto con movimientos quedaba adoptado por la clave `cobro_a_cliente`
+  (notas marcadas para un módulo posiblemente inexistente). Ahora siempre se renombra: «(anterior)» si está libre y, si
+  no, «(anterior <id>)» (no choca con `conceptos_nombre_unico`); el INSERT siembra el de sistema. Prueba API con ambos.
+- **2026-11-23 — VC-0a-c (cliente): secciones aportadas en Clientes.** `DondeSeAporta` suma `'cliente'`; el formulario de
+  Clientes (alta y edición), la ventana «Papel de cliente» de la ficha y la ficha misma muestran y guardan las secciones de
+  los módulos activos igual que en Proveedores (`secciones` viaja en el alta y en `PUT /api/terceros/:id/cliente`;
+  `asignarCliente` acepta `secciones`). `altaCompleta` envía las secciones con cualquier papel. `VentanaDePapel` recibe
+  `papelId` en vez de `proveedorId`. Aún ningún módulo aporta una sección a `cliente` (llegan con LV-1c y CXC); sin
+  secciones, las pantallas no cambian. Pruebas: alta con secciones y filtro de `seccionesDe` por `cliente`.
+- **2026-11-23 — VC-0b y VC-0b-c: Bancos listo para Cuentas por cobrar.** Migración `0039_cobros_a_clientes` (como la
+  `0037`: por nombre normalizado, alinea, reactiva, inserta y es repetible) con los conceptos de sistema `cobro_a_cliente`,
+  `cobro_a_cliente_de_activo`, `devolucion_a_cliente` y `cheque_rechazado` (este ya existía como sugerido y pasa a
+  sistema; conserva su bandera de cargo bancario). Nota marcada por módulo: `CONCEPTO_QUE_MARCA_PARA_MODULO`
+  (`pago_a_proveedor` → `cuentas-por-pagar`, `cobro_a_cliente` → `cuentas-por-cobrar`); `marcadaParaCuentasPorPagar`
+  pasa a `marcadaParaModulo: string | null` (servidor y cliente); los hechos del movimiento traen la clave del concepto en
+  vez de `conceptoEsDePago`; `RevisorDeCambios` lee el mapa; una nota de crédito suelta también puede estar marcada
+  (`desmarcar` y corregir respetan su tipo). Reservados de `cuentas-por-cobrar`: `cobro_a_cliente_de_activo` y
+  `devolucion_a_cliente`. **Decisión:** `cobro_a_cliente` no se elige a mano en una nota aunque Cuentas por cobrar esté
+  inactivo (como `pago_a_proveedor`): al ser la marca, la nota quedaría sin módulo activo que revise sus cambios; se pone
+  solo al marcarla. Cliente: etiqueta «Para Cuentas por cobrar», bloqueo por el módulo marcado inactivo, y la lista de
+  notas marcadas de la conciliación sigue siendo solo de Cuentas por pagar. La ventana de desmarcar ofrece
+  conceptos del tipo de la nota. Pendiente para CXC-3: el marcado de una nota de crédito (`marcar`).

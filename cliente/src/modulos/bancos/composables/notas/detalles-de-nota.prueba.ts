@@ -38,7 +38,7 @@ const base: Movimiento = {
   interesBruto: null,
   isrRetenido: null,
   puedeReclasificar: true,
-  marcadaParaCuentasPorPagar: false,
+  marcadaParaModulo: null,
   desglose: [],
   puedeMarcar: false,
   puedeDesmarcar: false,

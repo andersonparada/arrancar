@@ -1,5 +1,5 @@
 import type { PropiedadesDeConcepto } from './concepto.js';
-import { CONCEPTOS_RESERVADOS_POR_MODULO } from './conceptos-reservados.js';
+import { CONCEPTO_QUE_MARCA_PARA_MODULO, CONCEPTOS_RESERVADOS_POR_MODULO } from './conceptos-reservados.js';
 import {
   ConceptoDeSistemaNoSeElige,
   ConceptoIncompatible,
@@ -55,8 +55,9 @@ function exigirQueSeaElegible(
   if (clave === null) return;
   const modulo = CONCEPTOS_RESERVADOS_POR_MODULO[clave];
   if (modulo === undefined || modulosActivos === undefined) throw new ConceptoDeSistemaNoSeElige();
-  // «Pago a proveedores» sigue siendo solo de los cheques (P3): en una nota es la marca de Cuentas por pagar.
-  if (clave === CLAVE_DE_PAGO_A_PROVEEDORES && tipo !== 'cheque') throw new ConceptoDeSistemaNoSeElige();
+  // Un concepto que marca (VC-0b) solo se elige en un cheque (P3); en una nota es la marca del módulo, que se pone
+  // al marcarla: elegido a mano con el módulo inactivo, la nota quedaría sin quien revise sus cambios.
+  if (clave in CONCEPTO_QUE_MARCA_PARA_MODULO && tipo !== 'cheque') throw new ConceptoDeSistemaNoSeElige();
   if (modulosActivos.has(modulo)) throw new ConceptoReservadoPorSuModulo(modulo);
 }
 

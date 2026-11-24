@@ -251,6 +251,16 @@ export class Movimiento extends Entidad<MovimientoId> {
     if (!suelta || this.esInverso || this.estaAnulado || this.estaRevertido) throw new NotaNoMarcable();
   }
 
+  /**
+   * Una nota suelta vigente, de débito o de crédito (la que puede estar marcada para un módulo, VC-0b).
+   * @throws NotaNoMarcable si no lo es.
+   */
+  exigirNotaSueltaVigente(): void {
+    const { tipo, saldoInicial, transferenciaId, moduloDeOrigen } = this.propiedades;
+    const suelta = tipo !== 'cheque' && !saldoInicial && transferenciaId === null && moduloDeOrigen === null;
+    if (!suelta || this.esInverso || this.estaAnulado || this.estaRevertido) throw new NotaNoMarcable();
+  }
+
   /** @throws MovimientoMarcadoEnConciliacion si `conciliacionId` no es nulo. */
   exigirNoMarcadoEnConciliacion(
     conciliacionId: string | null,

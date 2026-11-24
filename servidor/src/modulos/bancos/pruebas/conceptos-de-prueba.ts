@@ -41,6 +41,10 @@ const delUsuario = (id: string, cambios: Partial<DatosDeConcepto>) =>
 export const idDeSistema = (clave: string): string =>
   idDe(PRIMERO_DE_SISTEMA + CONCEPTOS_DE_SISTEMA.findIndex((c) => c.claveDeSistema === clave));
 
+/** La clave de sistema del concepto con ese id fijo; nulo si no es de sistema. */
+export const claveDeSistemaDe = (id: string): string | null =>
+  CONCEPTOS_DE_SISTEMA.find((c) => idDeSistema(c.claveDeSistema ?? '') === id)?.claveDeSistema ?? null;
+
 function deSistema(indice: number): Concepto {
   const { claveDeSistema, datos } = CONCEPTOS_DE_SISTEMA[indice]!;
   return Concepto.reconstruir({

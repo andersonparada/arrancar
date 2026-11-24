@@ -68,7 +68,7 @@ async function volverAlEstadoAnterior(empresaId: string, cuentaId: string): Prom
     [empresaId],
   );
   await conexion.query(
-    `update bancos.conceptos set grupo_de_flujo = 'Cheques rechazados' where empresa_id = $1 and nombre = 'Cheque rechazado'`,
+    `update bancos.conceptos set grupo_de_flujo = 'Cheques rechazados', clave_de_sistema = null where empresa_id = $1 and nombre = 'Cheque rechazado'`,
     [empresaId],
   );
   void cuentaId;

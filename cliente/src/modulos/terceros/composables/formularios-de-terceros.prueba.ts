@@ -17,6 +17,21 @@ describe('alta completa', () => {
     expect(alta.contactos.map((c) => c.nombre)).toEqual(['Marta']);
   });
 
+  it('un cliente entra con las secciones que aportan los módulos activos', () => {
+    const secciones = { 'libro-de-ventas': { regimen: 'general' } };
+
+    const alta = altaCompleta(datosVacios(), 'cliente', { papeles: papelesVacios(), contactos: [], secciones });
+
+    expect(alta.papel).toMatchObject({ tipo: 'cliente', clase: 'directo' });
+    expect(alta.secciones).toEqual(secciones);
+  });
+
+  it('sin secciones no envía el campo', () => {
+    const alta = altaCompleta(datosVacios(), 'cliente', { papeles: papelesVacios(), contactos: [] });
+
+    expect(alta).not.toHaveProperty('secciones');
+  });
+
   it('al editar solo toma de la ficha los datos que se pueden cambiar', () => {
     const ficha = {
       ...datosVacios(),

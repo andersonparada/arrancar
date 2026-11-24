@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  moduloMarcado,
   accionesDeCheque,
   accionesDeMovimiento,
   accionesDeTransferencia,
@@ -18,7 +19,7 @@ const limpia = (cambios: Partial<HechosDeUnMovimiento> = {}): HechosDeUnMovimien
   revertido: false,
   esInverso: false,
   esDeOtroModulo: false,
-  conceptoEsDePago: false,
+  claveDelConcepto: null,
   mesConciliado: false,
   cuentaConConciliaciones: false,
   ...cambios,
@@ -227,30 +228,45 @@ describe('lo que generó otro módulo y las notas marcadas (CP4)', () => {
   });
 
   it('una nota de débito suelta con el concepto de pago a proveedores está marcada: se desmarca, no se marca', () => {
-    const marcada = debito({ conceptoEsDePago: true });
+    const marcada = debito({ claveDelConcepto: 'pago_a_proveedor' });
 
     expect(estaMarcada(marcada)).toBe(true);
     expect(accionesDeMovimiento(marcada)).toMatchObject({ puedeMarcar: false, puedeDesmarcar: true });
     expect(accionesDeMovimiento(debito())).toMatchObject({ puedeMarcar: true, puedeDesmarcar: false });
   });
 
-  it('el mismo concepto en un crédito, un cheque, una transferencia, un inverso o lo de otro módulo no es marca', () => {
+  it('una nota de crédito suelta con «Cobros a clientes» está marcada para Cuentas por cobrar y solo se desmarca', () => {
+    const marcada = debito({ tipo: 'credito', claveDelConcepto: 'cobro_a_cliente' });
+
+    expect(moduloMarcado(marcada)).toBe('cuentas-por-cobrar');
+    expect(moduloMarcado(debito({ claveDelConcepto: 'pago_a_proveedor' }))).toBe('cuentas-por-pagar');
+    expect(moduloMarcado(debito({ tipo: 'credito', claveDelConcepto: 'devolucion_de_anticipo' }))).toBeNull();
+    expect(accionesDeMovimiento(marcada)).toMatchObject({ puedeMarcar: false, puedeDesmarcar: true });
+    expect(accionesDeMovimiento(debito({ tipo: 'credito' }))).toMatchObject({ puedeMarcar: false });
+  });
+
+  it('la marca solo vale en su dirección: un débito con «Cobros a clientes» o un crédito con pago a proveedores no marcan', () => {
+    expect(moduloMarcado(debito({ tipo: 'debito', claveDelConcepto: 'cobro_a_cliente' }))).toBeNull();
+    expect(moduloMarcado(debito({ tipo: 'credito', claveDelConcepto: 'pago_a_proveedor' }))).toBeNull();
+    expect(estaMarcada(debito({ tipo: 'debito', claveDelConcepto: 'cobro_a_cliente' }))).toBe(false);
+  });
+
+  it('el mismo concepto en un cheque, una transferencia, un inverso o lo de otro módulo no es marca', () => {
     for (const cambios of [
-      { tipo: 'credito' as const },
       { tipo: 'cheque' as const },
       { esDeTransferencia: true },
       { esInverso: true },
       { esDeOtroModulo: true },
       { saldoInicial: true },
     ]) {
-      expect(estaMarcada(debito({ conceptoEsDePago: true, ...cambios }))).toBe(false);
+      expect(estaMarcada(debito({ claveDelConcepto: 'pago_a_proveedor', ...cambios }))).toBe(false);
     }
   });
 
   it('una nota anulada o revertida no se marca ni se desmarca', () => {
     for (const cambios of [{ anulado: true }, { revertido: true }]) {
       expect(accionesDeMovimiento(debito(cambios))).toMatchObject({ puedeMarcar: false });
-      expect(accionesDeMovimiento(debito({ conceptoEsDePago: true, ...cambios }))).toMatchObject({
+      expect(accionesDeMovimiento(debito({ claveDelConcepto: 'pago_a_proveedor', ...cambios }))).toMatchObject({
         puedeDesmarcar: false,
       });
     }

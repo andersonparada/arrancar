@@ -44,7 +44,7 @@ export interface MovimientoConMarcaDto extends Omit<
   | 'puedeEliminar'
   | 'puedeReclasificar'
   | 'conceptoNombre'
-  | 'marcadaParaCuentasPorPagar'
+  | 'marcadaParaModulo'
   | 'desglose'
   | 'puedeMarcar'
   | 'puedeDesmarcar'

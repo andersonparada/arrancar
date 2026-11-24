@@ -76,7 +76,7 @@ describe('registrar una nota ya marcada', () => {
       debito({ conceptoId: undefined, marcarParaCuentasPorPagar: true }),
     );
 
-    expect(creada).toMatchObject({ conceptoId: PAGO, marcadaParaCuentasPorPagar: true });
+    expect(creada).toMatchObject({ conceptoId: PAGO, marcadaParaModulo: 'cuentas-por-pagar' });
   });
 
   it('se rechaza si no es de débito o si el módulo está inactivo', async () => {
@@ -98,7 +98,7 @@ describe('marcar y desmarcar', () => {
 
     const marcada = await casos.marcar.ejecutar(operador, id);
 
-    expect(marcada).toMatchObject({ conceptoId: PAGO, marcadaParaCuentasPorPagar: true, puedeDesmarcar: true });
+    expect(marcada).toMatchObject({ conceptoId: PAGO, marcadaParaModulo: 'cuentas-por-pagar', puedeDesmarcar: true });
     await expect(casos.marcar.ejecutar(operador, id)).rejects.toThrow(NotaYaMarcada);
     await expect(casos.marcar.ejecutar(operador, credito)).rejects.toThrow(NotaNoMarcable);
     expect(casos.auditoria.entradas).toContainEqual(
@@ -121,7 +121,7 @@ describe('marcar y desmarcar', () => {
       conceptoId: CONCEPTO_GENERAL,
     });
 
-    expect(desmarcada).toMatchObject({ conceptoId: CONCEPTO_GENERAL, marcadaParaCuentasPorPagar: false });
+    expect(desmarcada).toMatchObject({ conceptoId: CONCEPTO_GENERAL, marcadaParaModulo: null });
     expect(casos.avisos.recibidos).toEqual([
       expect.objectContaining({ cambio: 'desmarcar', motivo: 'Era de otro proveedor' }),
     ]);
@@ -140,7 +140,7 @@ describe('marcar y desmarcar', () => {
     await expect(
       casos.desmarcar.ejecutar(operador, { movimientoId: id, motivo: 'Cambio', conceptoId: CONCEPTO_GENERAL }),
     ).rejects.toThrow('Está ligada a un pago.');
-    expect((await casos.obtener.ejecutar(operador, id)).marcadaParaCuentasPorPagar).toBe(true);
+    expect((await casos.obtener.ejecutar(operador, id)).marcadaParaModulo).toBe('cuentas-por-pagar');
   });
 
   it('reclasificar una nota marcada con reparto no se permite; sin reparto avisa «reclasificar»', async () => {

@@ -28,7 +28,7 @@ export class MarcarNota {
       movimiento.exigirNotaDeDebitoMarcable();
       if (!(await modulosDeOrigen.estaActivo(operador, MODULO_CUENTAS_POR_PAGAR))) throw new CuentasPorPagarInactivo();
       const anterior = await consultas.obtener(movimientoId);
-      if (anterior.marcadaParaCuentasPorPagar) throw new NotaYaMarcada();
+      if (anterior.marcadaParaModulo) throw new NotaYaMarcada();
       if (anterior.interesBruto !== null) throw new NotaNoMarcable();
 
       const marca = await conceptos.deSistema(operador, CLAVE_DE_PAGO_A_PROVEEDORES);

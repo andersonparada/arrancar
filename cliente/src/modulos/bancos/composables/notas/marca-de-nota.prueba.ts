@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import {
   detallesDeDesglose,
-  esperaACuentasPorPagarInactivo,
   explicacionDeOrigen,
   insigniaDeNota,
+  moduloInactivoQueEspera,
   ofreceCasillaDeMarca,
   ofreceMarcar,
   resumenDeMarcado,
@@ -18,14 +18,17 @@ const base = {
   anuladoEn: null,
   revertidoEn: null,
   revierteAId: null,
-  marcadaParaCuentasPorPagar: false,
+  marcadaParaModulo: null,
   moduloDeOrigen: null,
 };
 
 describe('marca de la nota', () => {
   it('la etiqueta de marca sale solo si no hay reversión', () => {
-    expect(insigniaDeNota({ ...base, marcadaParaCuentasPorPagar: true })).toBe('Para Cuentas por pagar');
-    expect(insigniaDeNota({ ...base, marcadaParaCuentasPorPagar: true, revertidoEn: '2026-01-01' })).toBe('Revertido');
+    expect(insigniaDeNota({ ...base, marcadaParaModulo: 'cuentas-por-pagar' })).toBe('Para Cuentas por pagar');
+    expect(insigniaDeNota({ ...base, marcadaParaModulo: 'cuentas-por-cobrar' })).toBe('Para Cuentas por cobrar');
+    expect(insigniaDeNota({ ...base, marcadaParaModulo: 'cuentas-por-pagar', revertidoEn: '2026-01-01' })).toBe(
+      'Revertido',
+    );
     expect(insigniaDeNota(base)).toBeUndefined();
     expect(insigniaDeNota({ ...base, parteDeApertura: 'error_del_banco' })).toBe('Carga inicial');
     expect(insigniaDeNota({ ...base, parteDeApertura: 'error_del_banco', anuladoEn: '2026-02-01' })).not.toBe(
@@ -69,9 +72,18 @@ describe('marca de la nota', () => {
 
 describe('Cuentas por pagar apagado', () => {
   it('bloquea lo que generó o marcó ese módulo, y solo eso', () => {
-    expect(esperaACuentasPorPagarInactivo({ ...base, marcadaParaCuentasPorPagar: true }, false)).toBe(true);
-    expect(esperaACuentasPorPagarInactivo({ ...base, moduloDeOrigen: 'cuentas-por-pagar' }, false)).toBe(true);
-    expect(esperaACuentasPorPagarInactivo({ ...base, marcadaParaCuentasPorPagar: true }, true)).toBe(false);
-    expect(esperaACuentasPorPagarInactivo(base, false)).toBe(false);
+    const ninguno = () => false;
+    const todos = () => true;
+    expect(moduloInactivoQueEspera({ ...base, marcadaParaModulo: 'cuentas-por-pagar' }, ninguno)).toBe(
+      'cuentas-por-pagar',
+    );
+    expect(moduloInactivoQueEspera({ ...base, moduloDeOrigen: 'cuentas-por-pagar' }, ninguno)).toBe(
+      'cuentas-por-pagar',
+    );
+    expect(moduloInactivoQueEspera({ ...base, marcadaParaModulo: 'cuentas-por-pagar' }, todos)).toBeNull();
+    expect(moduloInactivoQueEspera(base, ninguno)).toBeNull();
+    expect(moduloInactivoQueEspera({ ...base, marcadaParaModulo: 'cuentas-por-cobrar' }, ninguno)).toBe(
+      'cuentas-por-cobrar',
+    );
   });
 });

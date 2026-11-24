@@ -26,7 +26,7 @@ export type DatosNota = Omit<
   | 'puedeEliminar'
   | 'puedeReclasificar'
   | 'conceptoNombre'
-  | 'marcadaParaCuentasPorPagar'
+  | 'marcadaParaModulo'
   | 'desglose'
   | 'puedeMarcar'
   | 'puedeDesmarcar'

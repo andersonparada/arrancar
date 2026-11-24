@@ -10,7 +10,6 @@ import type {
   SolicitudDeMovimiento,
 } from '../../aplicacion/dto/movimiento.dto.js';
 import type { ConsultasMovimientos, SaldoPrincipalDeLaCuenta } from '../../aplicacion/puertos/consultas-movimientos.js';
-import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../dominio/asignacion-de-concepto.js';
 import type { MesDeConciliacionDto } from '../../aplicacion/dto/saldos-por-cuenta.dto.js';
 import { cheques } from './cheques.tablas.js';
 import { esPendienteDeClasificar } from './condiciones-de-clasificacion.js';
@@ -36,7 +35,7 @@ const columnas = {
   // Las notas de una transferencia (y sus inversos) muestran el número de la transferencia.
   numero: sql<number | null>`coalesce(${movimientos.numero}, ${transferencias.numero})`,
   anioDeNumero: sql<number>`case when ${movimientos.numero} is null and ${transferencias.numero} is not null then ${transferencias.anioDeNumero} else ${movimientos.anioDeNumero} end`,
-  conceptoEsDePago: sql<boolean>`coalesce(${conceptos.claveDeSistema} = ${CLAVE_DE_PAGO_A_PROVEEDORES}, false)`,
+  claveDelConcepto: conceptos.claveDeSistema,
   desglose: desgloseDelMovimiento,
   mesConciliado: mesConciliadoDe(movimientos.cuentaBancariaId, movimientos.fecha),
   cuentaConConciliaciones: cuentaConConciliacionesDe(movimientos.cuentaBancariaId),

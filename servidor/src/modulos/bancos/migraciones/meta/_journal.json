@@ -274,6 +274,13 @@
       "when": 1795057343166,
       "tag": "0038_impresion_de_cheques",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1795469011294,
+      "tag": "0039_cobros_a_clientes",
+      "breakpoints": true
     }
   ]
 }

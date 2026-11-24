@@ -1,5 +1,5 @@
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
-import { accionesDeMovimiento, estaMarcada } from '../../aplicacion/acciones-posibles.js';
+import { accionesDeMovimiento, moduloMarcado } from '../../aplicacion/acciones-posibles.js';
 import type { LineaDeDesgloseDto, MovimientoDto } from '../../aplicacion/dto/movimiento.dto.js';
 import { Movimiento } from '../../dominio/movimiento.js';
 import { hechosDeLaFila } from './hechos-de-movimiento.js';
@@ -14,7 +14,7 @@ interface DatosDeLaConsulta extends Pick<
 > {
   mesConciliado: boolean;
   cuentaConConciliaciones: boolean;
-  conceptoEsDePago: boolean;
+  claveDelConcepto: string | null;
   desglose: LineaDeDesgloseDto[];
 }
 
@@ -58,7 +58,7 @@ export const mapeadorDeMovimiento = {
       beneficiarioParaComparar: _beneficiarioParaComparar,
       mesConciliado: _mesConciliado,
       cuentaConConciliaciones: _cuentaConConciliaciones,
-      conceptoEsDePago: _conceptoEsDePago,
+      claveDelConcepto: _claveDelConcepto,
       anuladoEn,
       revertidoEn,
       ...dto
@@ -68,7 +68,7 @@ export const mapeadorDeMovimiento = {
       ...dto,
       anuladoEn: anuladoEn ? anuladoEn.toISOString() : null,
       revertidoEn: revertidoEn ? revertidoEn.toISOString() : null,
-      marcadaParaCuentasPorPagar: estaMarcada(hechos),
+      marcadaParaModulo: moduloMarcado(hechos),
       ...accionesDeMovimiento(hechos),
     };
   },

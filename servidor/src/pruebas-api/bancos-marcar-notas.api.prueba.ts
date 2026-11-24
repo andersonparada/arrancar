@@ -96,13 +96,13 @@ describe('marcar una nota para Cuentas por pagar', () => {
 
     expect(marcada.estado).toBe(200);
     expect(marcada.cuerpo).toMatchObject({
-      marcadaParaCuentasPorPagar: true,
+      marcadaParaModulo: 'cuentas-por-pagar',
       conceptoNombre: 'Pago a proveedores',
       puedeMarcar: false,
       puedeDesmarcar: true,
       puedeReclasificar: true,
     });
-    expect(antes).toMatchObject({ marcadaParaCuentasPorPagar: false, puedeMarcar: true, puedeDesmarcar: false });
+    expect(antes).toMatchObject({ marcadaParaModulo: null, puedeMarcar: true, puedeDesmarcar: false });
     expect(await auditoriaDe(id)).toEqual([
       { accion: 'corregir', motivo: 'Marcada para Cuentas por pagar', recurso: 'bancos.movimientos' },
     ]);
@@ -125,7 +125,7 @@ describe('marcar una nota para Cuentas por pagar', () => {
     const soloVer = await crearUsuarioConPermisos(entorno, cuenta, permisos);
 
     expect((await marcar(id, soloVer)).estado).toBe(403);
-    expect((await movimientoDe(cuenta.propietario, id)).marcadaParaCuentasPorPagar).toBe(false);
+    expect((await movimientoDe(cuenta.propietario, id)).marcadaParaModulo).toBeNull();
   });
 
   it('se puede registrar ya marcada, solo si es de débito y con el módulo activo', async () => {
@@ -143,7 +143,10 @@ describe('marcar una nota para Cuentas por pagar', () => {
     );
 
     expect(creada.estado).toBe(201);
-    expect(creada.cuerpo).toMatchObject({ marcadaParaCuentasPorPagar: true, conceptoNombre: 'Pago a proveedores' });
+    expect(creada.cuerpo).toMatchObject({
+      marcadaParaModulo: 'cuentas-por-pagar',
+      conceptoNombre: 'Pago a proveedores',
+    });
     expect(credito.cuerpo.error.codigo).toBe('nota_no_marcable');
     expect(sinElModulo.cuerpo.error.codigo).toBe('cuentas_por_pagar_inactivo');
   });
@@ -163,7 +166,7 @@ describe('desmarcar una nota', () => {
 
     expect(respuesta.estado).toBe(200);
     expect(respuesta.cuerpo).toMatchObject({
-      marcadaParaCuentasPorPagar: false,
+      marcadaParaModulo: null,
       conceptoNombre: 'General de prueba',
       desglose: [],
       puedeMarcar: true,
@@ -185,7 +188,7 @@ describe('desmarcar una nota', () => {
     const respuesta = await desmarcar(id);
 
     expect(respuesta.cuerpo.error.codigo).toBe('movimiento_ligado_a_pagos');
-    expect(await movimientoDe(cuenta.propietario, id)).toMatchObject({ marcadaParaCuentasPorPagar: true });
+    expect(await movimientoDe(cuenta.propietario, id)).toMatchObject({ marcadaParaModulo: 'cuentas-por-pagar' });
     expect(await desgloseDe(id)).toHaveLength(1);
   });
 
@@ -254,7 +257,7 @@ describe('otras acciones sobre una nota marcada', () => {
       datos(cuentaBancariaId, { referencia: 'Seguro' }),
     );
 
-    expect(corregida.cuerpo).toMatchObject({ marcadaParaCuentasPorPagar: true, referencia: 'Seguro' });
+    expect(corregida.cuerpo).toMatchObject({ marcadaParaModulo: 'cuentas-por-pagar', referencia: 'Seguro' });
     expect(avisos).toEqual(['corregir']);
   });
 
@@ -266,7 +269,7 @@ describe('otras acciones sobre una nota marcada', () => {
 
     expect(respuesta).toEqual({ conDesglose: true });
     expect(await movimientoDe(cuenta.propietario, id)).toMatchObject({
-      marcadaParaCuentasPorPagar: true,
+      marcadaParaModulo: 'cuentas-por-pagar',
       conceptoNombre: 'Pago a proveedores',
       desglose: [expect.objectContaining({ concepto: 'Pago a proveedores de activo fijo', monto: '100.00' })],
     });

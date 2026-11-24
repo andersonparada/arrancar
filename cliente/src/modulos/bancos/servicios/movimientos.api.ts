@@ -57,7 +57,8 @@ export interface Movimiento {
   /** Lo calcula el servidor: si se le puede cambiar solo el concepto (no un inverso, una transferencia ni el saldo inicial). */
   puedeReclasificar: boolean;
   /** Nota de débito suelta con el concepto «Pago a proveedores»: Cuentas por pagar puede aplicarla a facturas. */
-  marcadaParaCuentasPorPagar: boolean;
+  /** La clave del módulo para el que la nota está marcada (`cuentas-por-pagar`, `cuentas-por-cobrar`); nulo si no lo está. */
+  marcadaParaModulo: string | null;
   /** El reparto por concepto si no es «todo al concepto del movimiento»; vacío si no lo hay. */
   desglose: LineaDeDesglose[];
   /** Lo calcula el servidor: si se puede marcar (estructural; además exige Cuentas por pagar activo). */

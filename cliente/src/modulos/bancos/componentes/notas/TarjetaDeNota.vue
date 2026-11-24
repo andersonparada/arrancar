@@ -9,8 +9,8 @@ import { RouterLink } from 'vue-router';
 import { destinoDeOrigenDelPago } from '../../composables/movimientos/origen-y-causa';
 import { esDeSoloLectura } from '../../composables/movimientos/estado-de-reversion';
 import {
-  esperaACuentasPorPagarInactivo,
   insigniaDeNota,
+  moduloInactivoQueEspera,
   ofreceMarcar,
   sePuedeCorregir,
 } from '../../composables/notas/marca-de-nota';
@@ -26,15 +26,14 @@ const emit = defineEmits<{ editar: []; anular: []; eliminar: []; marcar: []; des
 
 const sesion = usarSesion();
 const insignia = computed(() => insigniaDeNota(props.registro));
-const cuentasPorPagarActivo = computed(() => sesion.moduloActivo('cuentas-por-pagar'));
-const bloqueada = computed(() => esperaACuentasPorPagarInactivo(props.registro, cuentasPorPagarActivo.value));
+const bloqueada = computed(() => moduloInactivoQueEspera(props.registro, sesion.moduloActivo) !== null);
 const conMarcar = computed(() => ofreceMarcar(props.registro, sesion.moduloActivo('cuentas-por-pagar')));
 </script>
 
 <template>
   <TarjetaDeRegistro
     :titulo="tituloDeNota(registro)"
-    :detalles="detallesDeNota(registro, cuentasPorPagarActivo)"
+    :detalles="detallesDeNota(registro, sesion.moduloActivo)"
     permiso="bancos.notas.editar"
     :insignia="insignia"
     :solo-lectura="esDeSoloLectura(registro)"

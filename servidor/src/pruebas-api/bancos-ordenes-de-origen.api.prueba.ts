@@ -142,7 +142,7 @@ describe('bancos.registrar_nota_de_origen', () => {
       monto: '50.00',
       moduloDeOrigen: 'cuentas-por-pagar',
       documentoDeOrigenId: pedido.documentoId,
-      marcadaParaCuentasPorPagar: false,
+      marcadaParaModulo: null,
       puedeEliminar: false,
     });
   });

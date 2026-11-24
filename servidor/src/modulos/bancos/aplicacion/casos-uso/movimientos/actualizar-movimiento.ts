@@ -37,7 +37,7 @@ export class ActualizarMovimiento {
       movimiento.exigirClase(esSaldoInicial);
       const anterior = await consultas.obtener(movimientoId);
       await this.dependencias.revisor.revisar(operador, { movimiento: anterior, cambio: 'corregir' });
-      await this.corregirYGuardar(operador, movimiento, { solicitud, marcada: anterior.marcadaParaCuentasPorPagar });
+      await this.corregirYGuardar(operador, movimiento, { solicitud, marcada: anterior.marcadaParaModulo !== null });
       await auditoria.registrar({
         recurso: 'bancos.movimientos',
         registroId: movimientoId,
@@ -83,8 +83,8 @@ export class ActualizarMovimiento {
     movimiento: Movimiento,
     { solicitud, marcada }: { solicitud: SolicitudDeMovimiento; marcada: boolean },
   ): Promise<{ conceptoId: string; pideIntereses: boolean }> {
-    const { conceptoId: actual, saldoInicial } = movimiento.instantanea();
-    if (marcada && solicitud.tipo !== 'debito') throw new NotaNoMarcable();
+    const { conceptoId: actual, saldoInicial, tipo } = movimiento.instantanea();
+    if (marcada && solicitud.tipo !== tipo) throw new NotaNoMarcable();
     if (saldoInicial || marcada) return { conceptoId: actual, pideIntereses: false };
     const modulosActivos = await this.dependencias.modulosDeOrigen.activos(operador);
     const elegido = await this.dependencias.conceptos.elegido(solicitud.conceptoId, solicitud.tipo, {
