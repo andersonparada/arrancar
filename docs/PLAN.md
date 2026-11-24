@@ -4405,3 +4405,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   corrigieron cuatro errores de las pruebas, no del código: un cheque con un solo concepto no guarda desglose, cerrar la carga
   pide motivo (y su prueba va al final porque cierra la empresa para las demás), un cargo de otro proveedor responde 400
   `cargo_no_disponible`, y el cheque en circulación de la referencia necesita el saldo de su cuenta.
+- **2026-11-23, AP-3 (revisión: verificación independiente de las pruebas de API).** Las dos suites
+  `cuentas-por-pagar-pagos-cheque-de-apertura(-baja).api.prueba.ts` se corrieron de nuevo con
+  `BD_PRUEBAS=arrancar_pruebas_t9_ap3r VITEST_MAX_WORKERS=2`: 2 archivos y 23 pruebas en verde. En el PostgreSQL de
+  desarrollo del 5433 la conexión desde Node daba `ECONNRESET` (el puerto abría pero rechazaba el protocolo), así que se
+  corrió contra un contenedor temporal en el 5499 con el mismo `infra/postgres/init`, cambiando el puerto de
+  `nombres-de-bases.ts` solo en el equipo (sin commit); contenedor y cambio retirados. No hubo cambios de código.
