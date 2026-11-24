@@ -31,6 +31,7 @@ const pago = (cambios: Partial<PagoConLineas>): PagoConLineas => ({
   observaciones: null,
   motivo: null,
   conCargaCerrada: null,
+  chequeDeAperturaReferidoId: null,
   estado: 'vigente',
   fechaDeAnulacion: null,
   motivoDeAnulacion: null,

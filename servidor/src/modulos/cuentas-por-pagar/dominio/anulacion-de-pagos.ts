@@ -3,7 +3,7 @@ import {
   ReaplicacionConOtroMonto,
   SoloSaldosIniciales,
 } from './errores-de-anulacion-de-pagos.js';
-import type { PagoConLineas } from './pago-con-lineas.js';
+import { esDeLaApertura, type PagoConLineas } from './pago-con-lineas.js';
 import type { EfectoDePago } from './eventos-de-pagos.js';
 import type { FormaDePago } from './pagos.js';
 import type { OrigenDeDocumento } from './tipos-de-documento.js';
@@ -37,6 +37,7 @@ export function efectoDelPago(pago: Pick<PagoConLineas, 'forma' | 'conCargaCerra
     nota_de_debito: 'banco',
     nota_ligada: 'transitoria_por_aplicar',
     efectivo: 'efectivo',
+    cheque_de_apertura: 'banco',
   };
   if (pago.forma !== 'cuenta_de_apertura') return porForma[pago.forma];
   return pago.conCargaCerrada ? 'correccion_de_error' : 'apertura';
@@ -56,7 +57,7 @@ export function exigirSoloSaldosInicialesEnLaApertura(
   pago: Pick<PagoConLineas, 'forma'>,
   origenes: readonly OrigenDeDocumento[],
 ): void {
-  if (pago.forma === 'cuenta_de_apertura' && origenes.some((origen) => origen !== 'saldo_inicial')) {
+  if (esDeLaApertura(pago) && origenes.some((origen) => origen !== 'saldo_inicial')) {
     throw new SoloSaldosIniciales();
   }
 }

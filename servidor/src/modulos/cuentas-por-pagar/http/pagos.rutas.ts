@@ -6,7 +6,9 @@ import { esquemaParamsDeProveedor } from './documentos.esquemas-http.js';
 import type { PagosControlador } from './pagos.controlador.js';
 import {
   esquemaAnularPago,
+  esquemaDesligarChequeDeApertura,
   esquemaMedios,
+  esquemaPagoConChequeDeApertura,
   esquemaNotasParaLigar,
   esquemaPago,
   esquemaPagoDeApertura,
@@ -40,6 +42,7 @@ export function rutasDePagos(controlador: PagosControlador): FastifyPluginAsyncZ
     consultas(app, controlador);
     cambios(app, controlador);
     ligar(app, controlador);
+    chequeDeApertura(app, controlador);
     apertura(app, controlador);
   };
 }
@@ -97,6 +100,20 @@ function ligar(app: FastifyInstance, controlador: PagosControlador): void {
     schema: { tags, body: esquemaPagoLigado },
     preHandler: [proteger({ permiso: 'cuentas-por-pagar.pagos.ligar-notas-de-debito' }), exigirAjustesSiHayDiferencias],
     handler: controlador.ligar,
+  });
+}
+
+/** Pagar saldos iniciales con el posfechado de apertura que ya está en Bancos, o desligarlo de su pago (§2.3). */
+function chequeDeApertura(app: FastifyInstance, controlador: PagosControlador): void {
+  app.post(`${RUTA}/pagos/cheque-de-apertura`, {
+    schema: { tags, body: esquemaPagoConChequeDeApertura },
+    preHandler: proteger({ permiso: 'cuentas-por-pagar.pagos.ligar-cheques-de-apertura' }),
+    handler: controlador.registrarConChequeDeApertura,
+  });
+  app.post(`${RUTA}/pagos/:id/desligar`, {
+    schema: { tags, params: esquemaParamsDePago, body: esquemaDesligarChequeDeApertura },
+    preHandler: proteger({ permiso: 'cuentas-por-pagar.pagos.desligar-cheques-de-apertura' }),
+    handler: controlador.desligarChequeDeApertura,
   });
 }
 

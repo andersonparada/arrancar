@@ -20,7 +20,7 @@ export class CorregirPartidaDeApertura {
   constructor(private readonly dependencias: DependenciasDeSaldosIniciales) {}
 
   /**
-   * @throws RecursoNoEncontrado, MovimientoMarcadoEnConciliacion, MesConciliado, SinFechaDeInicio, CargaInicialCerrada
+   * @throws RecursoNoEncontrado, MovimientoDeOtroModulo (posfechado ligado), MovimientoMarcadoEnConciliacion, MesConciliado, SinFechaDeInicio, CargaInicialCerrada
    *   y los errores de revisión de la partida (como al agregarla).
    */
   ejecutar(operador: Operador, correccion: CorreccionDePartida): Promise<PartidaGuardadaDto> {
@@ -47,6 +47,7 @@ export class CorregirPartidaDeApertura {
     const { cuentaBancariaId, movimientoId } = anterior.base;
     const movimiento = await movimientoExistente(repositorioMovimientos, movimientoId);
     movimiento.exigirNoMarcadoEnConciliacion(anterior.base.conciliacionId, 'corregir');
+    movimiento.exigirSinOrigen();
     await reglas.revisar(operador, { cuentaBancariaId, fechas: [anterior.base.fecha, partida.fecha], diferencia: 0 });
     const conceptoActual = movimiento.instantanea().conceptoId;
     movimiento.corregirPartida(await armador.datos(operador, partida, { corte, conceptoActual }));

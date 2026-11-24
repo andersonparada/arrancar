@@ -11,7 +11,9 @@ export const esquemaListaDePagos = z.object({
   proveedorId: z.uuid().optional(),
   contrasenaId: z.uuid().optional(),
   retiroId: z.uuid().optional(),
-  forma: z.enum(['cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura', 'efectivo']).optional(),
+  forma: z
+    .enum(['cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura', 'efectivo', 'cheque_de_apertura'])
+    .optional(),
   estado: z.enum(['vigente', 'anulado', 'todos']).default('vigente'),
   posfechado: comoBooleano.optional(),
   desde: fecha.optional(),

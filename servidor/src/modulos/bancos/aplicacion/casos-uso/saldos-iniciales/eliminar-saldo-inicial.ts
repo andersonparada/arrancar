@@ -2,6 +2,7 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { motivoValido } from '../../../dominio/nuevo-movimiento.js';
+import { movimientoExistente } from '../movimientos/dependencias-de-movimientos.js';
 import {
   abrirEscritura,
   exigirSinConciliaciones,
@@ -19,7 +20,7 @@ export class EliminarSaldoInicial {
 
   /**
    * @throws RecursoNoEncontrado si la cuenta no tiene saldo inicial; MotivoDeAnulacionInvalido; SinFechaDeInicio,
-   *   CargaInicialCerrada o AperturaConConciliacion.
+   *   CargaInicialCerrada, AperturaConConciliacion o MovimientoDeOtroModulo (un posfechado ligado a un pago).
    */
   ejecutar(operador: Operador, { cuentaBancariaId, motivo }: { cuentaBancariaId: string; motivo: string }) {
     const motivoLimpio = motivoValido(motivo);
@@ -28,6 +29,7 @@ export class EliminarSaldoInicial {
       const { cabecera } = await abrirEscritura(this.dependencias, operador, cuentaBancariaId);
       if (!cabecera) throw new RecursoNoEncontrado('El saldo inicial');
       await exigirSinConciliaciones(consultasConciliaciones, cuentaBancariaId);
+      await this.exigirSinPosfechadosLigados(cuentaBancariaId);
       const anterior = await ficha.deLaCuenta(operador, cuentaBancariaId);
       await auditoria.registrar({
         recurso: RECURSO_DE_SALDOS_INICIALES,
@@ -42,6 +44,14 @@ export class EliminarSaldoInicial {
         await this.dependencias.documentos.eliminar(cabecera.evidenciaArchivoId, RECURSO_DE_SALDOS_INICIALES);
       }
     });
+  }
+
+  /** Un posfechado ligado a un pago de otro módulo no se borra con el saldo inicial (diseño CP-AP §2.7). */
+  private async exigirSinPosfechadosLigados(cuentaBancariaId: string): Promise<void> {
+    const { consultas, repositorioMovimientos } = this.dependencias;
+    for (const { movimientoId } of await consultas.partidas(cuentaBancariaId)) {
+      (await movimientoExistente(repositorioMovimientos, movimientoId)).exigirSinOrigen();
+    }
   }
 
   private async eliminarLasPartidas(cuentaBancariaId: string): Promise<void> {

@@ -92,9 +92,13 @@ export function avisoDeDiferenciaConRetencion(documento: DocumentoPorPagar): str
 }
 
 /** El cheque posfechado compromete el documento hoy y lo da por pagado en su fecha; se paga a la vista (C-CP4-1). */
-export function avisoDelPosfechado(forma: 'cheque' | 'nota_de_debito' | 'nota_ligada', fecha: string): string {
-  const quien = forma === 'cheque' ? 'El cheque' : 'La nota de débito';
-  const aLaVista = forma === 'cheque' ? ' El cheque se paga a la vista: el proveedor puede cobrarlo antes.' : '';
+export function avisoDelPosfechado(
+  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cheque_de_apertura',
+  fecha: string,
+): string {
+  const esCheque = forma === 'cheque' || forma === 'cheque_de_apertura';
+  const quien = esCheque ? 'El cheque' : 'La nota de débito';
+  const aLaVista = esCheque ? ' El cheque se paga a la vista: el proveedor puede cobrarlo antes.' : '';
   return `${quien} lleva fecha ${fechaLegible(fecha)}: el documento queda comprometido y se da por pagado en esa fecha.${aLaVista}`;
 }
 

@@ -12,7 +12,9 @@ export const esquemaFiltroDePagosRealizados = z.object({
   desde: z.iso.date().optional(),
   hasta: z.iso.date().optional(),
   proveedorId: z.uuid().optional(),
-  forma: z.enum(['cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura', 'efectivo']).optional(),
+  forma: z
+    .enum(['cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura', 'efectivo', 'cheque_de_apertura'])
+    .optional(),
   cuentaBancariaId: z.uuid().optional(),
   estado: z.enum(['vigentes', 'anulados', 'todos']).default('vigentes'),
   posfechados: comoBooleano.default(false),

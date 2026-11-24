@@ -11,6 +11,7 @@ const NOMBRE_DE_LA_FORMA: Record<string, string> = {
   nota_de_debito: 'nota de débito',
   nota_ligada: 'nota ligada',
   cuenta_de_apertura: 'cuenta de apertura',
+  cheque_de_apertura: 'cheque de apertura',
   efectivo: 'efectivo',
   deposito: 'depósito',
 };

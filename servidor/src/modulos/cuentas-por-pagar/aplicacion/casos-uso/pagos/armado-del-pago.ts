@@ -15,6 +15,8 @@ export interface PagoParaElDto {
   observaciones: string | null;
   motivo: string | null;
   conCargaCerrada: boolean | null;
+  /** Solo en la cuenta de apertura y solo informativo: el cheque en circulación de la carga inicial que pagó lo mismo. */
+  chequeDeAperturaReferidoId: string | null;
   /** Solo en efectivo: el retiro, quien recibió por el proveedor y por qué se usó la excepción de bancarización. */
   retiroId: string | null;
   recibidoPor: string | null;
@@ -81,6 +83,17 @@ export const datosDelEfectivo = ({
   motivoSinBancarizar,
 });
 
+/** Lo que solo lleva la cuenta de apertura: su motivo, si la carga estaba cerrada y el cheque de apertura que se refiere. */
+export const datosDeLaApertura = ({
+  motivo,
+  conCargaCerrada,
+  chequeDeAperturaReferidoId,
+}: Pick<PagoParaElDto, 'motivo' | 'conCargaCerrada' | 'chequeDeAperturaReferidoId'>) => ({
+  motivo,
+  conCargaCerrada,
+  chequeDeAperturaReferidoId,
+});
+
 /** El pago como lo ve la pantalla justo después de registrarlo. */
 export function dtoDelPago(pago: PagoParaElDto): PagoDto {
   const { fila } = pago.lineas[0]!;
@@ -97,8 +110,7 @@ export function dtoDelPago(pago: PagoParaElDto): PagoDto {
     monto: sumaDeLaForma(pago),
     movimiento: pago.movimiento ? dtoDelMovimiento(pago.movimiento) : null,
     observaciones: pago.observaciones,
-    motivo: pago.motivo,
-    conCargaCerrada: pago.conCargaCerrada,
+    ...datosDeLaApertura(pago),
     ...datosDelEfectivo(pago),
     estado: pago.estado,
     anulacion: pago.anulacion,

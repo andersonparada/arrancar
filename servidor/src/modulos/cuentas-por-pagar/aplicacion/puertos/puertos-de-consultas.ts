@@ -148,6 +148,8 @@ export interface ChequesDeAperturaSinLigar {
 export interface ConsultasDeChequesDeApertura {
   /** Los que podrían ser del proveedor: con su nombre de beneficiario o, si tiene saldos iniciales con deuda, todos. */
   sinLigarDe(proveedorId: string, hoy: string): Promise<ChequesDeAperturaSinLigar>;
+  /** Si el movimiento es un cheque en circulación de la carga inicial, vigente (no anulado ni revertido) y de la empresa. */
+  esEnCirculacionVigente(movimientoId: string): Promise<boolean>;
 }
 
 /** Un cheque posfechado del proveedor, con lo que entregó a sus cargos sumado. */

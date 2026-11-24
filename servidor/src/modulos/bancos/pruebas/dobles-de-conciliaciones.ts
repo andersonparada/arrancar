@@ -21,6 +21,7 @@ import {
 import { diferenciaConElEstadoDeCuenta } from '../dominio/estado-de-cuenta.js';
 import {
   candidatosEnMemoria,
+  hayAnteriorEnMemoria,
   cobradosEnMesesAnterioresEnMemoria,
   marcadosAntesDeEnMemoria,
   paresCompensadosEnMemoria,
@@ -122,6 +123,8 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
   async tieneAlguna(cuentaBancariaId: string): Promise<boolean> {
     return this.deLaCuenta(cuentaBancariaId).length > 0;
   }
+
+  hayAnteriorA = async (cuenta: string, periodo: Periodo) => hayAnteriorEnMemoria(this.deLaCuenta(cuenta), periodo);
 
   async conSaldoDelBanco(cuentaBancariaId: string): Promise<boolean> {
     if (this.conCabeceraSinSaldo.has(cuentaBancariaId)) return true;

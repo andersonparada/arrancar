@@ -6,6 +6,8 @@ import type {
   AnulacionDeMovimiento,
   AnulacionDelMovimiento,
   ChequeAEmitir,
+  ChequeDeAperturaADesligar,
+  ChequeDeAperturaALigar,
   DesgloseDelMovimiento,
   MovimientoCreado,
   NotaDeCreditoARegistrar,
@@ -57,6 +59,21 @@ export class PagosEnBancosEnMediador implements PagosEnBancos {
     const { forma, inversoId } = await mediador.enviar(operador, 'bancos.anular_movimiento_de_origen', anulacion);
     const fechaDelInverso = inversoId === null ? null : await this.movimientos.fechaDe(inversoId);
     return { forma, fechaDelInverso };
+  }
+
+  async ligarChequeDeApertura(operador: Operador, cheque: ChequeDeAperturaALigar) {
+    const ligado = await mediador.enviar(operador, 'bancos.ligar_cheque_de_apertura', cheque);
+    return {
+      movimientoId: cheque.movimientoId,
+      cuentaBancariaId: ligado.cuentaBancariaId,
+      numero: ligado.numeroDeCheque,
+      fecha: ligado.fecha,
+      avisos: ligado.avisos,
+    };
+  }
+
+  async desligarChequeDeApertura(operador: Operador, cheque: ChequeDeAperturaADesligar): Promise<void> {
+    await mediador.enviar(operador, 'bancos.desligar_cheque_de_apertura', cheque);
   }
 
   async fijarDesglose(operador: Operador, { origen, movimientoId, conceptos }: DesgloseDelMovimiento): Promise<void> {

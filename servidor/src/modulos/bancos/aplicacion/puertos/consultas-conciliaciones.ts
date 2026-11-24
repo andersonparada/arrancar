@@ -42,6 +42,8 @@ export interface ConsultasConciliaciones {
    * hasta `finDelMes`: se marcan juntos, compensados, sin aparecer como partidas en tránsito.
    */
   paresCompensadosPendientes(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]>;
+  /** Si la cuenta tiene una conciliación de un mes anterior a `periodo` (entonces la de `periodo` no es la primera). */
+  hayAnteriorA(cuentaBancariaId: string, periodo: { anio: number; mes: number }): Promise<boolean>;
   /** Si la cuenta se cargó con el saldo del estado de cuenta (también con saldo en cero, que solo tiene cabecera). */
   conSaldoDelBanco(cuentaBancariaId: string): Promise<boolean>;
   /** La fecha del primer movimiento vigente de la cuenta; `null` si no tiene. */

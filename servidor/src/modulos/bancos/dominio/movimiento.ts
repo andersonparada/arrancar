@@ -26,6 +26,8 @@ import {
   NoSeRevierteUnInverso,
 } from './errores.js';
 import { MovimientoDeOtroModulo, NotaNoMarcable } from './errores-de-origen.js';
+import { desligarDelOrigen, ligarAlOrigen } from './ligadura-de-cheque-de-apertura.js';
+import type { OrigenDeMovimiento } from './origen-de-movimiento.js';
 import {
   datosDeLasPropiedades,
   datosValidos,
@@ -107,10 +109,9 @@ export class Movimiento extends Entidad<MovimientoId> {
   }
 
   /**
-   * Corrige una partida de la apertura (cualquier parte menos el saldo global de antes): a diferencia de `corregir`,
-   * también acepta un cheque (en circulación o posfechado). La cuenta, la parte y `saldoInicial` no cambian.
-   * @throws NoEsUnSaldoInicial si el movimiento no es una partida; MovimientoAnulado o MovimientoYaRevertido si ya no
-   *   está vigente; MontoInvalido si el monto no es mayor que cero.
+   * Corrige una partida de la apertura (menos el saldo global; acepta un cheque); cuenta, parte y `saldoInicial` fijos.
+   * @throws NoEsUnSaldoInicial si no es una partida; MovimientoAnulado o MovimientoYaRevertido si ya no está vigente;
+   *   MontoInvalido si el monto no es mayor que cero.
    */
   corregirPartida(datos: DatosDeMovimiento): void {
     if (this.propiedades.parteDeApertura === null) throw new NoEsUnSaldoInicial();
@@ -155,6 +156,16 @@ export class Movimiento extends Entidad<MovimientoId> {
       throw new Error('Solo un movimiento con origen fija su concepto por reparto.');
     }
     this.propiedades = { ...this.propiedades, conceptoId };
+  }
+
+  /** Liga el posfechado de la carga inicial al documento de otro módulo (ver `ligarAlOrigen`). */
+  ligarChequeDeApertura(origen: OrigenDeMovimiento, conceptoId: string): void {
+    this.propiedades = ligarAlOrigen(this.propiedades, origen, conceptoId);
+  }
+
+  /** Desliga el posfechado de ese documento; sigue vigente (ver `desligarDelOrigen`). */
+  desligarChequeDeApertura(origen: OrigenDeMovimiento, conceptoId: string): void {
+    this.propiedades = desligarDelOrigen(this.propiedades, origen, conceptoId);
   }
 
   /** El inverso sigue a su original cuando este se reclasifica (hereda el concepto, sin validar nada, C2). */
@@ -339,7 +350,8 @@ export class Movimiento extends Entidad<MovimientoId> {
     if (this.estaRevertido) throw new MovimientoYaRevertido();
   }
 
-  private exigirSinOrigen(): void {
+  /** @throws MovimientoDeOtroModulo si lo generó o ligó otro módulo. */
+  exigirSinOrigen(): void {
     if (this.propiedades.moduloDeOrigen !== null) throw new MovimientoDeOtroModulo();
   }
 

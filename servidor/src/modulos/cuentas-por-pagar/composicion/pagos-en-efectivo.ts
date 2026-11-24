@@ -11,6 +11,7 @@ import { BancarizacionDelLibroEnMediador } from '../infraestructura/bancarizacio
 import { BloqueoDeBancarizacionDrizzle } from '../infraestructura/persistencia/bloqueo-de-bancarizacion.drizzle.js';
 import { ConsultasDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-documentos.drizzle.js';
 import { ConsultasDePagosDrizzle } from '../infraestructura/persistencia/consultas-de-pagos.drizzle.js';
+import { ConsultasDeChequesDeAperturaDrizzle } from '../infraestructura/persistencia/cheques-de-apertura-sin-ligar.drizzle.js';
 import { ConsultasDeRetirosDrizzle } from '../infraestructura/persistencia/consultas-de-retiros.drizzle.js';
 import { FechasDeEntradaDrizzle } from '../infraestructura/persistencia/fechas-de-entrada.drizzle.js';
 import {
@@ -68,5 +69,6 @@ function delPago(movimientos: MovimientosDePagosDrizzle) {
     topeDeDiferencia: new TopeDeDiferenciaDelPagoEnConfiguracion(),
     cargaInicial: new CargaInicialEnMediador(),
     fechasDeEntrada: new FechasDeEntradaDrizzle(),
+    chequesDeApertura: new ConsultasDeChequesDeAperturaDrizzle(),
   };
 }

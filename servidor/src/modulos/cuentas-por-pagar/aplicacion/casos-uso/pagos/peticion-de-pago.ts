@@ -42,6 +42,18 @@ export interface PeticionDeApertura extends PeticionBase {
   forma: 'cuenta_de_apertura';
   /** De 1 a 300 caracteres. */
   motivo: string;
+  /** El cheque en circulación de la carga inicial que pagó lo mismo: informativo, no cambia ningún saldo (§2.4). */
+  chequeDeAperturaReferidoId?: string | null;
+}
+
+/**
+ * Pagar saldos iniciales con un posfechado de apertura que ya estaba en Bancos (diseño CP-AP §2.3): el monto es el del
+ * cheque y la fecha, la suya; no lleva referencia, observaciones propias del cheque ni diferencias.
+ */
+export interface PeticionDeChequeDeApertura extends PeticionBase {
+  forma: 'cheque_de_apertura';
+  /** El movimiento de Bancos: el posfechado. */
+  movimientoId: string;
 }
 
 /**
@@ -58,4 +70,5 @@ export interface PeticionDeEfectivo extends PeticionBase {
 }
 
 /** Lo que el guardador sabe guardar: las formas que emiten en Bancos, la nota ligada, la apertura y el efectivo. */
-export type PeticionGuardable = PeticionDePago | PeticionDeNotaLigada | PeticionDeApertura | PeticionDeEfectivo;
+export type PeticionGuardable =
+  PeticionDePago | PeticionDeNotaLigada | PeticionDeApertura | PeticionDeChequeDeApertura | PeticionDeEfectivo;

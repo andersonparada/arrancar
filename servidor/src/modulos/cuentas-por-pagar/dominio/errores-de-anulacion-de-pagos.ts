@@ -60,12 +60,12 @@ export class ReaplicacionConOtroMonto extends DatoInvalido {
   }
 }
 
-/** La cuenta de apertura solo cubre saldos iniciales. */
+/** La cuenta de apertura y el cheque de apertura solo cubren saldos iniciales. */
 export class SoloSaldosIniciales extends ReglaDeNegocioInfringida {
   readonly codigo = 'solo_saldos_iniciales';
 
   constructor() {
-    super('La cuenta de apertura solo se usa con saldos iniciales.');
+    super('La cuenta de apertura y el cheque de apertura solo se usan con saldos iniciales.');
   }
 }
 

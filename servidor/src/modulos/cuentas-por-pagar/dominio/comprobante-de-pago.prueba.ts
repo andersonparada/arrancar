@@ -7,7 +7,14 @@ import {
 } from './comprobante-de-pago.js';
 import type { FormaDePago } from './pagos.js';
 
-const FORMAS: FormaDePago[] = ['cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura', 'efectivo'];
+const FORMAS: FormaDePago[] = [
+  'cheque',
+  'nota_de_debito',
+  'nota_ligada',
+  'cuenta_de_apertura',
+  'efectivo',
+  'cheque_de_apertura',
+];
 
 describe('comprobante de pago', () => {
   it('el pago en efectivo es un «Recibo de pago en efectivo» y las demás formas, un comprobante', () => {

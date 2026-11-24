@@ -157,6 +157,30 @@ declare module './mediador.contratos.js' {
       datos: { movimientoId: string; origen: OrigenDeMovimientoContrato | null; conceptos: LineaDeConcepto[] };
       respuesta: { conDesglose: boolean };
     };
+    /**
+     * Liga el posfechado de la carga inicial (sin origen, vigente) al pago del módulo que lo pide: pone su origen, su
+     * concepto por clave y el reparto si hay dos líneas. El monto debe ser el del cheque. No cambia monto, fecha,
+     * número, conciliación ni impresión; el movimiento ya no se corrige, elimina ni blanquea en Bancos. Los avisos
+     * (beneficiario distinto, cobrado pronto) no bloquean.
+     */
+    'bancos.ligar_cheque_de_apertura': {
+      datos: {
+        origen: OrigenDeMovimientoContrato;
+        movimientoId: string;
+        montoCentavos: number;
+        beneficiarioEsperado: string;
+        conceptos: LineaDeConcepto[];
+      };
+      respuesta: { numeroDeCheque: number; fecha: string; cuentaBancariaId: string; avisos: AvisoDeBancos[] };
+    };
+    /**
+     * Quita el origen y el reparto del posfechado que ligó el módulo que lo pide y lo deja «Sin clasificar»: el cheque
+     * sigue vigente y se puede ligar de nuevo.
+     */
+    'bancos.desligar_cheque_de_apertura': {
+      datos: { origen: OrigenDeMovimientoContrato; movimientoId: string; motivo: string };
+      respuesta: { conceptoId: string };
+    };
   }
   interface AvisosEntreModulos {
     /**

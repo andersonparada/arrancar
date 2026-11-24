@@ -41,6 +41,7 @@ const aPago = (
   observaciones: fila.observaciones,
   motivo: fila.motivo,
   conCargaCerrada: fila.conCargaCerrada,
+  chequeDeAperturaReferidoId: fila.chequeDeAperturaReferidoId,
   estado: fila.estado,
   fechaDeAnulacion: fila.fechaDeAnulacion,
   motivoDeAnulacion: fila.motivoDeAnulacion,

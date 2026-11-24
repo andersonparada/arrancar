@@ -1,3 +1,4 @@
+import type { AvisoDeBancos } from '../../../core/contratos/bancos.contratos.js';
 import type { Cuadratica, Partida, PartidasDeConciliacion } from '../calculo-de-conciliacion.js';
 import type { MovimientoDto } from './movimiento.dto.js';
 
@@ -84,6 +85,8 @@ export interface ConciliacionDto {
   previaAlSaldoTranscrito: boolean;
   /** El archivo del estado de cuenta (PDF o foto), o `null` si no se ha adjuntado. */
   estadoDeCuenta: EstadoDeCuentaDto | null;
+  /** Solo al guardar las marcas: avisos que no bloquean (posfechado de apertura cobrado en la primera conciliación). */
+  avisos?: AvisoDeBancos[];
 }
 
 /** Lo que se recibe para iniciar una conciliación: ya no se escribe ningún saldo. */

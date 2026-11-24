@@ -2,6 +2,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import { exigirSaldosConMovimientos, fechaDeLaApertura } from '../../../dominio/apertura-de-pagos.js';
 import { exigirSoloSaldosInicialesEnLaApertura } from '../../../dominio/anulacion-de-pagos.js';
 import { motivoValido } from '../../../dominio/ciclo-de-vida.js';
+import { ChequeDeAperturaReferidoInvalido } from '../../../dominio/errores-de-cheque-de-apertura.js';
 import { dtoDeFicha } from '../../dto/ficha-del-documento.dto.js';
 import type { PagoDto } from '../../dto/registro-de-pago.dto.js';
 import { RECURSO_DE_PAGOS } from './anulador-del-pago.js';
@@ -44,6 +45,7 @@ export class AplicarACuentaDeApertura {
 
   private async aplicar(operador: Operador, pedido: PeticionDeApertura): Promise<PagoYSusEventos> {
     const { cargaInicial, reloj } = this.dependencias;
+    await this.exigirReferidoValido(pedido.chequeDeAperturaReferidoId);
     const { lineas } = pedidoEnCentavos(pedido);
     const { fechaDeInicio, cerrada } = await cargaInicial.obtener(operador);
     const previas = await this.revisor.revisar(pedido.proveedorId, lineas);
@@ -63,6 +65,14 @@ export class AplicarACuentaDeApertura {
     });
     await this.auditar(guardado.dto.id, { bloqueado, motivo: pedido.motivo });
     return guardado;
+  }
+
+  /** La referencia es solo informativa, pero debe ser un cheque en circulación vigente de esta empresa (RLS lo limita). */
+  private async exigirReferidoValido(movimientoId: string | null | undefined): Promise<void> {
+    if (!movimientoId) return;
+    if (!(await this.dependencias.chequesDeApertura.esEnCirculacionVigente(movimientoId))) {
+      throw new ChequeDeAperturaReferidoInvalido();
+    }
   }
 
   /** Dar por pagada una deuda sin dinero se audita como `ajustar`, con los cargos como estaban (como el ajuste de U13). */

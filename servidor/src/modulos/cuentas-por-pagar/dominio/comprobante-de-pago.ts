@@ -11,6 +11,7 @@ const TITULOS: Record<FormaDePago, string> = {
   nota_ligada: 'Comprobante de pago con nota de débito',
   cuenta_de_apertura: 'Comprobante de aplicación a la cuenta de apertura',
   efectivo: 'Recibo de pago en efectivo',
+  cheque_de_apertura: 'Comprobante de pago con cheque de apertura',
 };
 
 /** El pago en efectivo no tiene cheque ni nota propios: el comprobante es el recibo que el proveedor firma. */

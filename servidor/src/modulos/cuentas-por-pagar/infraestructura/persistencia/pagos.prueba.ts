@@ -93,7 +93,7 @@ describe('pagos', () => {
     await expect(crearPago({ numero: primero.numero, anioDeNumero: 2026 })).resolves.toBeDefined();
   });
 
-  it('la forma es una de las cinco y el monto es positivo', async () => {
+  it('la forma es una de las seis y el monto es positivo', async () => {
     expect(await restriccion(crearPago({ forma: 'trueque' as never }))).toBe('pagos_forma_valida');
     expect(await restriccion(crearPago({ monto: '0' }))).toBe('pagos_monto_positivo');
     expect(await restriccion(crearPago({ monto: '-1' }))).toBe('pagos_monto_positivo');
@@ -114,6 +114,45 @@ describe('pagos', () => {
     expect(await restriccion(crearPago({ movimientoId }))).toBe('pagos_movimiento_creado_unico');
     expect(await restriccion(crearPago({ movimientoId, forma: 'nota_de_debito' }))).toBe(
       'pagos_movimiento_creado_unico',
+    );
+  });
+
+  it('un posfechado se liga a un solo pago vigente; anulado el pago, se puede ligar a otro', async () => {
+    const movimientoId = await nuevoMovimiento();
+    const ligado = await crearPago({ forma: 'cheque_de_apertura', movimientoId });
+
+    expect(ligado.forma).toBe('cheque_de_apertura');
+    expect(await restriccion(crearPago({ forma: 'cheque_de_apertura', movimientoId }))).toBe(
+      'pagos_cheque_de_apertura_vigente_unico',
+    );
+    await enTransaccionSegura(contexto(), (tx) =>
+      tx
+        .update(pagos)
+        .set({ estado: 'anulado', ...anulacion, anuladoPor: e.usuarioId, fechaDeAnulacion: '2026-03-15' })
+        .where(eq(pagos.id, ligado.id)),
+    );
+    await expect(crearPago({ forma: 'cheque_de_apertura', movimientoId })).resolves.toBeDefined();
+  });
+
+  it('el cheque de apertura lleva movimiento y no lleva referencia', async () => {
+    expect(await restriccion(crearPago({ forma: 'cheque_de_apertura', movimientoId: null }))).toBe(
+      'pagos_movimiento_de_su_forma',
+    );
+    expect(await restriccion(crearPago({ forma: 'cheque_de_apertura', referencia: 'CH-1' }))).toBe(
+      'pagos_referencia_de_su_forma',
+    );
+  });
+
+  it('el cheque referido solo va en la cuenta de apertura y debe existir', async () => {
+    const referido = await nuevoMovimiento();
+
+    const guardado = await crearPago({ ...apertura, chequeDeAperturaReferidoId: referido });
+    expect(guardado.chequeDeAperturaReferidoId).toBe(referido);
+    expect(await restriccion(crearPago({ chequeDeAperturaReferidoId: referido }))).toBe(
+      'pagos_referido_solo_en_apertura',
+    );
+    expect(await restriccion(crearPago({ ...apertura, chequeDeAperturaReferidoId: crypto.randomUUID() }))).toBe(
+      'pagos_cheque_de_apertura_referido_fk',
     );
   });
 

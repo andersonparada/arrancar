@@ -29,9 +29,12 @@ export interface DependenciasDeMovimientos {
   desglose: DesgloseDeMovimientos;
 }
 
-/** @throws RecursoNoEncontrado si no existe o no es de la empresa. */
+/**
+ * El movimiento que se va a cambiar, con su fila bloqueada: así no se pierde un origen que se liga en paralelo.
+ * @throws RecursoNoEncontrado si no existe o no es de la empresa.
+ */
 export async function movimientoExistente(repositorio: RepositorioMovimientos, id: string): Promise<Movimiento> {
-  const movimiento = await repositorio.buscar(Identificador.desde(id));
+  const movimiento = await repositorio.bloquear(Identificador.desde(id));
   if (!movimiento) throw new RecursoNoEncontrado('El movimiento');
   return movimiento;
 }

@@ -55,6 +55,7 @@ describe('los avisos de una línea del pago', () => {
   it('el cheque posfechado se paga a la vista y compromete el documento', () => {
     expect(avisoDelPosfechado('cheque', '2026-12-01')).toContain('a la vista');
     expect(avisoDelPosfechado('nota_de_debito', '2026-12-01')).not.toContain('a la vista');
+    expect(avisoDelPosfechado('cheque_de_apertura', '2026-12-01')).toContain('El cheque lleva fecha');
   });
 
   it('al ligar una nota avisa que el banco debitó sin descontar la retención y cuánto le queda a la nota', () => {

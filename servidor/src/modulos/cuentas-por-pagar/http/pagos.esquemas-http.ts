@@ -9,6 +9,8 @@ const LIMITE_MAXIMO = 200;
 const monto = z.string().trim().regex(DINERO, 'Escriba el monto con hasta dos decimales.');
 const fecha = z.iso.date({ error: 'Escriba la fecha como AAAA-MM-DD.' });
 
+const motivo = z.string().trim().min(1, 'Escriba el motivo.').max(300, 'El motivo admite hasta 300 caracteres.');
+
 const lineas = z.array(z.object({ cargoId: z.uuid({ error: 'Escoja el documento.' }), monto })).min(1);
 
 /** Lo común a toda forma de pago; las reglas de los montos, la fecha y las diferencias son del dominio y responden por campo. */
@@ -58,11 +60,26 @@ export const esquemaPagoDeApertura = z.object({
   referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
   observaciones: comun.observaciones,
   aplicaciones: comun.aplicaciones,
+  /** El cheque en circulación de la carga inicial que pagó lo mismo: solo informativo (§2.4). */
+  chequeDeAperturaReferidoId: z.uuid({ error: 'Escoja el cheque de apertura.' }).optional(),
 });
 
-export const esquemaParamsDePago = z.object({ id: z.uuid() });
+/**
+ * Pagar saldos iniciales con un posfechado de apertura que ya estaba en Bancos (§2.3): el monto y la fecha son los del
+ * cheque, así que no se piden; no lleva referencia ni diferencias.
+ */
+export const esquemaPagoConChequeDeApertura = z.object({
+  forma: z.literal('cheque_de_apertura'),
+  movimientoId: z.uuid({ error: 'Escoja el cheque.' }),
+  proveedorId: comun.proveedorId,
+  observaciones: comun.observaciones,
+  aplicaciones: comun.aplicaciones,
+});
 
-const motivo = z.string().trim().min(1, 'Escriba el motivo.').max(300, 'El motivo admite hasta 300 caracteres.');
+/** Desligar el posfechado de apertura de su pago. */
+export const esquemaDesligarChequeDeApertura = z.object({ motivo });
+
+export const esquemaParamsDePago = z.object({ id: z.uuid() });
 
 /** Anular un pago: el motivo y, si movió dinero, la fecha del inverso en Bancos (por omisión la decide Bancos). */
 export const esquemaAnularPago = z.object({ motivo, fecha: fecha.optional() });
@@ -103,6 +120,8 @@ export const esquemaProveedoresPorPagar = z.object({
 export type PagoSolicitado = z.infer<typeof esquemaPago>;
 export type PagoLigadoSolicitado = z.infer<typeof esquemaPagoLigado>;
 export type PagoDeAperturaSolicitado = z.infer<typeof esquemaPagoDeApertura>;
+export type PagoConChequeDeAperturaSolicitado = z.infer<typeof esquemaPagoConChequeDeApertura>;
+export type DesligarChequeDeAperturaSolicitado = z.infer<typeof esquemaDesligarChequeDeApertura>;
 export type NotasParaLigarSolicitado = z.output<typeof esquemaNotasParaLigar>;
 export type ParaPagarSolicitado = z.infer<typeof esquemaParaPagar>;
 export type MediosSolicitado = z.infer<typeof esquemaMedios>;

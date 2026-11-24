@@ -63,4 +63,20 @@ export class ConsultasDeChequesDeAperturaDrizzle implements ConsultasDeChequesDe
   sinLigarDe(proveedorId: string, hoy: string): Promise<ChequesDeAperturaSinLigar> {
     return chequesDeAperturaSinLigarDelProveedor(proveedorId, hoy);
   }
+
+  async esEnCirculacionVigente(movimientoId: string): Promise<boolean> {
+    const [fila] = await transaccionEnCurso()
+      .select({ id: movimientos.id })
+      .from(movimientos)
+      .where(
+        and(
+          eq(movimientos.id, movimientoId),
+          eq(movimientos.parteDeApertura, 'cheque_en_circulacion'),
+          isNull(movimientos.anuladoEn),
+          isNull(movimientos.revertidoEn),
+          isNull(movimientos.revierteAId),
+        ),
+      );
+    return fila !== undefined;
+  }
 }

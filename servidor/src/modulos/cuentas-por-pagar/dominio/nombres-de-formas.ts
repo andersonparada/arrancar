@@ -7,4 +7,5 @@ export const NOMBRES_DE_FORMAS: Record<FormaDePago, string> = {
   nota_ligada: 'Nota de débito ligada',
   cuenta_de_apertura: 'Cuenta de apertura',
   efectivo: 'Efectivo',
+  cheque_de_apertura: 'Cheque de apertura',
 };

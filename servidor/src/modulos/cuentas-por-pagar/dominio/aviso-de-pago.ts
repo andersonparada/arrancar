@@ -26,6 +26,7 @@ const FORMAS_EN_EL_TEXTO: Record<FormaDePago, string> = {
   nota_ligada: 'débito ya registrado',
   cuenta_de_apertura: 'cuenta de apertura',
   efectivo: 'efectivo',
+  cheque_de_apertura: 'cheque de apertura',
 };
 
 export const textoDeLaForma = (forma: FormaDePago): string => FORMAS_EN_EL_TEXTO[forma];
@@ -33,7 +34,8 @@ export const textoDeLaForma = (forma: FormaDePago): string => FORMAS_EN_EL_TEXTO
 /** Por qué un pago no admite aviso, o `null` si lo admite. */
 export function motivoSinAviso(pago: { forma: FormaDePago; estado: 'vigente' | 'anulado' }): string | null {
   if (pago.estado === 'anulado') return 'El pago está anulado.';
-  if (!FORMAS_CON_AVISO.includes(pago.forma)) return 'Un pago a la cuenta de apertura no lleva aviso.';
+  if (!FORMAS_CON_AVISO.includes(pago.forma))
+    return 'Un pago de la carga inicial (cuenta de apertura o cheque de apertura) no lleva aviso.';
   return null;
 }
 

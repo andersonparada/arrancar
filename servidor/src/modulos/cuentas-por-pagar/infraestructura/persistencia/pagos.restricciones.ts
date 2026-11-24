@@ -5,6 +5,7 @@ import { check, type AnyPgColumn } from 'drizzle-orm/pg-core';
 type T = Record<
   | 'numero'
   | 'forma'
+  | 'chequeDeAperturaReferidoId'
   | 'monto'
   | 'movimientoId'
   | 'referencia'
@@ -21,7 +22,7 @@ export const restriccionesDePago = (t: T) => [
   check('pagos_numero_positivo', sql`${t.numero} > 0`),
   check(
     'pagos_forma_valida',
-    sql`${t.forma} in ('cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura', 'efectivo')`,
+    sql`${t.forma} in ('cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura', 'efectivo', 'cheque_de_apertura')`,
   ),
   check('pagos_monto_positivo', sql`${t.monto} > 0`),
   check(
@@ -40,6 +41,7 @@ export const restriccionesDePago = (t: T) => [
   check('pagos_motivo_rango', sql`${t.motivo} is null or char_length(${t.motivo}) between 1 and 300`),
   check('pagos_carga_de_apertura', sql`(${t.forma} = 'cuenta_de_apertura') = (${t.conCargaCerrada} is not null)`),
   ...restriccionesDePagoEnEfectivo(t),
+  ...restriccionesDeChequeDeApertura(t),
 ];
 
 /** Lo propio del pago en efectivo: su retiro, quien recibió y el motivo de no bancarizar. */
@@ -54,5 +56,13 @@ const restriccionesDePagoEnEfectivo = (t: T) => [
   check(
     'pagos_motivo_sin_bancarizar_rango',
     sql`${t.motivoSinBancarizar} is null or char_length(${t.motivoSinBancarizar}) between 1 and 300`,
+  ),
+];
+
+/** El cheque de apertura que una cuenta de apertura dice que ya pagó lo mismo es solo informativo. */
+const restriccionesDeChequeDeApertura = (t: T) => [
+  check(
+    'pagos_referido_solo_en_apertura',
+    sql`${t.chequeDeAperturaReferidoId} is null or ${t.forma} = 'cuenta_de_apertura'`,
   ),
 ];

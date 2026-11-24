@@ -40,10 +40,19 @@ export interface PagoYSusEventos {
   eventos: EventoDominio[];
 }
 
-/** Lo que solo lleva la cuenta de apertura: su motivo y si la carga inicial estaba cerrada; nulos en las demás formas. */
+/**
+ * Lo que solo lleva la cuenta de apertura: su motivo, si la carga inicial estaba cerrada y el cheque de apertura que dice
+ * haber pagado lo mismo (informativo); nulos en las demás formas.
+ */
 function datosDeApertura({ pedido, conCargaCerrada }: PagoPorGuardar) {
-  if (pedido.forma !== 'cuenta_de_apertura') return { motivo: null, conCargaCerrada: null };
-  return { motivo: pedido.motivo, conCargaCerrada: conCargaCerrada ?? false };
+  if (pedido.forma !== 'cuenta_de_apertura') {
+    return { motivo: null, conCargaCerrada: null, chequeDeAperturaReferidoId: null };
+  }
+  return {
+    motivo: pedido.motivo,
+    conCargaCerrada: conCargaCerrada ?? false,
+    chequeDeAperturaReferidoId: pedido.chequeDeAperturaReferidoId ?? null,
+  };
 }
 
 /** Lo que solo lleva el efectivo: su retiro, quien recibió y el motivo de la excepción de bancarización; nulos en las demás formas. */
@@ -56,9 +65,11 @@ function datosDeEfectivo(pedido: PeticionGuardable) {
   };
 }
 
-/** La referencia que se guarda aquí: en cheque y nota de débito va a Bancos. */
+/** La referencia que se guarda aquí: en cheque y nota de débito va a Bancos, y el cheque de apertura ya tiene la suya. */
 const referenciaPropia = (pedido: PeticionGuardable): string | null =>
-  pedido.forma === 'cheque' || pedido.forma === 'nota_de_debito' ? null : (pedido.referencia ?? null);
+  pedido.forma === 'cheque' || pedido.forma === 'nota_de_debito' || pedido.forma === 'cheque_de_apertura'
+    ? null
+    : (pedido.referencia ?? null);
 
 /** La empresa, la cuenta y el usuario del pago: el evento los lleva para que un suscriptor arme su unidad de trabajo. */
 const dondeYQuien = ({ empresaId, cuentaId, usuarioId }: Operador) => ({ empresaId, cuentaId, usuarioId });

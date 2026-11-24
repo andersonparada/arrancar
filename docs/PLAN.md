@@ -4714,3 +4714,66 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   solo al marcarla. Cliente: etiqueta «Para Cuentas por cobrar», bloqueo por el módulo marcado inactivo, y la lista de
   notas marcadas de la conciliación sigue siendo solo de Cuentas por pagar. La ventana de desmarcar ofrece
   conceptos del tipo de la nota. Pendiente para CXC-3: el marcado de una nota de crédito (`marcar`).
+
+- **2026-11-23, AP-1 (datos de Cuentas por pagar para cheques de apertura).** Migración `0014_cp_ap_cheques_de_apertura`:
+  `pagos.forma` suma `cheque_de_apertura` (se reemplaza `pagos_forma_valida`), único parcial
+  `pagos_cheque_de_apertura_vigente_unico` (un posfechado, un pago vigente; anulado + vigente pasa),
+  `cheque_de_apertura_referido_id` (FK a `bancos.movimientos`, check `pagos_referido_solo_en_apertura`, índice parcial) y los
+  permisos `pagos.ligar-cheques-de-apertura` y `pagos.desligar-cheques-de-apertura` (repartidos en `rol_permisos` y
+  `usuario_permisos` a quien tenía `pagos.aplicar-a-apertura`, repetibles). El tipo `FormaDePago` suma la forma nueva con sus
+  textos (título, nombre y texto del aviso); su efecto contable provisional es `banco` y no manda aviso: AP-3 lo decide al
+  programar la forma. Pruebas de checks, único y referido en `pagos.prueba.ts`; la del reparto en
+  `pruebas-api/cuentas-por-pagar-migracion-de-permisos-de-cheques-de-apertura.api.prueba.ts`. Sin cambios en Bancos. Corrección de la revisión: esa prueba ahora siembra también un permiso directo `aplicar-a-apertura` y otro ajeno, y comprueba que solo el primero recibe ligar y desligar en `usuario_permisos` (sin duplicados al correr dos veces); además se corrigió el usuario (31 letras, pasaba del máximo de 30) y se activan los módulos de los que depende.
+
+- **2026-11-23, AP-2 (corrección tras la revisión).** Faltaba cumplir §2.7 al corregir y eliminar un posfechado ligado:
+  `Movimiento.exigirSinOrigen` ahora es público y lo llaman `CorregirPartidaDeApertura`, `EliminarPartidaDeApertura` y `EliminarSaldoInicial`
+  (esta revisa todas las partidas antes de borrar); rechazan con `movimiento_de_otro_modulo`. Carrera Ligar/Anular:
+  `movimientoExistente` (usado por todo caso de uso que lee un movimiento para cambiarlo: anular cheque, reclasificar,
+  corregir/eliminar partida, blanquear, etc.) ahora lee con `repositorio.bloquear` (`for update`), así la lectura ve el origen que
+  otro ligó y no lo pisa al guardar. La prueba de API «después de ligado…» manda solicitudes válidas y afirma el código y que
+  monto, fecha y número no cambian (también el saldo inicial completo); nueva prueba de concurrencia anular/ligar (10 intentos).
+
+- **2026-11-23, AP-2 (órdenes de Bancos para cheques de apertura, sin migración).** Órdenes `bancos.ligar_cheque_de_apertura`
+  y `bancos.desligar_cheque_de_apertura` (`core/contratos/bancos.contratos.ts`; casos de uso `LigarChequeDeApertura` y
+  `DesligarChequeDeApertura`, atendidas en `composicion/ordenes.ts`). Ligar bloquea el movimiento (`RepositorioMovimientos.bloquear`,
+  `for update`), exige módulo de origen activo, que sea un posfechado de apertura vigente y sin origen
+  (`ChequeDeAperturaNoLigable`) y el monto exacto (`MontoDistintoDelCheque`); pone origen, concepto de mayor monto y desglose, y
+  audita `corregir` en `bancos.cheques` con el movimiento como estaba. Avisos que no bloquean: `beneficiario_distinto`
+  (`bancos.nombre_para_comparar`) y `posfechado_cobrado_pronto` (marcado en la primera conciliación de la cuenta, con la fecha
+  del corte). Desligar quita origen y desglose, deja `sin_clasificar`, exige el origen que pide (`OrigenDelMovimientoNoCoincide`)
+  y motivo, y audita `corregir`. El aviso también sale al marcar un posfechado de apertura por primera vez en la primera
+  conciliación (`MarcarMovimientos` devuelve `avisos` en el documento; `ConsultasConciliaciones.hayAnteriorA`). Después de ligado,
+  el `RevisorDeCambios` y `exigirSinOrigen` ya impiden corregir, eliminar y blanquear. Pruebas: dominio
+  (`ligadura-de-cheque-de-apertura.prueba.ts`) y API (`bancos-ordenes-cheque-de-apertura*.api.prueba.ts`). Decisiones del programador:
+  el motivo de la auditoría usa el id del documento («Ligado al pago <id> de Cuentas por pagar») porque la orden no trae el número
+  del pago; desligar rechaza uno anulado o revertido; el aviso de la conciliación solo sale al marcar por primera vez (no en cada
+  guardado).
+
+- **2026-11-23, AP-3 (forma `cheque_de_apertura` en Cuentas por pagar, sin migración).** Caso de uso
+  `RegistrarPagoConChequeDeApertura` (`POST /api/cuentas-por-pagar/pagos/cheque-de-apertura`, permiso
+  `pagos.ligar-cheques-de-apertura`): revisa los cargos sin bloquear (solo saldos iniciales, mismo proveedor, autorizados y en
+  contraseña), ordena a Bancos `ligar_cheque_de_apertura` (que bloquea el cheque primero y rechaza un monto distinto), bloquea
+  contraseñas y cargos y guarda; la fecha del pago es la del cheque (comprometido hasta ella, pagado en ella), sin retención
+  descontada ni diferencias, con la carga abierta o cerrada; publica `pago_registrado` (`efecto banco`). `DesligarChequeDeApertura`
+  (`POST …/pagos/:id/desligar`, permiso `pagos.desligar-cheques-de-apertura`) bloquea el cheque y después el pago, ordena
+  `desligar_cheque_de_apertura`, deja el pago `anulado` con `fecha_de_anulacion = pagos.fecha` y audita `anular` (`AnuladorDelPago`
+  acepta `fechaContable`); `pago_anulado` sale con `anulacionEnBancos = null`. `creoSuMovimiento` incluye la forma nueva: anular el
+  pago (o el cheque desde Bancos, y el lote de caducos) la trata como un cheque (`PagoCobrado` si está conciliado, sin bandeja);
+  `exigirSoloSaldosInicialesEnLaApertura` cubre las dos formas de apertura. La cuenta de apertura acepta
+  `chequeDeAperturaReferidoId` (informativo, validado contra los cheques en circulación vigentes de la empresa con RLS; error
+  `cheque_de_apertura_referido_invalido`) y el pago lo devuelve. Cuenta para la bancarización del mes del cheque
+  (`FORMAS_DEL_MES`), los reportes de cheques posfechados y de cheques cobrados antes, y los filtros por forma. La ficha trae
+  `puedeDesligar`. Pruebas: unitarias de dominio y de `DesligarChequeDeApertura`; API en
+  `cuentas-por-pagar-pagos-cheque-de-apertura(-baja).api.prueba.ts`. Decisiones del programador: ruta propia en vez de
+  `POST /pagos` con la forma (cada forma especial tiene la suya y su permiso: nota ligada, apertura), el pago de apertura no manda
+  aviso de pago al proveedor, y las listas de cheques para elegir (posfechados sin ligar y en circulación) quedan para AP-5.
+  **Verificado (2026-11-23):** las dos suites de API corren contra PostgreSQL real (23 pruebas en verde). Al correrlas se
+  corrigieron cuatro errores de las pruebas, no del código: un cheque con un solo concepto no guarda desglose, cerrar la carga
+  pide motivo (y su prueba va al final porque cierra la empresa para las demás), un cargo de otro proveedor responde 400
+  `cargo_no_disponible`, y el cheque en circulación de la referencia necesita el saldo de su cuenta.
+- **2026-11-23, AP-3 (revisión: verificación independiente de las pruebas de API).** Las dos suites
+  `cuentas-por-pagar-pagos-cheque-de-apertura(-baja).api.prueba.ts` se corrieron de nuevo con
+  `BD_PRUEBAS=arrancar_pruebas_t9_ap3r VITEST_MAX_WORKERS=2`: 2 archivos y 23 pruebas en verde. En el PostgreSQL de
+  desarrollo del 5433 la conexión desde Node daba `ECONNRESET` (el puerto abría pero rechazaba el protocolo), así que se
+  corrió contra un contenedor temporal en el 5499 con el mismo `infra/postgres/init`, cambiando el puerto de
+  `nombres-de-bases.ts` solo en el equipo (sin commit); contenedor y cambio retirados. No hubo cambios de código.

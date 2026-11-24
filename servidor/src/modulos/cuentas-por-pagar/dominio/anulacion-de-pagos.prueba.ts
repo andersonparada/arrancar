@@ -38,6 +38,7 @@ describe('el efecto del pago para Contabilidad', () => {
     expect(efectoDelPago({ forma: 'nota_de_debito', conCargaCerrada: null })).toBe('banco');
     expect(efectoDelPago({ forma: 'nota_ligada', conCargaCerrada: null })).toBe('transitoria_por_aplicar');
     expect(efectoDelPago({ forma: 'efectivo', conCargaCerrada: null })).toBe('efectivo');
+    expect(efectoDelPago({ forma: 'cheque_de_apertura', conCargaCerrada: null })).toBe('banco');
     expect(efectoDelPago({ forma: 'cuenta_de_apertura', conCargaCerrada: false })).toBe('apertura');
     expect(efectoDelPago({ forma: 'cuenta_de_apertura', conCargaCerrada: true })).toBe('correccion_de_error');
   });
@@ -51,12 +52,13 @@ describe('las reglas de reaplicar y de saldar la diferencia', () => {
     );
   });
 
-  it('la cuenta de apertura solo cubre saldos iniciales', () => {
+  it('la cuenta de apertura y el cheque de apertura solo cubren saldos iniciales', () => {
     exigirSoloSaldosInicialesEnLaApertura({ forma: 'cuenta_de_apertura' }, ['saldo_inicial']);
+    exigirSoloSaldosInicialesEnLaApertura({ forma: 'cheque_de_apertura' }, ['saldo_inicial']);
     exigirSoloSaldosInicialesEnLaApertura({ forma: 'cheque' }, ['libro_de_compras']);
-    expect(() => exigirSoloSaldosInicialesEnLaApertura({ forma: 'cuenta_de_apertura' }, ['libro_de_compras'])).toThrow(
-      SoloSaldosIniciales,
-    );
+    for (const forma of ['cuenta_de_apertura', 'cheque_de_apertura'] as const) {
+      expect(() => exigirSoloSaldosInicialesEnLaApertura({ forma }, ['libro_de_compras'])).toThrow(SoloSaldosIniciales);
+    }
   });
 
   it('la diferencia se salda desde la fecha del pago hasta hoy', () => {
