@@ -9,6 +9,7 @@ import {
   filasDeRol,
   rolesDeAuxiliarDeLaCuenta,
   totalDeFaltantes,
+  totalSegunOperacionSinElegir,
 } from './edicion-de-enlaces';
 
 const enlace = (rol: string, llave: string | null, cuentaId = 'c1'): Enlace => ({
@@ -192,6 +193,22 @@ describe('cuenta general obligatoria y roles según la operación', () => {
 
   it('un rol según la operación no cuenta como faltante', () => {
     expect(faltantesDelRol(rol('reserva_legal', { segunOperacion: true }), [])).toBe(0);
+  });
+});
+
+describe('roles según la operación sin cuenta', () => {
+  it('no son faltantes, pero se cuentan aparte para no decir que todo está listo', () => {
+    const roles = [
+      rol('iva_credito_fiscal', { segunOperacion: true }),
+      rol('retencion_por_pagar', { segunOperacion: true }),
+    ];
+    expect(totalDeFaltantes(roles, {})).toBe(0);
+    expect(totalSegunOperacionSinElegir(roles)).toBe(2);
+  });
+
+  it('uno con enlace ya no cuenta', () => {
+    const roles = [rol('reserva_legal', { segunOperacion: true, enlaces: [enlace('reserva_legal', null)] })];
+    expect(totalSegunOperacionSinElegir(roles)).toBe(0);
   });
 });
 

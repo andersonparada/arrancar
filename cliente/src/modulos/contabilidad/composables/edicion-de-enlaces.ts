@@ -145,6 +145,14 @@ export function consecuenciaDeQuitar(rol: RolDeEnlace, fila: FilaDeEnlace): stri
   return `Lo que llegue de los módulos para este rol quedará por contabilizar con un error hasta que lo enlace de nuevo.${YA_CONTABILIZADO}`;
 }
 
+/** Un rol «según la operación» sin ninguna cuenta: no se exige, pero su primer hecho quedaría en `falta_enlace`. */
+export const sinElegirSegunOperacion = (rol: RolDeEnlace): boolean => rol.segunOperacion && rol.enlaces.length === 0;
+
+/** Cuántos roles «según la operación» siguen sin cuenta (no cuentan como faltantes, pero no están resueltos). */
+export function totalSegunOperacionSinElegir(roles: RolDeEnlace[]): number {
+  return roles.filter(sinElegirSegunOperacion).length;
+}
+
 /** El total de cuentas que faltan por elegir en todos los roles. */
 export function totalDeFaltantes(roles: RolDeEnlace[], llavesPorRol: Record<string, LlavesDelRol>): number {
   return roles.reduce((suma, rol) => suma + faltantesDelRol(rol, llavesPorRol[rol.rol] ?? null), 0);

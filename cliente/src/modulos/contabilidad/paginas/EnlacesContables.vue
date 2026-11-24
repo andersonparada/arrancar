@@ -42,16 +42,28 @@ const permisosDeExcel = { importar: 'contabilidad.enlaces.importar', exportar: '
       <p
         class="mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
         :class="
-          e.faltantes.value
+          e.faltantes.value || e.segunOperacion.value
             ? 'bg-trigo-300/30 text-tierra-900 dark:bg-trigo-500/20 dark:text-trigo-300'
             : 'bg-campo-100 text-campo-900 dark:bg-campo-900 dark:text-campo-100'
         "
         role="status"
       >
-        <component :is="e.faltantes.value ? TriangleAlert : CheckCircle2" class="size-4 shrink-0" aria-hidden="true" />
+        <component
+          :is="e.faltantes.value || e.segunOperacion.value ? TriangleAlert : CheckCircle2"
+          class="size-4 shrink-0"
+          aria-hidden="true"
+        />
         <span v-if="e.faltantes.value">
           Faltan {{ e.faltantes.value }} {{ e.faltantes.value === 1 ? 'cuenta por elegir' : 'cuentas por elegir' }}: los
           hechos que dependen de ellas no se podrán contabilizar.
+        </span>
+        <span v-else-if="e.segunOperacion.value">
+          Ninguna cuenta obligatoria falta, pero {{ e.segunOperacion.value }}
+          {{
+            e.segunOperacion.value === 1
+              ? 'cuenta según su operación sigue sin elegir'
+              : 'cuentas según su operación siguen sin elegir'
+          }}. Si su empresa las usa, elíjalas: el primer hecho que las necesite quedaría por contabilizar con error.
         </span>
         <span v-else>Todos los roles tienen su cuenta.</span>
       </p>

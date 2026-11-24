@@ -9,7 +9,9 @@ import {
   consecuenciaDeQuitar,
   cuentasEnlazables,
   faltantesDelRol,
+  sinElegirSegunOperacion,
   totalDeFaltantes,
+  totalSegunOperacionSinElegir,
   type FilaDeEnlace,
   type LlavesDelRol,
 } from './edicion-de-enlaces';
@@ -107,6 +109,13 @@ function usarCambiosDeEnlace(datos: Ref<Datos>, cuentas: ComputedRef<Cuenta[]>) 
   return { ocupadas, elegir, quitar };
 }
 
+/** Los grupos que se muestran; con el filtro, solo los roles con cuentas faltantes o «según la operación» sin elegir. */
+function gruposVisibles(roles: RolDeEnlace[], llaves: Record<string, LlavesDelRol>, soloFaltantes: boolean) {
+  const conFalta = (rol: RolDeEnlace) =>
+    faltantesDelRol(rol, llaves[rol.rol] ?? null) > 0 || sinElegirSegunOperacion(rol);
+  return agruparPorModulo(roles.filter((rol) => !soloFaltantes || conFalta(rol)));
+}
+
 /** Los enlaces contables: roles por módulo, lo que falta y elegir, cambiar o quitar la cuenta de cada fila. */
 export function usarEnlaces(puedeVerCuentas: boolean) {
   const soloFaltantes = ref(false);
@@ -116,13 +125,13 @@ export function usarEnlaces(puedeVerCuentas: boolean) {
     { roles: [], cuentas: [], llaves: {} },
     'No se pudieron traer los enlaces.',
   );
-  const faltantes = computed(() => totalDeFaltantes(datos.value.roles, datos.value.llaves));
+  const resumen = {
+    faltantes: computed(() => totalDeFaltantes(datos.value.roles, datos.value.llaves)),
+    segunOperacion: computed(() => totalSegunOperacionSinElegir(datos.value.roles)),
+  };
   const cuentas = computed(() => cuentasEnlazables(datos.value.cuentas));
-  const grupos = computed(() => {
-    const conFalta = (rol: RolDeEnlace) => faltantesDelRol(rol, datos.value.llaves[rol.rol] ?? null) > 0;
-    return agruparPorModulo(datos.value.roles.filter((rol) => !soloFaltantes.value || conFalta(rol)));
-  });
+  const grupos = computed(() => gruposVisibles(datos.value.roles, datos.value.llaves, soloFaltantes.value));
   const cambios = usarCambiosDeEnlace(datos, cuentas);
   const intercambio = usarIntercambio(apiEnlaces.intercambio, cargar);
-  return { grupos, faltantes, cuentas, cargando, fallo, cargar, soloFaltantes, datos, intercambio, ...cambios };
+  return { ...resumen, grupos, cuentas, cargando, fallo, cargar, soloFaltantes, datos, intercambio, ...cambios };
 }
