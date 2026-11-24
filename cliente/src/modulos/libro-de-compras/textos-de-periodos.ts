@@ -88,10 +88,10 @@ export const VENTANA_DE_DECLARACION = {
   fechaAyuda: 'No puede ser anterior al mes siguiente al período.',
   remanente: 'Remanente de retenciones del mes anterior (opcional)',
   remanenteAyuda:
-    'Solo si es el primer mes que declara en Arrancar: lo que le quedó de retenciones (SAT-2237) o de constancias (SAT-2046) a favor. Los meses siguientes se toma solo de la declaración anterior.',
+    'Escríbalo del formulario presentado a la SAT si Arrancar no lo tiene (primer mes, mes sin declarar o mes anterior sin ventas). Si Arrancar ya lo calculó, se usa ese y no se cambia aquí: para diferir, rectifique el mes anterior. Vacío no cambia nada; solo en su primer mes en Arrancar se toma como cero.',
   credito: 'Remanente de crédito fiscal del mes anterior (opcional)',
   creditoAyuda:
-    'Solo en el SAT-2237 y solo si es el primer mes que declara en Arrancar: el crédito fiscal que le sobró del mes anterior. Se resta del impuesto de este mes.',
+    'Solo en el SAT-2237: el crédito fiscal que le sobró en el formulario del mes anterior, si Arrancar no lo tiene. Se resta del impuesto de este mes. El pequeño contribuyente (SAT-2046) no maneja remanente de crédito.',
   boton: 'Declarar',
   botonRectificacion: 'Registrar rectificación',
   exito: 'Período declarado.',

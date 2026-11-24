@@ -40,7 +40,10 @@ const REMANENTES: Record<string, (constancias: boolean) => string> = {
     c ? 'Saldo de constancias al siguiente mes' : 'Remanente de retenciones al siguiente mes',
   creditoAnterior: () => 'Remanente de crédito fiscal anterior',
   creditoAlSiguiente: () => 'Remanente de crédito fiscal al siguiente mes',
-  impuestoDelMes: () => 'Impuesto del mes (antes de retenciones)',
+  impuestoDelMes: (c) =>
+    c
+      ? 'Impuesto del mes (5 % de ingresos, antes de constancias)'
+      : 'Impuesto del mes (débito menos crédito, antes de retenciones)',
   impuestoAPagar: () => 'Impuesto por pagar',
 };
 

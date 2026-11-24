@@ -1,25 +1,34 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
-import { opcionesDeFormulario, type DeclaracionEnEdicion } from '../../composables/periodos/datos-de-periodos';
+import {
+  opcionesDeFormulario,
+  sinCreditoFiscal,
+  type DeclaracionEnEdicion,
+} from '../../composables/periodos/datos-de-periodos';
+import type { FormularioDeDeclaracion } from '../../servicios/periodos.api';
 import { VENTANA_DE_DECLARACION as textos } from '../../textos-de-periodos';
 
 /**
  * Declarar un período (o rectificarlo): el formulario, el número y la fecha son opcionales. El resumen dice qué va a
  * pasar antes de confirmar.
  */
-defineProps<{
+const props = defineProps<{
   abierta: boolean;
   rectificacion: boolean;
   resumen: string[];
   enviando: boolean;
   errores: Record<string, string>;
+  /** El formulario de la última declaración, para saber si el crédito fiscal aplica cuando se deja el automático. */
+  formularioVigente?: FormularioDeDeclaracion | null;
 }>();
 const edicion = defineModel<DeclaracionEnEdicion>({ required: true });
 defineEmits<{ guardar: []; cerrar: [] }>();
 const formularios = opcionesDeFormulario();
+const pideCredito = computed(() => !sinCreditoFiscal(edicion.value.formulario || props.formularioVigente || null));
 </script>
 
 <template>
@@ -63,6 +72,7 @@ const formularios = opcionesDeFormulario();
         paso="0.01"
       />
       <CampoTexto
+        v-if="pideCredito"
         v-model="edicion.creditoAnterior"
         :etiqueta="textos.credito"
         :ayuda="textos.creditoAyuda"

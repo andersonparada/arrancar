@@ -85,6 +85,7 @@ const resumenDelDeclarar = computed(() =>
       :resumen="resumenDelDeclarar"
       :enviando="declaracion.enviando"
       :errores="declaracion.errores"
+      :formulario-vigente="formularioDeLaUltimaDeclaracion(detalle.historial)"
       @guardar="declaracion.guardar(acciones.esRectificacion)"
       @cerrar="declaracion.abierta = false"
     />

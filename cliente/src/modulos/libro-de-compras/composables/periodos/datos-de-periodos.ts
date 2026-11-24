@@ -108,15 +108,28 @@ export const declaracionVacia = (): DeclaracionEnEdicion => ({
   creditoAnterior: '',
 });
 
+/** El pequeño contribuyente (SAT-2046) no maneja remanente de crédito fiscal: no se pide ni se guarda. */
+export const sinCreditoFiscal = (formulario: FormularioDeDeclaracion | '' | null): boolean => formulario === 'SAT-2046';
+
+const textoDe = (valor: string | number | null): string => String(valor ?? '').trim();
+
+const datosDelFormulario = (edicion: DeclaracionEnEdicion): DatosDeDeclaracion => ({
+  ...(edicion.formulario && { formulario: edicion.formulario }),
+  ...(edicion.numero.trim() && { numeroDeFormulario: edicion.numero.trim() }),
+  ...(edicion.fecha && { fechaDePresentacion: edicion.fecha }),
+});
+
 /** El cuerpo para la API: lo que se dejó vacío no se envía (el servidor propone). */
-export function cuerpoDeDeclaracion(edicion: DeclaracionEnEdicion): DatosDeDeclaracion {
+export function cuerpoDeDeclaracion(
+  edicion: DeclaracionEnEdicion,
+  formularioVigente: FormularioDeDeclaracion | null = null,
+): DatosDeDeclaracion {
+  const formulario = edicion.formulario || formularioVigente;
   const cuerpo: DatosDeDeclaracion = {};
-  if (edicion.formulario) cuerpo.formulario = edicion.formulario;
-  if (edicion.numero.trim()) cuerpo.numeroDeFormulario = edicion.numero.trim();
-  if (edicion.fecha) cuerpo.fechaDePresentacion = edicion.fecha;
-  const remanente = String(edicion.remanenteAnterior ?? '').trim();
-  if (remanente) cuerpo.remanenteDeRetencionesAnterior = remanente;
-  const credito = String(edicion.creditoAnterior ?? '').trim();
+  Object.assign(cuerpo, datosDelFormulario(edicion));
+  const retenciones = textoDe(edicion.remanenteAnterior);
+  const credito = sinCreditoFiscal(formulario) ? '' : textoDe(edicion.creditoAnterior);
+  if (retenciones) cuerpo.remanenteDeRetencionesAnterior = retenciones;
   if (credito) cuerpo.remanenteDeCreditoAnterior = credito;
   return cuerpo;
 }

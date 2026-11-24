@@ -56,3 +56,14 @@ describe('cambios', () => {
     expect(nombreDelDocumentoCambiado({ ...base, tipoDte: null, serie: null, numero: '9' })).toBe('9');
   });
 });
+
+describe('etiquetas del impuesto del mes', () => {
+  it('cada formulario nombra su base', () => {
+    expect(etiquetaDeCifra('remanentes.impuestoDelMes', 'SAT-2237')).toBe(
+      'Impuesto del mes (débito menos crédito, antes de retenciones)',
+    );
+    expect(etiquetaDeCifra('remanentes.impuestoDelMes', 'SAT-2046')).toBe(
+      'Impuesto del mes (5 % de ingresos, antes de constancias)',
+    );
+  });
+});
