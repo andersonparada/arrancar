@@ -31,7 +31,7 @@ export class RevisarCierre {
   ): Promise<RevisionDelCierreDto> {
     exigirAlcanceTotal(pedido.vista);
     return this.dependencias.unidadDeTrabajo.ejecutar(operador, async () =>
-      revisionADto(await this.armador.armar(operador, pedido.periodo)),
+      revisionADto(await this.armador.armar(operador, pedido.periodo), pedido.vista),
     );
   }
 }

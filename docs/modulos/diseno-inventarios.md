@@ -1259,7 +1259,7 @@ texto.
 | INV-6c | Traslados | frontend |
 | **INV-7** | Saldos iniciales, pregunta de EM-2, aviso de fecha de inicio, Excel | backend — **hecho** (2026-11-23, migraciones `0008_inv7_saldos_iniciales` y `0009_inv7_reubicar_saldos_iniciales`; queda el aviso del umbral de Activos fijos con AFI-9; correcciones de la revisión en `0010_inv7_saldo_inicial_sin_repetir`; ver la bitácora de `PLAN.md`) |
 | INV-7c | Saldos iniciales de inventario | frontend |
-| **INV-8** | Cierres y existencias al cierre (con el renglón «En tránsito interno»); revisar, cerrar, reabrir; eventos del bus | backend — **hecho** (2026-11-23, migración `0011_inv8_cierres`; con la pregunta `inventarios.revisar_cierre_del_mes` a los demás módulos y pruebas de concurrencia; quedan los avisos de ajustes, conteos y deterioros con INV-9, INV-10 e INV-12: ver la bitácora de `PLAN.md`) |
+| **INV-8** | Cierres y existencias al cierre (con el renglón «En tránsito interno»); revisar, cerrar, reabrir; eventos del bus | backend — **hecho** (2026-11-23, migración `0011_inv8_cierres`; con la pregunta `inventarios.revisar_cierre_del_mes` a los demás módulos y pruebas de concurrencia, y corregido tras la revisión: meses anteriores al primer cierre congelados, sin montos sin `costos.ver` ni alcance, aviso de la bandeja por fecha de emisión; quedan los avisos de ajustes, conteos y deterioros con INV-9, INV-10 e INV-12: ver la bitácora de `PLAN.md`) |
 | INV-8c | Cierre de inventario | frontend |
 | **INV-9** | Ajustes con aprobación, soportes (archivos), regla de IVA (§6.8, **régimen con débito = solo `general`**, V-3), `error_de_registro` referido a la salida que corrige (V-6), sobrante (V-5), salidas especiales (avisos de V-7) | backend |
 | INV-9c | Ajustes y salida especial | frontend |

@@ -12,6 +12,9 @@ import type { VistaDelKardex } from '../../dto/documento.dto.js';
 import type { ExistenciaAlCierreGuardada } from '../../puertos/repositorio-de-cierres.js';
 import type { CierreArmado } from './armador-del-cierre.js';
 
+/** La vista de la auditoría: guarda el cierre tal como estaba, sin recortes. */
+const VISTA_COMPLETA: VistaDelKardex = { verCostos: true, veTodasLasBodegas: true };
+
 export function totalesADto(totales: TotalesDelCierre): TotalesDelCierreDto {
   return {
     valorTotal: deCentavosEnteros(totales.valorTotal),
@@ -23,20 +26,28 @@ export function totalesADto(totales: TotalesDelCierre): TotalesDelCierreDto {
   };
 }
 
-export function revisionADto(armado: CierreArmado): RevisionDelCierreDto {
+/** Lo que ve cada usuario de los totales: sin `costos.ver` no hay montos (§10.1). */
+export function totalesVisiblesADto(totales: TotalesDelCierre, vista: VistaDelKardex): TotalesDelCierreDto {
+  const completos = totalesADto(totales);
+  if (vista.verCostos) return completos;
+  return { ...completos, valorTotal: null, porTipo: [] };
+}
+
+export function revisionADto(armado: CierreArmado, vista: VistaDelKardex): RevisionDelCierreDto {
   const { periodo, hallazgos, totales, metodo, regimenIsr, huella } = armado;
   return {
     periodo,
     hallazgos,
     puedeCerrar: hallazgos.every((hallazgo) => hallazgo.nivel !== 'bloquea'),
-    totales: totalesADto(totales),
+    totales: totalesVisiblesADto(totales, vista),
     metodo,
     regimenIsr,
     huella,
   };
 }
 
-export function cierreADto(cierre: CierreGuardado): CierreDto {
+/** Sin `costos.ver` no lleva el valor; sin alcance total tampoco las cifras de la empresa entera (§5.10, §10.1). */
+export function cierreADto(cierre: CierreGuardado, vista: VistaDelKardex): CierreDto {
   return {
     periodo: cierre.periodo,
     estado: cierre.estado,
@@ -47,14 +58,16 @@ export function cierreADto(cierre: CierreGuardado): CierreDto {
     motivoDeReapertura: cierre.motivoDeReapertura,
     metodo: cierre.metodo,
     regimenIsr: cierre.regimenIsr,
-    valorTotal: deCentavosEnteros(cierre.valorTotal),
-    articulosConExistencia: cierre.articulosConExistencia,
+    valorTotal: vista.verCostos && vista.veTodasLasBodegas ? deCentavosEnteros(cierre.valorTotal) : null,
+    articulosConExistencia: vista.veTodasLasBodegas ? cierre.articulosConExistencia : null,
   };
 }
 
 export function cierreConTiposADto(cierre: CierreGuardado, porTipo: TotalesDelCierre['porTipo']): CierreConTiposDto {
   return {
-    ...cierreADto(cierre),
+    ...cierreADto(cierre, VISTA_COMPLETA),
+    valorTotal: deCentavosEnteros(cierre.valorTotal),
+    articulosConExistencia: cierre.articulosConExistencia,
     porTipo: porTipo.map(({ tipoDeInventario, valor }) => ({ tipoDeInventario, valor: deCentavosEnteros(valor) })),
   };
 }

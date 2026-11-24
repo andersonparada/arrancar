@@ -20,7 +20,7 @@ export interface CasosDeUsoDeCierres {
 export class CierresControlador {
   constructor(private readonly casosDeUso: CasosDeUsoDeCierres) {}
 
-  listar = (solicitud: FastifyRequest) => this.casosDeUso.listar.ejecutar(operadorDe(solicitud));
+  listar = (solicitud: FastifyRequest) => this.casosDeUso.listar.ejecutar(operadorDe(solicitud), vistaDe(solicitud));
 
   revisar = (solicitud: FastifyRequest<{ Params: ParamsPeriodo }>) =>
     this.casosDeUso.revisar.ejecutar(operadorDe(solicitud), {

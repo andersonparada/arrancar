@@ -3804,8 +3804,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   antes de bloquear los artículos y un cierre en curso podía colarse. **Reabrir:** solo el último, con motivo; la foto queda
   `vigente = false` (no se borra); audita `reabrir` con el cierre y su valor por tipo; cerrar audita `cerrar`; ambos publican
   `inventarios.mes_cerrado` / `mes_reabierto` (`periodo`, `valorTotalCentavos`, `porTipo`). Sin `costos.ver` la foto lleva
-  `costoUnitario` y `valor` en `null`; `cierres.ver` muestra los totales del cierre y de la revisión (es un permiso de
-  contabilidad, como el de depreciación). **Pruebas:** dominio (foto, redondeo, hallazgos, meses), casos de uso en memoria
+  `costoUnitario` y `valor` en `null`; la lista, la revisión y los detalles de los rechazos recortan los montos igual
+  (corregido el mismo día, ver la entrada siguiente). **Pruebas:** dominio (foto, redondeo, hallazgos, meses), casos de uso en memoria
   (`cierres.prueba.ts`), y de API: flujo con tránsito, huella y reapertura (`inventarios-cierres`), permisos, alcance, costos y
   aislamiento (`…-permisos`), hallazgos, pregunta a otros módulos, carga abierta y `saldos_con_cierres` (`…-hallazgos`) y
   **concurrencia** (`…-concurrencia`: cerrar a la vez que seis documentos del mismo mes —cada uno entra y está en la foto o se
@@ -3813,6 +3813,17 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   **Pendiente:** los avisos de ajustes por aprobar, conteos en curso, el conteo de diciembre (art. 42 num. 3) y deterioros sin
   revisar entran con INV-9, INV-10 e INV-12 (sus tablas no existen todavía); la pantalla INV-8c; el cambio de método
   (`CambiarMetodoDeCosteo`) que lee los meses cerrados.
+- **2026-11-23 — INV-8, correcciones de la revisión.** (1) **Meses cerrados congelados:** `MesesCerrados.estaCerrado(periodo)`
+  responde «período ≤ último mes cerrado» (antes solo miraba la fila de ese mes, y los meses anteriores al primer cierre
+  contaban como abiertos): un documento fechado antes del primer cierre, o su anulación, da `mes_cerrado`. (2) **Sin montos
+  a quien no los ve (§10.1, §5.10):** `ListarCierres`, `RevisarCierre`, `CerrarMes` y `ReabrirMes` reciben la vista; sin
+  `costos.ver`, `valorTotal` va en `null` y `porTipo` vacío (en la lista, la revisión y los `detalles` de
+  `cierre_con_bloqueos` y `revision_del_cierre_desactualizada`); sin alcance total, la lista también oculta
+  `articulosConExistencia` y `valorTotal` (cifras de toda la empresa). La auditoría guarda el cierre completo. `cierres.ver`
+  **no** es un permiso de contabilidad aparte: solo da lista y fechas. (3) **Aviso `lineas_por_recibir`:** cuenta las líneas
+  de la bandeja con **fecha de emisión** hasta el último día del mes (filtro nuevo `emitidasHasta` de la consulta, sin
+  tocar el `hasta` por período de la pantalla). Pruebas: casos de uso y API (fecha anterior al primer cierre, lista y
+  revisión sin costos ni alcance, período del libro posterior a la emisión).
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

@@ -102,7 +102,7 @@ export class ArmadorDelCierre {
     const { consultas, bandeja, cargaInicial, preguntas } = this.dependencias;
     const propios = hallazgosDelCierre({
       ...(await consultas.hallazgosDeLaBase(periodo)),
-      lineasEnLaBandeja: (await bandeja.listar({ hasta: periodo })).length,
+      lineasEnLaBandeja: (await bandeja.listar({ emitidasHasta: ultimoDiaDelMes(periodo) })).length,
       cargaInicialAbierta: !(await cargaInicial.obtener(operador)).cerrada,
     });
     return [...propios, ...(await preguntas.hallazgosDeOtrosModulos(operador, periodo))];

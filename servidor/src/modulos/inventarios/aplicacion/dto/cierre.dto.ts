@@ -7,8 +7,9 @@ export interface ValorPorTipoDto {
   valor: string;
 }
 
+/** Sin `costos.ver`, `valorTotal` va en `null` y `porTipo` vacío. */
 export interface TotalesDelCierreDto {
-  valorTotal: string;
+  valorTotal: string | null;
   articulosConExistencia: number;
   porTipo: ValorPorTipoDto[];
 }
@@ -35,12 +36,16 @@ export interface CierreDto {
   motivoDeReapertura: string | null;
   metodo: string;
   regimenIsr: string | null;
-  valorTotal: string;
-  articulosConExistencia: number;
+  /** Nulo sin `costos.ver`. */
+  valorTotal: string | null;
+  /** Nulo para quien no ve todas las bodegas: es una cifra de toda la empresa. */
+  articulosConExistencia: number | null;
 }
 
-/** El cierre con su valor por tipo: lo que queda en la auditoría al reabrir. */
-export interface CierreConTiposDto extends CierreDto {
+/** El cierre completo con su valor por tipo: lo que queda en la auditoría al reabrir. */
+export interface CierreConTiposDto extends Omit<CierreDto, 'valorTotal' | 'articulosConExistencia'> {
+  valorTotal: string;
+  articulosConExistencia: number;
   porTipo: ValorPorTipoDto[];
 }
 

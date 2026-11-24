@@ -163,6 +163,19 @@ describe('cerrar julio', () => {
       'mes_cerrado',
     ]);
   });
+
+  it('una fecha anterior al primer mes cerrado también se rechaza: no hay meses abiertos antes del cierre', async () => {
+    const antes = await renglonesDeFoto(propietario(), '2026-07-01');
+
+    const nuevo = await entrada(propietario(), {
+      bodegaId: bodega1,
+      fecha: '2026-06-15',
+      renglones: [{ articuloId: e.articuloId, cantidad: '40', costoTotal: '400.00' }],
+    });
+
+    expect(nuevo.cuerpo.error.codigo).toBe('mes_cerrado');
+    expect(await renglonesDeFoto(propietario(), '2026-07-01')).toEqual(antes);
+  });
 });
 
 describe('agosto y septiembre', () => {

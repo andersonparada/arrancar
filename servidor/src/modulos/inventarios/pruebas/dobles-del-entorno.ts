@@ -22,7 +22,7 @@ export class MesesCerradosFijos implements MesesCerrados {
   constructor(public cerrados: string[] = []) {}
 
   async estaCerrado(periodo: string): Promise<boolean> {
-    return this.cerrados.includes(periodo);
+    return this.cerrados.some((cerrado) => cerrado >= periodo);
   }
 
   async hayAlguno(): Promise<boolean> {

@@ -33,13 +33,13 @@ export class ReabrirMes {
     const motivo = pedido.motivo.trim();
     if (motivo.length < 1 || motivo.length > MOTIVO_MAXIMO) throw new MotivoDeReaperturaInvalido();
     const { evento, dto } = await unidadDeTrabajo.ejecutar(operador, () =>
-      this.reabrir(operador, { periodo: pedido.periodo, motivo }),
+      this.reabrir(operador, { periodo: pedido.periodo, motivo, vista: pedido.vista }),
     );
     await publicadorEventos.publicar([evento]);
     return dto;
   }
 
-  private async reabrir(operador: Operador, { periodo, motivo }: { periodo: string; motivo: string }) {
+  private async reabrir(operador: Operador, { periodo, motivo, vista }: ReaperturaPedida) {
     const { cierres, auditoria } = this.dependencias;
     await cierres.bloquear();
     const ultimo = await cierres.ultimoMesCerrado();
@@ -61,6 +61,6 @@ export class ReabrirMes {
       valorTotalCentavos: Number(anterior.valorTotal),
       porTipo: porTipo.map(({ tipoDeInventario, valor }) => ({ tipoDeInventario, valorCentavos: Number(valor) })),
     });
-    return { evento, dto: cierreADto((await cierres.buscar(periodo))!) };
+    return { evento, dto: cierreADto((await cierres.buscar(periodo))!, vista) };
   }
 }

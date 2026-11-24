@@ -92,6 +92,20 @@ describe('lo que encuentra Inventarios', () => {
   });
 });
 
+describe('el aviso de la bandeja sigue a la fecha de emisión', () => {
+  const MOVER_EL_PERIODO = `update libro_de_compras.documentos set periodo = $2
+    where empresa_id = $1 and fecha_emision = '2026-10-11'`;
+
+  it('una factura emitida en octubre y sin recibir avisa aunque su período del libro sea noviembre', async () => {
+    await comoPropietario(MOVER_EL_PERIODO, [e.cuenta.empresaId, '2026-11-01']);
+
+    const { hallazgos } = await revision();
+    await comoPropietario(MOVER_EL_PERIODO, [e.cuenta.empresaId, '2026-10-01']);
+
+    expect(hallazgos).toEqual([expect.objectContaining({ nivel: 'aviso', codigo: 'lineas_por_recibir', cantidad: 1 })]);
+  });
+});
+
 describe('la pregunta a los demás módulos', () => {
   it('si ninguno dice nada, la revisión queda como estaba', async () => {
     expect(codigos((await revision()).hallazgos)).toEqual(['lineas_por_recibir']);

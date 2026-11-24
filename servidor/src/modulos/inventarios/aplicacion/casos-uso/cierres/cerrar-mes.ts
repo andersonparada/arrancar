@@ -47,11 +47,11 @@ export class CerrarMes {
     return dto;
   }
 
-  private async cerrar(operador: Operador, { periodo, huella }: CierrePedido) {
+  private async cerrar(operador: Operador, { periodo, huella, vista }: CierrePedido) {
     const { cierres, auditoria } = this.dependencias;
     await cierres.bloquear();
     const armado = await this.armador.armar(operador, periodo);
-    this.exigirCerrable(armado, huella);
+    this.exigirCerrable(armado, { huella, vista });
     const { totales, renglones, regimenIsr } = armado;
     const metodo = armado.metodo!;
     await cierres.guardar({
@@ -70,15 +70,15 @@ export class CerrarMes {
       accion: 'cerrar',
       anterior: { periodo, ...totalesADto(totales), metodo, regimenIsr },
     });
-    return { evento: this.evento(operador, armado), dto: cierreADto((await cierres.buscar(periodo))!) };
+    return { evento: this.evento(operador, armado), dto: cierreADto((await cierres.buscar(periodo))!, vista) };
   }
 
-  private exigirCerrable(armado: CierreArmado, huella: string | null | undefined): void {
+  private exigirCerrable(armado: CierreArmado, { huella, vista }: Pick<CierrePedido, 'huella' | 'vista'>): void {
     if (armado.porLlegar) throw new MesPorLlegar(armado.periodo);
     if (armado.siguiente !== armado.periodo) throw new MesAnteriorSinCerrar(armado.siguiente);
-    if (huella && huella !== armado.huella) throw new RevisionDelCierreDesactualizada(revisionADto(armado));
+    if (huella && huella !== armado.huella) throw new RevisionDelCierreDesactualizada(revisionADto(armado, vista));
     if (armado.hallazgos.some((hallazgo) => hallazgo.nivel === 'bloquea'))
-      throw new CierreConBloqueos(revisionADto(armado));
+      throw new CierreConBloqueos(revisionADto(armado, vista));
   }
 
   private evento(operador: Operador, { periodo, totales }: CierreArmado) {

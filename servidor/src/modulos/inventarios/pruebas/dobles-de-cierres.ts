@@ -15,6 +15,7 @@ import { ReabrirMes } from '../aplicacion/casos-uso/cierres/reabrir-mes.js';
 import { RevisarCierre } from '../aplicacion/casos-uso/cierres/revisar-cierre.js';
 import type { VistaDelKardex } from '../aplicacion/dto/documento.dto.js';
 import type { ConsultasDeCierre, HallazgosDeLaBase } from '../aplicacion/puertos/consultas-de-cierre.js';
+import type { FiltrosDePorRecibir } from '../aplicacion/dto/por-recibir.dto.js';
 import type { ConsultasPorRecibir } from '../aplicacion/puertos/consultas-por-recibir.js';
 import type { PreguntasDelCierre } from '../aplicacion/puertos/preguntas-del-cierre.js';
 import type {
@@ -150,8 +151,10 @@ export class ConsultasDeCierreEnMemoria implements ConsultasDeCierre {
 
 class BandejaFija implements ConsultasPorRecibir {
   lineas = 0;
+  filtros: FiltrosDePorRecibir[] = [];
 
-  async listar() {
+  async listar(filtros: FiltrosDePorRecibir) {
+    this.filtros.push(filtros);
     return Array.from({ length: this.lineas }, () => ({}) as never);
   }
 }

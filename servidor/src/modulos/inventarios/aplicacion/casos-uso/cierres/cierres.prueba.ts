@@ -42,18 +42,18 @@ describe('el orden de los cierres', () => {
     e.carga.fechaDeInicio = '2026-08-15';
     e.carga.cerrada = true;
 
-    expect((await e.listar.ejecutar(e.operador)).siguienteMes).toBe('2026-08-01');
+    expect((await e.listar.ejecutar(e.operador, e.vista)).siguienteMes).toBe('2026-08-01');
     await expect(e.cerrarMes('2026-09-01')).rejects.toBeInstanceOf(MesAnteriorSinCerrar);
     await expect(e.cerrarMes('2026-07-01')).rejects.toBeInstanceOf(MesAnteriorAlInicio);
     await e.cerrarMes('2026-08-01');
-    expect((await e.listar.ejecutar(e.operador)).siguienteMes).toBe('2026-09-01');
+    expect((await e.listar.ejecutar(e.operador, e.vista)).siguienteMes).toBe('2026-09-01');
   });
 
   it('sin fecha de inicio es el del primer movimiento; sin nada, no hay mes por cerrar', async () => {
-    expect((await e.listar.ejecutar(e.operador)).siguienteMes).toBe('2026-07-01');
+    expect((await e.listar.ejecutar(e.operador, e.vista)).siguienteMes).toBe('2026-07-01');
 
     e.consultas.primerMes = null;
-    expect((await e.listar.ejecutar(e.operador)).siguienteMes).toBeNull();
+    expect((await e.listar.ejecutar(e.operador, e.vista)).siguienteMes).toBeNull();
     await expect(e.cerrarMes('2026-07-01')).rejects.toBeInstanceOf(SinMesPorCerrar);
   });
 
@@ -118,6 +118,24 @@ describe('cerrar', () => {
     expect(rechazo).toBeInstanceOf(RevisionDelCierreDesactualizada);
     expect(rechazo.detalles.totales.valorTotal).toBe('400.00');
     await expect(e.cerrarMes('2026-07-01', rechazo.detalles.huella)).resolves.toMatchObject({ valorTotal: '400.00' });
+  });
+
+  it('sin costos.ver la revisión y los detalles de los rechazos llevan solo cantidades', async () => {
+    const sinCostos = { verCostos: false, veTodasLasBodegas: true };
+    const revisada = await e.revisarMes('2026-07-01', sinCostos);
+    e.consultas.articulos = [articulo({ valor: 40_000n })];
+
+    const rechazo = await e.cerrarMes('2026-07-01', revisada.huella, sinCostos).catch((error) => error);
+
+    expect(revisada.totales).toMatchObject({ valorTotal: null, articulosConExistencia: 1, porTipo: [] });
+    expect(rechazo.detalles.totales).toMatchObject({ valorTotal: null, porTipo: [] });
+    await expect(e.cerrarMes('2026-07-01', undefined, sinCostos)).resolves.toMatchObject({ valorTotal: null });
+  });
+
+  it('el aviso de la bandeja cuenta lo emitido hasta el último día del mes, sin importar su período del libro', async () => {
+    await e.revisarMes('2026-07-01');
+
+    expect(e.bandeja.filtros).toEqual([{ emitidasHasta: '2026-07-31' }]);
   });
 
   it('un bloqueo impide cerrar y no guarda nada; un aviso no', async () => {
@@ -193,7 +211,7 @@ describe('reabrir', () => {
       porTipo: [{ tipoDeInventario: 'mercaderia', valor: '315.00' }],
     });
     expect(e.publicador.nombres().at(-1)).toBe('inventarios.mes_reabierto');
-    expect((await e.listar.ejecutar(e.operador)).siguienteMes).toBe('2026-08-01');
+    expect((await e.listar.ejecutar(e.operador, e.vista)).siguienteMes).toBe('2026-08-01');
   });
 
   it('el mes reabierto no tiene existencias al cierre hasta que se cierra otra vez', async () => {
@@ -204,6 +222,21 @@ describe('reabrir', () => {
     );
     await e.cerrarMes('2026-08-01');
     expect(await e.existencias.ejecutar(e.operador, { periodo: '2026-08-01', vista: e.vista })).toHaveLength(2);
+  });
+});
+
+describe('la lista de cierres según quién mira', () => {
+  beforeEach(async () => {
+    await e.cerrarMes('2026-07-01');
+  });
+
+  it('sin costos.ver no lleva el valor; sin alcance total, tampoco las cifras de la empresa', async () => {
+    const sinCostos = await e.listar.ejecutar(e.operador, { verCostos: false, veTodasLasBodegas: true });
+    const sinAlcance = await e.listar.ejecutar(e.operador, { verCostos: true, veTodasLasBodegas: false });
+
+    expect(sinCostos.cierres[0]).toMatchObject({ valorTotal: null, articulosConExistencia: 1 });
+    expect(sinAlcance.cierres[0]).toMatchObject({ valorTotal: null, articulosConExistencia: null });
+    expect((await e.listar.ejecutar(e.operador, e.vista)).cierres[0]).toMatchObject({ valorTotal: '315.00' });
   });
 });
 

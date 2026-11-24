@@ -118,6 +118,16 @@ describe('la foto del mes cerrado', () => {
     expect(conCostos[0]).toMatchObject({ cantidad: '100.0000', costoUnitario: '2.100000', valor: '210.00' });
   });
 
+  it('la lista de cierres no lleva montos sin costos.ver ni cifras de la empresa sin alcance total', async () => {
+    const completa = (await propietario().get(CIERRES)).cuerpo.cierres[0];
+    const soloVista = (await soloVe.get(CIERRES)).cuerpo.cierres[0];
+    const conCostosSinAlcance = (await bodegueroConCostos.get(CIERRES)).cuerpo.cierres[0];
+
+    expect(completa).toMatchObject({ valorTotal: '345.00', articulosConExistencia: 2 });
+    expect(soloVista).toMatchObject({ valorTotal: null, articulosConExistencia: null });
+    expect(conCostosSinAlcance).toMatchObject({ valorTotal: null, articulosConExistencia: null });
+  });
+
   it('un mes sin cerrar no tiene foto', async () => {
     expect((await fotoDelMes(propietario(), '2026-08-01')).estado).toBe(404);
   });
