@@ -55,6 +55,15 @@ export class ArticuloConExistencias extends ReglaDeNegocioInfringida {
   }
 }
 
+/** La bodega es origen o destino de un traslado en camino: inactiva no admite la recepción, y la mercadería quedaría varada. */
+export class BodegaConTrasladosEnTransito extends ReglaDeNegocioInfringida {
+  readonly codigo = 'bodega_con_traslados_en_transito';
+
+  constructor() {
+    super('La bodega tiene traslados en tránsito. Recíbalos o anúlelos antes de inactivarla.');
+  }
+}
+
 /** La bodega tiene existencias: se sacan o trasladan antes de inactivarla, porque inactiva no admite movimientos. */
 export class BodegaConExistencias extends ReglaDeNegocioInfringida {
   readonly codigo = 'bodega_con_existencias';

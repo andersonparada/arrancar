@@ -1,4 +1,4 @@
-import type { CausaDeEntrada, ClaseDeDocumento, DestinoDeSalida } from './documento.js';
+import type { CausaDeEntrada, ClaseDeDocumento, DestinoDeSalida, EstadoDeTraslado } from './documento.js';
 import { DocumentoInvalido } from './errores-de-kardex.js';
 import type { BaseDeReparto } from './rebaja.js';
 
@@ -17,6 +17,8 @@ export interface RenglonDePlan {
   lineaDeCompraId?: string | null;
   /** La entrada que devuelve una devolución, o la que recibe la parte de una rebaja. */
   movimientoDeOrigenId?: string | null;
+  /** Solo en un saldo inicial: el día de la compra real del renglón (el que ordena su capa con PEPS). */
+  fechaDeCapa?: string | null;
   /** Solo en una rebaja: lo que le toca a la entrada (con signo) y con qué base se repartió. */
   reparto?: { base: BaseDeReparto; parte: bigint } | null;
 }
@@ -31,6 +33,9 @@ export interface PlanDeDocumento {
   documentoDeCompraId?: string | null;
   /** La recepción que devuelve o rebaja, cuando es una sola. */
   documentoRelacionadoId?: string | null;
+  /** Solo en la salida de un traslado: a qué bodega va y si ya llegó. */
+  bodegaDeDestinoId?: string | null;
+  estadoDeTraslado?: EstadoDeTraslado | null;
   causa: CausaDeEntrada | null;
   destino: DestinoDeSalida | null;
   conceptoDeGastoId: string | null;

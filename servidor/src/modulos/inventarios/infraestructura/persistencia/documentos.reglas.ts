@@ -12,6 +12,9 @@ type Columnas = Record<
   | 'numero'
   | 'bodegaId'
   | 'documentoDeCompraId'
+  | 'documentoRelacionadoId'
+  | 'bodegaDeDestinoId'
+  | 'estadoDeTraslado'
   | 'causa'
   | 'destino'
   | 'conceptoDeGastoId'
@@ -48,6 +51,32 @@ export function reglasDeDocumento(t: Columnas) {
     check(
       'documentos_activo_fijo_segun_destino',
       sql`coalesce(${t.destino} in ('obra_de_activo_fijo', 'mantenimiento_de_activo_fijo'), false) = (${t.activoFijoId} is not null)`,
+    ),
+  ];
+}
+
+/** Lo propio de las dos mitades de un traslado (§5.9): destino y estado solo en la salida; la entrada, ligada a ella. */
+export function reglasDeTraslado(t: Columnas) {
+  return [
+    check(
+      'documentos_traslado_destino_segun_clase',
+      sql`(${t.clase} = 'salida_de_traslado') = (${t.bodegaDeDestinoId} is not null)`,
+    ),
+    check(
+      'documentos_traslado_estado_segun_clase',
+      sql`(${t.clase} = 'salida_de_traslado') = (${t.estadoDeTraslado} is not null)`,
+    ),
+    check(
+      'documentos_traslado_estado_valido',
+      sql`${t.estadoDeTraslado} is null or ${t.estadoDeTraslado} in ('en_transito', 'recibido')`,
+    ),
+    check(
+      'documentos_traslado_a_otra_bodega',
+      sql`${t.bodegaDeDestinoId} is null or ${t.bodegaDeDestinoId} <> ${t.bodegaId}`,
+    ),
+    check(
+      'documentos_recepcion_ligada',
+      sql`${t.clase} <> 'entrada_de_traslado' or ${t.documentoRelacionadoId} is not null`,
     ),
   ];
 }

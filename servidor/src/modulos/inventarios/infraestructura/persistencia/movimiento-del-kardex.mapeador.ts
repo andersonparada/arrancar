@@ -39,5 +39,7 @@ export function aMovimientoDelKardex(fila: FilaDeMovimiento): MovimientoDelKarde
     lineaDeCompraId: fila.lineaDeDocumentoDeCompraId,
     documentoDeCompraId: fila.documentoDeCompraId,
     parteDeReparto: fila.parteDeReparto ? aCentavosEnteros(fila.parteDeReparto) : null,
+    fechaDeCapa: fila.fechaDeCapa,
+    vigente: fila.vigente,
   };
 }

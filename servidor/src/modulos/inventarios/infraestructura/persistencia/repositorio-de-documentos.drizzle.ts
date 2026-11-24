@@ -1,8 +1,9 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { deLaTransaccion } from '../../../core/base-datos/columnas.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   AnulacionDeDocumento,
+  CambioDeTraslado,
   DocumentoGuardado,
   RepositorioDeDocumentos,
 } from '../../aplicacion/puertos/repositorio-de-documentos.js';
@@ -19,6 +20,8 @@ function aDocumento(fila: Fila): DocumentoGuardado {
     bodegaId: fila.bodegaId,
     documentoDeCompraId: fila.documentoDeCompraId,
     documentoRelacionadoId: fila.documentoRelacionadoId,
+    bodegaDeDestinoId: fila.bodegaDeDestinoId,
+    estadoDeTraslado: fila.estadoDeTraslado,
     causa: fila.causa,
     destino: fila.destino,
     conceptoDeGastoId: fila.conceptoDeGastoId,
@@ -49,10 +52,32 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
     return fila ? aDocumento(fila) : null;
   }
 
+  async buscarSaldoInicialDeBodega(bodegaId: string): Promise<DocumentoGuardado | null> {
+    const [fila] = await transaccionEnCurso()
+      .select()
+      .from(documentos)
+      .where(
+        and(eq(documentos.clase, 'saldo_inicial'), eq(documentos.bodegaId, bodegaId), eq(documentos.estado, 'vigente')),
+      );
+    return fila ? aDocumento(fila) : null;
+  }
+
+  async bloquearSaldosInicialesDeBodegas(bodegaIds: readonly string[]): Promise<void> {
+    for (const id of [...new Set(bodegaIds)].sort()) {
+      await transaccionEnCurso().execute(
+        sql`select pg_advisory_xact_lock(hashtextextended('inventarios.saldo_inicial:' || current_setting('app.empresa_id', true) || ':' || ${id}::text, 0))`,
+      );
+    }
+  }
+
   async anular(id: string, { motivo, usuarioId, ahora }: AnulacionDeDocumento): Promise<void> {
     await transaccionEnCurso()
       .update(documentos)
       .set({ estado: 'anulado', anuladoEn: ahora, anuladoPor: usuarioId, motivoDeAnulacion: motivo })
       .where(eq(documentos.id, id));
+  }
+
+  async cambiarTraslado(id: string, cambio: CambioDeTraslado): Promise<void> {
+    await transaccionEnCurso().update(documentos).set(cambio).where(eq(documentos.id, id));
   }
 }

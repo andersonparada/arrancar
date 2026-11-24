@@ -8,6 +8,9 @@ import { rutasDeBodegas } from './composicion/bodegas.js';
 import { rutasDeAccesosABodegas } from './composicion/accesos-a-bodegas.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { rutasDeRecepciones } from './composicion/recepciones.js';
+import { rutasDeTraslados } from './composicion/traslados.js';
+import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
+import { rutasDeCierres } from './composicion/cierres.js';
 import { ALCANCE_DE_BODEGAS } from './infraestructura/persistencia/accesos-a-bodegas.tablas.js';
 // generador: importaciones
 
@@ -87,6 +90,42 @@ export const moduloInventarios: DefinicionModulo = {
       descripcion:
         'Descartar líneas de la bandeja «Por recibir» y devolverlas a ella (también quita o pone la marca de inventario en el libro)',
     },
+    { clave: 'inventarios.traslados.crear', descripcion: 'Trasladar mercadería entre bodegas de la empresa' },
+    {
+      clave: 'inventarios.traslados.recibir',
+      descripcion: 'Recibir en la bodega de destino los traslados que van en tránsito',
+    },
+    { clave: 'inventarios.traslados.anular', descripcion: 'Anular traslados entre bodegas' },
+    {
+      clave: 'inventarios.saldos-iniciales.ver',
+      descripcion: 'Ver los saldos iniciales de inventario (con sus costos)',
+    },
+    { clave: 'inventarios.saldos-iniciales.crear', descripcion: 'Cargar saldos iniciales de inventario' },
+    {
+      clave: 'inventarios.saldos-iniciales.editar',
+      descripcion: 'Corregir saldos iniciales de inventario con la carga inicial abierta',
+    },
+    {
+      clave: 'inventarios.saldos-iniciales.eliminar',
+      descripcion: 'Eliminar saldos iniciales de inventario con la carga inicial abierta',
+    },
+    {
+      clave: 'inventarios.saldos-iniciales.importar',
+      descripcion: 'Importar saldos iniciales de inventario desde Excel (también baja la plantilla)',
+    },
+    { clave: 'inventarios.saldos-iniciales.exportar', descripcion: 'Exportar saldos iniciales de inventario a Excel' },
+    {
+      clave: 'inventarios.cierres.ver',
+      descripcion: 'Ver los cierres mensuales del inventario y sus existencias valuadas',
+    },
+    {
+      clave: 'inventarios.cierres.cerrar',
+      descripcion: 'Cerrar un mes del inventario: congela sus existencias valuadas (exige ver todas las bodegas)',
+    },
+    {
+      clave: 'inventarios.cierres.reabrir',
+      descripcion: 'Reabrir el último mes cerrado del inventario, con su motivo (exige ver todas las bodegas)',
+    },
     // generador: permisos
   ],
   recursosConAlcance: [
@@ -107,6 +146,9 @@ export const moduloInventarios: DefinicionModulo = {
     rutasDeAccesosABodegas(),
     rutasDeMovimientos(),
     rutasDeRecepciones(),
+    rutasDeTraslados(),
+    rutasDeSaldosIniciales(),
+    rutasDeCierres(),
     // generador: rutas
   ]),
 };

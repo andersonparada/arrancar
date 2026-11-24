@@ -36,6 +36,7 @@ const filaNueva = (m: NuevoMovimiento) => ({
   lineaDeDocumentoDeCompraId: m.lineaDeCompraId ?? null,
   documentoDeCompraId: m.documentoDeCompraId ?? null,
   movimientoDeOrigenId: m.movimientoDeOrigenId ?? null,
+  fechaDeCapa: m.fechaDeCapa ?? null,
   saldoCantidad: '0',
   saldoValor: '0',
 });
@@ -110,6 +111,10 @@ export class AlmacenDelKardexDrizzle implements AlmacenDelKardex {
       .update(movimientos)
       .set({ vigente: false })
       .where(eq(movimientos.documentoId, documentoId));
+  }
+
+  async desactivarMovimiento(movimientoId: string): Promise<void> {
+    await transaccionEnCurso().update(movimientos).set({ vigente: false }).where(eq(movimientos.id, movimientoId));
   }
 
   /** Las capas y sus consumos son derivados: se regeneran desde el kardex (§5.13), sin auditar fila por fila. */

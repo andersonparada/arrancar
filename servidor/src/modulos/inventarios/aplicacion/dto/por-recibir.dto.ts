@@ -33,6 +33,8 @@ export interface FiltrosDePorRecibir {
   /** Primer día del período (`AAAA-MM-01`) del documento, desde. */
   desde?: string;
   hasta?: string;
+  /** Último día (`AAAA-MM-DD`) de la fecha de emisión: lo que ya estaba emitido a esa fecha, sin importar su período. */
+  emitidasHasta?: string;
   proveedorId?: string;
   conceptoId?: string;
 }

@@ -9,7 +9,7 @@ import {
 import { type Bodega, BodegaInvalido } from '../../../dominio/bodega.js';
 import { BodegasEnMemoria } from '../../../pruebas/dobles-de-bodegas.js';
 import { UsoDelKardexEnMemoria } from '../../../pruebas/dobles-de-uso-del-kardex.js';
-import { BodegaConExistencias } from '../../../dominio/errores.js';
+import { BodegaConExistencias, BodegaConTrasladosEnTransito } from '../../../dominio/errores.js';
 import type { SolicitudDeBodega } from '../../dto/bodega.dto.js';
 import type { ConsultasDeAccesosABodegas, UsuarioConAcceso } from '../../puertos/consultas-de-accesos-a-bodegas.js';
 import { ActualizarBodega } from './actualizar-bodega.js';
@@ -132,6 +132,18 @@ describe('bodegas', () => {
 
     await expect(inactivar()).rejects.toBeInstanceOf(BodegaConExistencias);
     uso.bodegasConExistencias.clear();
+    expect((await inactivar()).activo).toBe(false);
+  });
+
+  it('con un traslado en tránsito, de salida o de llegada, no se inactiva; sin él sí', async () => {
+    const casos = casosDeUso();
+    const creado = await casos.crear.ejecutar(operador, solicitud());
+    uso.bodegasConTrasladosEnTransito.add(creado.id);
+    const inactivar = () =>
+      casos.actualizar.ejecutar(operador, { bodegaId: creado.id, solicitud: solicitud({ activo: false }) });
+
+    await expect(inactivar()).rejects.toBeInstanceOf(BodegaConTrasladosEnTransito);
+    uso.bodegasConTrasladosEnTransito.clear();
     expect((await inactivar()).activo).toBe(false);
   });
 

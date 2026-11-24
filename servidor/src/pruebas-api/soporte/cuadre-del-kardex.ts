@@ -50,6 +50,28 @@ async function capasDesviadas(empresaId: string): Promise<string[]> {
 }
 
 /**
+ * Lo que está en tránsito interno no está en ninguna bodega (§5.11): Σ existencias + Σ en tránsito = saldo del
+ * artículo en la empresa. En tránsito = la salida de un traslado vigente que todavía no se recibió.
+ */
+async function transitoDesviado(empresaId: string): Promise<string[]> {
+  const filas = await comoPropietario<{ articulo_id: string; bodegas: string; transito: string; saldo: string }>(
+    `select s.articulo_id, coalesce(e.suma, 0)::text as bodegas, coalesce(t.suma, 0)::text as transito, s.cantidad::text as saldo
+       from inventarios.saldos_de_articulos s
+       left join (select articulo_id, sum(cantidad) as suma from inventarios.existencias
+                   where empresa_id = $1 group by 1) e on e.articulo_id = s.articulo_id
+       left join (select m.articulo_id, sum(-m.cantidad) as suma
+                    from inventarios.movimientos m join inventarios.documentos d on d.id = m.documento_id
+                   where m.empresa_id = $1 and m.vigente and d.estado_de_traslado = 'en_transito'
+                   group by 1) t on t.articulo_id = s.articulo_id
+      where s.empresa_id = $1 and coalesce(e.suma, 0) + coalesce(t.suma, 0) <> s.cantidad`,
+    [empresaId],
+  );
+  return filas.map(
+    (f) => `tránsito del artículo ${f.articulo_id}: bodegas ${f.bodegas} + tránsito ${f.transito} <> ${f.saldo}`,
+  );
+}
+
+/**
  * El «Cuadre del kardex» de la empresa (§13, R-11): las cachés (`existencias`, `saldos_de_articulos`, `capas`) contra
  * la suma de los movimientos. Debe volver vacío; los problemas vienen como texto para verlos en el fallo de la prueba.
  */
@@ -58,5 +80,6 @@ export async function cuadreDelKardex(empresaId: string): Promise<string[]> {
     ...(await existenciasDesviadas(empresaId)),
     ...(await saldosDesviados(empresaId)),
     ...(await capasDesviadas(empresaId)),
+    ...(await transitoDesviado(empresaId)),
   ];
 }

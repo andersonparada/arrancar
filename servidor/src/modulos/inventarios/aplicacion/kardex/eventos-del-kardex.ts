@@ -5,6 +5,7 @@ import {
   DocumentoDeInventarioAnulado,
   EntradaRegistrada,
   SalidaRegistrada,
+  TrasladoRegistrado,
 } from '../../dominio/eventos.js';
 import type { ArticuloParaMovimiento } from '../puertos/catalogos-del-kardex.js';
 import type { DocumentoGuardado } from '../puertos/repositorio-de-documentos.js';
@@ -60,6 +61,28 @@ export function eventoDeSalida(datos: DatosParaEventos): SalidaRegistrada {
     localidadId: documento.localidadId,
     departamentoId: documento.departamentoId,
     activoFijoId: documento.activoFijoId,
+  });
+}
+
+/** El evento de un traslado: sin dinero, con lo que salió y si ya está en el destino. */
+export function eventoDeTraslado(
+  datos: Omit<DatosParaEventos, 'documento'> & { salida: DocumentoGuardado },
+): TrasladoRegistrado {
+  const { empresaId, salida, movimientos, articulos } = datos;
+  return new TrasladoRegistrado({
+    empresaId,
+    documentoId: salida.id,
+    numero: salida.numero,
+    fecha: salida.fecha,
+    bodegaDeOrigenId: salida.bodegaId!,
+    bodegaDeDestinoId: salida.bodegaDeDestinoId!,
+    enTransito: salida.estadoDeTraslado === 'en_transito',
+    recibido: salida.estadoDeTraslado === 'recibido',
+    renglones: movimientos.map((m) => ({
+      articuloId: m.articuloId,
+      tipoDeInventario: articulos.get(m.articuloId)?.tipoDeInventario ?? '',
+      cantidad: deDiezmilesimas(magnitud(m.cantidad)),
+    })),
   });
 }
 

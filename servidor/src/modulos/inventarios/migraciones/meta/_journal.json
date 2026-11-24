@@ -43,6 +43,48 @@
       "when": 1795098551628,
       "tag": "0005_inv5_recepciones",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795469180270,
+      "tag": "0006_inv6_traslados",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795471776300,
+      "tag": "0007_inv6_recepcion_de_traslado",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795474212628,
+      "tag": "0008_inv7_saldos_iniciales",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795474217616,
+      "tag": "0009_inv7_reubicar_saldos_iniciales",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795476977267,
+      "tag": "0010_inv7_saldo_inicial_sin_repetir",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795481406401,
+      "tag": "0011_inv8_cierres",
+      "breakpoints": true
     }
   ]
 }

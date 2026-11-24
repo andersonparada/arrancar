@@ -30,6 +30,7 @@ function condiciones(filtros: FiltrosDePorRecibir): SQL[] {
   const opcionales = [
     filtros.desde ? gte(documentos.periodo, filtros.desde) : undefined,
     filtros.hasta ? lte(documentos.periodo, filtros.hasta) : undefined,
+    filtros.emitidasHasta ? lte(documentos.fechaEmision, filtros.emitidasHasta) : undefined,
     filtros.proveedorId ? eq(documentos.proveedorId, filtros.proveedorId) : undefined,
     filtros.conceptoId ? eq(lineasDeDocumento.conceptoId, filtros.conceptoId) : undefined,
   ];

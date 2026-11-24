@@ -32,6 +32,10 @@ export interface MovimientoDelKardex {
   readonly documentoDeCompraId?: string | null;
   /** Solo en el movimiento de valor de un reparto: lo que le toca a su entrada (con signo, es fijo). */
   readonly parteDeReparto?: bigint | null;
+  /** Solo en un movimiento de saldo inicial: el día de la compra real, que ordena su capa con PEPS. */
+  readonly fechaDeCapa?: string | null;
+  /** Falso cuando se anuló su documento o se quitó el renglón. */
+  readonly vigente?: boolean;
 }
 
 /** El tipo del motor: la mitad de un traslado es de entrada o de salida según el signo de su cantidad. */
@@ -51,6 +55,7 @@ export function aMovimientoDeCosto(m: MovimientoDelKardex): MovimientoDeCosto {
     tipo: tipoParaElMotor(m),
     cantidad: magnitud(m.cantidad),
     valor: m.tipo === 'entrada' || m.tipo === 'valor' ? m.costoTotal : 0n,
+    fechaDeCapa: m.fechaDeCapa ?? null,
   };
 }
 

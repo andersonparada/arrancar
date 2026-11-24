@@ -15,11 +15,14 @@ import type { DocumentoGuardado } from '../../puertos/repositorio-de-documentos.
 
 /** El recurso de auditoría de cada clase (`inventarios.<plural del documento>`, §10.2). */
 const RECURSO_DE_AUDITORIA: Record<ClaseDeDocumento, string> = {
+  saldo_inicial: 'inventarios.saldos-iniciales',
   entrada_manual: 'inventarios.entradas',
   salida_por_consumo: 'inventarios.salidas',
   recepcion_de_compra: 'inventarios.recepciones',
   devolucion_a_proveedor: 'inventarios.devoluciones-a-proveedor',
   rebaja_de_costo: 'inventarios.rebajas-de-costo',
+  salida_de_traslado: 'inventarios.traslados',
+  entrada_de_traslado: 'inventarios.traslados',
 };
 
 /** Revisión extra de una clase antes de anular (por ejemplo, que una recepción no tenga devoluciones vigentes). */
@@ -30,7 +33,7 @@ export interface AnulacionPedida {
   motivo: string;
 }
 
-function motivoValido(motivo: string): string {
+export function motivoValido(motivo: string): string {
   const limpio = motivo.trim();
   if (!limpio) throw new DocumentoInvalido('Escriba el motivo de la anulación.');
   if (limpio.length > 300) throw new DocumentoInvalido('El motivo no puede pasar de 300 caracteres.');
@@ -62,14 +65,18 @@ export class AnularDocumento {
     const { unidadDeTrabajo, publicadorEventos, consultas } = this.dependencias;
     const motivo = motivoValido(pedido.motivo);
     const { eventos, dto } = await unidadDeTrabajo.ejecutar(operador, async () => {
-      const eventos = await this.anular(operador, { documentoId: pedido.documentoId, motivo });
+      const eventos = await this.anularEnLaTransaccion(operador, { documentoId: pedido.documentoId, motivo });
       return { eventos, dto: await consultas.documento(pedido.documentoId) };
     });
     await publicadorEventos.publicar(eventos);
     return documentoSegunLaVista(dto, vista);
   }
 
-  private async anular(operador: Operador, pedido: AnulacionPedida): Promise<EventoDominio[]> {
+  /**
+   * Lo mismo que `ejecutar`, pero dentro de la unidad de trabajo de quien llama (el traslado recibido anula sus dos
+   * mitades en una sola transacción). El motivo ya debe venir validado con `motivoValido`.
+   */
+  async anularEnLaTransaccion(operador: Operador, pedido: AnulacionPedida): Promise<EventoDominio[]> {
     const { almacen, documentos, existencias, consultas } = this.dependencias;
     const { documento, movimientos } = await this.cargarYBloquear(pedido.documentoId);
     const anterior = await consultas.documento(documento.id);
@@ -137,15 +144,14 @@ export class AnularDocumento {
     return eventos;
   }
 
-  /** Lo que el documento sumó a las existencias, al revés. */
+  /** Lo que el documento sumó a las existencias, al revés (la cantidad de cada movimiento ya lleva su signo). */
   private reversa(documento: DocumentoGuardado, movimientos: readonly MovimientoDelKardex[]) {
     if (TIPO_DE_MOVIMIENTO_POR_CLASE[documento.clase] === 'valor') return [];
-    const signo = TIPO_DE_MOVIMIENTO_POR_CLASE[documento.clase] === 'entrada' ? -1n : 1n;
     return movimientos.map((m) => ({
       bodegaId: documento.bodegaId!,
       articuloId: m.articuloId,
       loteId: m.loteId,
-      cantidad: signo * (m.cantidad < 0n ? -m.cantidad : m.cantidad),
+      cantidad: -m.cantidad,
     }));
   }
 }

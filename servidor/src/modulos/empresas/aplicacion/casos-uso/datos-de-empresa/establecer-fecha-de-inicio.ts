@@ -13,7 +13,8 @@ export class EstablecerFechaDeInicio {
   constructor(private readonly dependencias: DependenciasDeDatosDeEmpresa) {}
 
   /**
-   * Registra la fecha de inicio la primera vez y la corrige después, mientras la carga esté abierta.
+   * Registra la fecha de inicio la primera vez y la corrige después, mientras la carga esté abierta. Los módulos con
+   * movimientos o cierres previos la revisan también la primera vez.
    * @throws CargaInicialCerrada si la carga ya se cerró.
    * @throws FechaDeInicioInvalida si no es una fecha real.
    * @throws RecursoNoEncontrado si la empresa no es de la cuenta o el operador no tiene acceso a ella.
@@ -23,7 +24,9 @@ export class EstablecerFechaDeInicio {
     return ejecutorEnEmpresa.ejecutar(operador, empresaId, async () => {
       const id = Identificador.desde<'Empresa'>(empresaId);
       const carga = await repositorioCargas.buscar(id);
-      if (carga) await this.corregir(operador, carga, { empresaId, fechaDeInicio });
+      const cambio = { empresaId, fechaDeInicio };
+      if (carga) await this.corregir(operador, carga, cambio);
+      else await this.dependencias.avisos.fechaDeInicioPorCambiar({ ...operador, empresaId }, cambio);
       await repositorioCargas.guardar(carga ?? CargaInicial.iniciar(id, fechaDeInicio));
       return consultas.cargaInicial(empresaId);
     });

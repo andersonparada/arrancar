@@ -1,13 +1,20 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
-import type { CargaInicial, LectorDelMetodoInicial, MesesCerrados } from '../aplicacion/puertos/entorno-del-kardex.js';
+import type {
+  CargaInicial,
+  LectorDeTransito,
+  LectorDelMetodoInicial,
+  MesesCerrados,
+} from '../aplicacion/puertos/entorno-del-kardex.js';
 import type { MetodoDeCosteo } from '../dominio/costeo/tipos.js';
 
 /** La carga inicial de una empresa: con o sin fecha de inicio. */
 export class CargaInicialFija implements CargaInicial {
+  cerrada = false;
+
   constructor(public fechaDeInicio: string | null = null) {}
 
   async obtener(_operador: Operador) {
-    return { fechaDeInicio: this.fechaDeInicio, cerrada: false };
+    return { fechaDeInicio: this.fechaDeInicio, cerrada: this.cerrada };
   }
 }
 
@@ -15,7 +22,15 @@ export class MesesCerradosFijos implements MesesCerrados {
   constructor(public cerrados: string[] = []) {}
 
   async estaCerrado(periodo: string): Promise<boolean> {
-    return this.cerrados.includes(periodo);
+    return this.cerrados.some((cerrado) => cerrado >= periodo);
+  }
+
+  async hayAlguno(): Promise<boolean> {
+    return this.cerrados.length > 0;
+  }
+
+  async hayAlgunoSinCandado(): Promise<boolean> {
+    return this.hayAlguno();
   }
 }
 
@@ -24,5 +39,13 @@ export class MetodoInicialFijo implements LectorDelMetodoInicial {
 
   async paraEmpresa(): Promise<MetodoDeCosteo> {
     return this.metodo;
+  }
+}
+
+export class TransitoFijo implements LectorDeTransito {
+  constructor(public activo = false) {}
+
+  async conTransito(): Promise<boolean> {
+    return this.activo;
   }
 }

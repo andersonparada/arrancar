@@ -38,6 +38,8 @@ export interface MovimientoDeCosto extends PosicionEnKardex {
   readonly cantidad: bigint;
   readonly valor: bigint;
   readonly capaId?: string;
+  /** Solo en un saldo inicial con PEPS: el día de la compra real, que ordena su capa (la posición sigue siendo `fecha`). */
+  readonly fechaDeCapa?: string | null;
   readonly reparto?: RepartoDeCosto;
   /** Solo en salidas: una devolución a proveedor. */
   readonly devolucion?: DevolucionAProveedor;

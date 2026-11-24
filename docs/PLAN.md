@@ -3667,6 +3667,169 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   línea de la nota (`LineaSobrerrecibida`; sustituye lo anotado arriba de que no se validaba), y su fecha no puede ser anterior
   a la de las entradas (`devolucion_antes_de_la_entrada`). `EntradaDevolvible` trae `fecha` y `costoCentavos`. Con promedio el
   costo real del motor puede diferir de la estimación por redondeos; la regla usa la estimación.
+- **2026-11-23 — INV-6 (Inventarios, servidor): traslados entre bodegas, con y sin tránsito, y su boleta.**
+  Migración `0006_inv6_traslados`: `documentos` admite las clases `salida_de_traslado` y `entrada_de_traslado` y gana
+  `bodega_de_destino_id` (llave compuesta a `bodegas`, solo en la salida) y `estado_de_traslado` (`en_transito` o `recibido`,
+  solo en la salida), con sus checks (`documentos_traslado_destino_segun_clase`, `…_estado_segun_clase`, `…_estado_valido`,
+  `…_a_otra_bodega`, `documentos_recepcion_ligada`) y un único parcial: una salida tiene una sola recepción vigente. La política
+  de alcance de `documentos` ahora también deja ver y escribir la fila a quien tiene asignada la bodega de **destino**
+  (`politicaPorAlcanceOpcionalOEn` en `core/base-datos/alcance.ts`; el texto de las políticas con una sola columna no cambia):
+  así el receptor ve «Por recibir» sin ver el origen. Como quien envía con tránsito solo ve el origen, la migración agrega
+  la función `inventarios.nombres_de_bodegas(uuid[])` (`security definer`, solo id, nombre y estado de las bodegas de la empresa
+  activa, sin `execute` para `public`; **para revisión de `seguridad`**, como `empresas.nombres_de_localidades`) con la que se
+  valida el destino y se muestra su nombre. **Casos de uso:** `TrasladarArticulos` (`POST /inventarios/traslados`; sin
+  tránsito, que es lo predeterminado, crea las dos mitades con la misma fecha y exige ver las dos bodegas, `bodega_fuera_de_alcance`;
+  con `inventarios.traslados.con_transito = true` deja la salida `en_transito`), `RecibirTraslado` (`POST …/:id/recibir`, `traslados.recibir`,
+  solo quien ve el destino; la entrada va completa, con fecha igual o posterior a la salida y hoy si no se escribe; no se
+  recibe dos veces: `traslado_ya_recibido`), `AnularTraslado` (`POST …/:id/anular`; en tránsito anula la salida, recibido anula
+  la entrada y luego la salida (sin reescribirla antes: la auditoría la guarda como estaba); exige ver el origen y, recibido, el destino; una auditoría `anular`
+  `inventarios.traslados` por cada mitad) y `ObtenerBoleta` (`GET /inventarios/documentos/:id/boleta`, con la salida o la
+  recepción: número, fecha, origen, destino, artículos, cantidades, quién entrega y quién recibe, **sin costos**). El kardex
+  por bodega muestra el traslado con su cantidad y sin valor. **Neutros para el costeo:** las dos mitades son movimientos
+  `traslado` (la de destino ligada a la de origen con `movimiento_de_origen_id`, orden 2 la salida y 0 la entrada), con costo
+  unitario informativo que deja el recálculo (el motor de INV-3 ya los trataba así); no crean capas ni cambian `saldo_*`. Evento
+  `inventarios.traslado_registrado` (sin dinero; `enTransito`, `recibido`). Permisos: `traslados.crear`, `.recibir`, `.anular`.
+  `AnularDocumento` gana `anularEnLaTransaccion` (para anular las dos mitades en una sola transacción) y revierte las existencias
+  con el signo de cada movimiento. Pruebas: dominio, casos de uso con el kardex en memoria (incluido PEPS: no cambia el orden de
+  consumo ni crea capas y lo que viaja sigue en el valor) y API (`inventarios-traslados`, `-peps`, `-aislamiento`, `-tablas`);
+  el «Cuadre del kardex» de las pruebas ahora revisa también Σ existencias + Σ en tránsito = saldo del artículo.
+  Decisiones: la recepción se registra en la unidad base del artículo (no guarda cómo se escribió la salida); recibir una
+  parte no existe (lo que faltó va a un ajuste, INV-9); no hay anulación de solo la recepción; la lista «Por recibir» es
+  `GET /inventarios/documentos?estado=vigente&estadoDeTraslado=en_transito`. **Pendiente:** la pantalla de traslados (INV-6c),
+  anular solo la recepción de un traslado si hiciera falta, y la revisión de `seguridad` de la función `nombres_de_bodegas`
+  y de que el receptor pueda también escribir (no solo leer) la fila de la salida.
+- **2026-11-23 — INV-6, correcciones de la revisión (servidor).** (1) `AnularTraslado` ya no devuelve la salida a `en_transito`
+  antes de anularla: la guardia de la salida mira si su recepción sigue vigente, así que se anula la entrada y luego la salida,
+  y la auditoría `anular` de la salida guarda `estadoDeTraslado: 'recibido'` y su `documentoRelacionadoId`, como estaba.
+  (2) Inactivar una bodega que es origen o destino de un traslado `en_transito` vigente da 422 `bodega_con_traslados_en_transito`
+  (`ConsultasDeUsoDelKardex.bodegaConTrasladosEnTransito`; la existencia de mercadería ya se revisaba). (3) Migración
+  `0007_inv6_recepcion_de_traslado`: la función `inventarios.recepcion_de_traslado(salida_id)` (`security definer`, solo fecha y
+  usuario de la recepción vigente de una salida de la empresa activa; sin `execute` para `public`; **para revisión de
+  `seguridad`**, junto a `nombres_de_bodegas`) hace que la boleta del remitente, que no ve la entrada del destino, traiga
+  `recibidoPor` y `fechaDeRecepcion`. (4) `GET /inventarios/traslados/destinos` (`traslados.crear`): id y nombre de las bodegas
+  activas de la empresa, para que quien solo ve su origen elija el destino (`ListarDestinos`, lee `nombres_de_bodegas`). (5) El
+  filtro `bodegaDeDestinoId` en `GET /inventarios/documentos` hace la lista «Por recibir» de una bodega:
+  `?estadoDeTraslado=en_transito&estado=vigente&bodegaDeDestinoId=<bodega>`. (6) `bodegaNombre` de un documento usa
+  `nombres_de_bodegas` cuando la bodega no se ve (el receptor ve de dónde viene el traslado). Pruebas: casos de uso y
+  `inventarios-traslados-visibilidad.api.prueba.ts`.
+- **2026-11-23 — INV-6, destinos según el tránsito.** `GET /inventarios/traslados/destinos` ahora mira
+  `inventarios.traslados.con_transito`: con tránsito lista todas las bodegas activas (`nombres_de_bodegas`); sin tránsito, solo
+  las activas que la seguridad por bodega deja ver al usuario (§3.5, §6.7), así no se revelan bodegas ajenas ni se ofrecen
+  opciones que darían 422 `bodega_fuera_de_alcance`. Prueba de API para ambos modos.
+- **2026-11-23 — INV-7 (Inventarios, servidor): saldos iniciales, pregunta de EM-2, aviso de la fecha de inicio y Excel.**
+  Migraciones `0008_inv7_saldos_iniciales` (clase `saldo_inicial` en el `check` de documentos; `movimientos.fecha_de_capa`
+  con su `check` `<= fecha` e índice parcial; único parcial `documentos_saldo_inicial_por_bodega_unico`: un documento vigente
+  por bodega) y `0009_inv7_reubicar_saldos_iniciales` (función `security definer` **para revisión de seguridad**, ver abajo).
+  **Rutas** `GET/POST /inventarios/saldos-iniciales`, `PUT/DELETE …/:movimientoId`, `GET …/exportar`, `…/plantilla`,
+  `POST …/importar` con los permisos `inventarios.saldos-iniciales.ver/.crear/.editar/.eliminar/.importar/.exportar`.
+  **Registrar** (`RegistrarSaldoInicial`): un renglón por llamada (artículo, bodega, lote, cantidad en cualquier unidad, costo
+  total, fecha de la capa); solo con fecha de inicio, carga abierta, ningún cierre (`MesesCerrados.hayAlguno()`, hoy siempre falso
+  hasta INV-8) y el método de costeo **ya elegido** (`metodo_de_costeo_sin_elegir`); va al documento `saldo_inicial` vigente de la
+  bodega (se crea con el primero, fecha = día anterior al inicio, saltándose `fecha_anterior_al_inicio`) y reutiliza
+  `RegistradorDeDocumento` (ahora acepta un documento existente y la causa del recálculo). El lote se elige por id o se escribe
+  por código con su vencimiento (se busca y, si no existe, se crea; otro vencimiento = 400). Con PEPS la capa nace con la
+  **fecha real de compra** (`fecha_de_capa`, que también reconoce un saldo inicial sin mirar el documento): el motor ordena las
+  capas por ella (`MovimientoDeCosto.fechaDeCapa`), así una capa anotada después pero más antigua sale primero; sin fecha propia
+  usa el día del documento. **Corregir y eliminar** (con la carga abierta): el movimiento deja de ser vigente
+  (`desactivarMovimiento`; los renglones de un documento vigente muestran solo los vigentes), el costo se recalcula una vez con
+  causa `saldo_inicial_corregido` (`existencia_negativa` si algo posterior lo consumió) y la auditoría guarda el renglón
+  (`corregir` / `eliminar`); si un documento se queda sin renglones se anula (auditoría `anular` con su motivo fijo). Los dos
+  candados del artículo se toman antes de releer el renglón. **Respuesta a `empresas.revisar_cierre_de_carga`**
+  (`RevisarCierreDeCargaEnInventarios`): `sin_saldos_iniciales`, `existencias_sin_costo`, `lotes_vencidos` y
+  `sin_conteo_de_respaldo` (todos avisos, nunca piden motivo), con las cifras de artículos con existencia, valor total, por tipo y
+  por bodega (hasta 200); lee los movimientos **sin el alcance por bodega** (reconoce el saldo por `fecha_de_capa`) y los nombres
+  de bodega con `nombres_de_bodegas`, así quien cierra sin ver todas las bodegas recibe lo de toda la empresa (prueba de API).
+  **Aviso `empresas.fecha_de_inicio_por_cambiar`** (`ValidarFechaDeInicioEnInventarios`): rechaza con
+  `inventario_con_fecha_fuera_de_la_carga` si hay un cierre, un movimiento vigente que no es saldo con fecha anterior a la nueva
+  o una capa de saldo con fecha propia igual o posterior; si no, la función `inventarios.reubicar_saldos_iniciales(date)` mueve
+  documentos y movimientos al nuevo día anterior. **PARA REVISIÓN DE SEGURIDAD:** la función es `security definer`, usa solo
+  `app.empresa_id` (nunca un parámetro), no lee ni devuelve datos y existe porque los documentos llevan alcance por bodega y quien
+  cambia la fecha puede no ver todas (un `UPDATE` normal dejaría sin mover las bodegas ajenas); sin `execute` para `public`.
+  **Excel:** columnas Artículo (código), Bodega (código), Lote, Vencimiento del lote, Cantidad, Unidad, Costo total y Fecha de la
+  capa; cada fila pasa por `RegistrarSaldoInicial` (todo o nada, ensayo, 5,000 filas del motor). **Decisiones del programador:**
+  (1) un renglón por solicitud y el documento por bodega se agranda, en vez de mandar el documento entero; (2) el listado, la
+  exportación y la API de saldos muestran los costos a quien tiene `saldos-iniciales.ver` / `.exportar` (son el dato que esa
+  pantalla captura; `costos.ver` no aplica); (3) `hayConteos()` y `hayAlguno()` son constantes falsas hasta INV-9 e INV-8; (4) un
+  cambio de fecha que mueve la capa por defecto se detecta porque su `fecha_de_capa` es igual a la del movimiento. **Pendiente:**
+  el aviso del umbral de capitalización en cada renglón de `repuestos` y `suministros` (AFI-9, necesita la orden de Activos
+  fijos), la pantalla (INV-7c) y que el cierre mensual (INV-8) lea los saldos. Pruebas: dominio y casos de uso en memoria
+  (`saldo-inicial.prueba.ts`, `saldos-iniciales.prueba.ts`) y de API (`inventarios-saldos-iniciales*.api.prueba.ts`: registro,
+  PEPS, corregir, eliminar, cuadre del kardex, cierre de la carga, fecha de inicio, Excel, alcance por bodega y reglas de la base).
+- **2026-11-23 — INV-7 (Inventarios, servidor): correcciones de la revisión.** Migración
+  `0010_inv7_saldo_inicial_sin_repetir`. (1) **Carrera al quitar el último renglón y agregar otro:** los candados eran por
+  artículo y nada protegía el documento de la bodega; ahora `RepositorioDeDocumentos.bloquearSaldosInicialesDeBodegas` toma un
+  `pg_advisory_xact_lock` por empresa y bodega (ordenado, después de los del artículo) antes de buscar el documento, de releer el
+  renglón y de decidir anularlo (`RegistradorDeSaldos`, `RetiradorDeSaldos.tomar`, que en corregir también toma la bodega destino);
+  prueba de API con borrar y agregar a la vez en 4 bodegas (falla sin el candado). (2) **Renglón repetido:** único parcial
+  `movimientos_saldo_inicial_unico` (empresa, artículo, bodega, lote —nulo cuenta como uno— y fecha de la capa, solo vigentes) y,
+  antes de él, `existeRenglon` en el caso de uso con el error `saldo_inicial_repetido` (422; por fila en Excel); se comprueba
+  después de que la bodega se ve, para no revelar lo de una bodega ajena. (3) `conflictosConLaFechaDeInicio` solo cuenta capas
+  vigentes. (4) `reubicar_saldos_iniciales` (reemplazada con `create or replace`, misma superficie de seguridad) mueve también
+  `capas.fecha` a la fecha de capa de su movimiento. (5) **Costos:** sin `inventarios.costos.ver` la lista, el alta y la corrección
+  llevan `costoTotal`, `costoUnitario` y `totales.valor` en `null` (`vista-de-saldos.ts`, recorte en el controlador) y el Excel de
+  exportar da 403 (lleva el costo de cada renglón); se revoca la decisión (2) de arriba, que contradecía INV-A7. Importar sigue
+  con `.importar`: el usuario escribe los costos. Pruebas nuevas: `inventarios-saldos-iniciales-revision.api.prueba.ts` y
+  `saldos-iniciales-repetidos.prueba.ts`. **Pendiente:** la pantalla INV-7c debe pedir `costos.ver` para mostrar y capturar montos.
+- **2026-11-23 — INV-7: la fecha de inicio ya no choca con el único de saldos.** Al adelantar la fecha de inicio,
+  `reubicar_saldos_iniciales` podía llevar a la misma fecha de capa dos renglones de la misma llave (artículo, bodega,
+  lote): uno con la capa por defecto y otro con capa propia igual al nuevo día anterior, y el único
+  `movimientos_saldo_inicial_unico` respondía 409 sin decir qué corregir. `conflictosConLaFechaDeInicio` cuenta ahora
+  esas llaves (`llavesQueSeJuntarian`, con la misma regla de la función) y el aviso se rechaza con
+  `inventario_con_fecha_fuera_de_la_carga` y un mensaje que pide corregir la fecha de capa o eliminar los repetidos.
+  Sin migración nueva. Pruebas: caso de uso en memoria y API (`inventarios-saldos-iniciales-carga`).
+- **2026-11-23 — INV-8 (Inventarios, servidor): cierres mensuales y existencias al cierre.** Migración `0011_inv8_cierres`
+  (`inventarios.cierres`, PK `(empresa_id, periodo)`, solo `politicaPorEmpresa`; `inventarios.existencias_al_cierre`, con llave
+  al cierre, único parcial `(artículo, bodega, en_tránsito, período) where vigente` y `politicaPorAlcance(bodegas)`).
+  **Rutas** `GET /inventarios/cierres`, `GET …/:periodo/revision`, `GET …/:periodo/existencias`, `POST …/:periodo/cerrar`
+  (con la huella de la revisión, como Activos fijos) y `POST …/:periodo/reabrir`, con los permisos `inventarios.cierres.ver`,
+  `.cerrar` y `.reabrir`; el período es siempre `aaaa-mm-01`. **Orden:** el mes siguiente al último cerrado; el primero, el de
+  la fecha de inicio o el del primer movimiento; no se cierra un mes posterior al mes en curso (`mes_por_llegar`).
+  **Foto** (`dominio/cierre/existencias-del-cierre.ts`, enteros y `BigInt`): se valúa al **último día del mes** con el saldo
+  (cantidad y valor) del último movimiento vigente de cada artículo, aunque ya haya movimientos de meses posteriores; el
+  valor del artículo se reparte entre sus bodegas y su renglón `en_transito_interno` según la cantidad, al costo del artículo en
+  toda la empresa (§3.2), y el último renglón absorbe el redondeo (mitad hacia arriba; si con muchas partes la última quedara en
+  negativo se reparte hacia abajo). Lo que viaja es la salida de un traslado vigente sin recepción vigente a esa fecha (se mira la
+  fecha de la recepción, no el `estado_de_traslado` de hoy), así que recibirlo después no toca la foto. Si las bodegas no suman la
+  cantidad del artículo, `foto_del_cierre_no_cuadra`. Se copian el tipo de inventario, el método que regía ese día y el
+  régimen de ISR (`datos_fiscales_de_empresa`). **Revisar:** bloquea el mes anterior sin cerrar (o futuro), la carga inicial
+  abierta con saldos iniciales y las recepciones vigentes de documentos del libro anulados (R-1); avisa de las líneas de la
+  bandeja con fecha del mes o anterior, los traslados en tránsito y los lotes vencidos con existencia. **Pregunta a los demás
+  módulos** (`preguntarATodos`, `inventarios.revisar_cierre_del_mes`, `{ empresaId, periodo }` → `{ nombreDelModulo,
+  hallazgos: [{ codigo, nivel: bloquea|aviso, mensaje }] }`, declarada en `core/contratos/inventarios.contratos.ts`): lo que
+  respondan entra a la revisión y a la huella; hoy nadie la responde. **Alcance:** revisar, cerrar y reabrir exigen ver todas las
+  bodegas (`cierre_sin_alcance_total`, 422): la foto es de toda la empresa y reabrir actualiza todas sus filas (con alcance
+  parcial la política dejaría algunas vigentes). **Candados:** cerrar y reabrir toman `pg_advisory_xact_lock` exclusivo de
+  `inventarios.cierre:<empresa>`; los documentos ya lo tomaban compartido. `MesesCerradosEnLaBase` (reemplaza al puerto que
+  decía «ninguno cerrado») toma el compartido **antes** de leer `cierres`, porque `exigirCargaAbierta` pregunta `hayAlguno()`
+  antes de bloquear los artículos y un cierre en curso podía colarse. **Reabrir:** solo el último, con motivo; la foto queda
+  `vigente = false` (no se borra); audita `reabrir` con el cierre y su valor por tipo; cerrar audita `cerrar`; ambos publican
+  `inventarios.mes_cerrado` / `mes_reabierto` (`periodo`, `valorTotalCentavos`, `porTipo`). Sin `costos.ver` la foto lleva
+  `costoUnitario` y `valor` en `null`; la lista, la revisión y los detalles de los rechazos recortan los montos igual
+  (corregido el mismo día, ver la entrada siguiente). **Pruebas:** dominio (foto, redondeo, hallazgos, meses), casos de uso en memoria
+  (`cierres.prueba.ts`), y de API: flujo con tránsito, huella y reapertura (`inventarios-cierres`), permisos, alcance, costos y
+  aislamiento (`…-permisos`), hallazgos, pregunta a otros módulos, carga abierta y `saldos_con_cierres` (`…-hallazgos`) y
+  **concurrencia** (`…-concurrencia`: cerrar a la vez que seis documentos del mismo mes —cada uno entra y está en la foto o se
+  rechaza con `mes_cerrado`—, dos cierres del mismo mes, cerrar el siguiente contra reabrir el último, dos reaperturas).
+  **Pendiente:** los avisos de ajustes por aprobar, conteos en curso, el conteo de diciembre (art. 42 num. 3) y deterioros sin
+  revisar entran con INV-9, INV-10 e INV-12 (sus tablas no existen todavía); la pantalla INV-8c; el cambio de método
+  (`CambiarMetodoDeCosteo`) que lee los meses cerrados.
+- **2026-11-23 — INV-8, correcciones de la revisión.** (1) **Meses cerrados congelados:** `MesesCerrados.estaCerrado(periodo)`
+  responde «período ≤ último mes cerrado» (antes solo miraba la fila de ese mes, y los meses anteriores al primer cierre
+  contaban como abiertos): un documento fechado antes del primer cierre, o su anulación, da `mes_cerrado`. (2) **Sin montos
+  a quien no los ve (§10.1, §5.10):** `ListarCierres`, `RevisarCierre`, `CerrarMes` y `ReabrirMes` reciben la vista; sin
+  `costos.ver`, `valorTotal` va en `null` y `porTipo` vacío (en la lista, la revisión y los `detalles` de
+  `cierre_con_bloqueos` y `revision_del_cierre_desactualizada`); sin alcance total, la lista también oculta
+  `articulosConExistencia` y `valorTotal` (cifras de toda la empresa). La auditoría guarda el cierre completo. `cierres.ver`
+  **no** es un permiso de contabilidad aparte: solo da lista y fechas. (3) **Aviso `lineas_por_recibir`:** cuenta las líneas
+  de la bandeja con **fecha de emisión** hasta el último día del mes (filtro nuevo `emitidasHasta` de la consulta, sin
+  tocar el `hasta` por período de la pantalla). Pruebas: casos de uso y API (fecha anterior al primer cierre, lista y
+  revisión sin costos ni alcance, período del libro posterior a la emisión).
+- **2026-11-23 — INV-8, interbloqueo entre cerrar un mes y cambiar la fecha de inicio.** El aviso
+  `empresas.fecha_de_inicio_por_cambiar` llegaba con la fila de `cargas_iniciales` tomada `for update` y pedía el candado
+  compartido del cierre (`hayAlguno()`); `CerrarMes` toma el candado exclusivo y luego esa fila `for share`: PostgreSQL
+  abortaba una de las dos con 500. Ahora `MesesCerrados.hayAlgunoSinCandado()` (la misma consulta, sin candado) lo usa
+  `ValidarFechaDeInicioEnInventarios`: la fila de la carga ya serializa ambos caminos. `exigirCargaAbierta` conserva
+  `hayAlguno()` con candado. Prueba de API de concurrencia (`inventarios-cierres-fecha-de-inicio-concurrencia`): solo 200 o 422.
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

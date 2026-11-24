@@ -31,6 +31,8 @@ export interface NuevoMovimiento {
   documentoDeCompraId?: string | null;
   /** La entrada que devuelve una devolución o que recibe la parte de una rebaja. */
   movimientoDeOrigenId?: string | null;
+  /** Solo en un saldo inicial: el día de la compra real, que ordena su capa con PEPS. */
+  fechaDeCapa?: string | null;
   /** Solo en un movimiento de valor de una rebaja: el almacén guarda su reparto con el movimiento. */
   reparto?: { base: string; parte: bigint } | null;
 }
@@ -69,6 +71,8 @@ export interface AlmacenDelKardex {
   actualizarMovimientos(cambios: readonly CambioDeMovimiento[]): Promise<void>;
   /** Los movimientos del documento dejan de ser vigentes (anulación). */
   desactivarMovimientosDelDocumento(documentoId: string): Promise<void>;
+  /** Un solo renglón deja de ser vigente (se corrigió o se quitó un saldo inicial). */
+  desactivarMovimiento(movimientoId: string): Promise<void>;
   /** Con PEPS: borra y vuelve a crear las capas y consumos derivados del artículo. */
   reemplazarCapas(articuloId: string, derivado: DerivadoDePeps): Promise<void>;
   guardarSaldo(articuloId: string, saldo: SaldoDelArticulo): Promise<void>;

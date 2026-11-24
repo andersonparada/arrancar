@@ -1,5 +1,5 @@
-import { and, desc, eq, exists, gte, inArray, lte, sql, type SQL } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { and, desc, eq, exists, gte, inArray, lte, or, sql, type SQL } from 'drizzle-orm';
+import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { conceptosDeGasto } from '../../../libro-de-compras/infraestructura/persistencia/conceptos-de-gasto.tablas.js';
@@ -18,11 +18,20 @@ const unidadEscrita = alias(unidades, 'unidad_escrita');
 
 const sinSigno = (texto: string): string => texto.replace(/^-/, '');
 
+/** Los filtros que comparan una columna con un valor igual. */
+function filtrosDeIgualdad(filtros: FiltrosDeDocumentos): SQL[] {
+  const iguales = [
+    [documentos.clase, filtros.clase],
+    [documentos.bodegaId, filtros.bodegaId],
+    [documentos.bodegaDeDestinoId, filtros.bodegaDeDestinoId],
+    [documentos.estado, filtros.estado],
+    [documentos.estadoDeTraslado, filtros.estadoDeTraslado],
+  ] as const;
+  return iguales.filter(([, valor]) => valor).map(([columna, valor]) => eq(columna, valor!));
+}
+
 function filtrosDe(filtros: FiltrosDeDocumentos): SQL[] {
-  const condiciones: SQL[] = [];
-  if (filtros.clase) condiciones.push(eq(documentos.clase, filtros.clase));
-  if (filtros.bodegaId) condiciones.push(eq(documentos.bodegaId, filtros.bodegaId));
-  if (filtros.estado) condiciones.push(eq(documentos.estado, filtros.estado));
+  const condiciones: SQL[] = filtrosDeIgualdad(filtros);
   if (filtros.desde) condiciones.push(gte(documentos.fecha, filtros.desde));
   if (filtros.hasta) condiciones.push(lte(documentos.fecha, filtros.hasta));
   if (filtros.articuloId) {
@@ -35,9 +44,18 @@ function filtrosDe(filtros: FiltrosDeDocumentos): SQL[] {
   return condiciones;
 }
 
+/** El nombre de una bodega sale de la función de bodegas: quien envía no tiene asignado el destino, ni quien recibe el origen. */
+const nombreDe = (bodegaId: AnyPgColumn) =>
+  sql<string | null>`(select n.nombre from inventarios.nombres_de_bodegas(array[${bodegaId}]::uuid[]) n)`;
+
 const cabeceras = () =>
   transaccionEnCurso()
-    .select({ documento: documentos, bodegaNombre: bodegas.nombre, conceptoNombre: conceptosDeGasto.nombre })
+    .select({
+      documento: documentos,
+      bodegaNombre: sql<string | null>`coalesce(${bodegas.nombre}, ${nombreDe(documentos.bodegaId)})`,
+      conceptoNombre: conceptosDeGasto.nombre,
+      destinoNombre: nombreDe(documentos.bodegaDeDestinoId),
+    })
     .from(documentos)
     .leftJoin(bodegas, eq(bodegas.id, documentos.bodegaId))
     .leftJoin(conceptosDeGasto, eq(conceptosDeGasto.id, documentos.conceptoDeGastoId));
@@ -60,7 +78,11 @@ const columnasDeRenglon = {
   costoTotal: movimientos.costoTotal,
 };
 
-/** Los renglones de los documentos, leídos **siempre unidos a su documento** (R-3): la seguridad por bodega los protege. */
+/**
+ * Los renglones de los documentos, leídos **siempre unidos a su documento** (R-3): la seguridad por bodega los protege.
+ * Un documento vigente muestra solo los renglones vigentes (un saldo inicial corregido deja el anterior sin vigencia);
+ * uno anulado los muestra todos.
+ */
 const filasDeRenglones = (documentoIds: readonly string[]) =>
   transaccionEnCurso()
     .select(columnasDeRenglon)
@@ -70,7 +92,12 @@ const filasDeRenglones = (documentoIds: readonly string[]) =>
     .innerJoin(unidadBase, eq(unidadBase.id, articulos.unidadBaseId))
     .leftJoin(unidadEscrita, eq(unidadEscrita.id, movimientos.unidadEscritaId))
     .leftJoin(lotes, eq(lotes.id, movimientos.loteId))
-    .where(inArray(movimientos.documentoId, [...documentoIds]))
+    .where(
+      and(
+        inArray(movimientos.documentoId, [...documentoIds]),
+        or(eq(movimientos.vigente, true), eq(documentos.estado, 'anulado')),
+      ),
+    )
     .orderBy(movimientos.secuencia);
 
 async function renglonesDe(documentoIds: readonly string[]): Promise<Map<string, RenglonDeDocumentoDto[]>> {
@@ -85,7 +112,7 @@ async function renglonesDe(documentoIds: readonly string[]): Promise<Map<string,
 
 type DatosDelDocumento = Omit<
   DocumentoDto,
-  'bodegaNombre' | 'conceptoDeGastoNombre' | 'avisos' | 'costoTotal' | 'renglones'
+  'bodegaNombre' | 'conceptoDeGastoNombre' | 'bodegaDeDestinoNombre' | 'avisos' | 'costoTotal' | 'renglones'
 >;
 
 /** Solo lo que la pantalla necesita del documento: nada de la autoría ni de las llaves internas. */
@@ -98,6 +125,8 @@ function datosDelDocumento(d: Cabecera['documento']): DatosDelDocumento {
     bodegaId: d.bodegaId,
     documentoDeCompraId: d.documentoDeCompraId,
     documentoRelacionadoId: d.documentoRelacionadoId,
+    bodegaDeDestinoId: d.bodegaDeDestinoId,
+    estadoDeTraslado: d.estadoDeTraslado,
     causa: d.causa,
     destino: d.destino,
     conceptoDeGastoId: d.conceptoDeGastoId,
@@ -118,6 +147,7 @@ function aDocumento(cabecera: Cabecera, renglones: RenglonDeDocumentoDto[]): Doc
     ...datosDelDocumento(cabecera.documento),
     bodegaNombre: cabecera.bodegaNombre,
     conceptoDeGastoNombre: cabecera.conceptoNombre,
+    bodegaDeDestinoNombre: cabecera.destinoNombre,
     avisos: [],
     costoTotal: deCentavosEnteros(total),
     renglones,

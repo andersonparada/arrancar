@@ -6,8 +6,10 @@ export type DatosDeEntradaRegistrada = EventosDominio['inventarios.entrada_regis
 export type DatosDeSalidaRegistrada = EventosDominio['inventarios.salida_registrada'];
 export type DatosDeDevolucionAProveedor = EventosDominio['inventarios.devolucion_a_proveedor'];
 export type DatosDeCostoAjustado = EventosDominio['inventarios.costo_ajustado'];
+export type DatosDeTrasladoRegistrado = EventosDominio['inventarios.traslado_registrado'];
 export type DatosDeDocumentoAnulado = EventosDominio['inventarios.documento_anulado'];
 export type DatosDeCostoRecalculado = EventosDominio['inventarios.costo_recalculado'];
+export type DatosDeMes = EventosDominio['inventarios.mes_cerrado'];
 
 /** Entró mercadería por una recepción o una entrada manual. Se publica tras confirmar. */
 export class EntradaRegistrada extends EventoDominio<DatosDeEntradaRegistrada> {
@@ -45,6 +47,15 @@ export class CostoAjustado extends EventoDominio<DatosDeCostoAjustado> {
   }
 }
 
+/** Una mitad de un traslado entre bodegas (la salida o su recepción); informativo y sin dinero. Se publica tras confirmar. */
+export class TrasladoRegistrado extends EventoDominio<DatosDeTrasladoRegistrado> {
+  readonly nombre = 'inventarios.traslado_registrado';
+
+  constructor(datos: DatosDeTrasladoRegistrado) {
+    super(datos);
+  }
+}
+
 /** Se anuló un documento del kardex. Se publica tras confirmar. */
 export class DocumentoDeInventarioAnulado extends EventoDominio<DatosDeDocumentoAnulado> {
   readonly nombre = 'inventarios.documento_anulado';
@@ -59,6 +70,24 @@ export class CostoRecalculado extends EventoDominio<DatosDeCostoRecalculado> {
   readonly nombre = 'inventarios.costo_recalculado';
 
   constructor(datos: DatosDeCostoRecalculado) {
+    super(datos);
+  }
+}
+
+/** Se cerró un mes del inventario. Se publica tras confirmar. */
+export class MesDeInventarioCerrado extends EventoDominio<DatosDeMes> {
+  readonly nombre = 'inventarios.mes_cerrado';
+
+  constructor(datos: DatosDeMes) {
+    super(datos);
+  }
+}
+
+/** Se reabrió el último mes cerrado del inventario. Se publica tras confirmar. */
+export class MesDeInventarioReabierto extends EventoDominio<DatosDeMes> {
+  readonly nombre = 'inventarios.mes_reabierto';
+
+  constructor(datos: DatosDeMes) {
     super(datos);
   }
 }

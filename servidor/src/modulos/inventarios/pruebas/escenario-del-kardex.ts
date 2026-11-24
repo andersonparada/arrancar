@@ -9,13 +9,23 @@ import {
 import { AnularDocumento } from '../aplicacion/casos-uso/movimientos/anular-documento.js';
 import { RegistrarEntradaManual } from '../aplicacion/casos-uso/movimientos/registrar-entrada-manual.js';
 import { RegistrarSalida } from '../aplicacion/casos-uso/movimientos/registrar-salida.js';
-import type { SolicitudDeEntrada, SolicitudDeSalida, VistaDelKardex } from '../aplicacion/dto/documento.dto.js';
+import { AnularTraslado } from '../aplicacion/casos-uso/traslados/anular-traslado.js';
+import type { DependenciasDeTraslados } from '../aplicacion/casos-uso/traslados/dependencias-de-traslados.js';
+import { RecibirTraslado } from '../aplicacion/casos-uso/traslados/recibir-traslado.js';
+import { TrasladarArticulos } from '../aplicacion/casos-uso/traslados/trasladar-articulos.js';
+import type {
+  SolicitudDeEntrada,
+  SolicitudDeSalida,
+  SolicitudDeTraslado,
+  VistaDelKardex,
+} from '../aplicacion/dto/documento.dto.js';
 import type { DependenciasDelKardex } from '../aplicacion/kardex/dependencias-del-kardex.js';
 import type { ClaseDeDocumento } from '../dominio/documento.js';
-import { CargaInicialFija, MesesCerradosFijos, MetodoInicialFijo } from './dobles-del-entorno.js';
+import { CargaInicialFija, MesesCerradosFijos, MetodoInicialFijo, TransitoFijo } from './dobles-del-entorno.js';
 import { KardexEnMemoria } from './dobles-del-kardex.js';
 
 export const BODEGA = 'bodega-1';
+export const OTRA_BODEGA = 'bodega-2';
 export const ARTICULO = 'articulo-1';
 export const OTRO_ARTICULO = 'articulo-2';
 
@@ -40,6 +50,7 @@ export class EscenarioDelKardex {
   readonly cargaInicial = new CargaInicialFija();
   readonly cierres = new MesesCerradosFijos();
   readonly metodoInicial = new MetodoInicialFijo();
+  readonly transito = new TransitoFijo();
   readonly dependencias: DependenciasDelKardex;
 
   constructor() {
@@ -49,6 +60,7 @@ export class EscenarioDelKardex {
     kardex.unidadesDelCatalogo.set('lb', { id: 'lb', magnitud: 'masa', factorALaReferencia: '1' });
     kardex.unidadesDelCatalogo.set('qq', { id: 'qq', magnitud: 'masa', factorALaReferencia: '100' });
     kardex.bodegasDelCatalogo.set(BODEGA, { id: BODEGA, nombre: 'Principal', activo: true });
+    kardex.bodegasDelCatalogo.set(OTRA_BODEGA, { id: OTRA_BODEGA, nombre: 'Secundaria', activo: true });
     this.dependencias = {
       unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
       auditoria: this.auditoria,
@@ -110,5 +122,47 @@ export class EscenarioDelKardex {
 
   anular(clase: ClaseDeDocumento, documentoId: string, motivo = 'Error') {
     return new AnularDocumento(this.dependencias, clase).ejecutar(this.operador, { documentoId, motivo }, this.vista);
+  }
+
+  /** Los casos de uso de traslados comparten las dependencias del kardex y leen el tránsito de `transito`. */
+  get dependenciasDeTraslados(): DependenciasDeTraslados {
+    return {
+      ...this.dependencias,
+      transito: this.transito,
+      traslados: {
+        boleta: async () => Promise.reject(new Error('No aplica')),
+        destinos: async () => Promise.reject(new Error('No aplica')),
+      },
+    };
+  }
+
+  traslado(cantidad: string, cambios: Partial<SolicitudDeTraslado> = {}): SolicitudDeTraslado {
+    return {
+      fecha: '2026-09-02',
+      bodegaDeOrigenId: BODEGA,
+      bodegaDeDestinoId: OTRA_BODEGA,
+      entregadoA: null,
+      observaciones: null,
+      renglones: [{ articuloId: ARTICULO, loteId: null, cantidad, unidadId: null, costoTotal: null }],
+      ...cambios,
+    };
+  }
+
+  trasladar(cantidad: string, cambios: Partial<SolicitudDeTraslado> = {}) {
+    const caso = new TrasladarArticulos(this.dependenciasDeTraslados);
+    return caso.ejecutar(this.operador, this.traslado(cantidad, cambios), this.vista);
+  }
+
+  recibirTraslado(documentoId: string, fecha: string | null = null) {
+    const caso = new RecibirTraslado(this.dependenciasDeTraslados);
+    return caso.ejecutar(this.operador, { documentoId, fecha, observaciones: null }, this.vista);
+  }
+
+  anularTraslado(documentoId: string, motivo = 'Error') {
+    return new AnularTraslado(this.dependenciasDeTraslados).ejecutar(
+      this.operador,
+      { documentoId, motivo },
+      this.vista,
+    );
   }
 }
