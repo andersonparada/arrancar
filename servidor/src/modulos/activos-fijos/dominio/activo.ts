@@ -13,6 +13,7 @@ import {
   type ValoresDelInmuebleDeActivo,
 } from './reglas-de-activo.js';
 import type { EstadoDeActivo } from './tipos-de-activo.js';
+import { SIN_HISTORIA, SIN_USO } from './vida-inicial-de-activo.js';
 
 export { ActivoInvalido };
 export type ActivoId = Identificador<'Activo'>;
@@ -74,19 +75,6 @@ const SOLO_SIN_LIBROS: readonly (keyof DatosEditables)[] = [
   'valorComoGanadoComun',
 ];
 
-/** Lo que un activo recién creado todavía no tiene: ocio, baja, libros, responsable con usuario y foto. */
-const SIN_HISTORIA = {
-  ocioso: false,
-  ociosoDesde: null,
-  motivoDeOcio: null,
-  fechaDeBaja: null,
-  porcentajeFiscal: null,
-  vidaUtilContableMeses: null,
-  valorResidual: null,
-  responsableUsuarioId: null,
-  fotoArchivoId: null,
-} as const;
-
 /** Lo que se guarda al poner en uso: la fecha y los parámetros con que se depreciará (el residual, en monto). */
 export interface DatosDeUso {
   fechaDeInicioDeUso: string;
@@ -94,17 +82,6 @@ export interface DatosDeUso {
   vidaUtilContableMeses: number | null;
   valorResidual: string;
 }
-
-/** Lo que un activo en construcción no tiene: uso, parámetros de depreciación ni marca de ocioso. */
-const SIN_USO = {
-  fechaDeInicioDeUso: null,
-  ocioso: false,
-  ociosoDesde: null,
-  motivoDeOcio: null,
-  porcentajeFiscal: null,
-  vidaUtilContableMeses: null,
-  valorResidual: null,
-} as const;
 
 const MOTIVO_MAXIMO = 300;
 
@@ -222,6 +199,27 @@ export class Activo extends Entidad<ActivoId> {
   }
 
   /**
+   * Da de baja el activo con la fecha dada (no se depreciará después de ella; §6.8).
+   * @throws ActivoNoEnUso si no está en uso (un activo en construcción no se da de baja, se elimina o se pone en uso).
+   */
+  darDeBaja(fecha: string): void {
+    this.exigirPuedeDarseDeBaja();
+    this.propiedades = { ...this.propiedades, estado: 'dado_de_baja', fechaDeBaja: fecha };
+  }
+
+  /** @throws ActivoDadoDeBaja o ActivoNoEnUso si el activo no admite la baja; no cambia nada. */
+  exigirPuedeDarseDeBaja(): void {
+    if (this.propiedades.estado === 'dado_de_baja') throw new ActivoDadoDeBaja();
+    this.exigirEnUso('Solo un activo en uso se da de baja o se vende.');
+  }
+
+  /** Deshace la baja (anularla): el activo vuelve a estar en uso. @throws ActivoInvalido si no está dado de baja. */
+  deshacerBaja(): void {
+    if (this.propiedades.estado !== 'dado_de_baja') throw new ActivoInvalido('El activo no está dado de baja.');
+    this.propiedades = { ...this.propiedades, estado: 'en_uso', fechaDeBaja: null };
+  }
+
+  /**
    * Deshace «poner en uso»: vuelve a construcción y borra los parámetros de depreciación y la marca de ocioso.
    * @throws ActivoSinLibros si no es un activo del balance en uso.
    */
@@ -266,13 +264,19 @@ export class Activo extends Entidad<ActivoId> {
     this.propiedades = { ...this.propiedades, ...valoresDelInmuebleValidos(this.propiedades, valores, inciso) };
   }
 
+  /** Deja la cantidad de piezas (una división o su anulación); lo demás lo reparte quien divide. */
+  cambiarCantidad(cantidad: number): void {
+    if (!Number.isInteger(cantidad) || cantidad < 1) throw new ActivoInvalido('La cantidad es un entero desde 1.');
+    this.propiedades = { ...this.propiedades, cantidad };
+  }
+
   /** Copia de solo lectura de sus propiedades, para guardarla. */
   instantanea(): Readonly<PropiedadesDeActivo> {
     return { ...this.propiedades };
   }
 
-  private exigirEnUso(): void {
-    if (this.propiedades.estado !== 'en_uso') throw new ActivoNoEnUso();
+  private exigirEnUso(mensaje?: string): void {
+    if (this.propiedades.estado !== 'en_uso') throw new ActivoNoEnUso(mensaje);
   }
 
   private exigirFechaDeOcio(fecha: string, hoy: string): void {

@@ -4,6 +4,7 @@ import type { CrearActivo } from '../aplicacion/casos-uso/activos/crear-activo.j
 import type { EditarActivo } from '../aplicacion/casos-uso/activos/editar-activo.js';
 import type { EliminarActivo } from '../aplicacion/casos-uso/activos/eliminar-activo.js';
 import type { PonerEnUso } from '../aplicacion/casos-uso/activos/poner-en-uso.js';
+import type { PonerEnUsoVarios } from '../aplicacion/casos-uso/activos/poner-en-uso-varios.js';
 import type { QuitarDeUso } from '../aplicacion/casos-uso/activos/quitar-de-uso.js';
 import type { MarcarOcioso } from '../aplicacion/casos-uso/activos/marcar-ocioso.js';
 import type {
@@ -18,6 +19,7 @@ import type {
   OcioDeActivoSolicitado,
   ParamsActivo,
   PonerEnUsoSolicitado,
+  PonerEnUsoVariosSolicitado,
 } from './activos.esquemas-http.js';
 
 export interface CasosDeUsoDeActivos {
@@ -27,6 +29,7 @@ export interface CasosDeUsoDeActivos {
   editar: EditarActivo;
   marcarOcioso: MarcarOcioso;
   ponerEnUso: PonerEnUso;
+  ponerEnUsoVarios: PonerEnUsoVarios;
   quitarDeUso: QuitarDeUso;
   eliminar: EliminarActivo;
   ubicaciones: ListarUbicaciones;
@@ -66,6 +69,9 @@ export class ActivosControlador {
       activoId: solicitud.params.activoId,
       solicitud: solicitud.body,
     });
+
+  ponerEnUsoVarios = (solicitud: FastifyRequest<{ Body: PonerEnUsoVariosSolicitado }>) =>
+    this.casosDeUso.ponerEnUsoVarios.ejecutar(operadorDe(solicitud), solicitud.body);
 
   quitarDeUso = (solicitud: FastifyRequest<{ Params: ParamsActivo }>) =>
     this.casosDeUso.quitarDeUso.ejecutar(operadorDe(solicitud), solicitud.params.activoId);

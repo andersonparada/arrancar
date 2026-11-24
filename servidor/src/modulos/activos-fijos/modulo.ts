@@ -2,9 +2,11 @@ import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { configuracionDeActivosFijos } from './configuracion.js';
 import { rutasDeActivos } from './composicion/activos.js';
+import { rutasDeBajas } from './composicion/bajas.js';
 import { rutasDeClases } from './composicion/clases.js';
 import { rutasDeBandeja, rutasDeCostos } from './composicion/costos.js';
 import { rutasDeDepreciacion } from './composicion/depreciacion.js';
+import { rutasDeDivisiones } from './composicion/divisiones.js';
 import { rutasDeMejoras } from './composicion/mejoras.js';
 import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 import { rutasDeTraslados } from './composicion/traslados.js';
@@ -86,6 +88,16 @@ export const moduloActivosFijos: DefinicionModulo = {
       descripcion: 'Trasladar activos de ubicación o responsable con su boleta (entregar y devolver a la bodega)',
     },
     { clave: 'activos-fijos.traslados.anular', descripcion: 'Anular boletas de traslado' },
+    {
+      clave: 'activos-fijos.bajas.crear',
+      descripcion: 'Dar de baja o vender activos con su acta y su denuncia',
+    },
+    { clave: 'activos-fijos.bajas.anular', descripcion: 'Anular bajas y ventas de activos' },
+    {
+      clave: 'activos-fijos.divisiones.crear',
+      descripcion: 'Dividir activos con cantidad y separarlos en unidades (a mano)',
+    },
+    { clave: 'activos-fijos.divisiones.anular', descripcion: 'Anular divisiones de activos' },
     // generador: permisos
   ],
   configuracion: configuracionDeActivosFijos,
@@ -98,6 +110,8 @@ export const moduloActivosFijos: DefinicionModulo = {
     rutasDeSaldosIniciales(),
     rutasDeMejoras(),
     rutasDeTraslados(),
+    rutasDeBajas(),
+    rutasDeDivisiones(),
     // generador: rutas
   ]),
 };

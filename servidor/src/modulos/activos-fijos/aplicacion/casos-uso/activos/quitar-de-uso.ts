@@ -1,13 +1,14 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { ActivoConLibrosUsados } from '../../../dominio/errores-de-depreciacion.js';
+import { ActivoConDivisiones } from '../../../dominio/errores-de-division.js';
 import { ActivoConMejoras } from '../../../dominio/errores-de-mejora.js';
 import { ActivoDeSaldoInicial } from '../../../dominio/errores-de-saldo-inicial.js';
 import type { ActivoFichaDto } from '../../dto/activo.dto.js';
-import type { DependenciasDeUso } from './dependencias-de-uso.js';
+import type { DependenciasDeQuitarDeUso } from './dependencias-de-uso.js';
 
 export class QuitarDeUso {
-  constructor(private readonly dependencias: DependenciasDeUso) {}
+  constructor(private readonly dependencias: DependenciasDeQuitarDeUso) {}
 
   /**
    * Deshace «poner en uso»: el activo vuelve a construcción y se borran sus tramos. Queda en la auditoría como
@@ -16,11 +17,18 @@ export class QuitarDeUso {
    * @throws ActivoDeSaldoInicial si sus tramos son los del saldo inicial (se corrigen en Saldos iniciales).
    * @throws ActivoSinLibros si no es un activo del balance en uso.
    * @throws ActivoConMejoras si tiene mejoras o costos posteriores sin anular.
+   * @throws ActivoConDivisiones si tiene tramos de una división vigente.
    * @throws ActivoConLibrosUsados si un cierre mensual ya usó sus tramos.
    */
   private async conTramosDeSaldoInicial(activoId: string): Promise<boolean> {
     const vigentes = await this.dependencias.tramos.vigentesDeActivo(activoId);
     return vigentes.some((tramo) => tramo.causa === 'saldo_inicial');
+  }
+
+  /** Los tramos de una división son de la división: se anula ella antes (AFI-5). */
+  private async conDivisiones(activoId: string): Promise<boolean> {
+    const vigentes = await this.dependencias.tramos.vigentesDeActivo(activoId);
+    return vigentes.some((tramo) => tramo.causa === 'division');
   }
 
   /** Las mejoras y los costos posteriores se anulan antes: sus costos son del activo y sus tramos, de la mejora. */
@@ -37,6 +45,7 @@ export class QuitarDeUso {
       if (!activo) throw new RecursoNoEncontrado('El activo');
       if (await this.conTramosDeSaldoInicial(activoId)) throw new ActivoDeSaldoInicial();
       if (await this.conMejoras(activoId)) throw new ActivoConMejoras();
+      if (await this.conDivisiones(activoId)) throw new ActivoConDivisiones();
       const anterior = await consultas.obtener(activoId);
       if (await cierres.usaronTramosDelActivo(activoId)) throw new ActivoConLibrosUsados();
       activo.quitarDeUso();

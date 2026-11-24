@@ -8,7 +8,7 @@ import { indicesDeTramo, llavesDeTramo, reglasDeTramo } from './tramos.llaves-y-
 /**
  * Los tramos de depreciación de cada activo y libro (diseño §5.8): qué falta depreciar al empezar el tramo y cuánto es
  * la cuota mensual, calculados por el dominio (§7) y guardados para poder auditar el cálculo. `mejora_id` dice qué
- * mejora o costo posterior lo creó; `division_id` (AFI-5) llega con su tabla. Solo `politicaPorEmpresa()`.
+ * mejora o costo posterior lo creó y `division_id`, qué división (AFI-5). Solo `politicaPorEmpresa()`.
  */
 export const tramos = esquemaActivosFijos.table(
   'tramos',
@@ -22,6 +22,7 @@ export const tramos = esquemaActivosFijos.table(
     desdePeriodo: date({ mode: 'string' }).notNull(),
     causa: text().$type<CausaDeTramo>().notNull(),
     mejoraId: uuid(),
+    divisionId: uuid(),
     porDepreciar: numeric({ precision: 14, scale: 2 }).notNull(),
     valorResidual: numeric({ precision: 14, scale: 2 }).notNull(),
     meses: smallint(),

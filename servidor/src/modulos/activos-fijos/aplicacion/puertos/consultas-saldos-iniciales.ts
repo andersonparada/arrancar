@@ -6,6 +6,8 @@ export interface ConflictosConLaFechaDeInicio {
   saldosConFechaPosterior: number;
   /** Activos de otro origen con adquisición anterior a la fecha nueva. */
   otrosConAdquisicionAnterior: number;
+  /** Saldos iniciales con una división vigente (sus tramos no se mueven con la fecha: AFI-5). */
+  saldosConDivisiones: number;
   hayCierres: boolean;
 }
 

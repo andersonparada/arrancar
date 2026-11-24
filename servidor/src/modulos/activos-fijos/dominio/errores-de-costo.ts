@@ -133,3 +133,14 @@ export class DocumentoConCostosCapitalizados extends ReglaDeNegocioInfringida {
 export class CostoNoAnulable extends ReglaDeNegocioInfringida {
   readonly codigo = 'costo_no_anulable';
 }
+
+/** El costo es anterior a una división del activo: parte de su efecto ya está en el activo nuevo. */
+export class CostoAnteriorADivision extends ReglaDeNegocioInfringida {
+  readonly codigo = 'costo_anterior_a_division';
+
+  constructor() {
+    super(
+      'El costo es anterior a una división del activo: anule primero la división y luego este costo. Si la división ya no se puede anular, reabra el mes o acuda a su contador.',
+    );
+  }
+}

@@ -1,9 +1,12 @@
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
+import { AbrirBoletaFirmada } from '../aplicacion/casos-uso/traslados/abrir-boleta-firmada.js';
 import { AnularTraslado } from '../aplicacion/casos-uso/traslados/anular-traslado.js';
 import { ObtenerBoleta } from '../aplicacion/casos-uso/traslados/obtener-boleta.js';
+import { SubirBoletaFirmada } from '../aplicacion/casos-uso/traslados/subir-boleta-firmada.js';
 import { TrasladarActivos } from '../aplicacion/casos-uso/traslados/trasladar-activos.js';
 import { TrasladosControlador } from '../http/traslados.controlador.js';
 import { rutasTraslados } from '../http/traslados.rutas.js';
+import { RepositorioBoletasFirmadasDrizzle } from '../infraestructura/persistencia/repositorio-boletas-firmadas.drizzle.js';
 import { CierresDrizzle } from '../infraestructura/persistencia/cierres.drizzle.js';
 import { ConsultasActivosDrizzle } from '../infraestructura/persistencia/consultas-activos.drizzle.js';
 import { ConsultasTrasladosDrizzle } from '../infraestructura/persistencia/consultas-traslados.drizzle.js';
@@ -19,6 +22,7 @@ function dependenciasDeTraslados() {
     auditoria: compartidas.auditoria,
     correlativos: compartidas.correlativos,
     reloj: compartidas.reloj,
+    documentos: compartidas.documentos,
     publicadorEventos: compartidas.publicadorEventos,
     repositorio: new RepositorioActivosDrizzle(),
     consultas: new ConsultasActivosDrizzle(),
@@ -27,6 +31,7 @@ function dependenciasDeTraslados() {
     cierres: new CierresDrizzle(),
     traslados: new RepositorioTrasladosDrizzle(),
     consultasDeTraslados: new ConsultasTrasladosDrizzle(),
+    boletasFirmadas: new RepositorioBoletasFirmadasDrizzle(),
   };
 }
 
@@ -38,6 +43,8 @@ export function rutasDeTraslados() {
       trasladar: new TrasladarActivos(dependencias),
       anular: new AnularTraslado(dependencias),
       obtenerBoleta: new ObtenerBoleta(dependencias),
+      subirFirmada: new SubirBoletaFirmada(dependencias),
+      abrirFirmada: new AbrirBoletaFirmada(dependencias),
     }),
   );
 }

@@ -10,6 +10,8 @@ import type {
 } from '../../aplicacion/dto/activo.dto.js';
 import type { ConsultasActivos } from '../../aplicacion/puertos/consultas-activos.js';
 import { activos } from './activos.tablas.js';
+import { ConsultasBajasDrizzle } from './consultas-bajas.drizzle.js';
+import { ConsultasDivisionesDrizzle } from './consultas-divisiones.drizzle.js';
 import { clases } from './clases.tablas.js';
 import { costos } from './costos.tablas.js';
 import { nombresDeUbicaciones } from './nombres-de-ubicaciones.js';
@@ -76,7 +78,13 @@ export class ConsultasActivosDrizzle implements ConsultasActivos {
     const filas = await this.filas(eq(activos.id, activoId));
     const [activo] = await this.conNombres(filas);
     if (!activo) throw new RecursoNoEncontrado('El activo');
-    return { ...activo, traslados: await this.trasladosDe(activoId), tramos: await this.tramosDe(activoId) };
+    return {
+      ...activo,
+      traslados: await this.trasladosDe(activoId),
+      tramos: await this.tramosDe(activoId),
+      divisiones: await new ConsultasDivisionesDrizzle().deActivo(activoId),
+      baja: await new ConsultasBajasDrizzle().deActivo(activoId),
+    };
   }
 
   async filas(donde: SQL | undefined) {

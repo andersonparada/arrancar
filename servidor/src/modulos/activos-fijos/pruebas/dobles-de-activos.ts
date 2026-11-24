@@ -24,6 +24,8 @@ function aFicha(activo: Activo): ActivoFichaDto {
     departamentoNombre: null,
     traslados: [],
     tramos: [],
+    divisiones: [],
+    baja: null,
   };
 }
 
@@ -95,6 +97,10 @@ export class ActivosEnMemoria implements RepositorioActivos, ConsultasActivos {
 
   async tieneMovimientos(id: ActivoId): Promise<boolean> {
     return this.conTraslados.has(id.valor);
+  }
+
+  async tieneDivisiones(_id: ActivoId): Promise<boolean> {
+    return false;
   }
 
   async listar(filtros: FiltrosDeActivos): Promise<ActivoDto[]> {

@@ -41,7 +41,8 @@ export function textoOpcional(valor: string | null, etiqueta: string, maximo: nu
   return limpio ? textoRequerido(limpio, etiqueta, maximo) : null;
 }
 
-function validarCodigo(codigo: string): string {
+/** @throws ActivoInvalido si el código no tiene el formato permitido. */
+export function validarCodigo(codigo: string): string {
   const limpio = codigo.trim();
   if (!FORMATO_DE_CODIGO.test(limpio))
     throw new ActivoInvalido('El código lleva de 1 a 30 letras, números, punto, guion o diagonal.');

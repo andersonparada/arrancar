@@ -3,6 +3,7 @@ import { transaccionEnCurso } from '../../../core/compartido/infraestructura/uni
 import type { RepositorioTraslados, UbicacionRegistrada } from '../../aplicacion/puertos/repositorio-traslados.js';
 import type { Traslado } from '../../dominio/traslado.js';
 import { enTandas } from './en-tandas.js';
+import { horaReal } from './hora-real.js';
 import { mapeadorDeTraslado } from './traslado.mapeador.js';
 import { traslados } from './traslados.tablas.js';
 
@@ -12,7 +13,7 @@ export class RepositorioTrasladosDrizzle implements RepositorioTraslados {
     for (const tanda of enTandas(nuevos))
       await transaccionEnCurso()
         .insert(traslados)
-        .values(tanda.map((traslado) => mapeadorDeTraslado.aFila(traslado)));
+        .values(tanda.map((traslado) => ({ ...mapeadorDeTraslado.aFila(traslado), creadoEn: horaReal() })));
   }
 
   async delGrupo(grupoId: string): Promise<Traslado[]> {
@@ -21,6 +22,16 @@ export class RepositorioTrasladosDrizzle implements RepositorioTraslados {
       .from(traslados)
       .where(eq(traslados.grupoId, grupoId))
       .orderBy(asc(traslados.id));
+    return filas.map((fila) => mapeadorDeTraslado.aEntidad(fila));
+  }
+
+  async delGrupoBloqueando(grupoId: string): Promise<Traslado[]> {
+    const filas = await transaccionEnCurso()
+      .select()
+      .from(traslados)
+      .where(eq(traslados.grupoId, grupoId))
+      .orderBy(asc(traslados.id))
+      .for('share');
     return filas.map((fila) => mapeadorDeTraslado.aEntidad(fila));
   }
 

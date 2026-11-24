@@ -4574,3 +4574,100 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   **Lector de códigos:** `agregarLeido` suma a la cantidad del mismo renglón (sin copiarlo), así el lote propuesto de la
   primera lectura no se pierde con la segunda. **Descartar notas de crédito:** `LineaPorRecibirDto` suma `esInventario`
   (aditivo); para una nota sin marca la ventana y los avisos de éxito y de deshacer dicen que el Libro de compras no cambia.
+
+- **2026-11-23 — AFI-3 (Activos fijos, servidor): «Disponible para uso» por lote.** Sin migración. `PonerEnUsoVarios`
+  (`POST /activos-fijos/activos/poner-en-uso`, mismo permiso `activos.poner-en-uso`): `activoIds` (1 a 200, sin repetidos),
+  una fecha, `ubicacion` común opcional y `ajustes` por activo (porcentaje fiscal, vida útil, residual; lo que falte lo
+  propone la clase). Todo o nada, con el candado compartido del cierre. `PonerEnUso` y el lote comparten
+  `ActivadorDeActivos`; la ficha única también acepta `ubicacion`. **Ubicación:** sin `enBodega` escrito, queda en la bodega de
+  activos si no hay responsable (§3.3). Si el activo solo tiene su fila de alta, esa fila toma la ubicación (aún no hubo boleta);
+  si ya tuvo traslados, el cambio es un traslado con boleta en la misma transacción (una boleta por lote, motivo «Disponible
+  para uso», recibe el responsable o «Bodega de activos», valida mes abierto y fecha no anterior al último traslado) y publica
+  `activo_trasladado`; los componentes se mueven con su principal; sin cambio de ubicación no se crea traslado. Error nuevo
+  `poner_en_uso_varios_invalido`. `QuitarDeUso` ya no necesita los traslados ni los eventos (`DependenciasDeQuitarDeUso`).
+  Decisiones: «solo tiene su fila de alta» = una sola fila vigente en el historial; los textos «Disponible para uso» son de
+  pantalla (AF-4c y AFI-4c). Las pruebas con base de datos de esta sesión se corrieron por un reenvío local al
+  PostgreSQL de Docker porque el puerto 5433 reseteaba conexiones desde el anfitrión.
+- **2026-11-23 — AFI-3, correcciones de la revisión.** (1) La fila de alta solo se reescribe si el bien no tenía movimiento
+  contable: lo que se pone en uso ahora o un componente aún en construcción; un componente que ya estaba en uso recibe
+  traslado con boleta y valida mes abierto. (2) Con `ubicacion`, un componente cuyo principal no va en el lote se rechaza con
+  `componente_se_traslada_con_su_principal`. (3) La fecha de uso debe caer en un mes abierto (`MesCerrado`) para todos los
+  activos, aunque el primer mes de depreciación sea el siguiente.
+- **2026-11-23 — AFI-3, segunda corrección de la revisión.** `UbicadorAlPonerEnUso` decide **por familia** (principal y sus
+  componentes): si alguno necesita boleta, todos los que cambian de lugar van en la misma boleta y ninguna fila de alta se
+  reescribe; solo si ninguno la necesita se mueve la alta. Así anular la boleta devuelve a la familia entera (§6.7). Pruebas
+  de anulación de ambos casos en `poner-en-uso-componentes.prueba.ts`.
+- **2026-11-23 — AFI-4 (Activos fijos, servidor): el escaneo firmado de la boleta (I-8 b).** Migración
+  `0008_af8_boletas_firmadas` (§5.16): `activos_fijos.boletas_firmadas` (PK `(empresa_id, grupo_id)`, `archivo_id` único con
+  llave a `core.archivos`, RLS por empresa; sin llave a `traslados`). `POST /activos-fijos/traslados/:grupoId/firmada` (multipart,
+  `traslados.crear`, con `limitarSubidas`) guarda o reemplaza el escaneo (PDF revisado con qpdf o foto, `recurso_dueno =
+  'activos-fijos.traslados'`) y `GET …/firmada` lo abre (`activos.ver`, cabeceras seguras, nombre armado por el servidor;
+  `/archivos/:id` no lo sirve). `SubirBoletaFirmada` va en tres tiempos como la evidencia de Bancos (qpdf fuera de la
+  transacción), toma un candado por boleta, borra el archivo anterior y audita `adjuntar` con el escaneo anterior (o `null`).
+  La boleta (`GET …/boleta`) ahora trae `firmada` (datos del archivo, sin ruta ni id). Errores: `boleta_inexistente` (404; la
+  boleta no existe o está anulada: qpdf ni corre) y `boleta_sin_firmada` (404). Decisiones: anular la boleta no borra el
+  escaneo y aún se abre; no hay ruta de quitar (el diseño no la pide); el archivo se guarda en el módulo (no se importa de
+  Bancos). La parte de `aBodega`, `marcarOcioso` y el título ya estaba hecha, con lo que AFI-4 queda completo en el servidor.
+  Pruebas: 7 unitarias y 11 de API (permisos, archivo inválido, sin archivo, anulada, reemplazo, aislamiento). Las pruebas con
+  base de datos se corrieron en un PostgreSQL propio (el puerto 5433 reseteaba conexiones).
+- **2026-11-23 — AFI-4, corrección de la revisión (carrera subir/anular).** `SubirBoletaFirmada` leía los renglones sin
+  bloquearlos y podía guardar un escaneo en una boleta que otra transacción acababa de anular. En la etapa final ahora los
+  relee con `FOR SHARE` (`RepositorioTraslados.delGrupoBloqueando`): la anulación en curso gana y la subida responde
+  `boleta_inexistente`; la subida en curso hace esperar a la anulación. Prueba de API con la intercalación (falla sin la
+  corrección).
+- **2026-11-23 — AF-9 (Activos fijos, servidor): bajas y ventas con acta, denuncia y resultados.** Migración `0009_af9_bajas`
+  (§5.12): `activos_fijos.bajas` con las cifras congeladas (costo, costo fiscal, base fiscal, acumuladas, valor en libros, cuotas
+  del mes), la venta (comprador, NIT, precio, IVA, FEL) y sus resultados contable y fiscal (A1), con los checks de §5.12 y una baja
+  vigente por activo; RLS por empresa. `POST /activos-fijos/bajas` (`bajas.crear`; `DarDeBaja` o `RegistrarVenta` según la causa),
+  `POST …/:id/anular` (`bajas.anular`), `GET …/:id`, y acta (`?tipoDeActa=administrativa|notarial`) y denuncia con subida y
+  apertura (`limitarSubidas`, qpdf fuera de la transacción, `FOR UPDATE`, auditoría `adjuntar`). Los avisos (sin acta, sin
+  denuncia, donación y faltante con IVA, componentes, IVA y ganancia o pérdida de capital en la venta, reproductor V-10 e inmueble de
+  persona individual desde 2027) salen del dominio y se calculan al leer. Un principal se da de baja con sus componentes (una sola
+  acta; en una venta el precio se reparte por costo). Eventos `activo_dado_de_baja`, `activo_vendido` y `baja_anulada`. **Cambios
+  en el cierre**: `activosParaCerrar` incluye a los dados de baja después del mes (antes solo el mes de la baja), para que los
+  meses abiertos anteriores sigan depreciándolos y la acumulada congelada coincida con las cuotas; `AnularMejora` rechaza un activo
+  dado de baja. Decisiones: sin baja parcial (AFI-6); `faltante_de_inventario` sin `inventario_id` hasta AF-12; bienes de terceros
+  solo se devuelven. Pruebas: 40 unitarias de los casos de uso, 13 del dominio y 24 de API (baja, venta, componentes, anular, acta y
+  denuncia, permisos, aislamiento, cierres y concurrencia). Las pruebas con base de datos se corrieron en un PostgreSQL propio (el
+  puerto 5433 reseteaba conexiones). Pendiente: AF-9c (pantallas) y AFI-6.
+- **2026-11-23 — AF-9 (revisión): cinco correcciones.** (1) Vender un principal con un bien de control o de terceros ya no falla con
+  `precio_no_repartible`: el precio y el IVA se reparten solo entre los activos con libros; el de control queda como baja «otra» sin
+  precio y el de terceros como `devuelto_al_dueno` (**por validar con `contador-guatemala`**). (2) No se anula la baja de un
+  componente mientras su principal esté dado de baja (`baja_de_componente_con_principal_dado_de_baja`). (3) El cierre toma lo que
+  la baja congeló: en el mes de la baja incluye al activo solo si la baja vigente tiene `cuota_del_mes_* > 0`, no según el
+  `primer_mes` de hoy (se quitó ese parámetro de `activosParaCerrar`). (4) Se rechaza la baja con fecha anterior a una mejora o costo
+  posterior vigente (`baja_anterior_a_una_mejora`). (5) El acta y la denuncia son del acto: viven en la baja del principal y los
+  componentes las leen de ahí (avisos, `tieneActa`, descarga); subir desde un componente las guarda en la del principal
+  (`RepositorioBajas.portadoraDeDocumentos`). Sin migración. Pruebas nuevas: 10 unitarias y 6 de API.
+- **2026-11-23 — AF-9 (revisión 2): cuatro correcciones.** (1) La baja anterior a una mejora compara contra la fecha de la
+  mejora vigente (`consultasDeMejoras.deActivo`), no contra la fecha de emisión de la factura de sus líneas. (2) Un principal de
+  terceros o de control ya no se vende aunque tenga un componente propio: el principal conserva lo pedido y el dominio lo rechaza
+  (`causa_de_baja_no_permitida`); solo los componentes se convierten. (3) Un componente de terceros que va con un principal vendido,
+  donado, obsoleto o faltante ya no se marca `devuelto_al_dueno`: se rechaza con `bien_de_terceros_sin_destino` hasta resolver su
+  destino. (4) Un bien de control no se vende como activo (la venta con resultado contradecía §3.2 y §3.4). Los puntos 3 y 4
+  quedan **pendientes del dictamen de `contador-guatemala`** (qué destino y qué registro les corresponde); mientras tanto se
+  rechazan. Sin migración. Pruebas nuevas: 6 unitarias y 3 de API.
+- **2026-11-23 — AFI-5 (Activos fijos, servidor): divisiones.** Migración `0010_afi5_divisiones`: tabla `divisiones` (§5.15),
+  `division_id` en `costos` y `tramos`, origen `division` y clases `division_cedida` y `division_recibida`, y
+  `activos-fijos.divisiones` en la auditoría permanente. `DividirActivo`, `SepararEnUnidades` (tope 200) y `AnularDivision`
+  (`divisiones.crear` y `.anular`) sobre el servicio `DivisorDeActivos`: el activo nuevo se lleva `round(Q × k / n)` del costo, la
+  acumulada contable y fiscal, el residual y la base del porcentaje, y los dos activos abren un tramo `division` por libro desde el
+  mes de la división; las cuotas ya cerradas se quedan en el origen. `acumuladaAl` suma las acumuladas recibidas y resta las
+  cedidas en el cierre, el historial (bajas, mejoras) y la ficha, que ahora trae `divisiones`. Anular exige mes abierto y ningún
+  movimiento posterior (traslado, mejora, cambio de tramos, baja, cuotas u otra división), borra el activo nuevo y audita con los
+  dos activos. Eventos `activo_dividido` y `division_anulada`. Decisiones: no se divide un saldo inicial con diferencias fiscales
+  ni un activo con costos negativos; un activo con divisiones no se elimina, no cambia su cantidad a mano ni vuelve a
+  construcción; la baja anterior a una división se rechaza. Pruebas: 15 y 27 del dominio, 16 de persistencia y 25 de API (cierre,
+  baja, anular y separar con el centavo). Pendiente: AFI-6 (traslado y baja parciales), AFI-8 y AFI-6c (pantallas).
+- **2026-11-23 — AFI-5, correcciones de la revisión.** `creado_en` de divisiones, tramos, costos, mejoras y traslados pasa a la hora
+  real (`horaReal()`, `clock_timestamp()`): arregla que anular la última de «Separar en unidades» repusiera el tramo equivocado (todos
+  compartían `now()`) y la carrera de un movimiento que esperó el candado del activo y quedaba con hora anterior a la división.
+  Anular también se bloquea con costos vigentes posteriores en cualquiera de los dos activos, y compara el mes de la **fecha** de la
+  división con el último cierre (no su `periodo`). Cambiar la fecha de inicio de la carga se rechaza si un saldo tiene divisiones
+  vigentes. Pruebas: 3 de API nuevas (orden de anulaciones con cuotas, costo posterior, mes de la fecha) y 1 unitaria.
+- **2026-11-23 — AFI-5, segunda ronda de correcciones.** (1) Anular una división ya no falla con `en_uso` si el activo nuevo
+  dejó historial: las cuotas sin efecto (de un mes reabierto) se **borran** con el activo y quedan completas en la auditoría
+  (`anterior.cuotasSinEfectoDelNuevo`); una mejora o una baja del activo nuevo, aunque esté anulada, es rastro que se conserva y
+  rechaza la anulación con `division_con_movimientos_posteriores` y un mensaje claro (no se borra nada). (2) `AnularCosto`
+  rechaza con `costo_anterior_a_division` un costo vigente que no viene de la división y es anterior a una división vigente de
+  su activo (origen o nuevo): se anula primero la división. Pruebas: 4 de API nuevas (`activos-fijos-divisiones-rastro`).

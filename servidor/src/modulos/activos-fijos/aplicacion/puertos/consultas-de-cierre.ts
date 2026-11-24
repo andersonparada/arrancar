@@ -23,10 +23,10 @@ export interface TotalDeClase {
 export interface ConsultasDeCierre {
   /**
    * Los activos del balance que se deprecian en el mes, con sus tramos vigentes, lo ya depreciado de cada tramo y la
-   * acumulada de cada libro antes del mes. Con `conBajasDelMes` incluye los dados de baja ese mes (primer mes
-   * `mes_siguiente`, §3.6).
+   * acumulada de cada libro antes del mes. Incluye a los dados de baja ese mes solo si su baja congeló la cuota del mes
+   * (primer mes `mes_siguiente`, §3.6): el cierre toma lo congelado, no la regla vigente.
    */
-  activosParaCerrar(periodo: string, conBajasDelMes: boolean): Promise<ActivoParaCerrar[]>;
+  activosParaCerrar(periodo: string): Promise<ActivoParaCerrar[]>;
   /** El primer mes que usa algún tramo vigente, o `null` si ningún activo se ha puesto en uso. */
   primerMesConTramos(): Promise<string | null>;
   hallazgosDeActivos(periodo: string, mesesDeConstruccion: number): Promise<HallazgosDeActivos>;

@@ -686,7 +686,7 @@ resultado = 'encontrado'`; en un activo de cantidad 1 no se pide). Índice `(inv
   y `0000_esquema`. Cada paso del servidor genera su migración con `bd:generar -w servidor -- activos-fijos <nombre>`:
   `0001_af1_clases` (con la auditoría permanente de §4.2), `0002_af2_activos_y_traslados`, `0003_af3_costos_y_descartes`,
   `0004_af4_tramos`, `0005_af5_cierres_y_cuotas`, `0006_af6_saldos_iniciales`, `0007_af7_mejoras` (la FK de
-  `costos.mejora_id` y `tramos.mejora_id` se agrega aquí), `0008_af9_bajas`, `0009_af12_inventarios`. Si un paso se
+  `costos.mejora_id` y `tramos.mejora_id` se agrega aquí), `0008_af8_boletas_firmadas`, `0009_af9_bajas`, `0010_af12_inventarios`. Si un paso se
   adelanta, cada migración toma el siguiente número libre: los nombres dicen el paso, no el número.
 - **Sin datos que convertir** (módulo nuevo) ni migración de permisos (todos nuevos: el rol con acceso total los recibe
   solo). Los correlativos no necesitan fila previa.
@@ -1318,7 +1318,7 @@ dos decimales.
 | AF-3c | Bandeja «Por capitalizar» (aviso de software y suscripciones, V-2) y pestaña Costos | frontend | **Programado** (2026-11-19; notas abajo) |
 | AFI-2c (con AF-3c) | Ventana «Capitalizar» con unidades, costo por unidad y cuadrícula | frontend | **Programado** (2026-11-19) |
 | **AF-4** | Dominio de depreciación (§7, pruebas puras con los ejemplos: tope del inmueble con el mayor y el 70 %, reproductores, ocioso, exceso de nota de crédito por libro), `tramos`, poner en uso y quitar de uso | backend | **Programado, en revisión** (2026-11-19; migración `0004_af4_tramos`) |
-| **AFI-3** (con AF-4) | `PonerEnUsoVarios`, ubicación y «En bodega de activos» al ponerlo disponible, textos de «Disponible para uso» | backend | |
+| **AFI-3** (con AF-4) | `PonerEnUsoVarios`, ubicación y «En bodega de activos» al ponerlo disponible, textos de «Disponible para uso» | backend | **Programado** (2026-11-23; sin migración; `POST …/activos/poner-en-uso`; la ficha única también acepta `ubicacion`) |
 | **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | **Programado, en revisión** (2026-11-19; migración `0005_af5_cierres_y_cuotas`; faltan los hallazgos de inventario en curso (AF-10) y de bodega (AFI-7)) |
 | AF-5c | Cierre de depreciación y pestaña Depreciación | frontend | **Programado** (2026-11-19; la pestaña muestra los tramos: faltan las cuotas por año y mes, que piden una ruta nueva del servidor) |
 | **AF-6** | Saldos iniciales (con costo fiscal, A1; con «Cantidad» y «En bodega», AFI), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | **Programado, en revisión** (2026-11-19; migración `0006_af6_saldos_iniciales`; notas abajo) |
@@ -1326,11 +1326,11 @@ dos decimales.
 | **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend **Programado, en revisión** (2026-11-19; migración `0007_af7_mejoras`; notas abajo) |
 | AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | |
 | **AF-8** | Traslados con boleta (grupo), anular | backend | **Programado, en revisión** (2026-11-19; sin migración; notas abajo) |
-| **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | **Parcial** (2026-11-19): hecho `aBodega`, `marcarOcioso` y el título configurable; falta subir el escaneo firmado (espera a `seguridad`) |
+| **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | **Programado** (2026-11-23; migración `0008_af8_boletas_firmadas`; `aBodega`, `marcarOcioso` y el título desde 2026-11-19; ver notas de AF-8) |
 | AF-8c | Traslados y boleta imprimible | frontend | |
 | AFI-4c (con AF-8c) | Entregar y devolver; casilla «A la bodega»; selección múltiple; subir la boleta firmada | frontend | |
-| **AFI-5** (después de AF-7 y AF-8) | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl` (y su uso en cierre, ficha y bajas), dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §7.6 y 50 divisiones de 1, y de integración (cierre después de dividir, baja después de dividir, anular) | backend | |
-| **AF-9** | Bajas y ventas con archivos, tipo de acta, costo fiscal y resultados (A1), avisos de donación y reproductor (V-10, V-12) | backend | |
+| **AFI-5** (después de AF-7 y AF-8) | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl` (y su uso en cierre, ficha y bajas), dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §7.6 y 50 divisiones de 1, y de integración (cierre después de dividir, baja después de dividir, anular) | backend **Programado** (2026-11-23; migración `0010_afi5_divisiones`; sin la división automática de traslado, baja e inventario, que es AFI-6 y AFI-8; notas abajo; segunda ronda de correcciones hecha: anular con historial del activo nuevo y costos anteriores a la división) |
+| **AF-9** | Bajas y ventas con archivos, tipo de acta, costo fiscal y resultados (A1), avisos de donación y reproductor (V-10, V-12) | backend | **Programado** (2026-11-23; migración `0009_af9_bajas`; sin la baja parcial, que es AFI-6; notas abajo) |
 | **AFI-6** (después de AFI-5 y AF-9) | Traslado y baja con cantidad parcial (división automática) | backend | |
 | AF-9c | Baja y venta (ventanas, actas imprimibles) | frontend | |
 | AFI-6c | Dividir y separar en la ficha; cantidad en traslados y bajas | frontend | |
@@ -1366,6 +1366,81 @@ dos decimales.
 - El archivo del costo manual (`archivo_id`) tiene su columna, pero la ruta de subida queda pendiente (revisión de `seguridad`).
 - La lista de costos de un activo y su ficha usan `activos.ver`; la ficha trae `costo` (Σ de los vigentes).
 
+**Notas de lo programado en AF-9 (servidor, migración `0009_af9_bajas`):**
+
+- `POST /activos-fijos/bajas` (`bajas.crear`) elige `DarDeBaja` o `RegistrarVenta` según la causa y devuelve la baja con sus **avisos**
+  (`sin_acta`, `sin_denuncia`, `donacion_con_iva`, `faltante_con_iva`, `con_componentes`, `venta_con_iva`, `ganancia_de_capital` o
+  `perdida_de_capital`, `venta_de_reproductor` y `inmueble_de_persona_individual` desde el 1-ene-2027 si el régimen vigente es de
+  persona individual). Los avisos se calculan al leer (el acta o la denuncia subidas después los quitan). `GET …/bajas/:id` (`activos.ver`)
+  da los datos del acta imprimible; la ficha del activo trae `baja`.
+- **Cifras congeladas**: la acumulada de cada libro es `acumuladaAntesDe` (lo cerrado más lo que darían, mes a mes, los meses
+  abiertos que van antes: el mismo cálculo de las mejoras) y, con `primer_mes = mes_siguiente`, la cuota del propio mes, que queda
+  en `cuota_del_mes_*`. Para que el cierre de esos meses abiertos siga depreciando al activo dado de baja, `activosParaCerrar` ahora
+  incluye a los dados de baja **después** del mes y, en el propio mes de la baja, **solo si la baja vigente congeló una cuota de ese
+  mes** (`cuota_del_mes_* > 0`): el cierre toma lo congelado y no la regla `primer_mes` de hoy, así que cambiarla después no
+  descuadra los libros ni el resultado de una venta (prueba de API con el cambio de regla en los dos sentidos). Una baja con fecha
+  anterior a una mejora o costo posterior vigente del activo o de sus componentes se rechaza (`baja_anterior_a_una_mejora`): las
+  cifras «al día de la baja» no pueden incluir un costo que todavía no existía.
+- **Costo fiscal** (A1) = Σ costos fiscales (con el del saldo inicial cargado) sin tope del inmueble ni ganado común; la base
+  fiscal usa la misma función de poner en uso. Bienes de control y de terceros llevan los montos en cero; un terreno, costo sin
+  depreciación. Venta: resultado contable `precio − valor en libros`; fiscal `precio − (costo fiscal − acumulada fiscal)`.
+- **Con componentes**: el principal y sus componentes vigentes se dan de baja a la vez, con **una sola acta** (mismo número
+  `activos-fijos.bajas`, una fila por activo). En una venta el precio y el IVA se reparten en proporción al costo de cada activo
+  (sobrante al último; `precio_no_repartible` si a alguno le tocaría menos de un centavo). **Solo entran al reparto los activos con
+  libros**: un bien de control que va con el principal queda como baja con causa `otra` y sin precio propio, y un componente de
+  terceros impide vender, donar, dar por obsoleto o por faltante al principal (`bien_de_terceros_sin_destino`): no se inventa que
+  se devolvió, se pide resolver antes su destino (devolverlo o darlo de baja por separado); con destrucción, robo, extravío u
+  «otra» se va con el principal con esa causa. Un principal de terceros o de control no se vende aunque tenga componentes propios
+  (`causa_de_baja_no_permitida`). **Cómo se registra la venta de un bien de control y el destino de los bienes de terceros queda
+  pendiente del dictamen de `contador-guatemala`**; mientras tanto se rechaza. Un componente se da de baja solo, pero si se dio de baja con su principal solo se anula con el principal
+  (`baja_de_componente_con_su_principal`); y uno dado de baja aparte no se anula mientras su principal esté dado de baja
+  (`baja_de_componente_con_principal_dado_de_baja`). **Acta y denuncia son del acto**: se guardan en la baja del principal (subir
+  desde el componente las manda ahí, con su auditoría `adjuntar`) y el componente las lee de ella para los avisos, `tieneActa` y la
+  descarga.
+- **Anular** (`bajas.anular`): mes abierto (`mes_cerrado`), el activo vuelve a `en_uso` y se audita `anular` con la baja como estaba
+  (una entrada por activo). `AnularMejora` rechaza un activo dado de baja (`activo_dado_de_baja`): sus cifras están congeladas.
+- **Acta y denuncia**: `POST …/bajas/:id/acta?tipoDeActa=administrativa|notarial` y `…/denuncia` (multipart, `bajas.crear`,
+  `limitarSubidas`), `GET …/acta` y `…/denuncia` (`activos.ver`); mismo esquema de tres tiempos que la boleta firmada, `FOR UPDATE`
+  sobre la baja, borra el archivo anterior y audita `adjuntar`. El tipo de acta viaja en la dirección porque el lector de
+  documentos solo admite el archivo. Una baja anulada no admite documentos (`baja_anulada`) y sigue mostrando los que tenía.
+- Decisiones: la causa `faltante_de_inventario` se acepta **sin** `inventario_id` hasta AF-12 (la columna existe sin llave ni el check
+  de §5.12); `devuelto_al_dueno` solo vale para bienes de terceros, y un bien de terceros no se vende ni se dona (un bien de control tampoco se vende: baja sin resultado, §3.2 y §3.4); la baja de solo
+  una parte de un grupo (`cantidad` menor) responde `baja_parcial_no_disponible` hasta AFI-6; `numero` del acta no es único (lo
+  comparten el principal y sus componentes); no se dan de baja activos en construcción (se eliminan o se ponen en uso).
+- Falta para AF-9c: ventanas de baja y venta, acta imprimible, subir acta y denuncia, y mostrar los avisos.
+
+**Notas de lo programado en AFI-5 (servidor, migración `0010_afi5_divisiones`):**
+
+- `activos_fijos.divisiones` (§5.15) con sus checks y RLS por empresa; `costos` gana `division_id`, el origen `division` y las clases
+  `division_cedida` (negativa) y `division_recibida`; `tramos` gana `division_id`. La llave del activo nuevo se creó a mano con
+  `on delete set null (activo_nuevo_id)` (drizzle no escribe la lista de columnas): como un `check` exige el activo nuevo mientras la
+  división está vigente, el activo solo se borra al anular. `activos-fijos.divisiones` entra a la auditoría permanente.
+- Cálculo en `dominio/depreciacion/division.ts` (`repartirCifras`, `tramosDeUnaParte`): `round(Q × k / n)` mitad hacia arriba y el
+  sobrante en el origen; prueba con el ejemplo de §7.6 y con 50 divisiones de 1 (no se pierde un centavo y cada pieza agota su
+  pendiente). El `periodo` de la división es el primer mes de sus tramos, `max(mes de la fecha, desde del último tramo)`, y a él
+  se refiere `acumuladaAl`: `acumuladasAntesDe(periodo)` (cierre) y el historial de cada activo (bajas, mejoras, ficha) suman las
+  acumuladas recibidas y restan las cedidas de las divisiones vigentes con `periodo <= mes`.
+- `POST …/activos/:id/dividir` y `…/:id/separar-en-unidades` (`divisiones.crear`, 201) y `POST …/divisiones/:id/anular`
+  (`divisiones.anular`). `DivisorDeActivos` es el servicio que AFI-6 y AFI-8 reutilizarán con las causas `traslado`, `baja` e
+  `inventario`. Separar en unidades acepta códigos escritos (sin repetirse ni usarse) y propone el resto en un bloque.
+- Anular: mes de la **fecha** de la división abierto (no el de su `periodo`, que con `mes_siguiente` puede ser el siguiente) y sin,
+  después de la división, traslados (salvo el alta), mejoras, costos, otros cambios de tramos, bajas, cuotas del activo nuevo ni
+  otra división. Se compara `creado_en`, que en divisiones, tramos, costos, mejoras y traslados es la hora real
+  (`clock_timestamp()`, `horaReal()`): así lo guardado por una transacción que esperó el candado del activo es posterior a la
+  división, y las de «separar en unidades» (y sus tramos) se deshacen de la última a la primera. Anula los costos cedidos (rastro), apaga los tramos y repone los que sustituyeron,
+  borra el activo nuevo con sus costos, tramos y alta, y devuelve la cantidad y el residual. Audita `anular` con la división y las
+  fichas de los dos activos; la ficha del activo trae `divisiones`.
+- Cambiar la fecha de inicio de la carga se rechaza si algún saldo inicial tiene una división vigente (`reubicar` no mueve sus
+  tramos de división): hay que anularla antes.
+- Decisiones: no se divide un saldo inicial con costo fiscal distinto del contable o de su base (`saldo_inicial_con_diferencias`: la
+  diferencia no tiene dónde caer) ni un activo con costos negativos por grupo; un activo con divisiones no se elimina, no cambia su
+  cantidad a mano ni vuelve a construcción (`activo_con_divisiones`); la baja con fecha anterior a una división se rechaza
+  (`baja_anterior_a_una_division`); el activo nuevo no copia serie, placa, foto ni observaciones. La fecha de la división
+  no puede ser anterior al inicio de uso (o a la adquisición) ni a un traslado, mejora o división del activo.
+- Pendiente: la vida útil que guarda el activo nuevo (`vida_util_contable_meses`) copia la del origen, pero `aplicarEstimacion` de
+  una mejora posterior la recalcula desde su primer tramo (el de la división) y daría los meses que le faltaban; solo es el dato
+  mostrado (la depreciación usa los tramos). Falta AFI-6c para las pantallas de dividir y separar.
+
 **Notas de lo programado en AF-8 (servidor, sin migración):**
 
 - Anular es por **boleta** (`POST …/traslados/:grupoId/anular`): anula todos los renglones, devuelve cada activo a la fila vigente
@@ -1376,7 +1451,9 @@ dos decimales.
   la pantalla imprime (AF-8c). Eventos `activo_trasladado` y `traslado_anulado` (este no estaba en §9).
 - El historial de la ficha (`TrasladoDto`) trae `grupoId`, `numero`, `anioDeNumero` y `motivoDeAnulacion`: con el `grupoId` la pantalla
   reimprime (`GET …/boleta`) o anula la boleta después de crearla.
-- Falta para AFI-4: subir y bajar el escaneo firmado (`boletas_firmadas`, §5.16). Falta para AF-8c: pantalla de traslados y boleta
+- AFI-4 (2026-11-23): `POST …/traslados/:grupoId/firmada` (multipart, `traslados.crear`) sube o reemplaza el escaneo y `GET …/firmada` (`activos.ver`)
+  lo abre; `BoletaDto.firmada` trae sus datos. Reemplazar borra el archivo anterior y audita `adjuntar`; anular la boleta no lo borra.
+  Errores `boleta_inexistente` (grupo ausente o anulado) y `boleta_sin_firmada`. Falta para AF-8c: pantalla de traslados y boleta
   imprimible. `GET /activos-fijos/ubicaciones` sigue con `activos.ver` (el diseño dice `traslados.crear` o `inventarios.crear`).
 
 **Notas de lo programado en AF-7 (servidor, migración `0007_af7_mejoras`):**
@@ -1499,7 +1576,7 @@ Pendiente con `seguridad` (antes de programar cada parte):
 - **Antes del paso AF-P22**: las funciones `empresas.nombres_de_localidades` y `empresas.nombres_de_departamentos`
   (§6.13): `security definer`, `search_path` fijo, filtro por `app.empresa_id`, columnas mínimas, `GRANT` solo a
   `arrancar_app`, y lo que el usuario aceptó exponer.
-- Antes de AFI-4: el escaneo firmado de la boleta (`core.archivos`, `recurso_dueno = 'activos-fijos.traslados'`, PDF con
+- ~~Antes de AFI-4~~ (hecho con la revisión del diseño y las reglas de archivos de los demás módulos): el escaneo firmado de la boleta (`core.archivos`, `recurso_dueno = 'activos-fijos.traslados'`, PDF con
   qpdf, `limitarSubidas`).
 - Antes de AFI-2: el tope de 200 unidades por operación (tamaño del cuerpo y tiempo de la transacción).
 - Lo de siempre: las dos dependencias nuevas del cliente (QR y lectura de QR), el permiso de cámara, las fotos y actas

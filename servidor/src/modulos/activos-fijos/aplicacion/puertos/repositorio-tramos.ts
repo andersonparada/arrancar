@@ -10,6 +10,8 @@ export interface TramosNuevos {
 export interface TramosDeCambio extends TramosNuevos {
   /** La mejora o el costo posterior que los crea; nulo en la revisión y el cambio de matrícula. */
   mejoraId: string | null;
+  /** La división que los crea (AFI-5); nulo en los demás cambios. */
+  divisionId?: string | null;
 }
 
 /** Guarda los tramos de depreciación de los activos (§5.8). La seguridad por empresa (RLS) limita lo que se ve. */
@@ -29,6 +31,8 @@ export interface RepositorioTramos {
    * hubo.
    */
   anularDeMejora(mejoraId: string): Promise<void>;
+  /** Lo mismo que `anularDeMejora`, para los tramos que creó una división anulada (la fila de la división ya está anulada). */
+  anularDeDivision(divisionId: string): Promise<void>;
   /** Si el activo tiene un tramo vigente creado después de los de la mejora (otra mejora o un cambio que parte de ella). */
   hayCambiosPosterioresALaMejora(mejoraId: string): Promise<boolean>;
   /** Borra los tramos del activo (deshacer «poner en uso», o eliminar el activo); el caso de uso deja su auditoría. */

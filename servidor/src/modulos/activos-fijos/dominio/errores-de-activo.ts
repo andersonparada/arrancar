@@ -75,8 +75,8 @@ export class ActivoConMovimientos extends ReglaDeNegocioInfringida {
 export class ActivoNoEnUso extends ReglaDeNegocioInfringida {
   readonly codigo = 'activo_no_en_uso';
 
-  constructor() {
-    super('Solo un activo en uso se marca como ocioso.');
+  constructor(mensaje = 'Solo un activo en uso se marca como ocioso.') {
+    super(mensaje);
   }
 }
 

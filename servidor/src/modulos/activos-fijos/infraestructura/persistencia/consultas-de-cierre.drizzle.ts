@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, isNull, lt, lte, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, exists, gte, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { datosFiscalesDeEmpresa } from '../../../libro-de-compras/infraestructura/persistencia/datos-fiscales.tablas.js';
@@ -12,21 +12,37 @@ import { sumarMeses } from '../../dominio/depreciacion/meses.js';
 import type { TramoGuardado } from '../../dominio/depreciacion/tramo.js';
 import { acumuladasAntesDe } from './acumulada-al.js';
 import { activos } from './activos.tablas.js';
+import { bajas } from './bajas.tablas.js';
 import { clases } from './clases.tablas.js';
 import { cuotas } from './cuotas.tablas.js';
 import { hallazgosDeActivos } from './hallazgos-de-activos.drizzle.js';
 import { mapeadorDeTramo } from './tramo.mapeador.js';
 import { tramos } from './tramos.tablas.js';
 
-/** Los activos del balance en uso y, si la regla lo pide, los que se dieron de baja en el mes. */
-function seDeprecianEn(periodo: string, conBajasDelMes: boolean): SQL {
-  const enUso = eq(activos.estado, 'en_uso');
-  const bajaDelMes = and(
-    eq(activos.estado, 'dado_de_baja'),
-    gte(activos.fechaDeBaja, periodo),
-    lt(activos.fechaDeBaja, sumarMeses(periodo, 1)),
+/**
+ * Lo que la baja vigente del activo congeló como cuota de su propio mes (§5.12, §6.8): hay cuota si el primer mes de la
+ * empresa era `mes_siguiente` al dar de baja. Así el cierre sigue lo congelado y no la regla de hoy.
+ */
+function bajaConCuotaDelMes(): SQL {
+  const conCuota = sql`(${bajas.cuotaDelMesContable} > 0 or ${bajas.cuotaDelMesFiscal} > 0)`;
+  return exists(
+    transaccionEnCurso()
+      .select({ uno: sql`1` })
+      .from(bajas)
+      .where(and(eq(bajas.activoId, activos.id), eq(bajas.estado, 'vigente'), conCuota)),
   );
-  return and(eq(activos.tipoDeRegistro, 'activo'), conBajasDelMes ? or(enUso, bajaDelMes) : enUso)!;
+}
+
+/**
+ * Los activos del balance que se depreciaron en el mes: los que están en uso, los que se dieron de baja después de él
+ * (todavía estaban en uso) y los dados de baja en el propio mes cuya baja congeló la cuota de ese mes.
+ */
+function seDeprecianEn(periodo: string): SQL {
+  const enUso = eq(activos.estado, 'en_uso');
+  const dadoDeBaja = eq(activos.estado, 'dado_de_baja');
+  const despues = and(dadoDeBaja, gte(activos.fechaDeBaja, sumarMeses(periodo, 1)));
+  const enElMes = and(dadoDeBaja, gte(activos.fechaDeBaja, periodo), bajaConCuotaDelMes());
+  return and(eq(activos.tipoDeRegistro, 'activo'), or(enUso, despues, enElMes))!;
 }
 
 /** Los tramos vigentes que ya empezaron, agrupados por activo. */
@@ -67,12 +83,12 @@ const COLUMNAS_DEL_ACTIVO = {
 
 /** Las lecturas del cierre mensual en PostgreSQL; la seguridad por empresa (RLS) limita lo que se ve. */
 export class ConsultasDeCierreDrizzle implements ConsultasDeCierre {
-  async activosParaCerrar(periodo: string, conBajasDelMes: boolean): Promise<ActivoParaCerrar[]> {
+  async activosParaCerrar(periodo: string): Promise<ActivoParaCerrar[]> {
     const filas = await transaccionEnCurso()
       .select(COLUMNAS_DEL_ACTIVO)
       .from(activos)
       .innerJoin(clases, eq(clases.id, activos.claseId))
-      .where(seDeprecianEn(periodo, conBajasDelMes))
+      .where(seDeprecianEn(periodo))
       .orderBy(asc(activos.codigo));
     const [delActivo, depreciados, acumuladas] = [
       await tramosPorActivo(periodo),

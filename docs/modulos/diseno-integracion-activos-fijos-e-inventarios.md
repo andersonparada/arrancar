@@ -494,8 +494,8 @@ Se intercalan en los pasos ya previstos de Activos fijos e Inventarios.
 | **AFI-1** | `en_bodega`, `alta_conjunta_id`, `a_bodega` y el índice de existencias en la migración de activos y traslados | backend | AF-2 |
 | **AFI-2** | Capitalizar en N unidades, cuadrícula de unidades, destino alta conjunta; pruebas del reparto y del sobrante, de códigos repetidos y de la regla de la línea | backend | AF-3 (**programado, en revisión**, 2026-11-19) |
 | AFI-2c | Ventana «Capitalizar» con unidades | frontend | AF-3c (**programado**, 2026-11-19) |
-| **AFI-3** | `PonerEnUsoVarios` y textos de «Disponible para uso» | backend | AF-4 |
-| **AFI-4** | Traslados a bodega y devolución con ocioso; responsiva configurable en la boleta; boleta firmada (si I-8 b) | backend | AF-8 |
+| **AFI-3** | `PonerEnUsoVarios` y textos de «Disponible para uso» | backend | AF-4 (**programado**, 2026-11-23) |
+| **AFI-4** | Traslados a bodega y devolución con ocioso; responsiva configurable en la boleta; boleta firmada (si I-8 b) | backend | AF-8 (**programado**, 2026-11-23) |
 | AFI-4c | Entregar y devolver; casilla «A la bodega»; selección múltiple | frontend | AF-8c |
 | **AFI-5** | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl`, dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §4.2 y de integración (cierre después de dividir, baja después de dividir, anular) | backend | Después de AF-7 y AF-8 |
 | **AFI-6** | Traslado y baja con cantidad parcial (división automática) | backend | Después de AFI-5 y AF-9 |

@@ -11,6 +11,7 @@ import type {
 import { activos } from './activos.tablas.js';
 import { cierres } from './cierres.tablas.js';
 import { clases } from './clases.tablas.js';
+import { divisiones } from './divisiones.tablas.js';
 import { nombresDeUbicaciones } from './nombres-de-ubicaciones.js';
 import { saldosIniciales } from './saldos-iniciales.tablas.js';
 import { UbicacionesEnEmpresas } from './ubicaciones-en-empresas.drizzle.js';
@@ -92,6 +93,12 @@ export class ConsultasSaldosInicialesDrizzle implements ConsultasSaldosIniciales
       ),
       otrosConAdquisicionAnterior: await cuenta(
         and(sql`${activos.origen} is distinct from 'saldo_inicial'`, lt(activos.fechaDeAdquisicion, fechaDeInicio)),
+      ),
+      saldosConDivisiones: await cuenta(
+        and(
+          eq(activos.origen, 'saldo_inicial'),
+          sql`exists (select 1 from ${divisiones} d where d.estado = 'vigente' and d.activo_origen_id = ${activos.id})`,
+        ),
       ),
       hayCierres: cierre !== undefined,
     };

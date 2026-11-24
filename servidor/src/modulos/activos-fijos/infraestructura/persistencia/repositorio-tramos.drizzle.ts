@@ -1,8 +1,10 @@
-import { and, asc, desc, eq, lt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, lt, sql, type SQL } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { RepositorioTramos, TramosDeCambio, TramosNuevos } from '../../aplicacion/puertos/repositorio-tramos.js';
 import type { TramoCalculado, TramoGuardado } from '../../dominio/depreciacion/tramo.js';
 import { cuotas } from './cuotas.tablas.js';
+import { divisiones } from './divisiones.tablas.js';
+import { horaReal } from './hora-real.js';
 import { mejoras } from './mejoras.tablas.js';
 import { mapeadorDeTramo } from './tramo.mapeador.js';
 import { tramos } from './tramos.tablas.js';
@@ -21,7 +23,7 @@ export class RepositorioTramosDrizzle implements RepositorioTramos {
     if (nuevos.length === 0) return;
     await transaccionEnCurso()
       .insert(tramos)
-      .values(nuevos.map((tramo) => mapeadorDeTramo.aFila(empresaId, activoId, tramo)));
+      .values(nuevos.map((tramo) => ({ ...mapeadorDeTramo.aFila(empresaId, activoId, tramo), creadoEn: horaReal() })));
   }
 
   async vigentesDeActivo(activoId: string): Promise<TramoCalculado[]> {
@@ -37,7 +39,7 @@ export class RepositorioTramosDrizzle implements RepositorioTramos {
     return filas.map((fila) => ({ ...mapeadorDeTramo.aTramo(fila), id: fila.id }));
   }
 
-  async reemplazar({ empresaId, activoId, mejoraId, tramos: nuevos }: TramosDeCambio): Promise<void> {
+  async reemplazar({ empresaId, activoId, mejoraId, divisionId, tramos: nuevos }: TramosDeCambio): Promise<void> {
     const transaccion = transaccionEnCurso();
     for (const tramo of nuevos) {
       await transaccion
@@ -51,15 +53,26 @@ export class RepositorioTramosDrizzle implements RepositorioTramos {
             eq(tramos.vigente, true),
           ),
         );
-      await transaccion.insert(tramos).values({ ...mapeadorDeTramo.aFila(empresaId, activoId, tramo), mejoraId });
+      const fila = mapeadorDeTramo.aFila(empresaId, activoId, tramo);
+      await transaccion
+        .insert(tramos)
+        .values({ ...fila, mejoraId, divisionId: divisionId ?? null, creadoEn: horaReal() });
     }
   }
 
   async anularDeMejora(mejoraId: string): Promise<void> {
+    await this.apagarYReponer(eq(tramos.mejoraId, mejoraId));
+  }
+
+  async anularDeDivision(divisionId: string): Promise<void> {
+    await this.apagarYReponer(eq(tramos.divisionId, divisionId));
+  }
+
+  private async apagarYReponer(donde: SQL): Promise<void> {
     const apagados = await transaccionEnCurso()
       .update(tramos)
       .set({ vigente: false })
-      .where(and(eq(tramos.mejoraId, mejoraId), eq(tramos.vigente, true)))
+      .where(and(donde, eq(tramos.vigente, true)))
       .returning({
         activoId: tramos.activoId,
         libro: tramos.libro,
@@ -69,7 +82,7 @@ export class RepositorioTramosDrizzle implements RepositorioTramos {
     for (const apagado of apagados) await this.reponerSustituido(apagado);
   }
 
-  /** El tramo del mismo libro y mes más reciente que ya existía y no es de una mejora anulada vuelve a regir. */
+  /** El tramo del mismo libro y mes más reciente que ya existía y no es de una mejora ni una división anuladas vuelve a regir. */
   private async reponerSustituido(apagado: TramoApagado): Promise<void> {
     const transaccion = transaccionEnCurso();
     const [previo] = await transaccion
@@ -84,6 +97,8 @@ export class RepositorioTramosDrizzle implements RepositorioTramos {
           lt(tramos.creadoEn, apagado.creadoEn),
           sql`(${tramos.mejoraId} is null or not exists (
             select 1 from ${mejoras} where ${mejoras.id} = ${tramos.mejoraId} and ${mejoras.estado} = 'anulada'))`,
+          sql`(${tramos.divisionId} is null or not exists (
+            select 1 from ${divisiones} where ${divisiones.id} = ${tramos.divisionId} and ${divisiones.estado} = 'anulada'))`,
         ),
       )
       .orderBy(desc(tramos.creadoEn))

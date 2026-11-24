@@ -1,5 +1,5 @@
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
-import type { BoletaDto } from '../aplicacion/dto/traslado.dto.js';
+import type { BoletaDto, BoletaFirmadaDto } from '../aplicacion/dto/traslado.dto.js';
 import type { ConsultasTraslados } from '../aplicacion/puertos/consultas-traslados.js';
 import type { RepositorioTraslados, UbicacionRegistrada } from '../aplicacion/puertos/repositorio-traslados.js';
 import type { Activo } from '../dominio/activo.js';
@@ -51,6 +51,10 @@ export class TrasladosEnMemoria implements RepositorioTraslados, ConsultasTrasla
     return this.filas.flatMap((fila) => (fila.traslado?.instantanea().grupoId === grupoId ? [fila.traslado] : []));
   }
 
+  async delGrupoBloqueando(grupoId: string): Promise<Traslado[]> {
+    return this.delGrupo(grupoId);
+  }
+
   async guardar(traslado: Traslado): Promise<void> {
     const fila = this.filas.find((candidata) => candidata.trasladoId === traslado.id.valor);
     if (fila) fila.traslado = traslado;
@@ -68,6 +72,13 @@ export class TrasladosEnMemoria implements RepositorioTraslados, ConsultasTrasla
 
   private esDelActivo(fila: FilaDeHistorial, activoId: string): boolean {
     return (fila.traslado?.instantanea().activoId ?? this.activoDeAlta.get(fila.trasladoId)) === activoId;
+  }
+
+  /** Los escaneos firmados que dejó `BoletasFirmadasEnMemoria`, por boleta. */
+  readonly firmadas = new Map<string, BoletaFirmadaDto>();
+
+  async firmadaDe(grupoId: string): Promise<BoletaFirmadaDto | null> {
+    return this.firmadas.get(grupoId) ?? null;
   }
 
   async boleta(grupoId: string): Promise<BoletaDto> {
@@ -89,6 +100,7 @@ export class TrasladosEnMemoria implements RepositorioTraslados, ConsultasTrasla
       estado: primero.estado,
       anuladoEn: primero.anuladoEn?.toISOString() ?? null,
       motivoDeAnulacion: primero.motivoDeAnulacion,
+      firmada: this.firmadas.get(grupoId) ?? null,
       renglones: renglones.map((renglon) => this.renglon(renglon)),
     };
   }

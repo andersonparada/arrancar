@@ -1,3 +1,4 @@
+import { ActivoDadoDeBaja } from '../../../dominio/errores-de-activo.js';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
@@ -28,6 +29,7 @@ export class AnularMejora {
    * otro cambio de depreciación después de ella. Al confirmar publica `costo_anulado` por cada costo.
    * @throws RecursoNoEncontrado si no existe o no es de la empresa.
    * @throws MejoraNoAnulable si ya está anulada.
+   * @throws ActivoDadoDeBaja si el activo ya se dio de baja: sus cifras están congeladas.
    * @throws MejoraConLibrosUsados si un cierre ya usó su depreciación.
    * @throws MejoraConCambiosPosteriores si otra mejora o revisión parte de ella.
    * @throws MejoraInvalida si falta el motivo.
@@ -71,6 +73,7 @@ export class AnularMejora {
     if (mejora.instantanea().estado === 'anulada') throw new MejoraNoAnulable();
     const [activo] = await repositorio.buscarBloqueando([mejora.instantanea().activoId]);
     if (!activo) throw new RecursoNoEncontrado('El activo');
+    if (activo.instantanea().estado === 'dado_de_baja') throw new ActivoDadoDeBaja();
     if (await cierres.usaronTramosDeLaMejora(mejoraId)) throw new MejoraConLibrosUsados();
     if (await tramos.hayCambiosPosterioresALaMejora(mejoraId)) throw new MejoraConCambiosPosteriores();
     return { mejora, activo };
