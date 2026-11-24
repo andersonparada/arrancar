@@ -82,6 +82,26 @@ declare module './mediador.contratos.js' {
      * igual o posterior a la nueva; el error deshace el cambio. El operador lleva `empresaId` = la empresa.
      */
     'empresas.fecha_de_inicio_por_cambiar': { empresaId: string; fechaDeInicio: string };
+    /**
+     * Se registró un valor de un inmueble (`fuente`: `matricula_fiscal` o `catastro_municipal`). Activos fijos decide si
+     * abre un tramo fiscal desde el primer mes abierto; nunca toca meses cerrados. Dentro de la transacción del alta.
+     */
+    'empresas.valor_de_inmueble_registrado': {
+      inmuebleId: string;
+      valorId: string;
+      fuente: 'matricula_fiscal' | 'catastro_municipal';
+      vigenteDesde: string;
+    };
+    /**
+     * Un valor de un inmueble se va a eliminar. Activos fijos lanza `ValorDeInmuebleUsadoEnCierre` si algún activo
+     * ligado al inmueble lo usó en un mes cerrado; el error deshace la eliminación. Sin escucha, se elimina.
+     */
+    'empresas.valor_de_inmueble_por_eliminar': {
+      inmuebleId: string;
+      valorId: string;
+      fuente: 'matricula_fiscal' | 'catastro_municipal';
+      vigenteDesde: string;
+    };
   }
 }
 

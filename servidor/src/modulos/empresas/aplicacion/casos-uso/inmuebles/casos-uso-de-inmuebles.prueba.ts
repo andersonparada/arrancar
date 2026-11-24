@@ -8,6 +8,7 @@ import {
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 import { InmuebleInvalido } from '../../../dominio/inmueble.js';
 import { InmueblesEnMemoria } from '../../../pruebas/dobles-de-inmuebles.js';
+import { ValoresDeInmuebleEnMemoria } from '../../../pruebas/dobles-de-valores-de-inmueble.js';
 import type { SolicitudDeInmueble } from '../../dto/inmueble.dto.js';
 import { ActualizarInmueble } from './actualizar-inmueble.js';
 import { CrearInmueble } from './crear-inmueble.js';
@@ -57,6 +58,7 @@ function casosDeUso() {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     repositorio: registros,
     consultas: registros,
+    valores: new ValoresDeInmuebleEnMemoria(),
     auditoria,
   };
   return {

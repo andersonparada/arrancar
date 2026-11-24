@@ -82,6 +82,28 @@ describe('inmuebles con alcance por localidad', () => {
     expect((await encargado.get(`${RUTA}/${ajeno.cuerpo.id}`)).estado).toBe(404);
   });
 
+  it('no ve, registra ni elimina valores de un inmueble de una localidad que no ve', async () => {
+    const ajeno = await cuenta.propietario.post(
+      RUTA,
+      datos({ nombre: 'Valores ajenos', numeroDeFinca: '23', localidadId: localidadDelPropietario }),
+    );
+    const url = `${RUTA}/${ajeno.cuerpo.id}/valores`;
+    const valor = {
+      fuente: 'matricula_fiscal',
+      vigenteDesde: '2026-01-01',
+      origen: 'autoavaluo',
+      valorTotal: '1000.00',
+    };
+    const registrado = await cuenta.propietario.post(url, valor);
+
+    const lista = await encargado.get(url);
+    const registro = await encargado.post(url, { ...valor, vigenteDesde: '2027-01-01' });
+    const baja = await encargado.delete(`${url}/${registrado.cuerpo.id}`);
+
+    expect([lista.estado, registro.estado, baja.estado]).toEqual([404, 404, 404]);
+    expect((await cuenta.propietario.get(url)).cuerpo).toHaveLength(1);
+  });
+
   it('no crea, mueve, cambia, inactiva ni elimina en una localidad que no ve', async () => {
     const propio = await encargado.post(RUTA, datos({ nombre: 'Del encargado', numeroDeFinca: '20' }));
     const ajeno = await cuenta.propietario.post(
@@ -218,7 +240,7 @@ describe('Excel de inmuebles', () => {
     expect(guardados).toEqual([]);
   });
 
-  it('exportar y bajar la plantilla piden su permiso, y la hoja no lleva valores del inmueble', async () => {
+  it('exportar y bajar la plantilla piden su permiso, y la hoja lleva el valor vigente de cada fuente', async () => {
     const exportado = await cuenta.propietario.get(`${RUTA}/exportar`);
     const sinPermiso = await encargado.get(`${RUTA}/plantilla`);
     const libro = new ExcelJS.Workbook();
@@ -227,6 +249,7 @@ describe('Excel de inmuebles', () => {
 
     expect(exportado.estado).toBe(200);
     expect(sinPermiso.estado).toBe(403);
-    expect(titulos).not.toMatch(/valor|catastral \(Q\)/i);
+    expect(titulos).toContain('Matrícula fiscal: valor total');
+    expect(titulos).toContain('Catastro municipal: vigente desde');
   });
 });

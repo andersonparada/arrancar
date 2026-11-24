@@ -62,6 +62,10 @@ describe('números', () => {
     );
   });
 
+  it('una cantidad puede fijar sus decimales, como las superficies en manzanas', () => {
+    expect(guatemala.cantidad('1234.5', 'mz', 4)).toBe('1,234.5000 mz');
+  });
+
   it('un valor vacío o que no es número muestra una raya', () => {
     expect(guatemala.monto('')).toBe('—');
     expect(guatemala.cantidad('abc')).toBe('—');

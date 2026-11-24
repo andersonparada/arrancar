@@ -4777,3 +4777,92 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   desarrollo del 5433 la conexión desde Node daba `ECONNRESET` (el puerto abría pero rechazaba el protocolo), así que se
   corrió contra un contenedor temporal en el 5499 con el mismo `infra/postgres/init`, cambiando el puerto de
   `nombres-de-bases.ts` solo en el equipo (sin commit); contenedor y cambio retirados. No hubo cambios de código.
+- **2026-11-23 — Parcelas PA-0b y PA-0bc: valores del inmueble en dos series (Empresas, servidor y cliente).** Migración
+  `empresas/0015_valores_de_inmueble` (§5.2 del diseño): `empresas.valores_de_inmueble` con la fuente (`matricula_fiscal` o
+  `catastro_municipal`), origen, fecha de vigencia, terreno, construcciones y cultivos permanentes, total, categoría del IUSI
+  (solo con la matrícula fiscal, por fecha: PA-21 a), documento y `archivo_id` (la FK existe; PA-AR lo usará). Llave compuesta
+  al inmueble con `on delete cascade`, únicos `(id, empresa_id)` y `(inmueble_id, fuente, vigente_desde)`, checks de las partes
+  y del total en centavos, solo `politicaPorEmpresa()`. Dominio `ValorDeInmueble` (no se edita), casos `RegistrarValorDeInmueble`,
+  `EliminarValorDeInmueble` (audita `eliminar` con recurso `empresas.inmuebles`, corregido tras la revisión) y `ListarValoresDeInmueble`; rutas
+  `GET/POST /empresas/inmuebles/:id/valores` y `DELETE …/:valorId` (ver con `empresas.inmuebles.ver`; registrar y eliminar con
+  `.editar`). Avisos del mediador `empresas.valor_de_inmueble_registrado` y `empresas.valor_de_inmueble_por_eliminar` en
+  `core/contratos/empresas.contratos.ts` (el segundo dentro de la transacción: si Activos fijos lanza
+  `valor_de_inmueble_usado_en_cierre` el valor sigue y no queda rastro; probado con un escucha falso). El Excel de inmuebles
+  trae al final el valor vigente hoy de cada fuente (fecha, origen, terreno, construcciones, cultivos, total, documento y, en la
+  matrícula, la categoría del IUSI); al importar, una serie con algún dato exige fecha, origen y total, y la fila crea el
+  inmueble y sus valores en una sola transacción. Cliente: la ficha del inmueble gana la sección «Valores» (una lista por
+  fuente con «Vigente hoy», ventana para registrar y eliminar con confirmación). **Pendiente:** confirmar con el contador la
+  vigencia del Decreto 18-2026 y la ayuda de la categoría (§5.2); sin QA en el navegador; AF-P23 debe escuchar los dos avisos
+  (el rechazo real llega con AF-5). Corrección tras la revisión (§10.2): eliminar un valor audita con el recurso permanente
+  `empresas.inmuebles` (su `anterior` trae `inmuebleId`); eliminar, inactivar y reactivar un inmueble dejan en `anterior` el
+  DTO con sus valores (las dos series), leídos antes de borrar.
+- **2026-11-23 — Parcelas PA-1: módulo `parcelas` (servidor).** Esqueleto con el generador (`dependeDe: ['terceros']`) y
+  una sola migración `parcelas/0000_pa1_parcelas` (el generador no crea una `0000_esquema` aparte): `tipos_de_parcela`
+  (único normalizado, semilla perezosa al listar, Excel y eliminar), `parcelas` (§5.3: árbol con llave compuesta madre-localidad,
+  nivel, tenencia, superficies como copia de la medición vigente, punto y colindancias; `politicaPorEmpresa` más
+  `politicaPorAlcance(ALCANCE_DE_LOCALIDADES)`, que se importa de `accesos-a-localidades.tablas.js`),
+  `mediciones` (§5.5: cifra y unidad originales, varas de la cuerda, anulación completa, `archivo_id` ya creado para PA-AR) y
+  `parcelas_de_inmuebles` (N:M con la porción; la FK al inmueble es `no action`, así que eliminar un inmueble ligado da
+  `inmueble_en_uso`). La misma migración registra `parcelas.contratos` en `core.recursos_de_auditoria_permanente`. Configuración de §10.4
+  en `configuracion.ts` (la caballería en 645,816 varas²: PA-23 a). Dominio puro `superficie.ts` con `BigInt` (exacto, redondeo al
+  centésimo, mitad hacia arriba), `Parcela` y `Medicion`. Casos de uso: crear (con primera medición e inmuebles), editar (quitar un
+  inmueble audita `quitar`), inactivar y reactivar (hijas activas, madre activa, aviso a los módulos de rubro), eliminar (sin hijas ni
+  mediciones vigentes; las anuladas se van con ella; audita con la ficha), listar con filtros y como árbol, registrar y anular
+  mediciones (anular recalcula la superficie y audita), Excel de parcelas (madre por código, inmuebles por nombre separados con «;»,
+  medición inicial en cifra y unidad, la útil en la misma unidad). Mediador (`core/contratos/parcelas.contratos.ts`): la orden
+  `parcelas.obtener_parcela_en_fecha` (superficie que regía ese día; uso `null` y `cedidaATerceros` falso hasta PA-2) y los avisos
+  `parcela_por_inactivar` y `parcela_por_eliminar` (probados con un escucha que rechaza). Permisos `parcelas.tipos-de-parcela.*`,
+  `parcelas.parcelas.*` y `parcelas.mediciones.crear|anular`. El generador también dejó el catálogo de tipos de parcela del cliente
+  (PA-1c lo completa con árbol, formulario y ficha). **Pendiente:** eventos §9.2 y avisos `superficie_por_cambiar` y `parcela_guardada`
+  (llegan con PA-2 y los módulos de rubro), la suma de hijas contra la madre y de porciones contra el inmueble (avisos de §3.2 y §5.6),
+  el aviso de «Parcelas sin inmueble o sin medición» (PA-5) y la unidad de la útil distinta de la de la total.
+- **2026-11-23 — Parcelas PA-1: correcciones de la revisión.** (1) El Excel de parcelas lleva la columna «Varas por lado de la
+  cuerda»: se exporta la de la medición y, al importar, la celda manda y la configuración de la empresa solo se usa si está vacía
+  (en otra unidad que no sea la cuerda, escribirla es un error por fila). (2) La útil exportada es la cifra original si es igual a
+  la total y, si el redondeo la hiciera pasar de la total, se deja igual a ella: el archivo exportado siempre se puede reimportar.
+  (3) `CrearParcela` rechaza una localidad inactiva (`localidad_inactiva`; también por el Excel). (4) `buscarBloqueando`
+  (`FOR UPDATE`) en editar, inactivar, reactivar, eliminar, registrar y anular mediciones, y al crear una hija se bloquea la madre;
+  anular una medición bloquea la parcela antes de leer la medición. (5) Un inmueble repetido se rechaza en el esquema Zod (400), en
+  `inmueblesDe` (todos los casos de uso) y en `inmueblesPorNombre` (el Excel informa por fila). (6) Las varas por lado de la
+  cuerda van de 1 a 100 y la superficie no pasa de lo que cabe en `numeric(14,2)`: `SuperficieInvalida` en vez de un 500. (7) Una
+  medición con fecha futura se rechaza (`medicion_con_fecha_futura`): no hay proceso que active mediciones al llegar su fecha, y
+  así la ficha y `obtener_parcela_en_fecha` ven las mismas cifras. Pruebas: dominio, casos de uso y
+  `parcelas-limites-y-bloqueos.api.prueba.ts` (el bloqueo se prueba reteniendo la fila desde otra transacción).
+- **2026-11-23 — Parcelas PA-1: útil del Excel con cuatro decimales.** La útil exportada ya no usa los decimales de pantalla (la
+  cuerda muestra 2): se calcula con los cuatro que admite la importación, y si queda en cero o no se puede reimportar se usa la
+  cifra original, así una útil de 0.001 cuerdas ya no impide exportar todas las parcelas. Prueba nueva del caso de uso.
+- **2026-11-23 — Parcelas PA-1c: pantallas de Parcelas (cliente).** El catálogo de tipos de parcela ya lo había dejado el
+  generador (lista y ventana, con Excel); este paso hace Parcelas: **lista en árbol** por localidad (`ListaDeParcelas`: grupos con
+  su cantidad y su superficie total, tarjetas con sangría de hasta 4 niveles para que no desborde en el celular, botón para
+  esconder o mostrar las subparcelas con `aria-expanded`, filtros de localidad, texto con pausa y «mostrar inactivas», estados
+  vacíos distintos para «no hay parcelas» y «ninguna coincide», Excel de administración), **formulario en página**
+  (`CamposDeParcela`: localidad y madre al crear y fijas al editar, tipo, tenencia, primera medición opcional, punto en el mapa,
+  colindancias e inmuebles con su porción) y **ficha con pestañas** (Datos con los avisos del servidor, el enlace al mapa y las
+  subparcelas con «Agregar subparcela», que abre el formulario ya con localidad y madre; Mediciones con «Rige hoy», registrar y
+  anular con motivo; Inmuebles). La **calculadora de superficie** (`CamposDeMedicion` y `CalculadoraDeSuperficie`) convierte lo
+  escrito (cifra, unidad y varas de la cuerda) a m², ha y mz en vivo con `edicion-de-superficie.ts`, copia exacta del dominio del
+  servidor (mismos `BigInt` y mismas pruebas, V-1 incluida) y los factores de la sesión (`parcelas.unidades.*`); avisa antes de
+  guardar si la útil pasa de la total. Las superficies se muestran en la unidad de la empresa
+  (`parcelas.unidades.unidad_para_mostrar`) con los decimales de la unidad: `formatearCantidad` admite un tercer parámetro de
+  decimales. Cambio en el servidor: `GET /parcelas/catalogos` (las localidades activas que el operador ve y los inmuebles activos,
+  por nombre; exige `parcelas.parcelas.ver` y poder crear o editar) para que quien registra parcelas no necesite permisos de
+  Empresas; las localidades del filtro de la lista salen de la propia lista. Pruebas: 59 del módulo en el cliente (conversión,
+  vista previa, árbol, formulario, mediciones, detalles, pestañas) y 3 de API del catálogo. **Pendiente:** QA en el navegador
+  (PA-QA); las pestañas Usos y Contratos y la etiqueta «Cedida» (PA-2c y PA-3c); la unidad del uso vigente en la tarjeta; el
+  aviso de la suma de hijas contra la madre (el servidor aún no lo manda); los tipos de parcela siguen pidiendo
+  `parcelas.tipos-de-parcela.ver` para elegirse en el formulario (resuelto en la corrección siguiente).
+- **2026-11-23 — Parcelas PA-1c: correcciones de la revisión.** (1) La tarjeta de una madre sin medición muestra la suma de
+  sus subparcelas activas y la etiqueta lo dice («Superficie total (suma de subparcelas)»). (2) Las parcelas inactivas ya no
+  suman ni en la madre ni en el total de la localidad (reorganizar es inactivar y crear otra: contarlas duplicaba); la tarjeta
+  de la inactiva sigue mostrando su propia medición. (3) Los errores `inmuebles.<n>.<campo>` del servidor se reparten a cada
+  fila del editor de inmuebles y la porción acepta solo 2 decimales (`paso 0.01`). (4) `GET /parcelas/catalogos` incluye ahora
+  los tipos de parcela (con `activo`, por nombre, y la siembra perezosa de la lista sugerida), así que quien solo tiene
+  `parcelas.parcelas.ver` y `.crear` ya puede registrar parcelas; el tipo inactivo que la parcela tiene se conserva. (5) La
+  ficha de una parcela inactiva no ofrece «Agregar subparcela»; si la madre de la dirección no se puede usar se avisa y se
+  quita, y si falla la carga de la lista no se toca. (6) El selector de madre va en orden de árbol (`ordenarComoArbol`).
+- **2026-11-23 — Parcelas PA-1c: segunda ronda de correcciones.** (1) El error de una fila de inmuebles se busca con el
+  índice que el servidor vio (`indiceEnviado`: solo cuentan las filas con inmueble) y no con el de la pantalla. (2) La ficha
+  trae el árbol activo completo de su localidad y de ahí sale la suma de subparcelas (a toda profundidad) de la parcela y de
+  sus tarjetas de subparcelas, con la misma etiqueta que la lista. (3) Con texto de búsqueda el árbol llega incompleto: ni las
+  madres ni la localidad muestran sumas (aviso en la lista); sin texto, como antes. Decisión: cálculo en el cliente sobre el
+  árbol completo en vez de un campo nuevo del servidor; si el árbol de una localidad crece mucho, mover la suma al servidor.

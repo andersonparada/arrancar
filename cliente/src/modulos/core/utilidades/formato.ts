@@ -24,7 +24,8 @@ export const formatearFechaHora = (valor: Instante) => formatoDeLaEmpresa().fech
 
 export const formatearMonto = (valor: Numero, moneda?: string) => formatoDeLaEmpresa().monto(valor, moneda);
 
-export const formatearCantidad = (valor: Numero, unidad?: string) => formatoDeLaEmpresa().cantidad(valor, unidad);
+export const formatearCantidad = (valor: Numero, unidad?: string, decimales?: number) =>
+  formatoDeLaEmpresa().cantidad(valor, unidad, decimales);
 
 /** La cantidad de un artículo de inventario, con hasta 4 decimales (la unidad es opcional). */
 export const formatearCantidadDeInventario = (valor: Numero, unidad?: string) =>

@@ -57,9 +57,10 @@ export class FormatoRegional {
     }).format(Number(valor));
   }
 
-  cantidad(valor: Numero, unidad?: string): string {
+  /** `decimales` fija cuántos lleva la cifra (una superficie en manzanas lleva cuatro); sin él, los de la empresa. */
+  cantidad(valor: Numero, unidad?: string, decimalesPropios?: number): string {
     if (!hayNumero(valor)) return SIN_VALOR;
-    const decimales = Math.max(DECIMALES_MINIMOS, this.ajustes.decimalesCantidades);
+    const decimales = decimalesPropios ?? Math.max(DECIMALES_MINIMOS, this.ajustes.decimalesCantidades);
     const numero = new Intl.NumberFormat(IDIOMA, {
       minimumFractionDigits: decimales,
       maximumFractionDigits: decimales,
