@@ -4431,3 +4431,17 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     lista de auxiliares, incluido si `retencion_por_pagar` lo es por las retenciones pendientes de saldo inicial (§4.4);
     por ahora no lo es.
   - Entorno: el puerto :5433 sigue sin responder al agente; las pruebas corrieron en un contenedor propio (ya borrado).
+- **2026-11-23 (CT-1c y CT-2c, Contabilidad: pantallas de Inicio, Nomenclatura y Enlaces contables)**:
+  - Tres pantallas de Administración en `cliente/src/modulos/contabilidad/`: **Inicio de la contabilidad** (caso con su
+    explicación, fecha, máscara con ejemplo del código, firmantes; la máscara queda fija si ya hay cuentas; cambiar fecha o caso
+    pide confirmación), **Nomenclatura** (árbol plegable con búsqueda por código o nombre sin tildes, ver u ocultar inactivas,
+    abrir y plegar todo, «agregar cuenta inferior» con el código siguiente propuesto y naturaleza y tipo heredados, ventana
+    `CamposDeCuenta` que muestra solo lo que aplica a la cuenta, eliminar con confirmación, Excel de importar y exportar) y
+    **Enlaces contables** (roles agrupados por módulo, resumen de lo que falta con interruptor «solo lo que falta», un selector
+    de cuenta por fila que guarda al instante, confirmación al cambiar o quitar, enlaces huérfanos señalados, Excel).
+  - Sin vista previa del caso b (de CT-6). El campo «plantilla» del inicio no se edita aún: se conserva lo guardado hasta CT-1p.
+  - Quitar la marca de «cuenta de control» a una cuenta que es la de un rol de auxiliar pide confirmación con los roles afectados
+    (el aviso al desmarcar que dejó pendiente CT-2).
+  - Lógica pura con pruebas (37 en el módulo): máscara y código propuesto, árbol y filtro, filas y faltantes de enlaces, inicio.
+    Sin cambios en el servidor.
+  - Pendiente de cliente: la lista de cuentas se trae completa (sin paginar); está bien hasta unos miles de cuentas.
