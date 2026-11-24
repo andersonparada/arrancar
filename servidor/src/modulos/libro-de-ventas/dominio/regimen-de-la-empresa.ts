@@ -54,8 +54,8 @@ const FAMILIAS_CON_IVA: readonly TipoDeDocumento[] = ['factura', 'factura_cambia
  * El IVA sale de la familia del documento, no del régimen del mes: la SAT ya certificó el DTE y un régimen mal cargado
  * solo da un aviso (§3.4). Llevan IVA la factura, la cambiaria y la especial; las facturas de pequeño contribuyente,
  * agropecuario y primario, el recibo y la nota de abono no. La nota de crédito o de débito hereda el tratamiento de la
- * factura que corrige (`tipoDeLaFactura`); si la factura es del sistema anterior (no se conoce su familia) se usa el
- * régimen del mes: solo el general carga IVA.
+ * factura que corrige (`tipoDeLaFactura`); si la factura es del sistema anterior (no se conoce su familia) lo decide
+ * `tratamientoDeLaNotaSobreFacturaAnterior`.
  */
 export function cobraIva(datos: {
   regimen: RegimenDeIva;
@@ -68,6 +68,35 @@ export function cobraIva(datos: {
     return tipoDeLaFactura ? FAMILIAS_CON_IVA.includes(tipoDeLaFactura) : regimen === 'general';
   }
   return FAMILIAS_CON_IVA.includes(tipo);
+}
+
+export const AVISO_DE_IVA_DE_LA_FACTURA_ANTERIOR_SIN_HISTORIAL =
+  'No hay historial fiscal del mes de la factura del sistema anterior: el IVA de la nota se calculó con el régimen del mes de la nota. Revise el IVA.';
+
+export const AVISO_DE_IVA_QUE_NO_CONCUERDA_CON_LA_FACTURA_ANTERIOR =
+  'El IVA del DTE no concuerda con el régimen de la empresa en el mes de la factura del sistema anterior; se respetó el del DTE. Revise sus datos fiscales.';
+
+/**
+ * El IVA de una nota sobre una factura del sistema anterior, de la que solo se conoce la fecha. El IVA que dice el DTE
+ * manda (la SAT ya lo certificó); si el DTE no lo dice, se usa el régimen de la empresa en el mes de la factura (solo el
+ * general carga IVA), y sin historial de ese mes, el del mes de la nota. Lo dudoso da un aviso, nunca un bloqueo (§3.4).
+ */
+export function tratamientoDeLaNotaSobreFacturaAnterior(datos: {
+  ivaDelDte: number | null;
+  regimenDeLaFactura: RegimenDeIva | null;
+  regimenDelMesDeLaNota: RegimenDeIva;
+}): { cobraIva: boolean; avisos: string[] } {
+  const { ivaDelDte, regimenDeLaFactura, regimenDelMesDeLaNota } = datos;
+  if (ivaDelDte !== null) {
+    const cobraIva = ivaDelDte > 0;
+    const concuerda = regimenDeLaFactura === null || (regimenDeLaFactura === 'general') === cobraIva;
+    return { cobraIva, avisos: concuerda ? [] : [AVISO_DE_IVA_QUE_NO_CONCUERDA_CON_LA_FACTURA_ANTERIOR] };
+  }
+  if (regimenDeLaFactura !== null) return { cobraIva: regimenDeLaFactura === 'general', avisos: [] };
+  return {
+    cobraIva: regimenDelMesDeLaNota === 'general',
+    avisos: [AVISO_DE_IVA_DE_LA_FACTURA_ANTERIOR_SIN_HISTORIAL],
+  };
 }
 
 /**

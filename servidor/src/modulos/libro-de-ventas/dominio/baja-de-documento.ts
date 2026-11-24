@@ -10,6 +10,7 @@ import {
   NotaDeDebitoSostieneNotasDeCredito,
 } from './errores-de-baja.js';
 import type { FacturaConNotas } from './reglas-de-notas.js';
+import { notasDeCreditoCaben } from './tope-de-notas.js';
 
 const MAXIMO_DEL_MOTIVO = 300;
 
@@ -96,16 +97,17 @@ export function fechaDeAnulacionValida(fecha: string | null, contexto: { emision
 
 /**
  * Anular una nota de débito: las notas de crédito vigentes deben seguir cabiendo sin ella, es decir en la factura más
- * las demás notas de débito, en total y en IVA.
+ * las demás notas de débito, en total y en IVA (la misma regla de tope que al registrar una nota).
  * @throws NotaDeDebitoSostieneNotasDeCredito
  */
 export function exigirQueLasNotasDeCreditoSigaCabiendo(
   factura: FacturaConNotas,
   notaDeDebitoQueSeQuita: { total: number; iva: number },
 ): void {
-  const totalQueQueda = factura.total + factura.totalDeNotasDeDebito - notaDeDebitoQueSeQuita.total;
-  const ivaQueQueda = factura.iva + factura.ivaDeNotasDeDebito - notaDeDebitoQueSeQuita.iva;
-  if (factura.totalDeNotasDeCredito > totalQueQueda || factura.ivaDeNotasDeCredito > ivaQueQueda) {
-    throw new NotaDeDebitoSostieneNotasDeCredito();
-  }
+  const tope = {
+    total: factura.total + factura.totalDeNotasDeDebito - notaDeDebitoQueSeQuita.total,
+    iva: factura.iva + factura.ivaDeNotasDeDebito - notaDeDebitoQueSeQuita.iva,
+  };
+  const acumulado = { total: factura.totalDeNotasDeCredito, iva: factura.ivaDeNotasDeCredito };
+  if (!notasDeCreditoCaben(tope, acumulado)) throw new NotaDeDebitoSostieneNotasDeCredito();
 }

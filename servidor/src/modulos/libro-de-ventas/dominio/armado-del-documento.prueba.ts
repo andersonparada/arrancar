@@ -48,6 +48,7 @@ const contexto = (cambios: Partial<ContextoDelArmado> = {}): ContextoDelArmado =
   empresaId: '55555555-5555-4555-8555-555555555555',
   fechaDeInicio: null,
   regimen: { regimenIva: 'general', regimenIsr: 'utilidades' },
+  regimenDeLaFacturaAnterior: null,
   tasaDeIva: 1200,
   fechaDeDerogacion: '2025-07-09',
   cliente: CLIENTE,

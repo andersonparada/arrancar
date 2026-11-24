@@ -91,4 +91,21 @@ describe('anular una nota de débito', () => {
 
     expect(intento).toThrow(NotaDeDebitoSostieneNotasDeCredito);
   });
+
+  it('usa la misma tolerancia de redondeo que al registrar las notas', () => {
+    const conRedondeo = {
+      total: 10000,
+      iva: 1071,
+      totalDeNotasDeCredito: 10000,
+      ivaDeNotasDeCredito: 1072,
+      totalDeNotasDeDebito: 1000,
+      ivaDeNotasDeDebito: 107,
+    };
+
+    expect(() => exigirQueLasNotasDeCreditoSigaCabiendo(conRedondeo, { total: 1000, iva: 107 })).not.toThrow();
+    const pasada = { ...conRedondeo, ivaDeNotasDeCredito: 1077 };
+    expect(() => exigirQueLasNotasDeCreditoSigaCabiendo(pasada, { total: 1000, iva: 107 })).toThrow(
+      NotaDeDebitoSostieneNotasDeCredito,
+    );
+  });
 });

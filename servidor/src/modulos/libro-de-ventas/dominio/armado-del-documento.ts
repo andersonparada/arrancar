@@ -9,6 +9,7 @@ import { resolverReceptor, type ClienteDelDocumento, type Receptor, type Recepto
 import {
   avisosDeFamiliaContraRegimen,
   cobraIva,
+  tratamientoDeLaNotaSobreFacturaAnterior,
   exigirRegimenVigente,
   type RegimenDelMes,
 } from './regimen-de-la-empresa.js';
@@ -55,6 +56,8 @@ export interface ContextoDelArmado {
   empresaId: string;
   fechaDeInicio: string | null;
   regimen: RegimenDelMes;
+  /** El régimen en el mes de la factura del sistema anterior que corrige la nota; `null` si no hay historial de ese mes. */
+  regimenDeLaFacturaAnterior: RegimenDelMes | null;
   /** Tasa del IVA en centésimas (12 % → 1200). */
   tasaDeIva: number;
   fechaDeDerogacion: string;
@@ -100,6 +103,21 @@ function reglasDeLaNota(
   if (!facturaAnterior) return [];
   exigirFacturaAnteriorValida(facturaAnterior, { fechaDeInicio: contexto.fechaDeInicio, fechaDeLaNota: fechaEmision });
   return avisosDeLaNota({ tipo, fechaEmision }, facturaAnterior.fecha);
+}
+
+/** Si el documento carga IVA y los avisos de ese tratamiento (la nota de una factura anterior no tiene familia que heredar). */
+function tratamientoDelIva(solicitud: SolicitudArmada, contexto: ContextoDelArmado) {
+  const { tipo, facturaAnterior } = solicitud;
+  const regimen = contexto.regimen.regimenIva;
+  if (esNota(tipo) && facturaAnterior && !contexto.facturaAfectada) {
+    return tratamientoDeLaNotaSobreFacturaAnterior({
+      ivaDelDte: solicitud.ivaDelDte,
+      regimenDeLaFactura: contexto.regimenDeLaFacturaAnterior?.regimenIva ?? null,
+      regimenDelMesDeLaNota: regimen,
+    });
+  }
+  const tipoDeLaFactura = contexto.facturaAfectada?.tipo ?? null;
+  return { cobraIva: cobraIva({ regimen, tipo, tipoDeLaFactura }), avisos: [] as string[] };
 }
 
 /** El destino que se pide y lo que lo decide, junto. */
@@ -169,8 +187,9 @@ export function armarDocumentoDeVenta(solicitud: SolicitudArmada, contexto: Cont
   exigirRegimenVigente({ regimenIva, tipo, fechaDeEmision: fechaEmision }, contexto.fechaDeDerogacion);
   exigirPosteriorALaFechaDeInicio(fechaEmision, contexto.fechaDeInicio);
   const receptor = resolverReceptor(solicitud, contexto.cliente);
+  const iva = tratamientoDelIva(solicitud, contexto);
   const opciones = {
-    cobraIva: cobraIva({ regimen: regimenIva, tipo, tipoDeLaFactura: contexto.facturaAfectada?.tipo ?? null }),
+    cobraIva: iva.cobraIva,
     tasaDeIva: contexto.tasaDeIva,
     ivaDelDte: solicitud.ivaDelDte,
   };
@@ -182,6 +201,7 @@ export function armarDocumentoDeVenta(solicitud: SolicitudArmada, contexto: Cont
   const avisos = [
     ...avisosDeLaFechaDeInicio(fechaEmision, contexto.fechaDeInicio),
     ...avisosDeFamiliaContraRegimen(regimenIva, tipo),
+    ...iva.avisos,
     ...avisosDeNota,
   ];
   return { documento: { ...encabezado, destino, totales, lineas }, avisos };

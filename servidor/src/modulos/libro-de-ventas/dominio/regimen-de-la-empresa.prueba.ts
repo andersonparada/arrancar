@@ -5,6 +5,7 @@ import {
   avisosDeFamiliaContraRegimen,
   cobraIva,
   exigirRegimenVigente,
+  tratamientoDeLaNotaSobreFacturaAnterior,
   type RegimenDeIva,
 } from './regimen-de-la-empresa.js';
 import type { TipoDeDocumento } from './tipos-de-documento.js';
@@ -40,6 +41,37 @@ describe('qué documento carga débito', () => {
   it('la nota de una factura del sistema anterior usa el régimen del mes', () => {
     expect(cobraIva({ regimen: 'general', tipo: 'nota_de_credito', tipoDeLaFactura: null })).toBe(true);
     expect(cobraIva({ regimen: 'pequeno_contribuyente', tipo: 'nota_de_credito', tipoDeLaFactura: null })).toBe(false);
+  });
+});
+
+describe('nota sobre una factura del sistema anterior', () => {
+  const base = { ivaDelDte: null, regimenDeLaFactura: null, regimenDelMesDeLaNota: 'general' } as const;
+
+  it('el IVA del DTE manda; avisa si no concuerda con el régimen de la factura', () => {
+    expect(tratamientoDeLaNotaSobreFacturaAnterior({ ...base, ivaDelDte: 0 })).toMatchObject({ cobraIva: false });
+    expect(
+      tratamientoDeLaNotaSobreFacturaAnterior({ ...base, ivaDelDte: 1200, regimenDeLaFactura: 'general' }),
+    ).toEqual({
+      cobraIva: true,
+      avisos: [],
+    });
+    const choque = tratamientoDeLaNotaSobreFacturaAnterior({
+      ...base,
+      ivaDelDte: 1200,
+      regimenDeLaFactura: 'no_afiliado',
+    });
+    expect(choque.cobraIva).toBe(true);
+    expect(choque.avisos).toHaveLength(1);
+  });
+
+  it('sin IVA del DTE decide el régimen del mes de la factura, y sin historial el de la nota con aviso', () => {
+    expect(tratamientoDeLaNotaSobreFacturaAnterior({ ...base, regimenDeLaFactura: 'pequeno_contribuyente' })).toEqual({
+      cobraIva: false,
+      avisos: [],
+    });
+    const sinHistorial = tratamientoDeLaNotaSobreFacturaAnterior(base);
+    expect(sinHistorial.cobraIva).toBe(true);
+    expect(sinHistorial.avisos).toHaveLength(1);
   });
 });
 

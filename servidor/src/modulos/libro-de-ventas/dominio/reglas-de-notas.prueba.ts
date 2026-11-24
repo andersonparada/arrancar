@@ -140,6 +140,14 @@ describe('tope de las notas de crédito', () => {
     expect(sinAgotar).toThrow(NotaExcedeLaFactura);
   });
 
+  it('varias notas parciales toleran el redondeo del IVA de cada una sin agotar el total', () => {
+    const factura = conNotas({ total: 10000, iva: 1071, totalDeNotasDeCredito: 5000, ivaDeNotasDeCredito: 536 });
+
+    expect(() =>
+      exigirQueLaNotaNoSupereLaFactura(factura, { tipo: 'nota_de_credito', total: 4999, iva: 536 }),
+    ).not.toThrow();
+  });
+
   it('las notas de débito vigentes suben el tope', () => {
     const factura = conNotas({ totalDeNotasDeDebito: 1120, ivaDeNotasDeDebito: 120 });
 

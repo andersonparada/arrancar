@@ -50,6 +50,7 @@ export class CargadorDeContexto {
       empresaId: operador.empresaId,
       fechaDeInicio: await empresa.fechaDeInicio(operador),
       regimen,
+      regimenDeLaFacturaAnterior: await this.regimenDeLaFacturaAnterior(operador, solicitud),
       tasaDeIva,
       fechaDeDerogacion,
       consumidorFinal,
@@ -63,6 +64,16 @@ export class CargadorDeContexto {
     const regimen = await this.dependencias.historial.regimenEn(operador.empresaId, periodo, true);
     if (!regimen) throw new EmpresaSinDatosFiscales();
     return regimen;
+  }
+
+  /** El régimen en el mes de la factura del sistema anterior, si la nota cita una y hay historial de ese mes. */
+  private async regimenDeLaFacturaAnterior(
+    operador: Operador,
+    solicitud: SolicitudDeDocumentoDeVenta,
+  ): Promise<RegimenDelMes | null> {
+    if (!solicitud.facturaAnterior) return null;
+    const periodo = primerDiaDelMes(solicitud.facturaAnterior.fecha);
+    return this.dependencias.historial.regimenEn(operador.empresaId, periodo, false);
   }
 
   private async exigirLocalidad(localidadId: string | null): Promise<void> {

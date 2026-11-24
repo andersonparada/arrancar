@@ -4412,3 +4412,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Q0.05 de IVA de más por el redondeo de cada documento; si no agota el total, el tope del IVA es exacto. (4) Un cliente
   con NIT `CF` se factura como consumidor final por omisión (tipo `cf`), también con solo `tipoDeIdentificacion: 'cf'`
   o `nitReceptor: 'CF'`. Con pruebas de dominio y de API.
+- **2026-11-23 — LV-2: segunda ronda de correcciones.** (1) La nota sobre una factura del **sistema anterior** ya no
+  toma el IVA del régimen del mes de la nota: manda el IVA del DTE (`ivaDelDte`; con aviso si no concuerda con el
+  régimen de la empresa en el mes de la factura); sin él, decide el régimen del historial en `facturaAnterior.fecha`
+  (solo el general carga IVA, `ContextoDelArmado.regimenDeLaFacturaAnterior`); sin historial de ese mes se usa el de la
+  nota con aviso (`tratamientoDeLaNotaSobreFacturaAnterior`). **Pendiente de validar con `contador-guatemala`.**
+  (2) y (3) El tope de las notas de crédito es una sola regla (`dominio/tope-de-notas.ts`, `notasDeCreditoCaben`) que
+  comparten registrar una nota y anular o eliminar una nota de débito: el total no pasa del tope y el IVA no pasa del
+  IVA proporcional al total acumulado más Q0.05 (así varias notas parciales toleran el redondeo de cada una sin
+  agotar el total).
