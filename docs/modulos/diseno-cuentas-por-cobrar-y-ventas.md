@@ -12,6 +12,11 @@ texto, marcadas **[validación 2026-11-19]**; el resumen, lo pendiente y las pre
 usuario (2026-11-19)», «Validación del contador (2026-11-19)» y «Preguntas nuevas (2026-11-19)»). **La tabla de §16 está
 lista para programar**: empieza por VC-0a.
 
+**Actualización (2026-11-23): la parte de Cuentas por cobrar de este diseño pasa a ser parte del módulo único «Ventas y cobros»** (clave
+`cuentas-por-cobrar`, sin cambio), junto con Ventas y caja. Lo que aquí se diga de la cartera sigue vigente **salvo lo que corrige `diseno-ventas-y-caja.md` §24**: dependencias,
+interruptor de cartera, numeración de migraciones, permisos de reportes y pasos CXC-*. **Libro de ventas sigue siendo un módulo aparte y este diseño sigue siendo su
+referencia** (LV-*, VC-0*). El resumen de lo que cambia está en la sección final, «Remisión a Ventas y cobros».
+
 Sirve a empresas de **cualquier rubro y régimen**: nada aquí supone ganado, fincas, tabaco, régimen de IVA o ISR, ni que
 la empresa o sus clientes sean agentes de retención. Lo que cambia según el régimen de la empresa (columnas del libro,
 retenciones que puede sufrir, formulario) se lee del historial fiscal que ya existe
@@ -37,7 +42,7 @@ retenciones que puede sufrir, formulario) se lee del historial fiscal que ya exi
     emitidos (FEL o papel), débito fiscal, bandeja de **DTE emitidos** importados de la SAT, **retenciones recibidas** y
     sus **constancias**, el libro del período con folios, el cuadre «SAT contra libro» y los datos para el SAT-2237, el
     SAT-2046 y el ISR mensual del opcional simplificado.
-  - **`cuentas-por-cobrar`** (esquema `cuentas_por_cobrar`), `dependeDe: ['libro-de-ventas', 'bancos']`: lo que cada
+  - **`cuentas-por-cobrar`** (esquema `cuentas_por_cobrar`; hoy «Ventas y cobros», `dependeDe: ['terceros']`, `diseno-ventas-y-caja.md` §24.1; decía `['libro-de-ventas', 'bancos']`): lo que cada
     cliente debe; vencimientos y contraseña del cliente; **cobros** con Bancos (depósito o transferencia registrada desde
     aquí, o un depósito que ya está en Bancos) con su **recibo de cobro** numerado; la retención recibida como medio de
     cobro; saldo a favor (anticipos) aplicable o devolvible; cheque rechazado; ajustes; **castigo** de incobrables; saldos
@@ -628,6 +633,8 @@ avisos).
 
 ### 6.12 Multimoneda y migraciones
 
+_La lista de migraciones de abajo queda reemplazada por la numeración única de `diseno-ventas-y-caja.md` §24.4; lo de multimoneda sigue vigente._
+
 - Columnas de moneda en `documentos`, `cobros`, `aplicaciones_*`, `retenciones_aplicadas`, `devoluciones` y `ajustes`
   **desde el primer día**, como CxP en `diseno-multimoneda.md` §6.5 (con `default 'GTQ'` y el check «GTQ ⇒ tipo 1 y
   equivalente igual»). El dominio solo acepta GTQ hasta que Multimoneda esté en `main` (VC-P19). Nunca se suman monedas.
@@ -1107,6 +1114,8 @@ Todos «a una fecha de corte» usan la fecha de cada hecho (emisión, cobro, anu
 
 ## 16. Pasos (un commit cada uno; servidor y cliente por separado, con pruebas)
 
+_**Los pasos CXC-\* de esta tabla quedan reemplazados por la tabla unificada de `diseno-ventas-y-caja.md` §24.5**, que conserva sus claves. Siguen vigentes aquí los pasos `VC-0*`, `LV-*`, VC-10 y VC-11._
+
 **Lista para programar (2026-11-19).** Todas las dependencias de la columna «Depende de» son pasos de esta tabla o cosas
 que ya están en `main` (CCL-B1, EM-2, el lector de `core/intercambio`). La última columna dice qué **dato del usuario**
 falta; un paso sin nada ahí se puede programar en cuanto entren sus dependencias. **El primer paso es VC-0a**: no depende
@@ -1229,7 +1238,7 @@ archivos de la SAT (mismos controles que recibidos), y la futura guarda de crede
 
 | # | Tema | Qué pasa | Qué se hace |
 |---|---|---|---|
-| R-1 | Cartera apagada | El libro registra sin destino; al encender la cartera, los documentos anteriores no están en ella | Cargar como saldo inicial (si la carga está abierta) o una acción «Enviar a Cuentas por cobrar» para los vigentes sin destino (paso posterior si hace falta) |
+| R-1 | Cartera apagada (hoy, módulo o interruptor de la empresa: `diseno-ventas-y-caja.md` §24.3) | El libro registra sin destino; al encender la cartera, los documentos anteriores no están en ella | Cargar como saldo inicial (si la carga está abierta) o una acción «Enviar a Cuentas por cobrar» para los vigentes sin destino (paso posterior si hace falta) |
 | R-2 | Anular en Bancos un depósito de un cobro | Con la cartera activa la escucha rechaza; inactiva, la revisión de origen (VC-0b) rechaza | Igual que CxP |
 | R-3 | Libro de compras inactivo | Libro de ventas no se activa (dependencia) | Mensaje claro al activar |
 | R-4 | Dos empresas con el mismo NIT en la cuenta | La misma autorización en dos bandejas | Bloqueo «registrado en otra empresa» y el establecimiento (§7.4) |
@@ -1304,3 +1313,25 @@ no se detiene.
 | VC-P27 | ¿Alguna empresa cobra con **tarjeta (POS)**? (VC-P10 lo dejó para «si alguien la usa») | Sí (cuál) / No. Si sí: mande una liquidación real de la adquirente y una constancia de su retención (sin datos sensibles), y confirme que la adquirente se registre como **cliente** en Terceros (es quien retiene y quien liquida) | Si nadie la usa, CXC-5t no se programa; el modelo ya queda abierto desde la `0003`. La liquidación cierra también V-3 |
 | VC-P28 | ¿Alguna empresa recibe **facturas especiales** de sus compradores? ¿Está inscrita en el IVA o es una persona individual sin inscripción? | Sí (cuál y régimen) / No | Es informativa: el diseño ya cubre los dos casos (aviso si está inscrita). Sirve para probar con un caso real |
 | VC-P29 | Pendiente desde L5: una **captura** del SAT-2237 y del SAT-1311 vigentes | — | Con ellas se fijan la casilla del remanente de retenciones, si la nota de abono cuenta en las operaciones y si el tramo de Q30,000 del ISR mensual es del total del mes. No bloquea: VC-0c2 y LV-5 guardan las cifras y se ajusta la casilla después |
+
+## Remisión a Ventas y cobros (2026-11-23)
+
+Decisión del usuario: Ventas/Caja y Cuentas por cobrar son **un solo módulo**, «Ventas y cobros». El detalle está en `diseno-ventas-y-caja.md` §24.
+
+| Tema de este diseño | Qué cambia | Dónde |
+|---|---|---|
+| Clave y esquema (§0) | **Se conservan** `cuentas-por-cobrar` y `cuentas_por_cobrar`, para no reescribir el `check` de `0002_lv2` ni los contratos. Cambia el nombre visible | §24.1 |
+| `dependeDe` (§0, §1, §6.12) | `['terceros']`, con `usaTablasDe: ['inventarios', 'libro-de-ventas', 'libro-de-compras', 'bancos']` | §24.1 |
+| §6.2 `documentos` | Suma lo de §12 de Ventas; la referencia a la venta es `venta_id` **con llave** | §24.4 |
+| §6.3 `cobros` | Suma las formas `caja` y **`directo`**; la referencia de caja son dos columnas **con llave** | §24.3, §24.4 |
+| §8.1 `RecibirDocumento` | Rechaza con `cartera_apagada` si la empresa apagó la cartera. Orden nueva `admite_documentos_nuevos` | §24.3, §24.6 |
+| §8.3 y VC-P10 | «Cobro en efectivo sin depósito» deja de estar fuera: forma `caja` con turno, o `directo` sin caja (VU-P2) | §24.3 |
+| §8.8 Avisos y §8.9 | Un solo manejador por mensaje, junto con los de Ventas y caja | §24.4 |
+| §11.1 Permisos | `reportes.*` pasa a `reportes-de-cartera.*`; nuevo `cobros.directo` | §24.1, §24.4 |
+| §11.3 Configuración | Suma `cuentas-por-cobrar.funciones.*` | §24.3 |
+| §13.2 Cliente | Carpeta `cliente/src/modulos/cuentas-por-cobrar/`, compartida con las pantallas de Ventas | §24.1 |
+| §16 Pasos CXC-* | Tabla unificada. **CXC-A desaparece** (entra en VYC-E2 y CXC-3b) | §24.5 |
+| §19, R-1 | Vale también para el interruptor de la empresa. Anular o eliminar un documento viejo sigue funcionando con la cartera apagada | §24.3 |
+
+**No cambia:** el libro fiscal aparte de la cartera, un destino por documento, saldos derivados, retenciones como medio de cobro, recibo de cobro, castigos, saldos iniciales
+ni ninguna respuesta VC-P1 a VC-P24, salvo la parte de VC-P10 que este mismo módulo ya resuelve.

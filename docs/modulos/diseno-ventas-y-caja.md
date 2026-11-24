@@ -9,6 +9,9 @@ programa hasta que el usuario responda §21.** En este documento, **CV-n** es la
 nn de seguridad; §22 dice dónde quedó cada uno. Los diseños aprobados no se reescriben: lo que este diseño les pide cambiar está en las **adendas de §18**, y ninguna contradice lo ya programado ni los
 pasos LV-1, LV-2 y VC-0x en curso.
 
+**Actualización (2026-11-23): Ventas/Caja y Cuentas por cobrar son un solo módulo, «Ventas y cobros» (clave `cuentas-por-cobrar`), e Inventarios es opcional.
+**§24 manda sobre el resto de este documento**: clave y esquema, Inventarios apagado, interruptores de caja, crédito y cartera, y la tabla de pasos unificada.
+
 Sirve a empresas de **cualquier rubro y régimen**, y a negocios **sin NIT**: nada aquí supone ganado, fincas, comida, régimen
 de IVA o ISR, ni que la empresa sea agente de retención.
 
@@ -27,26 +30,28 @@ de IVA o ISR, ni que la empresa sea agente de retención.
 
 ## 0. La propuesta en una página
 
-- **Dos módulos nuevos:**
-  - **`ventas-y-caja`** (esquema `ventas_y_caja`), `dependeDe: ['inventarios', 'terceros']`: formas de venta, catálogo de lo
-    que se vende, venta de mostrador, cajas, turnos, arqueos, comprobante interno y paso de control a formal.
+- **Dos módulos** (actualizado por §24):
+  - **«Ventas y cobros»** (clave `cuentas-por-cobrar`, esquema `cuentas_por_cobrar`), `dependeDe: ['terceros']`, con Inventarios
+    **opcional**: formas de venta, catálogo de lo que se vende, mostrador, cajas, turnos, arqueos, comprobante interno, paso de
+    control a formal, **crédito, cartera y recibos**. Caja, crédito y cartera se encienden por empresa (§24.3).
   - **`produccion`** (esquema `produccion`), `dependeDe: ['inventarios']`: recetas con versiones, órdenes de producción, real
     contra teórico. Es activable: quien solo revende no lo ve.
 - **La forma de venta es el centro** (§3): un catálogo por empresa. Con configuración FEL, la venta es **formal**; sin ella,
   es **de control**. Conviven en la misma caja, turno, cartera, inventario y reportes. Cada venta guarda su forma y una **foto
   de lo fiscal**: cambiar la forma no altera el pasado.
-- **Una sola cartera por cliente** (§6): se **extiende `cuentas-por-cobrar`** (diseñado y aún sin programar) con un cargo de
-  origen «venta de control» y un cobro en caja, sin exigirle Libro de ventas ni Bancos. Los abonos a ventas de control dan un
+- **Una sola cartera por cliente** (§6), **dentro del mismo módulo** (§24): un cargo de origen «venta de control» y un cobro en
+  caja, sin exigir Libro de ventas ni Bancos. Los abonos a ventas de control dan un
   **recibo de pago**; los de documentos fiscales, el **recibo de cobro** ya aprobado.
 - **Cada módulo puede faltar** (§2). La pieza que lo permite es un campo nuevo en la definición del módulo, **`usaTablasDe`**:
   separa «necesito sus tablas para mis llaves» (siempre existen en toda instalación, PLAN §3.2) de «debe estar activo»
   (`dependeDe`). Con él, `inventarios` deja de exigir Libro de compras **sin mover ninguna tabla ni llave**.
 
-| Lo que quiere el negocio | Módulos activos |
+| Lo que quiere el negocio | Módulos activos (funciones por empresa en §24.3) |
 |---|---|
-| Vender de contado, solo control, sin NIT | `ventas-y-caja`, `inventarios`, `terceros` |
-| Además, fiar y cobrar abonos | + `cuentas-por-cobrar` (sin Bancos ni libros) |
-| Además, recetas y producción | + `produccion` |
+| Servicios: facturar y cobrar, sin existencias ni caja | `cuentas-por-cobrar`, `terceros` (+ `libro-de-ventas` si factura con FEL) |
+| Vender de contado, solo control, sin NIT | `cuentas-por-cobrar`, `terceros`, con `inventarios` si lleva existencias |
+| Además, fiar y cobrar abonos | Encender crédito y cartera (sin Bancos ni libros) |
+| Además, recetas y producción | + `inventarios`, `produccion` |
 | Ventas formales | + `libro-de-ventas` (trae `libro-de-compras`) y, para certificar desde Arrancar, el futuro `facturacion-fel` |
 | Depositar la caja al banco | + `bancos` |
 | Partidas | + `contabilidad` |
@@ -145,16 +150,14 @@ fondo fijo). Se reutiliza la **forma del arqueo** (conteo por denominación en `
 | Módulo | `dependeDe` (debe estar activo) | `usaTablasDe` (llaves y lectura; puede estar apagado) |
 |---|---|---|
 | `inventarios` | **`[]`** (hoy `['libro-de-compras']`) | `['libro-de-compras']` |
-| `cuentas-por-cobrar` | **`['terceros']`** (el aprobado decía `['libro-de-ventas', 'bancos']`) | `['libro-de-ventas', 'bancos']` |
-| `ventas-y-caja` | `['inventarios', 'terceros']` | `['cuentas-por-cobrar', 'libro-de-ventas', 'bancos']` |
+| **`cuentas-por-cobrar`** («Ventas y cobros», §24.1) | **`['terceros']`** | **`['inventarios', 'libro-de-ventas', 'libro-de-compras', 'bancos']`** |
 | `produccion` | `['inventarios']` | — |
 | `libro-de-ventas` | `['libro-de-compras']` (sin cambio) | — |
 
 Orden del migrador resultante, sin ciclos: `terceros` → `libro-de-compras` → `inventarios`, `libro-de-ventas`; `bancos` →
-`cuentas-por-cobrar` → `ventas-y-caja`; `inventarios` → `produccion`.
+`cuentas-por-cobrar`; `inventarios` → `produccion`.
 
-`cuentas-por-cobrar` **no** es dependencia de Ventas: quien solo vende de contado no la necesita. Sin ella, las formas no ofrecen
-crédito.
+Quien solo vende de contado apaga la **cartera** en la configuración de la empresa (§24.3). Sin ella, las formas no ofrecen crédito.
 
 ### 2.3 El campo `usaTablasDe` (paso VCJ-0a)
 
@@ -765,6 +768,8 @@ Sin Producción activa, un producto con `descarga = 'receta'` responde `requiere
 opción.
 
 ## 9. Datos de Ventas y caja (esquema `ventas_y_caja`)
+
+_Actualizado por §24: las tablas viven en el esquema `cuentas_por_cobrar`; `cajas.bodega_id` y el `turno_id` de ventas y pagos pasan a nulos, con caja directa (§24.2, §24.3)._
 
 Toda tabla lleva `empresa_id` (FK `core.empresas` on delete cascade), `politicaPorEmpresa()`, `...marcasDeTiempo` y `...autoria`. Llaves
 compuestas con `empresa_id` hacia el único `<tabla>_id_empresa_unico (id, empresa_id)`, **un índice por llave**, `no action` salvo donde se
@@ -1439,7 +1444,7 @@ Contabilidad escucha los eventos de §13.3 con el mecanismo CT-0 (registro de ev
 | R-9 | Volumen | Una caseta con 150 ventas al día = 55,000 ventas y unas 165,000 líneas al año por empresa. Índices por `(empresa_id, fecha)`; reportes por rango; turno con foto de totales |
 | R-10 | Cajero sin acceso a la bodega | Aviso al asignar y error claro al vender (§9.1) |
 | R-11 | Costos a la vista del cajero | Permiso propio; el DTO no los trae |
-| R-12 | Módulo apagado con datos | Las tablas quedan. Apagar la cartera con saldos: `validarDesactivacion` **no** lo impide porque no es `dependeDe`. Ventas deja de ofrecer crédito y muestra «Hay saldos de clientes: active Cuentas por cobrar para cobrarlos». Los saldos no se pierden |
+| R-12 | Función o módulo apagado con datos | Las tablas y los saldos quedan siempre. La **cartera** no se apaga con saldos (`cartera_con_saldos`); apagar el **crédito** no afecta lo ya prestado. Si soporte desactiva el **módulo** completo, `validarDesactivacion` no lo impide: los saldos se conservan y vuelven al reactivarlo, y lo que dependa de él falla cerrado (S-21). Detalle en §24.3 |
 | R-13 | Teórico que nunca se compara con lo real (al vender) | Reporte de real contra teórico con los conteos; aviso si pasan N días sin conteo de los ingredientes |
 | R-14 | Reimpresión usada para engañar | Dice «Reimpresión» y queda en auditoría |
 | R-15 | Recursos de auditoría permanente | Declarados en las migraciones de cada módulo |
@@ -1451,6 +1456,8 @@ Contabilidad escucha los eventos de §13.3 con el mecanismo CT-0 (registro de ev
 | R-21 | La autorización con contraseña es lenta en hora pico | Solo aparece en excepciones. Si estorba en la práctica, se evalúa un PIN con diseño de `seguridad` (§23) |
 
 ## 20. Pasos (un commit cada uno; servidor y cliente por separado, con pruebas)
+
+_**La tabla vigente de VCJ-\* y CXC-\* está en §24.5.** Esta se conserva por trazabilidad; de ella siguen vigentes los pasos `REC-*` (REC-5 depende de VCJ-4i)._
 
 **Se puede empezar sin esperar a Cuentas por cobrar:** VCJ-0a a VCJ-7 y todo REC. Solo el crédito (VCJ-8) y lo que viene después esperan a CXC-3b.
 
@@ -1594,3 +1601,389 @@ El usuario aceptó la **opción recomendada (a) de VJ-P1 a VJ-P17**:
 Antes de VCJ-4 sigue pendiente confirmar contra texto oficial las citas de IVA (Q50, Q2,500) y el techo de Q500,285. No se programa
 ningún plazo de contingencia ni monto de multa mientras no se lea la Res. SAT-DSI-1793-2026. El aviso de privacidad lo revisa un
 abogado antes de publicarse.
+
+## 24. Adenda: módulo único «Ventas y cobros» (2026-11-23)
+
+_Decisión del usuario, que no se reabre: Ventas/Caja y Cuentas por cobrar son **un solo módulo**, con formas de venta, caja, crédito, cartera y
+recibos. **Inventarios es opcional** para él: una empresa de servicios que solo factura y cobra no debe necesitarlo. Caja y crédito se usan según
+configuración y permisos. Libro de ventas sigue aparte por ser fiscal, y Producción sigue aparte y depende de Inventarios._
+
+**Esta sección manda sobre el resto del documento** y sobre `diseno-cuentas-por-cobrar-y-ventas.md` donde se contradigan. Verificado contra `main`
+(`48b8dad9`), `integracion` (`9c8c4440`), la rama de VCJ-0d (`worktree-wf_05a0b7b8-de7-3`) y las ramas de la tanda 9.
+
+### 24.1 Clave, esquema y dependencias
+
+**Dónde está escrita hoy la clave `cuentas-por-cobrar`:**
+
+| Lugar | Estado | Tipo de dato |
+|---|---|---|
+| `libro_de_ventas.documentos_destino_valido` (migración `0002_lv2`, y su snapshot) | Ramas `-77` y `-111` | **`check` en una migración** |
+| `DestinoDeDocumentoDeVenta`, `DESTINOS_DE_DOCUMENTO`, orden `cuentas-por-cobrar.recibir_documento`, doble de pruebas | Ramas `-77` y `-111` | Contrato entre módulos |
+| `MODULO_CUENTAS_POR_COBRAR`, conceptos reservados, nota marcada | Ramas `-6` y `-61` (VC-0b) | Quedará en `bancos.movimientos.modulo_de_origen` |
+| `origen-y-causa.ts` (nombre visible) y un comentario de `terceros.contratos.ts` | `main` | Texto |
+
+La clave `ventas-y-caja` **no aparece en ningún código** (solo en documentos). `cuentas_por_cobrar` en Contabilidad (`rubros`, `roles-de-enlace`) es un
+**rubro del catálogo de cuentas**, no la clave del módulo: no se relaciona con esta decisión.
+
+| Opción | Migraciones ya escritas | A favor | En contra |
+|---|---|---|---|
+| **A. Conservar `cuentas-por-cobrar`**, con nombre visible «Ventas y cobros» | **Ninguna cambia** | Cero datos que convertir; contratos y checks siguen válidos | La clave técnica dice menos de lo que hace el módulo (solo se ve en permisos y URL) |
+| B. Clave nueva `ventas-y-cobros` antes de unir la tanda 9 | Reescribir `0002_lv2` y su snapshot en dos ramas ya revisadas | Nombre exacto | Rehacer y volver a probar LV-2 y VC-0b |
+| C. Clave nueva y migración que cambie el `check` | Una más en Libro de ventas | Sin reescribir | Dos valores válidos a la vez o conversión de datos, por un nombre interno |
+| D. Clave nueva con alias de la vieja | Ninguna | Nombre exacto | Un mecanismo de alias en el core, el mediador y Bancos para siempre |
+
+**Decisión: A.** Queda así:
+
+| Dato | Valor |
+|---|---|
+| `clave` | **`cuentas-por-cobrar`** |
+| `nombre` (lo que ve el usuario) | **«Ventas y cobros»** |
+| Esquema | **`cuentas_por_cobrar`**: aquí viven también las tablas de §9. **No se crea `ventas_y_caja`** |
+| Carpetas | `servidor/src/modulos/cuentas-por-cobrar/`, `cliente/src/modulos/cuentas-por-cobrar/` |
+| `dependeDe` | **`['terceros']`** |
+| `usaTablasDe` | **`['inventarios', 'libro-de-ventas', 'libro-de-compras', 'bancos']`** |
+| Generador | `npm run generar -- modulo cuentas-por-cobrar --nombre "Ventas y cobros" --icono ShoppingCart` |
+
+| Módulo | `dependeDe` | `usaTablasDe` |
+|---|---|---|
+| `inventarios` | `[]` (con VCJ-0b) | `['libro-de-compras']` |
+| **`cuentas-por-cobrar`** | **`['terceros']`** | **`['inventarios', 'libro-de-ventas', 'libro-de-compras', 'bancos']`** |
+| `produccion` | `['inventarios']` | — |
+| `libro-de-ventas` | `['libro-de-compras']` (sin cambio) | — |
+
+- **Sin ciclos.** Libro de ventas no tiene llave hacia la cartera (`retenciones_recibidas.cobro_id` va sin llave, §5.7 de ese diseño), Inventarios guarda el
+  origen sin llave y `produccion.consumos_por_venta.venta_id` también. Orden del migrador: `terceros` → `libro-de-compras` → `inventarios`, `libro-de-ventas`;
+  `bancos` → `cuentas-por-cobrar`; `inventarios` → `produccion`.
+- **`libro-de-compras` se declara** aunque ya llegue de forma transitiva, porque el módulo lee directamente `datos_fiscales_de_empresa` (§3.9).
+- **Una empresa con FEL sigue necesitando `libro-de-ventas`** (§3.5). Sin él, el módulo funciona solo con formas de control.
+
+**Cómo leer el resto del documento:**
+
+| Donde dice | Se lee |
+|---|---|
+| Módulo, permiso, evento, correlativo, configuración o recurso de auditoría `ventas-y-caja.<x>` | `cuentas-por-cobrar.<x>` |
+| Esquema `ventas_y_caja.<tabla>` | `cuentas_por_cobrar.<tabla>` (ningún nombre de tabla choca: revisadas las de §6 de cartera y §9) |
+| Rutas `/ventas-y-caja/…` | `/cuentas-por-cobrar/…` |
+| `ventas-y-caja.reportes.*` y `cuentas-por-cobrar.reportes.*` | **Es el único choque de claves.** Pasan a `cuentas-por-cobrar.reportes-de-ventas.*` y `cuentas-por-cobrar.reportes-de-cartera.*` |
+| «Cuentas por cobrar» como módulo | «Ventas y cobros». Como función sigue siendo **la cartera** |
+
+### 24.2 Con Inventarios apagado
+
+**Hay dos niveles, y el segundo era un vacío del diseño.** Los módulos se activan **por cuenta** (`core.cuenta_modulos`), pero una cuenta puede tener una empresa con
+bodegas y otra de servicios. Por eso «esta empresa controla existencias» no se puede deducir de que el módulo esté activo, y **tampoco de si se ven bodegas**:
+`inventarios.bodegas` tiene RLS por alcance, así que un cajero sin bodegas asignadas vería cero filas y la regla fallaría abierta (el mismo error de S-05). Se guarda
+explícito:
+
+```
+controla_existencias = (módulo inventarios activo en la cuenta)
+                       y (cuentas-por-cobrar.funciones.control_de_existencias de la empresa)
+```
+
+**Catálogo.** `servicio` no basta para quien vende un bien sin llevar inventario: bien y servicio tienen **distinto nacimiento del IVA** (al entregar o al percibir, §4.5 y
+CV-16). Se agrega un tipo:
+
+| `productos.tipo` | `articulo_id` | `descarga` | Con `controla_existencias` | Sin `controla_existencias` |
+|---|---|---|---|---|
+| `articulo` | Obligatorio | `existencia` | Se vende y descarga | **No se ofrece**; `requiere_inventarios` |
+| `platillo` | Obligatorio | `existencia` o `receta` | Se vende y descarga | **No se ofrece**; `requiere_inventarios` |
+| `servicio` | Nulo | `ninguna` | Se vende | Se vende |
+| **`bien_sin_existencia`** (nuevo) | Nulo | `ninguna` | **No se vende** (`producto_por_vincular`; VU-P3) | Se vende, sin costo ni kardex |
+| `combo` | Nulo | `ninguna` | Por sus componentes | Solo si todos sus componentes se pueden vender |
+
+**Cambios de tablas** (entran en VYC-E1, antes de que exista ninguna fila):
+
+| Tabla | Cambio |
+|---|---|
+| `productos.tipo` | Suma `bien_sin_existencia`. Check: `articulo_id` no nulo ⇔ `tipo in ('articulo', 'platillo')`; `descarga = 'ninguna'` en `servicio`, `combo` y `bien_sin_existencia` |
+| `productos.articulo_id` | Sigue con su FK compuesta a `inventarios.articulos`: la tabla existe en toda instalación (PLAN §3.2) y queda nula |
+| `cajas.bodega_id` | Pasa a **nula**. Es obligatoria en dominio solo para vender algo con `descarga <> 'ninguna'`: sin bodega, `caja_sin_bodega` |
+| `lineas_de_venta` | Sin columna nueva: `tipo` y `descarga` copiados distinguen bien de servicio, y `estado_de_descarga = 'no_aplica'` |
+
+**Lectura.** Con Inventarios apagado **no se envía ninguna orden** (`existencias_para_vender` lanzaría `ModuloNoDisponible`): el caso de uso consulta antes `controla_existencias`.
+Las lecturas de `articulos` para mostrar un nombre son seguras. El costo queda nulo y el margen dice «sin costo registrado».
+
+**Qué se oculta sin `controla_existencias`:** existencias y bodega en Mostrador, «Por descargar», selector de artículo, compra de inventario desde caja (§5.5), recetas, costo y
+margen por producto. **Sigue visible** el reporte «Ventas de bienes sin descarga», que no se puede apagar.
+
+**Apagar y encender:**
+
+| Situación | Qué pasa |
+|---|---|
+| Apagar el interruptor de la empresa con líneas `pendiente` o pedidos sin entregar que descargan | Se rechaza (`existencias_con_pendientes`) hasta resolverlos |
+| Soporte desactiva el **módulo** Inventarios (no se le puede impedir: `validarDesactivacion` solo mira `dependeDe`) | Las líneas pendientes quedan así y `EntregarVenta` falla cerrado (`requiere_inventarios`): **nunca se marca entregado sin descargar** |
+| Seguir vendiendo lo que antes llevaba existencia | Acción explícita **«Vender sin control de existencia»**: pasa los productos elegidos a `bien_sin_existencia`, con `productos.editar` y auditoría `corregir` |
+| Encender Inventarios después | Acción **«Vincular a un artículo»** (`bien_sin_existencia` → `articulo`). **Las ventas pasadas no se descargan**: la existencia inicial entra por saldo inicial o conteo |
+
+Son las **únicas** transiciones de `tipo` en un producto con ventas; cada línea ya guardó su copia, así que el pasado no cambia.
+
+**Regla de que nada se descuenta dos veces, con Inventarios activo:**
+
+1. **Una sola puerta.** Solo `RegistrarVenta` y `EntregarVenta` (y la bandeja «Por descargar») ordenan una salida. **Libro de ventas nunca toca el kardex**, ni al registrar, ni desde la
+   bandeja de DTE, ni al regularizar (§3.7, paso 6).
+2. **Idempotencia en la base.** El único parcial `(empresa_id, clase, modulo_de_origen, documento_de_origen_id) where estado = 'vigente'` (§7.1), con `modulo_de_origen = 'cuentas-por-cobrar'`.
+3. **[corrige §7.1 y §7.4]** Con ese único y el id de la venta como origen, **una venta con una línea pendiente no podría descargarse después** (sería un segundo documento de la misma
+   venta). Por eso: la descarga inicial usa como origen **la venta**, y la descarga posterior usa como origen **la línea** (`lineas_de_venta.id`), con la línea bloqueada `for update` y solo la
+   transición `pendiente → hecha`.
+4. **Decisión fijada al vender.** `descarga` se copia a la línea. Vincular un producto o encender Inventarios no reprocesa líneas `no_aplica`.
+5. **Combo:** descargan solo los componentes; la línea padre lleva `ninguna`. **Receta:** una sola orden con todos los renglones (§8.6).
+6. **Entrega única:** `EntregarVenta` exige `entrega = 'pendiente'` con la fila bloqueada.
+
+### 24.3 Encender y apagar caja, crédito y cartera (reemplaza R-12 y las filas de §0 y §2.2)
+
+**Por empresa**, nivel `empresa` únicamente, `publica: true` para que el cliente oculte el menú; **la regla la aplica siempre el servidor**:
+
+| Clave | Por omisión (VU-P1) | Qué enciende |
+|---|---|---|
+| `cuentas-por-cobrar.funciones.caja` | `false` | Cajas con turno, arqueos, movimientos de efectivo, cierre |
+| `cuentas-por-cobrar.funciones.credito` | `true` | Vender con condición `credito` o `mixto`. Exige `cartera` |
+| `cuentas-por-cobrar.funciones.cartera` | `true` | Recibir cargos, cobros, recibos, saldo a favor, estado de cuenta |
+| `cuentas-por-cobrar.funciones.control_de_existencias` | `true` | §24.2 |
+
+**Configuración y permisos son dos llaves distintas:** el interruptor dice si **la empresa** usa la función; el permiso, si **esa persona** puede. Se necesitan las dos. Apagar una función no
+quita permisos, así que al encenderla de nuevo no hay que reasignar nada.
+
+- Se cambian por `PUT /cuentas-por-cobrar/controles` con `cuentas-por-cobrar.controles.configurar`, y se **auditan** (`configurar`, antes y después), como §14.4 (S-23).
+- **Carrera:** `CambiarFunciones` toma un candado consultivo exclusivo por empresa; abrir turno, registrar venta, recibir documento y cobrar lo toman compartido (precedente:
+  `activos-fijos/infraestructura/persistencia/cierres.drizzle.ts`). Así ninguna venta a crédito entra mientras se apaga la cartera.
+
+**Vender sin caja: la «caja directa».** Hoy `ventas.caja_id` y `turno_id` son obligatorios, y sobre `caja_id` descansan la RLS (S-15) y la idempotencia.
+
+| Opción | A favor | En contra |
+|---|---|---|
+| A. `caja_id` nula | Simple a primera vista | **Rompe la RLS por caja** y el único de idempotencia (los nulos no chocan: volverían las ventas dobles) |
+| **B. Una caja de sistema `directa` por empresa, sin turnos** | RLS, llaves, idempotencia y autorizaciones quedan iguales; solo `turno_id` pasa a nula | Una fila de sistema |
+| C. Tabla aparte de ventas sin caja | Sin nulos | Dos juegos de ventas: contradice «un solo juego de registros» (§3.8) |
+
+**Recomendado y adoptado: B.**
+
+| Tabla | Cambio |
+|---|---|
+| `cajas` | `clase text not null default 'con_turno'`, `in ('con_turno', 'directa')`. Único parcial `(empresa_id) where clase = 'directa'`. Único `(id, empresa_id, clase)`. Semilla perezosa «Ventas directas». No se edita su clase ni se inactiva |
+| `ventas`, `pagos_de_venta` | `turno_id` **nula**; `clase_de_caja text not null`, con FK compuesta `(caja_id, empresa_id, clase_de_caja)` a ese único. Check `(clase_de_caja = 'con_turno') = (turno_id is not null)`. Con `turno_id` nulo la FK de §9.0 no se evalúa, y es lo correcto |
+| `turnos` | `clase_de_caja text not null default 'con_turno'`, check `= 'con_turno'`, misma FK: **la base impide abrir un turno en la caja directa** |
+| `arqueos`, `movimientos_de_caja` | Sin cambio: siempre tienen turno |
+| `cobros.forma` | Suma **`directo`**: cobro recibido sin caja ni banco, con `medio` obligatorio y sin `movimiento_id` ni referencia de caja. Permiso propio `cobros.directo` |
+
+**Uso de la caja directa:**
+
+| `funciones.caja` | Qué se puede registrar en la directa |
+|---|---|
+| Apagada | Contado (según VU-P2), crédito y mixto |
+| Encendida | **Solo crédito sin pago**, con `ventas.vender-sin-turno`. Si no, sería una salida para que el efectivo no pase por el arqueo |
+
+Anular una venta o un cobro `directo` sigue exigiendo segunda persona (§4.8); `autorizaciones_de_caja` usa el id de la caja directa. El reporte **«Cobrado sin caja ni banco»** no se puede apagar.
+
+**Apagar y encender:**
+
+| Función | Al apagar | Con datos | Al encender |
+|---|---|---|---|
+| **Caja** | Rechaza con turno abierto (`caja_con_turno_abierto`), efectivo en tránsito (`caja_con_efectivo_en_transito`) o efectivo contado en el último cierre (`caja_con_efectivo_sin_retirar`): primero se deposita o se retira | Turnos y arqueos quedan de solo lectura en reportes | Hay que crear una caja y abrir turno |
+| **Crédito** | **Siempre se puede.** Solo impide ventas nuevas a crédito (`credito_no_disponible`) | **Los saldos siguen vivos** y se siguen cobrando | Inmediato |
+| **Cartera** | Rechaza con **cualquier saldo** por cobrar o a favor, incluidos anticipos de pedidos (`cartera_con_saldos`, con cuánto y de cuántos clientes). Exige apagar crédito en el mismo cambio (`credito_sin_cartera`) | Estado de cuenta, recibos y reportes quedan **de solo lectura**. Se sale de los saldos cobrando, con nota de crédito o con castigo: **nunca se borran** | Los documentos registrados mientras estuvo apagada no entran solos (R-1 de la cartera) |
+
+**Reemplazo de R-12** (ya aplicado en §19):
+
+> **R-12. Función o módulo apagado con datos.** Las tablas y los saldos quedan siempre. La **cartera** no se apaga con saldos (`cartera_con_saldos`); apagar el **crédito** no afecta lo ya
+> prestado. Si soporte desactiva el **módulo** completo, `validarDesactivacion` no lo impide; los saldos se conservan y vuelven al reactivarlo, Libro de ventas registra sin destino y lo que
+> dependa del módulo **falla cerrado** (S-21).
+
+**Libro de ventas con la cartera apagada.** Hoy el destino sale de «módulo activo en la cuenta», y ya no alcanza: una empresa con el módulo activo y la cartera apagada vería cada factura como
+deuda. El cambio exacto está en §24.6:
+
+- Un documento nuevo se registra **sin destino**.
+- **Anular o eliminar** un documento viejo sigue funcionando: el módulo está activo y atiende el aviso.
+- Una **nota sobre una factura que pasó por la cartera** se rechaza con `cartera_apagada` («Encienda la cartera para registrar esta nota»), porque crearía un saldo a favor en una cartera apagada.
+
+**Combinaciones:**
+
+| Negocio | Caja | Crédito | Cartera | Existencias | Otros módulos |
+|---|---|---|---|---|---|
+| Servicios: factura y cobra | No | Sí | Sí | No | `libro-de-ventas` si factura con FEL; `bancos` si deposita |
+| Tienda de contado sin NIT | Sí | No | No | Sí | `inventarios` |
+| Tienda que fía | Sí | Sí | Sí | Sí | `inventarios` |
+| Solo cobra facturas del Libro | No | No | Sí | No | `libro-de-ventas` |
+| Restaurante | Sí | Opcional | Opcional | Sí | `inventarios`, `produccion` |
+
+### 24.4 Lo que deja de ser entre módulos
+
+**Órdenes que pasan a ser casos de uso internos** (misma unidad de trabajo, sin mediador y sin contrato en `core/contratos`):
+
+| Antes | Ahora |
+|---|---|
+| `cuentas-por-cobrar.recibir_venta_de_control` | Servicio interno `CargosDeVenta` |
+| `cuentas-por-cobrar.registrar_cobro_de_caja` / `anular_cobro_de_caja` | Casos de uso internos. `AnularCobro` sigue rechazando un cobro `caja` directo (`cobro_de_caja`) |
+| `cuentas-por-cobrar.anular_cargo_de_venta` | Servicio interno |
+| Preguntar a `ModulosActivosDeLaCuenta` si hay cartera | Lectura de `funciones.cartera` |
+| Error `requiere_cuentas_por_cobrar` | `cartera_apagada` |
+
+**Siguen por el mediador** (son de otros módulos): `cuentas-por-cobrar.recibir_documento`, las órdenes a `libro-de-ventas`, `inventarios`, `produccion` y `bancos`. **Nueva:**
+`cuentas-por-cobrar.admite_documentos_nuevos` → `{ admite }`.
+
+**Un manejador por mensaje.** Para el mediador ahora es un solo módulo: responder dos veces la misma pregunta **lanza** `ManejadorDuplicadoParaLaPregunta` al arrancar, y dos escuchas de un aviso dejarían la regla partida y dependiente del orden de registro. Se unen:
+
+| Mensaje | Une |
+|---|---|
+| `empresas.revisar_cierre_de_carga` (pregunta) | Turnos abiertos (§13.2) + saldos iniciales de clientes (§8.9 de cartera) |
+| `libro-de-ventas.documento_por_anular` / `_por_eliminar` | «Viene de una venta» + reglas del cargo (§8.8 de cartera). Primero la venta |
+| `bancos.movimiento_por_cambiar` | Depósito de turno + cobro. Distingue por el id del movimiento en `movimientos_de_caja` y `cobros` |
+
+**Tablas.** Las llaves de `ventas`, `pagos_de_venta` y `movimientos_de_caja` hacia `documentos` y `cobros` ya son **dentro del esquema**. Las referencias que iban sin llave porque cruzaban módulos **ganan llave compuesta**:
+
+| Antes (§12) | Ahora |
+|---|---|
+| `documentos.referencia_de_origen_id` | **`documentos.venta_id`** (uuid, nula), FK compuesta a `ventas`; `(origen = 'venta_de_control') = (venta_id is not null)`; único parcial `(empresa_id, venta_id) where estado = 'vigente'` |
+| `cobros.referencia_de_caja_id` | **`cobros.movimiento_de_caja_id`** y **`cobros.pago_de_venta_id`** (uuid, nulas), FK compuestas; `(forma = 'caja') = (exactamente una no nula)` |
+
+**Permisos.** Se conservan separados `pagos.*` (cajero, en turno) y `cobros.*` (cartera, en oficina): un cajero sigue sin poder hacer un cobro por banco. **Nuevos:** `ventas.vender-sin-turno`, `cobros.directo`. **Renombrados:**
+`reportes-de-ventas.*`, `reportes-de-cartera.*`. Recursos de auditoría permanente, con el prefijo `cuentas-por-cobrar.`: `ventas`, `turnos`, `arqueos`, `formas`, `regularizaciones`, `movimientos`, `cajas`, `productos`, `cobros`, `castigos`.
+
+**Eventos** (Contabilidad aún no escucha ninguno de estos): `ventas-y-caja.*` pasa a `cuentas-por-cobrar.*`, sin choques con los de §10.3 de cartera. **La regla de una sola fuente por parte (§17) no cambia.**
+
+**Una sola numeración de migraciones.** Antes eran dos series (`0001…0006` de Ventas, `0001…0007` de cartera). Como **dos migraciones del mismo módulo no van en paralelo**, juntar los módulos crearía una fila india. Para evitarla, las tablas entran **por bloques, antes
+que la lógica**:
+
+| Migración | Paso | Contenido |
+|---|---|---|
+| `0000_vyc_e1_ventas_y_caja` | VYC-E1 | Catálogos, formas, productos, menús, cajas y accesos, turnos, arqueos, autorizaciones, movimientos, ventas, líneas, pagos (sin las FK a cartera) |
+| `0001_vyc_e1_auditoria_permanente` (`--custom`) | VYC-E1 | Recursos permanentes de ventas y caja |
+| `0002_vyc_e2_cartera` | VYC-E2 | Tablas de §6 de cartera con §12 y §24.3, y las FK entre ventas y cartera |
+| `0003_vyc_e2_auditoria_permanente` (`--custom`) | VYC-E2 | `cobros`, `castigos` |
+| `0004_vyc_e3_regularizaciones_y_dte` | VYC-E3 | `regularizaciones`, `regularizacion_ventas`, `dte_de_ventas` |
+| Siguiente libre | VCJ-14, CXC-5t, CXC-9 | Solo lo que nazca después (`devoluciones_de_venta`, tarjeta, estimaciones) |
+
+Los pasos E declaran **todos** los permisos y la configuración en `modulo.ts`, para que los pasos de lógica no choquen en ese archivo. Reemplaza las listas de §9.12 y de §6.12 de cartera. A-11 (privilegios) entra en VYC-E1 y VYC-E2.
+
+### 24.5 Tabla de pasos unificada (reemplaza §20 y, de cartera, los pasos CXC-*)
+
+Se conservan las claves. Los pasos `LV-*`, `VC-0*` y `VC-10/11` siguen en la tabla de `diseno-cuentas-por-cobrar-y-ventas.md` §16; los `REC-*`, en §20 de este documento, con el único cambio de que **REC-5 depende de VCJ-4i**. **CXC-A desaparece:** su contenido entra en VYC-E2 y CXC-3b.
+
+**Lo que destraba esta decisión:** VCJ-1 ya **no espera a INV-8**, porque el módulo no depende de Inventarios. Solo la descarga (VCJ-3 y VCJ-4i) sigue detrás de VCJ-0b.
+
+| Paso | Qué | Quién | Depende de | Va en paralelo con | Espera del usuario |
+|---|---|---|---|---|---|
+| **VCJ-0a** | **Hecho** (en `integracion`) | backend | — | — | — |
+| **VCJ-0d** | **Hecho** (en la rama `worktree-wf_05a0b7b8-de7-3`, falta unir) | backend | VCJ-0a | — | — |
+| VCJ-0e | Cliente de Empresas para A-10; unir antes de publicar VCJ-0d | frontend | VCJ-0d | Todo lo demás | — |
+| **VCJ-0b** | Inventarios sin `dependeDe` | backend | VCJ-0a, **INV-8** | VYC-E1, VCJ-1, VCJ-2 | — |
+| VCJ-0c | Cliente de Inventarios con el libro apagado | frontend | VCJ-0b, INV-5c | Cualquiera | — |
+| **VYC-0** | Ajustes a lo ya programado (§24.6, grupos A y B) | backend + frontend | Tanda 9 unida (LV-2, VC-0b) | VYC-E1 | — |
+| **VYC-E1** | Esqueleto, permisos, configuración y tablas de ventas y caja, con caja directa, `bien_sin_existencia` y checks; pruebas de checks y de RLS | backend | VCJ-0a, VCJ-0d | VCJ-0b, VYC-0 | — |
+| **VYC-E2** | Tablas de cartera con §12 y §24.3; privilegios; pruebas de checks | backend | VYC-E1, **LV-2** | Lógica de VCJ-1 y VCJ-2 | — |
+| **VYC-E3** | Regularizaciones y `dte_de_ventas` | backend | VYC-E2 | Lógica | — |
+| **VYC-F** | `CambiarFunciones`: reglas de §24.2 y §24.3, candado, auditoría, ruta de controles, `admite_documentos_nuevos` y §24.6 grupo C | backend | VYC-E2, VYC-0 | CXC-1, VCJ-2 | VU-P1, VU-P4 |
+| VYC-Fc | Pantalla «Funciones de Ventas y cobros» y menú según interruptores | frontend | VYC-F | Cualquier `c` | — |
+| **VCJ-1** | Formas (solo control), medios, conceptos, productos con combos y Excel; precios auditados | backend | VYC-E1 | VCJ-2, CXC-1 | — |
+| VCJ-1c | Formas, Productos, Medios, Conceptos | frontend | VCJ-1 | VCJ-2 | — |
+| **VCJ-2** | Cajas con alcance, **caja directa**, turnos, responsable; pruebas de RLS con dos cajeros | backend | VYC-E1 | VCJ-1, CXC-1 | — |
+| VCJ-2c | Cajas, abrir turno | frontend | VCJ-2 | CXC-1c | — |
+| **VCJ-3** | Inventarios: clases de venta, órdenes, idempotencia, A-14, A-15, **origen por línea** (§24.2) | backend | VCJ-0b | VCJ-3b, VCJ-4 | — |
+| **VCJ-3b** | Verificar credencial sin abrir sesión (A-13); autorizaciones | backend | VCJ-2 | VCJ-3 | — |
+| **VCJ-4** | `RegistrarVenta` de contado de control **sin descarga** (`servicio`, `bien_sin_existencia`), con turno o en caja directa; `AnularVenta`; concurrencia | backend | VCJ-1, VCJ-2, VCJ-3b | VCJ-3, CXC-2 | VU-P2 |
+| **VCJ-4i** (nuevo) | Venta con descarga: `articulo`, `platillo`, combo; «¿volvió la mercadería?» con kardex; acciones de §24.2 | backend | VCJ-3, VCJ-4 | VCJ-5 | VU-P3 |
+| VCJ-4c | Mostrador, comprobante, autorización, bloqueo | frontend | VCJ-4 (lo de existencia, con VCJ-4i) | VCJ-5 | — |
+| **VCJ-5** | Movimientos, arqueos, cierre, reabrir; compra sin factura solo con `controla_existencias` | backend | VCJ-4 | VCJ-4i, CXC-3 | — |
+| VCJ-5c | Caja: movimientos, arqueo, cierre | frontend | VCJ-5 | — | — |
+| **VCJ-6** | Menú del día; «Por descargar» con sus tres salidas y pregunta al cierre | backend + frontend | VCJ-4i, INV-8 | VCJ-7 | — |
+| **VCJ-7** | Reportes de ventas y caja, «Ventas de bienes sin descarga», «Cobrado sin caja ni banco», Auditoría (A-12) | backend + frontend | VCJ-5 | CXC-7 | — |
+| **CXC-1** | Condiciones, `recibir_documento` (rechaza con cartera apagada), documentos, vencimiento, contraseña, avisos | backend | VYC-E2, LV-2 | VCJ-1, VCJ-2 | — |
+| CXC-1c | Por cobrar, estado de cuenta, sección del cliente | frontend | CXC-1 | VCJ-2c | — |
+| **CXC-2** | Abonos, aplicaciones, saldos derivados con fechas de corte | backend | CXC-1 | VCJ-4 | — |
+| **CXC-3** | Cobros: depósito, nota ligada, solo retenciones y **`directo`**; recibo, anular, escucha de Bancos unida | backend | CXC-2, LV-3, VC-0b | VCJ-5 | VU-P2 |
+| CXC-3c | Cobrar, cobros, recibo | frontend | CXC-3 | — | — |
+| **CXC-3b** | Cobro `caja`, recibo de pago, `grupo_de_pago_id`, `sustituido` | backend | CXC-3, VCJ-5 | CXC-4, CXC-5 | — |
+| **CXC-4** / CXC-4c | Saldo a favor, devolución, diferencia menor | backend / frontend | CXC-3 | CXC-5, CXC-6, CXC-8 | — |
+| **CXC-5** / CXC-5c | Cheque rechazado | backend / frontend | CXC-3 | CXC-4, CXC-6, CXC-8 | — |
+| CXC-5t | Tarjeta (solo si VC-P27 dice que sí) | backend + frontend | CXC-5 | — | VC-P27 |
+| **CXC-6** / CXC-6c | Saldos iniciales, cuenta de apertura, pregunta de EM-2 **unida con turnos** | backend / frontend | CXC-3 | CXC-4, CXC-5, CXC-8 | — |
+| **CXC-7** / CXC-7c | Reportes de cartera con «Clase» | backend / frontend | CXC-4 | VCJ-7 | — |
+| **CXC-8** / CXC-8c | Castigos y recuperaciones | backend / frontend | CXC-3 | CXC-4, CXC-5, CXC-6 | — |
+| **VCJ-8** | Crédito y mixto, abonos en caja, recibos y anulación por grupo, pedidos con anticipo, búsqueda de clientes | backend + frontend | CXC-3b, VCJ-5 | CXC-7 | — |
+| **VCJ-9** | Forma formal `transcrito`, regularización con traslado de deuda, conciliación | backend + frontend | VYC-E3, VCJ-8, LV-3, LV-4, CXC-4 | VCJ-10, VCJ-11 | — |
+| **VCJ-10** | Depósito de turno con Bancos | backend + frontend | VCJ-5, VC-0b | VCJ-8 | — |
+| **VCJ-11** | Avisos de prescripción y estado de cuenta con clase | backend + frontend | VCJ-8, CXC-7 | VCJ-9 | — |
+| VCJ-12 | Eventos y reglas de Contabilidad | backend | VCJ-9, CT-3 | — | Contador |
+| VCJ-13 | Trabajadores | backend + frontend | VCJ-8 | VCJ-14, VCJ-15 | — |
+| VCJ-14 | Devolución parcial (migración propia) | backend + frontend | VCJ-9 | VCJ-13 | — |
+| VCJ-15 | Reconocimiento de deuda; intereses | backend + frontend | VCJ-8 | VCJ-13 | — |
+| VCJ-16 | (Después) Destino en Libro de compras para gastos de caja. **El valor del destino será `cuentas-por-cobrar`** | backend + frontend | VCJ-5 | — | — |
+| VCJ-17 | (Después) Forma con `certificador` | backend + frontend | Módulo FEL | — | VC-P4 |
+| CXC-9 | (Después) Estimación de incobrables | backend + frontend | CXC-8 | — | — |
+| VC-QA | Punta a punta del Libro y la cartera, **también con la cartera apagada** | pruebas-qa | LV-*, CXC-1 a CXC-8 | — | — |
+| VCJ-QA | Punta a punta: **empresa de servicios sin Inventarios ni caja** que factura y cobra; negocio sin NIT que fía; empresa inscrita con dos formas; apagar y encender cada función | pruebas-qa | VCJ-9, VYC-Fc | — | — |
+
+**Carriles en paralelo** (tocan carpetas distintas y, tras los pasos E, no generan migraciones):
+
+| Carril | Pasos |
+|---|---|
+| Catálogo y venta | VCJ-1 → VCJ-4 → VCJ-4i |
+| Caja | VCJ-2 → VCJ-3b → VCJ-5 |
+| Cartera | CXC-1 → CXC-2 → CXC-3 → CXC-4, CXC-5, CXC-6, CXC-8 |
+| Inventarios (otro módulo) | VCJ-0b → VCJ-3 |
+| Pantallas | Cada `c` detrás de su paso |
+
+**En fila:** VYC-E1 → VYC-E2 → VYC-E3 entre sí, y VCJ-3 con REC-2, porque tocan el mismo `check` de `inventarios.documentos`.
+
+### 24.6 Cambios exactos a código ya programado
+
+**No cambia ninguna migración ni ningún dato.** Quedan intactos: `0002_lv2` y su snapshot, `0039_cobros_a_clientes`, `DestinoDeDocumentoDeVenta`, `DESTINOS_DE_DOCUMENTO`, `MODULO_CUENTAS_POR_COBRAR`, los conceptos reservados y
+`terceros.contratos.ts`. A `core/contratos/cuentas-por-cobrar.contratos.ts` solo se le **suma** una orden. Todo se hace **después de unir la tanda 9**: no hay que reabrir sus ramas. Los números de línea son los de las ramas indicadas.
+
+**A. Nombre visible, en VYC-0** (sin esto, la app pediría «Active Cuentas por cobrar», un módulo que ya no se llama así):
+
+| Archivo | Dónde está | Cambio |
+|---|---|---|
+| `cliente/src/modulos/bancos/composables/movimientos/origen-y-causa.ts:5` | `main` | `'Ventas y cobros'` |
+| `cliente/src/modulos/bancos/composables/notas/marca-de-nota.prueba.ts:28` | `-6`, `-61` | Espera `'Para Ventas y cobros'` |
+| `servidor/src/modulos/bancos/dominio/conceptos-reservados.ts:14` | `-6`, `-61` | `'Ventas y cobros'` |
+| `servidor/src/modulos/bancos/dominio/asignacion-de-concepto.prueba.ts:145,160` | `-6`, `-61` | Espera `/Ventas y cobros/` |
+| `servidor/src/modulos/libro-de-ventas/aplicacion/casos-uso/documentos/bajas-con-el-destino.ts:13` | `-77`, `-111` | `'Ventas y cobros'` |
+| `servidor/src/modulos/libro-de-ventas/dominio/destino-del-documento.ts:33,56` | `-77`, `-111` | `DestinoInactivo('Ventas y cobros')` |
+
+**Se quedan como están**, porque describen la función y no el módulo: «no puede ir a Cuentas por cobrar» y «Para ir a Cuentas por cobrar» (`destino-del-documento.ts:29,32`), «saldo inicial en Cuentas por cobrar» (`errores-de-documento.ts:27`), «En cuentas por cobrar»
+(`textos-de-documentos.ts:49`) y el valor `cuentas_por_cobrar` de `libro-de-ventas.destino.consumidor_final`.
+
+**B. Libro de ventas con la cartera apagada, en VYC-0** (código de las ramas `-77` y `-111`; rutas bajo `servidor/src/modulos/` salvo donde se indica):
+
+| Archivo | Cambio |
+|---|---|
+| `core/contratos/cuentas-por-cobrar.contratos.ts` | Suma la orden `cuentas-por-cobrar.admite_documentos_nuevos` → `{ admite: boolean }` |
+| `libro-de-ventas/aplicacion/puertos/puertos-de-documentos.ts` | `DestinosDeVenta.admitenNuevos(operador)` |
+| `libro-de-ventas/infraestructura/vecinos-en-mediador.ts` | Lo implementa: si el módulo no está activo, `false`; si lo está, manda la orden. **`activos()` no cambia**, porque también protege anular y eliminar |
+| `libro-de-ventas/aplicacion/casos-uso/documentos/cargador-de-contexto.ts:59` | Carga `admiteDocumentosNuevos` |
+| `libro-de-ventas/dominio/armado-del-documento.ts` (`:66`, `:130`) | Pasa el dato a `resolverDestino` |
+| `libro-de-ventas/dominio/destino-del-documento.ts` | `destinoAutomatico` devuelve `null` si no admite. Lo pedido a mano y las notas siguen su camino, y los rechaza `recibir_documento` con `cartera_apagada` |
+| `libro-de-ventas/pruebas/vecinos-de-ventas-en-memoria.soporte.ts` y `servidor/src/pruebas-api/soporte/escenario-de-ventas.ts` | El doble responde la orden nueva |
+| `libro-de-ventas/dominio/destino-del-documento.prueba.ts` | Caso nuevo: cartera apagada, sin destino automático |
+| `cliente/src/modulos/libro-de-ventas/composables/documentos/usar-catalogos-del-registro.ts:71` | `conCartera` = módulo activo **y** `sesion.config('cuentas-por-cobrar.funciones.cartera', true)` |
+
+Hasta que exista el módulo, la orden no tiene quien la atienda, pero tampoco se envía: `DESTINOS_DE_DOCUMENTO` solo cuenta módulos activos.
+
+**C. Bancos con la cartera apagada, en VYC-F.** Con el módulo activo, Bancos reserva `cobro_a_cliente`, `cobro_a_cliente_de_activo`, `devolucion_a_cliente` y `cheque_rechazado`. En una empresa con la cartera apagada **nadie los registraría, y tampoco se podrían elegir a mano**: no podría clasificar un cheque devuelto.
+
+| Archivo (ramas `-6`, `-61`) | Cambio |
+|---|---|
+| `servidor/src/modulos/bancos/infraestructura/modulos-de-origen-en-modulos-activos.ts` | `activos()` deja fuera `cuentas-por-cobrar` si `admite_documentos_nuevos` es falso. **`estaActivo()` pasa a leer directo los módulos de la cuenta**: `RevisorDeCambios` debe seguir avisando al módulo |
+| `cliente/src/modulos/bancos/composables/conceptos/opciones-de-concepto.ts` (`liberarReservados`) | Recibe una función que considera el interruptor; sus 6 llamados pasan a usarla. `moduloInactivoQueEspera` **no cambia** |
+
+**Comentario desactualizado** (se corrige al pasar): `vecinos-en-mediador.ts` dice que el destino «es un módulo que depende de este»; desde A-2 no es así.
+
+### 24.7 Preguntas y validaciones
+
+**Para el usuario** (la primera opción es la recomendada; ninguna frena VYC-E1, VCJ-1, VCJ-2 ni CXC-1):
+
+| # | Pregunta | Opciones | Por qué | Antes de |
+|---|---|---|---|---|
+| **VU-P1** | Al activar Ventas y cobros en una empresa, ¿qué viene encendido? | a) Crédito, cartera y control de existencias, con **caja apagada**; b) todo encendido; c) todo apagado | Una empresa de servicios empieza a facturar y cobrar sin abrir turnos. Una tienda enciende la caja al crear la primera | VYC-F |
+| **VU-P2** | Sin caja, ¿se puede registrar un pago **en efectivo**? | a) Sí, con recibo, segunda persona para anular y un reporte que no se apaga; b) no: solo banco, tarjeta o cheque | Sin esto, un profesional sin Bancos no podría dar recibo de lo que le pagan en efectivo. El costo: ese efectivo no tiene arqueo | VCJ-4, CXC-3 |
+| **VU-P3** | Si la empresa **sí** controla existencias, ¿se puede vender un bien sin ligarlo a un artículo? | a) No, hay que vincularlo; b) sí, y sale en un reporte | Con b habría una forma simple de sacar ventas del inventario, justo lo que prohíbe §3.8 | VCJ-4i |
+| **VU-P4** | ¿Se puede apagar la cartera con **saldos pendientes**? | a) No: primero se cobra, se acredita o se castiga, y mientras tanto se puede apagar solo el crédito; b) sí, quedando de solo lectura | Con b quedarían deudas sin pantalla para cobrarlas | VYC-F |
+
+**Para `contador-guatemala`** (antes del paso indicado):
+
+| # | Punto | Antes de |
+|---|---|---|
+| VU-C1 | `bien_sin_existencia`: ingreso sin costo de ventas en la partida; la compra queda en gasto. ¿Aceptable en empresa inscrita, o solo con aviso? | VCJ-12 |
+| VU-C2 | Cobro `directo` y venta de contado en caja directa: ¿a qué cuenta va el efectivo sin arqueo? | VCJ-12 |
+| VU-C3 | Apagar `control_de_existencias` en una empresa inscrita con existencias: ¿es compatible con «un solo juego de registros» (dictamen §2.2) si queda auditado y con un reporte que no se apaga? | VYC-F |
+
+**Para `seguridad`** (antes de VYC-F): el interruptor de existencias, la caja directa como vía para esquivar el arqueo, el cobro `directo` y el candado de `CambiarFunciones`.
