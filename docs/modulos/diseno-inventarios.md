@@ -14,7 +14,7 @@ P-2 a: quitar la marca en el libro), los traslados neutros para el costeo y la d
 día, y el saldo por bodega del kardex para el bodeguero; y (2) la **integración con Activos fijos** (AFI-0,
 `diseno-integracion-activos-fijos-e-inventarios.md`): los bienes de uso no entran a Inventarios aunque se guarden, y el
 aviso del umbral de capitalización (I-11 a). Lo que entra por la validación va marcado **(V-n)** y lo de la integración
-**(AFI)**. Quedan abiertas P-1, P-3 e INV-A16 (§17)._
+**(AFI)**. P-1, P-3 e INV-A16 ya tienen respuesta (2026-11-23, al final). Queda abierta INV-P14 (§17)._
 
 Sirve a empresas de **cualquier rubro y régimen**: nada aquí supone fincas, ganado, régimen de IVA o ISR, ni que la
 empresa sea agente de retención. El kardex y el costeo son iguales para todas; lo que depende del régimen (si el faltante
@@ -184,11 +184,11 @@ complicaría los traslados (llevarían costo) y no lo pide ninguna regla fiscal.
   con las diferencias de las salidas). Si algún mes está cerrado, el error `cambio_de_metodo_con_meses_cerrados` dice
   **cuáles** hay que reabrir (de uno en uno, del último hacia atrás, INV-A15).
 - **El ajuste por el cambio (V-1, pregunta P-1)**: la ley pide «los ajustes pertinentes» y la NIIF para las Pymes
-  10.11-10.12 aplica el cambio hacia atrás salvo que sea impracticable. En v1 (recomendación P-1 a, **pendiente del
-  usuario**) el valor de la existencia **no cambia** al pasar de método (una sola capa al promedio) y el contador hace el
-  ajuste en Contabilidad con lo que diga la resolución; solo se publica `inventarios.metodo_cambiado`. Si se elige P-1 b
-  (cargar las capas reales al pasar a PEPS con un ajuste hacia utilidades acumuladas), hace falta una tabla de capas de
-  apertura del cambio y un evento con la diferencia; queda descrito en §19.
+  10.11-10.12 aplica el cambio hacia atrás salvo que sea impracticable. En v1 (**P-1 = a, respondida por el
+  usuario el 2026-11-23**) el valor de la existencia **no cambia** al pasar de método (una sola capa al promedio) y el contador hace el
+  ajuste en Contabilidad con lo que diga la resolución; solo se publica `inventarios.metodo_cambiado`. La opción P-1 b, que no
+  entra en v1 (cargar las capas reales al pasar a PEPS con un ajuste hacia utilidades acumuladas), haría falta una tabla de capas de
+  apertura del cambio y un evento con la diferencia; queda descrita en §19.
 - Un método **por categoría** (INV-P2 b) se dejaría con una columna `categoria_id` nula en la misma tabla; no entra en
   v1.
 
@@ -420,8 +420,8 @@ Quitar o asignar audita `quitar`/`asignar` como en Caja chica.
 | `motivo` | text | sí | 1–500 |
 
 Único `metodos_de_costeo_id_empresa_unico (id, empresa_id)` (destino de la llave de `recalculos`). Índice `(empresa_id,
-desde desc)`. RLS: empresa. El método de un día es la fila de mayor `desde <=` ese día. Si se
-elige P-1 b (§17), aquí se agregaría el ajuste por el cambio; con P-1 a no hay columna de ajuste.
+desde desc)`. RLS: empresa. El método de un día es la fila de mayor `desde <=` ese día. Con
+P-1 = a (§17) no hay columna de ajuste; si algún día se adopta la b, aquí se agregaría.
 
 ### 5.8 `inventarios.lotes`
 
@@ -782,7 +782,7 @@ está activo (es la dependencia); si la empresa no tiene datos fiscales, se asum
   - el evento `inventarios.ajuste_aprobado` lleva en ese renglón `movimientoDeOrigenId` y el **destino original** de la
     salida (destino, concepto de gasto, localidad, departamento, activo fijo), para que Contabilidad **revierta ese
     destino**; **no** lleva `destinoDelSobrante` (no va a otros ingresos);
-  - una salida a `obra_de_activo_fijo` no se corrige así en v1 (pregunta INV-A16): su costo ya está en el activo;
+  - una salida a `obra_de_activo_fijo` no se corrige así en v1 (**INV-A16 = a**): se anula la salida si el mes está abierto o se corrige en Activos fijos, porque su costo ya está en el activo;
   - una salida registrada **de menos** no se ajusta: se registra la salida que faltó, con su destino.
 - **Sobrante** (V-5): entra al costo de §7.4 y el evento lleva `destinoDelSobrante` (la variable de la empresa).
 
@@ -1270,7 +1270,7 @@ texto.
 | INV-12c | Deterioro | frontend |
 | **INV-13** | Reportes de §13 y autorizaciones del libro; correspondencia tipo → clase de la SAT y «mercadería en tránsito» desde la bandeja (el reporte semestral, cuando se tenga la plantilla, INV-P8 e INV-P14) | backend |
 | INV-13c | Pantallas de reportes | frontend |
-| **INV-14** | Cambio de método con autorización de la SAT: `desde` calculado (1 de enero del año siguiente), autorización tarde con recálculo o con la lista de meses por reabrir (V-1); el ajuste según P-1 | backend y frontend |
+| **INV-14** | Cambio de método con autorización de la SAT: `desde` calculado (1 de enero del año siguiente), autorización tarde con recálculo o con la lista de meses por reabrir (V-1); sin ajuste de valor (P-1 = a: lo hace el contador en Contabilidad) | backend y frontend |
 | **INV-AF** | Órdenes con Activos fijos (§4.3); cambio del `check` de `activos_fijos.costos.origen`; texto «Obra o uso propio (activo en construcción)» | backend (después de AF-3) |
 | **AFI-9** (con INV-AF e INV-0c) | Orden `activos-fijos.obtener_umbral_de_capitalizacion` (la atiende Activos fijos) y el aviso del umbral en la recepción, la entrada manual y el saldo inicial; ayuda fija en el artículo de tipo `repuestos` | backend + frontend |
 | INV-QA | Punta a punta (factura en el libro → por recibir → salida → traslado con tránsito → conteo → ajuste → cierre; saldos iniciales → cierre de la carga) | pruebas-qa |
@@ -1279,8 +1279,8 @@ texto.
 INV-0 se puede programar en cuanto el usuario apruebe INV-A9. INV-3 no depende de la base y puede ir en paralelo con
 INV-1 e INV-2. INV-7 puede adelantarse a INV-5 si se quiere cargar saldos primero. Lo que el contador pidió corregir
 antes de programar (validación §6) ya está en este diseño: V-2 y los traslados antes de **INV-3**; V-3 y V-6 antes de
-**INV-9**; V-4 antes de **INV-13**; V-1 antes de **INV-14**. Quedan abiertas P-1 (antes de INV-14), P-3 (antes de
-INV-9) e INV-A16 (antes de INV-9).
+**INV-9**; V-4 antes de **INV-13**; V-1 antes de **INV-14**. P-1, P-3 e INV-A16 ya están respondidas (2026-11-23). Queda
+abierta INV-P14, solo antes del reporte semestral de INV-13.
 
 ## 17. Preguntas para el usuario
 
@@ -1320,7 +1320,8 @@ Del arquitecto:
 | INV-A14 | ¿Desde cuándo vale un cambio de método? | a) Desde el 1.º de enero de un año; b) desde cualquier mes abierto sin movimientos | **a**; validado (V-1) y precisado: el 1 de enero del año **siguiente** a la autorización |
 | INV-A15 | ¿Reabrir meses? | a) Solo el último, de uno en uno; b) cualquiera | **a**, con motivo y auditoría |
 
-**Abiertas** (nacen de la validación del contador del 2026-11-18; se preguntan al usuario antes del paso indicado):
+**Nacidas de la validación del contador del 2026-11-18.** P-1, P-3 e INV-A16 quedaron **respondidas el 2026-11-23** (ver «Respuestas
+del usuario (2026-11-23)» al final; la tabla se conserva como estaba al preguntar). **Sigue abierta solo INV-P14:**
 
 | # | Pregunta | Opciones | Recomendación |
 |---|---|---|---|
@@ -1374,7 +1375,7 @@ marca de inventario** (R-16).
 - Préstamo de herramientas: aprobado en Activos fijos (INV-P3 a); falta su diseño corto allá (`diseno-activos-fijos.md`
   §19) y la corrección de `PLAN.md` §6 al anotarlo.
 - Identificación específica por serie (INV-P1 c) y método por categoría (INV-P2 b).
-- Si P-1 fuera b: tabla de capas de apertura del cambio de método y evento «ajuste por cambio de método».
+- Si en el futuro se adoptara P-1 b (hoy es a): tabla de capas de apertura del cambio de método y evento «ajuste por cambio de método».
 - Órdenes para Ventas (salida por venta, devolución al costo original, consignación) y Cultivos (entrada de cosecha).
 - Recepción **antes** de la factura (mercadería recibida sin documento, con costo provisional que se ajusta al llegar la
   factura): hoy se espera la factura o se usa la fecha real con el mes abierto.
@@ -1404,3 +1405,18 @@ existencias valuadas en Excel); **INV-A14** un cambio de método rige desde el 1
 Inventarios (I-11 a); uso propio de mercadería por la salida a «Obra o uso propio» (I-10 a). Validación del contador
 guardada y llevada al cuerpo (§18), con **P-2 = a** (descartar quita la marca en el libro) y **INV-A14 precisada**: rige
 el 1 de enero del año **siguiente** a la autorización.
+
+## Respuestas del usuario (2026-11-23)
+
+- **P-1 = a:** al autorizar la SAT un cambio de método, la existencia pasa al nuevo método con el mismo valor y **el contador hace
+  el ajuste en Contabilidad**. INV-14 no registra ningún ajuste de valor.
+- **P-3 = a:** **sin causa propia de merma normal.** Un faltante entra como `sin_causa_exceptuada` (factura) o como
+  `perecedero_o_vencimiento` con acta; las mermas dentro del proceso (NIIF 13.13) se registran como consumo.
+- **INV-A16 = a:** en v1 `error_de_registro` **no** corrige una salida a obra o uso propio: se anula la salida si el mes está abierto o
+  se corrige en Activos fijos.
+- **INV-P14 sigue abierta**, con la recomendación **c** (decidir al ver la plantilla oficial). Mientras tanto esos artículos salen en
+  el bloque «Sin clase de la SAT» (§13). Solo afecta al reporte semestral de INV-13.
+
+**Dependencia nueva (misma fecha):** Ventas y Cuentas por cobrar son un solo módulo, «Ventas y cobros» (clave `cuentas-por-cobrar`), para
+el que **Inventarios es opcional**. Producción sigue aparte y depende de Inventarios. Lo que cambia para este módulo está en
+`diseno-ventas-y-caja.md` §24.2: las órdenes de venta siguen siendo las mismas, y su `modulo_de_origen` es `cuentas-por-cobrar`.

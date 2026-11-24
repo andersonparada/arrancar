@@ -4352,3 +4352,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   o que lee un módulo y que pueden estar apagados. Cuenta para el orden del migrador, para `verificarDeclaracion` (deben
   estar registrados) y para la prueba de llaves entre esquemas; `validarActivacion` y `validarDesactivacion` siguen
   leyendo solo `dependeDe`. Pruebas de orden, de ciclos, de verificación y de activación. Sin migración.
+- **2026-11-23**: Ventas/Caja y Cuentas por cobrar pasan a ser un solo módulo, «Ventas y cobros» (clave `cuentas-por-cobrar`, sin
+  reescribir migraciones), con Inventarios opcional y Libro de ventas aparte. Validado por contador y seguridad (30 hallazgos
+  incorporados); respuestas VU-P1 a VU-P9 en `diseno-ventas-y-caja.md` §24.9. Inventarios: P-1, P-3 e INV-A16 = a.
