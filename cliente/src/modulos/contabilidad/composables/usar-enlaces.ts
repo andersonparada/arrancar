@@ -48,7 +48,7 @@ function mensajeDeEnlazado(rol: RolDeEnlace, cuenta: Cuenta): string {
 const confirmarCambio = (avisos: Avisos, fila: FilaDeEnlace, nueva: Cuenta): Promise<boolean> =>
   avisos.confirmar({
     titulo: 'Cambiar la cuenta',
-    mensaje: `«${fila.nombre}» pasará de ${fila.enlace?.cuentaCodigo} ${fila.enlace?.cuentaNombre} a ${nueva.codigo} ${nueva.nombre}. Solo afecta a lo que se contabilice desde ahora; lo ya contabilizado no cambia.`,
+    mensaje: `«${fila.nombre}» pasará de ${fila.enlace?.cuentaCodigo} ${fila.enlace?.cuentaNombre} a ${nueva.codigo} ${nueva.nombre}. Solo afecta a lo que se contabilice desde ahora; lo ya contabilizado no cambia, salvo que regenere un período abierto: ahí las partidas automáticas se rehacen con la cuenta nueva.`,
     textoConfirmar: 'Cambiar',
   });
 

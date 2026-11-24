@@ -22,6 +22,8 @@ export interface RolDeEnlaceDto {
   nombreDeLlave: string | null;
   esDeAuxiliar: boolean;
   opcional: boolean;
+  generalObligatoria: boolean;
+  segunOperacion: boolean;
   enlaces: EnlaceDto[];
 }
 

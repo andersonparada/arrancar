@@ -72,7 +72,7 @@ function filasDeLlaves(rol: RolDeEnlace, llaves: LlavesDelRol): FilaDeEnlace[] {
         nombre: llave.nombre,
         enlace,
         huerfana: false,
-        falta: !enlace && !general && !rol.opcional,
+        falta: !enlace && !general && !rol.opcional && !rol.segunOperacion && !rol.generalObligatoria,
       };
     });
 }
@@ -117,23 +117,32 @@ const registrosCubiertos = (rol: RolDeEnlace, llaves: LlaveDeEnlace[]): number =
  * se puede comprobar), falta la cuenta general, porque la búsqueda terminaría en `falta_enlace`.
  */
 export function faltantesDelRol(rol: RolDeEnlace, llaves: LlavesDelRol): number {
-  if (rol.opcional) return 0;
+  if (rol.opcional || rol.segunOperacion) return 0;
   if (!rol.admiteLlave) return rol.enlaces.length === 0 ? 1 : 0;
   if (rol.enlaces.some((enlace) => enlace.llave === null)) return 0;
-  if (llaves === null) return 1;
+  return faltantesSinGeneral(rol, llaves);
+}
+
+/** Un rol con llave y sin cuenta general: cuántas cuentas faltan según los registros conocidos. */
+function faltantesSinGeneral(rol: RolDeEnlace, llaves: LlavesDelRol): number {
+  if (rol.generalObligatoria || llaves === null) return 1;
   const sinEnlace = llavesSinEnlace(rol, llaves).length;
   if (sinEnlace > 0) return sinEnlace;
   return registrosCubiertos(rol, llaves) === 0 ? 1 : 0;
 }
 
+const YA_CONTABILIZADO = ' Lo ya contabilizado no cambia.';
+
 /** Lo que pasa con lo que llegue de los módulos si se quita el enlace de la fila, según las reglas de búsqueda. */
 export function consecuenciaDeQuitar(rol: RolDeEnlace, fila: FilaDeEnlace): string {
   if (rol.opcional)
-    return 'Este rol es opcional: sin enlace el importe se suma al costo de cada línea y no se detiene nada.';
+    return `Sin esta cuenta, el IVA no acreditable se suma al costo o gasto de cada línea. No se detiene nada.${YA_CONTABILIZADO}`;
   const general = enlaceDe(rol, null);
   if (fila.llave !== null && general)
-    return `Lo de este registro pasará a usar la cuenta general ${general.cuentaCodigo} ${general.cuentaNombre}.`;
-  return 'Lo que llegue de los módulos para este rol quedará por contabilizar con un error hasta que lo enlace de nuevo.';
+    return `Lo de este registro pasará a usar la cuenta general ${general.cuentaCodigo} ${general.cuentaNombre}.${YA_CONTABILIZADO}`;
+  if (fila.llave === null && rol.enlaces.some((enlace) => enlace.llave !== null))
+    return `Los registros con cuenta propia siguen igual. Los demás quedarán por contabilizar con error hasta que tengan cuenta.${YA_CONTABILIZADO}`;
+  return `Lo que llegue de los módulos para este rol quedará por contabilizar con un error hasta que lo enlace de nuevo.${YA_CONTABILIZADO}`;
 }
 
 /** El total de cuentas que faltan por elegir en todos los roles. */

@@ -29,6 +29,8 @@ const rol = (clave: string, propios: Partial<RolDeEnlace> = {}): RolDeEnlace => 
   nombreDeLlave: null,
   esDeAuxiliar: false,
   opcional: false,
+  generalObligatoria: false,
+  segunOperacion: false,
   enlaces: [],
   ...propios,
 });
@@ -158,7 +160,7 @@ describe('consecuenciaDeQuitar', () => {
 
   it('en un rol opcional el importe va al costo de cada línea', () => {
     expect(consecuenciaDeQuitar(rol('iva_no_acreditable', { opcional: true }), fila(null))).toContain(
-      'costo de cada línea',
+      'costo o gasto de cada línea',
     );
   });
 
@@ -170,5 +172,41 @@ describe('consecuenciaDeQuitar', () => {
   it('sin respaldo queda por contabilizar con error', () => {
     expect(consecuenciaDeQuitar(conLlave, fila('a'))).toContain('con un error');
     expect(consecuenciaDeQuitar(rol('x'), fila(null))).toContain('con un error');
+  });
+});
+
+describe('cuenta general obligatoria y roles según la operación', () => {
+  const proveedores = rol('proveedores', { admiteLlave: true, generalObligatoria: true });
+  const conCategorias = { ...proveedores, enlaces: [enlace('proveedores', 'a'), enlace('proveedores', 'b')] };
+
+  it('proveedores con todas las categorías y sin cuenta general sigue faltando', () => {
+    expect(faltantesDelRol(conCategorias, llaves)).toBe(1);
+    expect(totalDeFaltantes([conCategorias], { proveedores: llaves })).toBe(1);
+  });
+
+  it('con la cuenta general ya no falta y las categorías no son obligatorias', () => {
+    const completo = { ...proveedores, enlaces: [enlace('proveedores', null)] };
+    expect(faltantesDelRol(completo, llaves)).toBe(0);
+    expect(filasDeRol(proveedores, llaves).some((fila) => fila.falta && fila.llave !== null)).toBe(false);
+  });
+
+  it('un rol según la operación no cuenta como faltante', () => {
+    expect(faltantesDelRol(rol('reserva_legal', { segunOperacion: true }), [])).toBe(0);
+  });
+});
+
+describe('mensaje al quitar según el caso', () => {
+  const general = enlace('r', null);
+  const fila = (llave: string | null) => ({ llave, nombre: 'x', enlace: null, huerfana: false, falta: false });
+
+  it('quitar la general con enlaces propios no dice que todo queda con error', () => {
+    const r = rol('r', { admiteLlave: true, enlaces: [general, enlace('r', 'a')] });
+    const texto = consecuenciaDeQuitar(r, fila(null));
+    expect(texto).toContain('siguen igual');
+    expect(texto).toContain('Lo ya contabilizado no cambia.');
+  });
+
+  it('el opcional no detiene nada', () => {
+    expect(consecuenciaDeQuitar(rol('r', { opcional: true }), fila(null))).toContain('No se detiene nada.');
   });
 });

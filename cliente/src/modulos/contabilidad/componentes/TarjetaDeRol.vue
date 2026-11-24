@@ -42,6 +42,10 @@ const estaOcupada = (fila: FilaDeEnlace): boolean => props.ocupadas.has(`${props
     <p v-if="rol.opcional" class="mt-1 text-xs text-tierra-600 dark:text-tierra-300">
       Opcional: sin cuenta, este importe va al costo de cada línea.
     </p>
+    <p v-if="rol.segunOperacion" class="mt-1 text-xs text-tierra-600 dark:text-tierra-300">
+      Según su operación: solo aplica a algunas empresas. Si le corresponde, enlácela antes del primer hecho que la use;
+      si llega uno sin cuenta, quedará por contabilizar con un error visible, sin perderse.
+    </p>
     <ul class="mt-2 divide-y divide-tierra-100 dark:divide-tierra-800">
       <FilaDeEnlaceDelRol
         v-for="fila in filas"

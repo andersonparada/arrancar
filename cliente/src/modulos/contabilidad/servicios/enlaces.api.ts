@@ -22,6 +22,10 @@ export interface RolDeEnlace {
   esDeAuxiliar: boolean;
   /** Sin enlace el hecho se contabiliza igual con otra regla: no cuenta como faltante. */
   opcional: boolean;
+  /** La llave del hecho puede venir vacía: la cuenta general es obligatoria aunque cada registro tenga la suya. */
+  generalObligatoria: boolean;
+  /** Solo aplica a ciertas empresas: no cuenta como faltante; se exige al llegar el primer hecho. */
+  segunOperacion: boolean;
   enlaces: Enlace[];
 }
 

@@ -17,18 +17,27 @@ export interface DefinicionDeRol {
   esDeAuxiliar: boolean;
   /** Sin enlace el hecho se contabiliza igual con otra regla (p. ej. el IVA no acreditable va al costo de la línea). */
   opcional: boolean;
+  /**
+   * La llave del hecho puede venir vacía (proveedor sin categoría, caja chica sin fondo), así que la cuenta general es
+   * obligatoria aunque cada registro tenga la suya.
+   */
+  generalObligatoria: boolean;
+  /** Solo aplica a ciertas empresas (crédito fiscal, sociedades, NIIF…): sin dato fiscal para decidirlo, se exige al llegar el primer hecho. */
+  segunOperacion: boolean;
 }
 
 interface Opciones {
   llave?: string;
   auxiliar?: boolean;
   opcional?: boolean;
+  generalObligatoria?: boolean;
+  segunOperacion?: boolean;
 }
 
 const rol = (
   nombre: string,
   modulos: readonly string[],
-  { llave, auxiliar = false, opcional = false }: Opciones = {},
+  { llave, auxiliar = false, opcional = false, generalObligatoria = false, segunOperacion = false }: Opciones = {},
 ): DefinicionDeRol => ({
   nombre,
   modulos,
@@ -36,6 +45,8 @@ const rol = (
   nombreDeLlave: llave ?? null,
   esDeAuxiliar: auxiliar,
   opcional,
+  generalObligatoria,
+  segunOperacion,
 });
 
 const COMPRAS = 'libro-de-compras';
@@ -48,12 +59,17 @@ const PROPIOS = ['contabilidad'];
 
 /** Todos los roles de sistema, con lo que la pantalla de enlaces necesita saber de cada uno. */
 export const DEFINICIONES_DE_ROLES: Readonly<Record<RolDeCuenta, DefinicionDeRol>> = {
-  proveedores: rol('Proveedores', [COMPRAS, PAGAR], { llave: 'Categoría de proveedor', auxiliar: true }),
-  iva_credito_fiscal: rol('IVA crédito fiscal', [COMPRAS]),
+  proveedores: rol('Proveedores', [COMPRAS, PAGAR], {
+    llave: 'Categoría de proveedor',
+    auxiliar: true,
+    generalObligatoria: true,
+  }),
+  iva_credito_fiscal: rol('IVA crédito fiscal', [COMPRAS], { segunOperacion: true }),
   iva_no_acreditable: rol('IVA no acreditable', [COMPRAS], { opcional: true }),
   retencion_por_pagar: rol('Retención por pagar', [COMPRAS, CAJA], {
     llave: 'Regla de retención',
     auxiliar: true,
+    segunOperacion: true,
   }),
   gasto_por_concepto: rol('Gasto por concepto del libro', [COMPRAS], { llave: 'Concepto de gasto' }),
   documentos_por_asignar: rol('Documentos por asignar', [COMPRAS, CAJA, LIQUIDAR], { auxiliar: true }),
@@ -70,7 +86,7 @@ export const DEFINICIONES_DE_ROLES: Readonly<Record<RolDeCuenta, DefinicionDeRol
   fondos_en_transito: rol('Fondos en tránsito', [BANCOS]),
   apertura_por_regularizar: rol('Apertura por regularizar', [PAGAR]),
   iva_por_rectificar: rol('IVA por rectificar', [COMPRAS]),
-  caja_chica: rol('Caja chica', [CAJA], { llave: 'Fondo', auxiliar: true }),
+  caja_chica: rol('Caja chica', [CAJA], { llave: 'Fondo', auxiliar: true, generalObligatoria: true }),
   anticipos_por_liquidar: rol('Anticipos por liquidar', [LIQUIDAR, PAGAR, CAJA], { auxiliar: true }),
   cuentas_por_cobrar_a_empleados: rol('Cuentas por cobrar a empleados', [LIQUIDAR, PAGAR, CAJA]),
   perdidas_no_deducibles: rol('Pérdidas no deducibles', [CAJA, LIQUIDAR, PAGAR]),
@@ -90,13 +106,13 @@ export const DEFINICIONES_DE_ROLES: Readonly<Record<RolDeCuenta, DefinicionDeRol
   diferencial_no_realizado_perdida: rol('Diferencial no realizado (pérdida)', ['multimoneda']),
   isr_gasto_corriente: rol('ISR gasto corriente', PROPIOS),
   isr_por_pagar: rol('ISR por pagar', PROPIOS),
-  isr_diferido_resultado: rol('ISR diferido (resultado)', PROPIOS),
-  isr_diferido_activo: rol('ISR diferido activo', PROPIOS),
-  isr_diferido_pasivo: rol('ISR diferido pasivo', PROPIOS),
+  isr_diferido_resultado: rol('ISR diferido (resultado)', PROPIOS, { segunOperacion: true }),
+  isr_diferido_activo: rol('ISR diferido activo', PROPIOS, { segunOperacion: true }),
+  isr_diferido_pasivo: rol('ISR diferido pasivo', PROPIOS, { segunOperacion: true }),
   resultado_del_ejercicio: rol('Resultado del ejercicio', PROPIOS),
   resultados_acumulados: rol('Resultados acumulados', PROPIOS),
   ajustes_de_ejercicios_anteriores: rol('Ajustes de ejercicios anteriores', PROPIOS),
-  reserva_legal: rol('Reserva legal', PROPIOS),
+  reserva_legal: rol('Reserva legal', PROPIOS, { segunOperacion: true }),
 };
 
 /** Los roles que un conjunto de módulos activos necesita, en el orden del catálogo. */
