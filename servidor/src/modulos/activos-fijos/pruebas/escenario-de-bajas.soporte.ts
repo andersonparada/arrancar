@@ -13,7 +13,7 @@ import type { Activo } from '../dominio/activo.js';
 import type { IncisoFiscal } from '../dominio/incisos-fiscales.js';
 import { BajasEnMemoria } from './dobles-de-bajas.js';
 import { DocumentosDePrueba } from './dobles-de-boleta-firmada.js';
-import { HistorialEnMemoria } from './dobles-de-mejoras.js';
+import { HistorialEnMemoria, MejorasEnMemoria } from './dobles-de-mejoras.js';
 import { armarUso, operador, uso } from './escenario-de-uso.soporte.js';
 
 export { operador };
@@ -62,6 +62,7 @@ export function armarBajas() {
   const bajas = new BajasEnMemoria(base.activos);
   const historial = new HistorialEnMemoria();
   const documentos = new DocumentosDePrueba();
+  const mejoras = new MejorasEnMemoria(base.costos);
   const dependencias = {
     ...base.dependencias,
     consultas: base.activos,
@@ -69,6 +70,7 @@ export function armarBajas() {
     documentos,
     bajas,
     consultasDeBajas: bajas,
+    consultasDeMejoras: mejoras,
   };
   const registrador = new RegistradorDeBajas(dependencias);
   const adjuntador = new AdjuntadorDeDocumentos(dependencias);
@@ -86,6 +88,7 @@ export function armarBajas() {
   return {
     ...base,
     bajas,
+    mejoras,
     historial,
     documentos,
     activoEnUso,

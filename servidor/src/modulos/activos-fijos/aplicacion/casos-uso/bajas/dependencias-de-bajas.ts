@@ -1,6 +1,7 @@
 import type { Correlativos } from '../../../../core/compartido/aplicacion/correlativos.js';
 import type { DocumentosProtegidos } from '../../../../core/compartido/aplicacion/documentos-protegidos.js';
 import type { ConsultasBajas } from '../../puertos/consultas-bajas.js';
+import type { ConsultasMejoras } from '../../puertos/consultas-mejoras.js';
 import type { RepositorioBajas } from '../../puertos/repositorio-bajas.js';
 import type { RepositorioTraslados } from '../../puertos/repositorio-traslados.js';
 import type { DependenciasDeCambioDeLibros } from '../mejoras/dependencias-de-mejoras.js';
@@ -17,5 +18,7 @@ export interface DependenciasDeBajas extends DependenciasDeCambioDeLibros {
   traslados: RepositorioTraslados;
   bajas: RepositorioBajas;
   consultasDeBajas: ConsultasBajas;
+  /** Las fechas de las mejoras vigentes: la baja no puede ser anterior a ninguna. */
+  consultasDeMejoras: ConsultasMejoras;
   documentos: DocumentosProtegidos;
 }

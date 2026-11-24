@@ -94,3 +94,15 @@ export class BajaDeComponenteConPrincipalDadoDeBaja extends ReglaDeNegocioInfrin
     );
   }
 }
+
+/** Un bien de terceros que va con el principal no tiene destino: nadie dice si se devolvió, se perdió o se destruyó. */
+export class BienDeTercerosSinDestino extends ReglaDeNegocioInfringida {
+  readonly codigo = 'bien_de_terceros_sin_destino';
+
+  constructor(codigoDelBien: string) {
+    super(
+      `El bien de terceros ${codigoDelBien} es un componente de este activo: resuelva primero su destino (devolverlo a su dueño o darlo de baja por separado) y repita la operación.`,
+      { codigoDelBien },
+    );
+  }
+}

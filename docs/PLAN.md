@@ -4413,4 +4413,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   posterior vigente (`baja_anterior_a_una_mejora`). (5) El acta y la denuncia son del acto: viven en la baja del principal y los
   componentes las leen de ahí (avisos, `tieneActa`, descarga); subir desde un componente las guarda en la del principal
   (`RepositorioBajas.portadoraDeDocumentos`). Sin migración. Pruebas nuevas: 10 unitarias y 6 de API.
+- **2026-11-23 — AF-9 (revisión 2): cuatro correcciones.** (1) La baja anterior a una mejora compara contra la fecha de la
+  mejora vigente (`consultasDeMejoras.deActivo`), no contra la fecha de emisión de la factura de sus líneas. (2) Un principal de
+  terceros o de control ya no se vende aunque tenga un componente propio: el principal conserva lo pedido y el dominio lo rechaza
+  (`causa_de_baja_no_permitida`); solo los componentes se convierten. (3) Un componente de terceros que va con un principal vendido,
+  donado, obsoleto o faltante ya no se marca `devuelto_al_dueno`: se rechaza con `bien_de_terceros_sin_destino` hasta resolver su
+  destino. (4) Un bien de control no se vende como activo (la venta con resultado contradecía §3.2 y §3.4). Los puntos 3 y 4
+  quedan **pendientes del dictamen de `contador-guatemala`** (qué destino y qué registro les corresponde); mientras tanto se
+  rechazan. Sin migración. Pruebas nuevas: 6 unitarias y 3 de API.
 

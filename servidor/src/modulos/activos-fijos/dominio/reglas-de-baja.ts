@@ -31,11 +31,17 @@ function obligatorio(valor: string, opciones: { nombre: string; maximo: number }
   return texto;
 }
 
-/** Los bienes de terceros solo se devuelven, se destruyen, se roban, se extravían o tienen otra causa; no se venden. */
+/**
+ * Los bienes de terceros solo se devuelven, se destruyen, se roban, se extravían o tienen otra causa; no se venden. Un
+ * bien de control no se vende como activo: nunca estuvo en el balance y la baja no lleva resultado (§3.2 y §3.4); cómo
+ * se registra su venta queda pendiente del dictamen del contador.
+ */
 function exigirCausaDelBien(causa: DatosDeBaja['causa'], tipoDeRegistro: TipoDeRegistro): void {
   const esDeTerceros = tipoDeRegistro === 'de_terceros';
   if (causa === 'devuelto_al_dueno' && !esDeTerceros)
     throw new CausaDeBajaNoPermitida('«Devuelto al dueño» solo vale para los bienes de terceros.');
+  if (causa === 'venta' && tipoDeRegistro === 'bien_de_control')
+    throw new CausaDeBajaNoPermitida('Un bien de control no se vende como activo: dé de baja con otra causa.');
   if (esDeTerceros && ['venta', 'donacion', 'obsolescencia', 'faltante_de_inventario'].includes(causa))
     throw new CausaDeBajaNoPermitida('Un bien de terceros no se vende ni se dona: devuélvalo a su dueño.');
 }

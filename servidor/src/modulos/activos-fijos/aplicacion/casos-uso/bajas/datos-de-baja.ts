@@ -1,5 +1,5 @@
 import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
-import { PrecioNoRepartible } from '../../../dominio/errores-de-baja.js';
+import { BienDeTercerosSinDestino, PrecioNoRepartible } from '../../../dominio/errores-de-baja.js';
 import { repartirEnProporcion } from '../../../dominio/resultados-de-venta.js';
 import type { TipoDeRegistro } from '../../../dominio/tipos-de-activo.js';
 import type { CausaDeBaja, DatosDeBaja, DatosDeVenta } from '../../../dominio/tipos-de-baja.js';
@@ -64,19 +64,26 @@ const CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS: readonly CausaDeBaja[] = [
   'faltante_de_inventario',
 ];
 
+/** Lo que se sabe de un activo para armar su baja dentro de un acto con otros activos. */
+export interface ParteDeLaBaja {
+  codigo: string;
+  tipoDeRegistro: TipoDeRegistro;
+  venta: DatosDeVenta | null;
+  /** Va con su principal (el pedido es el principal; los demás son sus componentes). */
+  esComponente: boolean;
+}
+
 /**
- * Los datos de la baja de un activo que se da de baja con otros (§3.8): el que no lleva venta propia en una venta queda
- * como «otra» causa (un bien de control se va con el principal sin precio); un bien de terceros no se vende ni se dona,
- * así que se devuelve a su dueño. Un activo solo conserva su causa y deja que el dominio la valide.
+ * Los datos de la baja de un activo en un acto con otros (§3.8). El principal conserva lo pedido y el dominio lo valida
+ * (un principal de terceros o de control no se vende). Un componente sin venta propia en una venta queda como «otra»
+ * causa (un bien de control se va sin precio). Un componente de terceros no se vende, ni se dona, ni se da por obsoleto
+ * o faltante con su principal: no se inventa que se devolvió, se pide resolver su destino antes.
+ * @throws BienDeTercerosSinDestino si un componente de terceros no tiene destino en la causa pedida.
  */
-export function datosDelActivo(
-  datos: DatosDeBaja,
-  parte: { tipoDeRegistro: TipoDeRegistro; venta: DatosDeVenta | null; enConjunto: boolean },
-): DatosDeBaja {
-  const { tipoDeRegistro, venta, enConjunto } = parte;
-  if (venta || !enConjunto) return { ...datos, venta };
-  const deTerceros = tipoDeRegistro === 'de_terceros';
-  if (deTerceros && CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS.includes(datos.causa))
-    return { ...datos, causa: 'devuelto_al_dueno', venta: null };
+export function datosDelActivo(datos: DatosDeBaja, parte: ParteDeLaBaja): DatosDeBaja {
+  const { codigo, tipoDeRegistro, venta, esComponente } = parte;
+  if (venta || !esComponente) return { ...datos, venta };
+  if (tipoDeRegistro === 'de_terceros' && CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS.includes(datos.causa))
+    throw new BienDeTercerosSinDestino(codigo);
   return datos.causa === 'venta' ? { ...datos, causa: 'otra', venta: null } : datos;
 }

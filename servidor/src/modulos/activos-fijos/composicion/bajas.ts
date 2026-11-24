@@ -14,6 +14,7 @@ import { BajasControlador } from '../http/bajas.controlador.js';
 import { rutasBajas } from '../http/bajas.rutas.js';
 import { CierresDrizzle } from '../infraestructura/persistencia/cierres.drizzle.js';
 import { ConsultasActivosDrizzle } from '../infraestructura/persistencia/consultas-activos.drizzle.js';
+import { ConsultasMejorasDrizzle } from '../infraestructura/persistencia/consultas-mejoras.drizzle.js';
 import { ConsultasBajasDrizzle } from '../infraestructura/persistencia/consultas-bajas.drizzle.js';
 import { HistorialDeDepreciacionDrizzle } from '../infraestructura/persistencia/historial-de-depreciacion.drizzle.js';
 import { RepositorioActivosDrizzle } from '../infraestructura/persistencia/repositorio-activos.drizzle.js';
@@ -46,6 +47,7 @@ function dependenciasDeBajas() {
     traslados: new RepositorioTrasladosDrizzle(),
     bajas: new RepositorioBajasDrizzle(),
     consultasDeBajas: new ConsultasBajasDrizzle(),
+    consultasDeMejoras: new ConsultasMejorasDrizzle(),
   };
 }
 

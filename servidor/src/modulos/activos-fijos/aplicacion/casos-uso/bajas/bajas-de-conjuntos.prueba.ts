@@ -1,12 +1,16 @@
 /** Bajas y ventas de un activo con sus componentes cuando alguno no lleva libros, y las reglas que cuidan el acto (§3.8). */
+import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { Mejora } from '../../../dominio/mejora.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   BajaAnteriorAUnaMejora,
+  BienDeTercerosSinDestino,
   BajaDeComponenteConPrincipalDadoDeBaja,
   CausaDeBajaNoPermitida,
 } from '../../../dominio/errores-de-baja.js';
 import {
   armarBajas,
+  operador,
   solicitudDeBaja,
   solicitudDeVenta,
   type EscenarioDeBajas,
@@ -60,6 +64,12 @@ describe('el reparto de una venta', () => {
 });
 
 const control = { tipoDeRegistro: 'bien_de_control', costoCentavos: 0 } as const;
+const deTerceros = {
+  tipoDeRegistro: 'de_terceros',
+  propietario: 'Vecino',
+  formaDeTenencia: 'comodato',
+  origen: null,
+} as const;
 const terceros = { tipoDeRegistro: 'de_terceros', costoCentavos: 0 } as const;
 
 describe('vender un principal con un componente sin libros', () => {
@@ -78,47 +88,45 @@ describe('vender un principal con un componente sin libros', () => {
     expect(e.estadoDe(taladro).estado).toBe('dado_de_baja');
   });
 
-  it('un bien de terceros no se vende con el principal: se devuelve a su dueño y el precio no lo toca', async () => {
-    const { principal, hijo, clase } = await principalConComponente();
-    const prestado = await e.activoConCosto(clase, null, {
-      tipoDeRegistro: 'de_terceros',
-      propietario: 'Vecino',
-      formaDeTenencia: 'comodato',
-      origen: null,
-      activoPadreId: principal.id.valor,
-    });
+  it('un componente de terceros impide vender, donar o dar por faltante al principal: no se inventa su destino', async () => {
+    const { principal, clase } = await principalConComponente();
+    await e.activoConCosto(clase, null, { ...deTerceros, activoPadreId: principal.id.valor });
 
-    await e.vender(solicitudDeVenta(principal));
-
-    const bajas = bajasPorActivo();
-    expect(bajas.get(prestado.id.valor)).toMatchObject({ causa: 'devuelto_al_dueno', venta: null });
-    const precios = [principal, hijo].map((activo) => bajas.get(activo.id.valor)!.venta!.precioCentavos);
-    expect(precios.reduce((suma, precio) => suma + precio, 0)).toBe(10000000);
+    await expect(e.vender(solicitudDeVenta(principal))).rejects.toBeInstanceOf(BienDeTercerosSinDestino);
+    for (const causa of ['donacion', 'faltante_de_inventario', 'obsolescencia'] as const)
+      await expect(e.darDeBaja(solicitudDeBaja(principal, { causa }))).rejects.toBeInstanceOf(BienDeTercerosSinDestino);
+    expect(e.bajas.registros.size).toBe(0);
   });
 
-  it('un bien de terceros que va con un principal donado también se devuelve a su dueño', async () => {
+  it('un componente de terceros se va con el principal si la causa es una destrucción o un robo', async () => {
     const { principal, clase } = await principalConComponente();
-    const prestado = await e.activoConCosto(clase, null, {
-      tipoDeRegistro: 'de_terceros',
-      propietario: 'Vecino',
-      formaDeTenencia: 'comodato',
-      origen: null,
-      activoPadreId: principal.id.valor,
-    });
+    const prestado = await e.activoConCosto(clase, null, { ...deTerceros, activoPadreId: principal.id.valor });
 
-    await e.darDeBaja(solicitudDeBaja(principal, { causa: 'donacion', destinoDelBien: 'Escuela' }));
+    await e.darDeBaja(solicitudDeBaja(principal, { causa: 'robo' }));
 
-    expect(bajasPorActivo().get(prestado.id.valor)!.causa).toBe('devuelto_al_dueno');
+    expect(bajasPorActivo().get(prestado.id.valor)!.causa).toBe('robo');
+  });
+
+  it('un principal de terceros no se vende aunque tenga un componente propio', async () => {
+    const clase = await e.claseDe('herramientas', '25.00');
+    const prestado = await e.activoConCosto(clase, null, deTerceros);
+    const hijo = await e.activoConCosto(clase, '5000.00', { activoPadreId: prestado.id.valor });
+    await e.poner(hijo);
+
+    await expect(e.vender(solicitudDeVenta(prestado))).rejects.toBeInstanceOf(CausaDeBajaNoPermitida);
+    expect(e.bajas.registros.size).toBe(0);
+  });
+
+  it('un bien de control no se vende como activo, con o sin componentes', async () => {
+    const clase = await e.claseDe('herramientas', '25.00');
+    const taladro = await e.activoConCosto(clase, '800.00', { tipoDeRegistro: 'bien_de_control' });
+
+    await expect(e.vender(solicitudDeVenta(taladro))).rejects.toBeInstanceOf(CausaDeBajaNoPermitida);
   });
 
   it('un bien de terceros solo no se vende', async () => {
     const clase = await e.claseDe('herramientas', '25.00');
-    const prestado = await e.activoConCosto(clase, null, {
-      tipoDeRegistro: 'de_terceros',
-      propietario: 'Vecino',
-      formaDeTenencia: 'comodato',
-      origen: null,
-    });
+    const prestado = await e.activoConCosto(clase, null, deTerceros);
 
     await expect(e.vender(solicitudDeVenta(prestado))).rejects.toBeInstanceOf(CausaDeBajaNoPermitida);
   });
@@ -140,9 +148,23 @@ describe('anular la baja de un componente', () => {
 });
 
 describe('baja anterior a una mejora', () => {
+  const mejora = (activoId: string, fecha: string) =>
+    e.mejoras.agregar(
+      Mejora.registrar(
+        { empresaId: Identificador.desde<'Empresa'>(operador.empresaId), activoId, numero: 1, anioDeNumero: 2027 },
+        {
+          clase: 'mejora',
+          fecha,
+          descripcion: 'Motor nuevo',
+          vidaUtilRestanteContableMeses: null,
+          noEsEdificacion: false,
+        },
+      ),
+    );
+
   it('se rechaza la baja con fecha anterior a una mejora vigente del activo o de un componente', async () => {
     const { principal, hijo } = await principalConComponente();
-    await e.agregarCosto(hijo, '5000.00', { claseDeCosto: 'otro', fecha: '2027-06-10', mejoraId: 'mejora-1' });
+    await mejora(hijo.id.valor, '2027-06-10');
 
     await expect(e.darDeBaja(solicitudDeBaja(principal, { fecha: '2027-06-05' }))).rejects.toBeInstanceOf(
       BajaAnteriorAUnaMejora,
@@ -151,6 +173,28 @@ describe('baja anterior a una mejora', () => {
 
     expect(despues.costo).toBe('75000.00');
     expect(e.estadoDe(hijo).estado).toBe('dado_de_baja');
+  });
+
+  it('manda la fecha de la mejora y no la de la factura de sus costos', async () => {
+    const { principal, hijo } = await principalConComponente();
+    await mejora(hijo.id.valor, '2027-06-12');
+    const mejoraId = [...e.mejoras.registros.keys()][0]!;
+    await e.agregarCosto(hijo, '5000.00', { claseDeCosto: 'otro', fecha: '2027-04-01', mejoraId });
+
+    await expect(e.darDeBaja(solicitudDeBaja(principal, { fecha: '2027-06-10' }))).rejects.toBeInstanceOf(
+      BajaAnteriorAUnaMejora,
+    );
+  });
+
+  it('no estorba una factura posterior de un costo de una mejora anterior a la baja', async () => {
+    const { principal, hijo } = await principalConComponente();
+    await mejora(hijo.id.valor, '2027-05-20');
+    const mejoraId = [...e.mejoras.registros.keys()][0]!;
+    await e.agregarCosto(hijo, '5000.00', { claseDeCosto: 'otro', fecha: '2027-07-05', mejoraId });
+
+    const baja = await e.darDeBaja(solicitudDeBaja(principal, { fecha: '2027-06-10' }));
+
+    expect(baja.id).toBeTruthy();
   });
 });
 

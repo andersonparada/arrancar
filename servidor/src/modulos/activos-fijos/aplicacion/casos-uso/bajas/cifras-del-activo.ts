@@ -28,10 +28,20 @@ interface PedidoDeCifras {
   primerMes: PrimerMes;
 }
 
+/** La fecha de la mejora (no la de la factura de sus costos) manda: una baja anterior a una mejora vigente no cuadra. */
+async function exigirSinMejorasPosteriores(
+  dependencias: DependenciasDeBajas,
+  pedido: { activo: { id: { valor: string }; codigo: string }; fecha: string },
+): Promise<void> {
+  const mejoras = await dependencias.consultasDeMejoras.deActivo(pedido.activo.id.valor);
+  const posterior = mejoras.find((mejora) => mejora.estado === 'vigente' && mejora.fecha > pedido.fecha);
+  if (posterior) throw new BajaAnteriorAUnaMejora(pedido.activo.codigo, posterior.fecha);
+}
+
 /**
  * Lo que valía el activo al día de la baja, para congelarlo (§6.8): costo, costo fiscal, base fiscal y las acumuladas de
  * los dos libros (con la cuota del propio mes si la convención la deprecia). El activo debe estar bloqueado.
- * @throws BajaAnteriorAUnaMejora si el activo tiene una mejora o un costo posterior después de la fecha de la baja.
+ * @throws BajaAnteriorAUnaMejora si el activo tiene una mejora o un costo posterior (por la fecha de la mejora) después de la fecha de la baja.
  */
 export async function cifrasDelActivo(
   dependencias: DependenciasDeBajas,
@@ -41,8 +51,7 @@ export async function cifrasDelActivo(
   if (propiedades.tipoDeRegistro !== 'activo') return CIFRAS_EN_CERO;
   const id = propiedades.id.valor;
   const costos = (await dependencias.costos.vigentesDeActivo(id)).map((costo) => costo.instantanea());
-  const posterior = costos.find((costo) => costo.mejoraId !== null && costo.fecha > pedido.fecha);
-  if (posterior) throw new BajaAnteriorAUnaMejora(propiedades.codigo, posterior.fecha);
+  await exigirSinMejorasPosteriores(dependencias, { activo: propiedades, fecha: pedido.fecha });
   const saldo = await dependencias.saldos.fiscalDeActivo(id);
   const incisoFiscal = await new IncisosDeClases(dependencias.clases).de(propiedades.claseId);
   const ganado = propiedades.valorComoGanadoComun === null ? 0 : aCentavos(propiedades.valorComoGanadoComun);

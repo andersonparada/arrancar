@@ -1387,9 +1387,12 @@ dos decimales.
 - **Con componentes**: el principal y sus componentes vigentes se dan de baja a la vez, con **una sola acta** (mismo número
   `activos-fijos.bajas`, una fila por activo). En una venta el precio y el IVA se reparten en proporción al costo de cada activo
   (sobrante al último; `precio_no_repartible` si a alguno le tocaría menos de un centavo). **Solo entran al reparto los activos con
-  libros**: un bien de control que va con el principal queda como baja con causa `otra` y sin precio propio, y un bien de terceros
-  no se vende ni se dona con el principal: queda como `devuelto_al_dueno` (decisión conservadora, **pendiente de validar con
-  `contador-guatemala`**). Un componente se da de baja solo, pero si se dio de baja con su principal solo se anula con el principal
+  libros**: un bien de control que va con el principal queda como baja con causa `otra` y sin precio propio, y un componente de
+  terceros impide vender, donar, dar por obsoleto o por faltante al principal (`bien_de_terceros_sin_destino`): no se inventa que
+  se devolvió, se pide resolver antes su destino (devolverlo o darlo de baja por separado); con destrucción, robo, extravío u
+  «otra» se va con el principal con esa causa. Un principal de terceros o de control no se vende aunque tenga componentes propios
+  (`causa_de_baja_no_permitida`). **Cómo se registra la venta de un bien de control y el destino de los bienes de terceros queda
+  pendiente del dictamen de `contador-guatemala`**; mientras tanto se rechaza. Un componente se da de baja solo, pero si se dio de baja con su principal solo se anula con el principal
   (`baja_de_componente_con_su_principal`); y uno dado de baja aparte no se anula mientras su principal esté dado de baja
   (`baja_de_componente_con_principal_dado_de_baja`). **Acta y denuncia son del acto**: se guardan en la baja del principal (subir
   desde el componente las manda ahí, con su auditoría `adjuntar`) y el componente las lee de ella para los avisos, `tieneActa` y la
@@ -1401,7 +1404,7 @@ dos decimales.
   sobre la baja, borra el archivo anterior y audita `adjuntar`. El tipo de acta viaja en la dirección porque el lector de
   documentos solo admite el archivo. Una baja anulada no admite documentos (`baja_anulada`) y sigue mostrando los que tenía.
 - Decisiones: la causa `faltante_de_inventario` se acepta **sin** `inventario_id` hasta AF-12 (la columna existe sin llave ni el check
-  de §5.12); `devuelto_al_dueno` solo vale para bienes de terceros, y un bien de terceros no se vende ni se dona; la baja de solo
+  de §5.12); `devuelto_al_dueno` solo vale para bienes de terceros, y un bien de terceros no se vende ni se dona (un bien de control tampoco se vende: baja sin resultado, §3.2 y §3.4); la baja de solo
   una parte de un grupo (`cantidad` menor) responde `baja_parcial_no_disponible` hasta AFI-6; `numero` del acta no es único (lo
   comparten el principal y sus componentes); no se dan de baja activos en construcción (se eliminan o se ponen en uso).
 - Falta para AF-9c: ventanas de baja y venta, acta imprimible, subir acta y denuncia, y mostrar los avisos.

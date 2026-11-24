@@ -104,7 +104,7 @@ export class RegistradorDeBajas {
       const { id, empresaId, codigo, tipoDeRegistro, fechaDeInicioDeUso } = activo.instantanea();
       const entrada = { empresaId, activoId: id.valor, cifras, ...contexto.acta };
       const alContexto = { codigoDelActivo: codigo, tipoDeRegistro, fechaDeInicioDeUso, hoy: contexto.hoy };
-      const parte = { tipoDeRegistro, venta: ventas[i]!, enConjunto: calculados.length > 1 };
+      const parte = { codigo, tipoDeRegistro, venta: ventas[i]!, esComponente: i > 0 };
       return Baja.registrar(entrada, datosDelActivo(datos, parte), alContexto);
     });
   }
