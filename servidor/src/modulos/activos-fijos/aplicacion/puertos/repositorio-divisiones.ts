@@ -6,4 +6,9 @@ export interface RepositorioDivisiones {
   buscar(id: DivisionId): Promise<Division | null>;
   /** Guarda el cambio de una división (anularla). */
   guardar(division: Division): Promise<void>;
+  /**
+   * Borra las cuotas sin efecto (`vigente = false`, de un mes reabierto) del activo nuevo de una división que se anula,
+   * y las devuelve para que queden en la auditoría. Las cuotas vigentes no se tocan: antes se revisó que no hubiera.
+   */
+  retirarCuotasSinEfecto(activoId: string): Promise<Record<string, unknown>[]>;
 }

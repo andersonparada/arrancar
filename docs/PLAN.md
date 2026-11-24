@@ -4439,4 +4439,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Anular también se bloquea con costos vigentes posteriores en cualquiera de los dos activos, y compara el mes de la **fecha** de la
   división con el último cierre (no su `periodo`). Cambiar la fecha de inicio de la carga se rechaza si un saldo tiene divisiones
   vigentes. Pruebas: 3 de API nuevas (orden de anulaciones con cuotas, costo posterior, mes de la fecha) y 1 unitaria.
-
+- **2026-11-23 — AFI-5, segunda ronda de correcciones.** (1) Anular una división ya no falla con `en_uso` si el activo nuevo
+  dejó historial: las cuotas sin efecto (de un mes reabierto) se **borran** con el activo y quedan completas en la auditoría
+  (`anterior.cuotasSinEfectoDelNuevo`); una mejora o una baja del activo nuevo, aunque esté anulada, es rastro que se conserva y
+  rechaza la anulación con `division_con_movimientos_posteriores` y un mensaje claro (no se borra nada). (2) `AnularCosto`
+  rechaza con `costo_anterior_a_division` un costo vigente que no viene de la división y es anterior a una división vigente de
+  su activo (origen o nuevo): se anula primero la división. Pruebas: 4 de API nuevas (`activos-fijos-divisiones-rastro`).

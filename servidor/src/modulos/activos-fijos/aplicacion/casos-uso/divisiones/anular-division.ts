@@ -4,7 +4,11 @@ import { aCentavos, deCentavos } from '../../../../core/compartido/dominio/centa
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Activo } from '../../../dominio/activo.js';
 import { MesCerrado } from '../../../dominio/errores-de-depreciacion.js';
-import { DivisionConMovimientosPosteriores, DivisionNoAnulable } from '../../../dominio/errores-de-division.js';
+import {
+  DivisionConMovimientosPosteriores,
+  DivisionConRastroDelNuevo,
+  DivisionNoAnulable,
+} from '../../../dominio/errores-de-division.js';
 import type { Division, DivisionId } from '../../../dominio/division.js';
 import { periodoDe } from '../../../dominio/depreciacion/meses.js';
 import type { DivisionDto } from '../../dto/division.dto.js';
@@ -29,13 +33,14 @@ export class AnularDivision {
   /**
    * Anula una división (`divisiones.anular`, I-9 a): solo con el mes de su fecha abierto (aunque el `periodo` de los tramos sea el siguiente) y si ninguno de los dos activos tiene, después
    * de ella, cuotas, traslados (salvo el alta), mejoras, otros cambios de tramos, bajas ni otra división. Anula los costos
-   * que cedió, deja sin efecto sus tramos (y repone los que sustituyó), borra el activo nuevo con su alta y devuelve la
+   * que cedió, deja sin efecto sus tramos (y repone los que sustituyó), borra el activo nuevo con su alta y sus cuotas sin efecto (de un mes reabierto, que quedan en la auditoría) y devuelve la
    * cantidad y el residual al origen. La fila queda anulada con el código del activo nuevo. Audita `anular` con la división
    * y los dos activos como estaban; al confirmar publica `division_anulada`.
    * @throws RecursoNoEncontrado si no existe o no es de la empresa.
    * @throws DivisionNoAnulable si ya está anulada.
    * @throws MesCerrado si su mes ya se cerró.
    * @throws DivisionConMovimientosPosteriores si alguno de los dos activos tiene movimientos posteriores.
+   * @throws DivisionConRastroDelNuevo si el activo nuevo tuvo una mejora o una baja, aunque esté anulada.
    * @throws DivisionInvalida si falta el motivo.
    */
   async ejecutar(operador: Operador, pedido: AnulacionPedida): Promise<DivisionDto> {
@@ -50,12 +55,12 @@ export class AnularDivision {
     const porAnular = await this.cargarYRevisar(divisionId);
     const anterior = await this.comoEstaba(porAnular);
     const incisoFiscal = await this.incisoDe(porAnular.origen);
-    await this.deshacer(operador, { ...porAnular, motivo });
+    const cuotasRetiradas = await this.deshacer(operador, { ...porAnular, motivo });
     await auditoria.registrar({
       recurso: RECURSO_DE_DIVISIONES,
       registroId: divisionId,
       accion: 'anular',
-      anterior,
+      anterior: cuotasRetiradas.length > 0 ? { ...anterior, cuotasSinEfectoDelNuevo: cuotasRetiradas } : anterior,
       motivo,
     });
     const { origen, division } = porAnular;
@@ -65,7 +70,10 @@ export class AnularDivision {
     };
   }
 
-  /** Anula la fila y lo que creó: costos cedidos, tramos y activo nuevo; el origen recupera su cantidad y su residual. */
+  /**
+   * Anula la fila y lo que creó: costos cedidos, tramos y activo nuevo; el origen recupera su cantidad y su residual.
+   * Devuelve las cuotas sin efecto del activo nuevo (de un mes reabierto) que se borraron con él, para la auditoría.
+   */
   private async deshacer(operador: Operador, { division, origen, nuevo, motivo }: PorAnular & { motivo: string }) {
     const { divisiones, tramos, repositorio } = this.dependencias;
     const propias = division.instantanea();
@@ -73,10 +81,12 @@ export class AnularDivision {
     division.anular({ motivo, usuarioId: operador.usuarioId, ahora: new Date() });
     await divisiones.guardar(division);
     await tramos.anularDeDivision(propias.id.valor);
+    const cuotasRetiradas = await divisiones.retirarCuotasSinEfecto(nuevo.id.valor);
     await repositorio.eliminar(nuevo);
     origen.cambiarCantidad(origen.instantanea().cantidad + propias.cantidadSeparada);
     this.devolverResidual(origen, propias.residualSeparadoCentavos);
     await repositorio.guardar(origen);
+    return cuotasRetiradas;
   }
 
   /** Toma el candado del cierre, bloquea los dos activos y revisa que la división se pueda anular. */
@@ -92,6 +102,7 @@ export class AnularDivision {
     if (ultimo && periodoDe(fecha) <= ultimo) throw new MesCerrado(periodoDe(fecha));
     if (await consultasDeDivisiones.hayMovimientosPosteriores(divisionId))
       throw new DivisionConMovimientosPosteriores();
+    if (await consultasDeDivisiones.tieneMejorasOBajas(nuevo.id.valor)) throw new DivisionConRastroDelNuevo();
     return { division, origen, nuevo };
   }
 

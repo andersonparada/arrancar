@@ -49,6 +49,15 @@ export class DivisionConMovimientosPosteriores extends ReglaDeNegocioInfringida 
   }
 }
 
+/** El activo nuevo tuvo una mejora o una baja, aunque esté anulada: es rastro que se conserva y el activo no se puede borrar. */
+export class DivisionConRastroDelNuevo extends DivisionConMovimientosPosteriores {
+  constructor() {
+    super(
+      'El activo nuevo tuvo una mejora o una baja, aunque esté anulada: ese rastro se conserva y la división ya no se puede anular.',
+    );
+  }
+}
+
 /** Un dato de la división (motivo, fecha) no cumple sus reglas. */
 export class DivisionInvalida extends DatoInvalido {
   readonly codigo = 'division_invalida';

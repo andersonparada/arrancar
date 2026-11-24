@@ -1,8 +1,9 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { RepositorioDivisiones } from '../../aplicacion/puertos/repositorio-divisiones.js';
 import type { Division, DivisionId } from '../../dominio/division.js';
 import { mapeadorDeDivision } from './division.mapeador.js';
+import { cuotas } from './cuotas.tablas.js';
 import { divisiones } from './divisiones.tablas.js';
 import { horaReal } from './hora-real.js';
 
@@ -25,5 +26,12 @@ export class RepositorioDivisionesDrizzle implements RepositorioDivisiones {
       .update(divisiones)
       .set(mapeadorDeDivision.aFila(division))
       .where(eq(divisiones.id, division.id.valor));
+  }
+
+  async retirarCuotasSinEfecto(activoId: string): Promise<Record<string, unknown>[]> {
+    return transaccionEnCurso()
+      .delete(cuotas)
+      .where(and(eq(cuotas.activoId, activoId), eq(cuotas.vigente, false)))
+      .returning();
   }
 }

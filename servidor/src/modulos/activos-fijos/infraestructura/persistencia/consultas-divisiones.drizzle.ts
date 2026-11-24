@@ -95,4 +95,11 @@ export class ConsultasDivisionesDrizzle implements ConsultasDivisiones {
     const resultado = await transaccionEnCurso().execute<{ hay: boolean }>(MOVIMIENTOS_POSTERIORES(divisionId));
     return resultado.rows[0]?.hay === true;
   }
+
+  async tieneMejorasOBajas(activoId: string): Promise<boolean> {
+    const resultado = await transaccionEnCurso().execute<{ hay: boolean }>(sql`
+      select (exists (select 1 from activos_fijos.mejoras where activo_id = ${activoId})
+        or exists (select 1 from activos_fijos.bajas where activo_id = ${activoId})) as hay`);
+    return resultado.rows[0]?.hay === true;
+  }
 }

@@ -3,7 +3,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Activo } from '../../../dominio/activo.js';
 import type { Costo, CostoId } from '../../../dominio/costo.js';
-import { CostoDeActivoNegativo } from '../../../dominio/errores-de-costo.js';
+import { CostoAnteriorADivision, CostoDeActivoNegativo } from '../../../dominio/errores-de-costo.js';
 import type { CostoDto } from '../../dto/costo.dto.js';
 import type { DependenciasDeCostos } from './dependencias-de-costos.js';
 import { eventoDeCostoAnulado } from './eventos-de-costos.js';
@@ -24,6 +24,7 @@ export class AnularCosto {
    * @throws CostoNoAnulable si ya está anulado o es el saldo inicial.
    * @throws CostoInvalido si falta el motivo.
    * @throws CostoDeActivoNegativo si el activo quedaría con costo negativo.
+   * @throws CostoAnteriorADivision si es anterior a una división vigente del activo (se anula primero la división).
    * @throws CostoPosteriorNoDisponible si el activo ya está en uso con libros.
    */
   async ejecutar(operador: Operador, pedido: AnulacionPedida): Promise<CostoDto> {
@@ -55,6 +56,7 @@ export class AnularCosto {
     const costo = await costos.buscar(Identificador.desde(costoId) as CostoId);
     if (!costo) throw new RecursoNoEncontrado('El costo');
     costo.exigirAnulable();
+    if (await costos.esAnteriorAUnaDivisionVigente(costoId)) throw new CostoAnteriorADivision();
     const { activoId, lineaDeDocumentoId, montoCentavos } = costo.instantanea();
     if (lineaDeDocumentoId) await costos.bloquearLineas([lineaDeDocumentoId]);
     const [activo] = await repositorio.buscarBloqueando([activoId]);
