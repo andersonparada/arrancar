@@ -76,6 +76,8 @@ export const esquemaParamsDeDocumento = z.object({ documentoId: z.uuid() });
 export const esquemaFiltroDeDocumentos = z.object({
   periodo: z.iso.date().optional(),
   clienteId: z.uuid().optional(),
+  /** Solo los de consumidor final (sin cliente); no se combina con `clienteId`. */
+  sinCliente: z.stringbool().optional(),
   tipo: opcionObligatoria(TIPOS_DE_DOCUMENTO).optional(),
   estado: z.enum(['vigente', 'anulado', 'todos']).default('vigente'),
   destino: z.enum([...DESTINOS_DE_DOCUMENTO, 'ninguno']).optional(),

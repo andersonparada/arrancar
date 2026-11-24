@@ -66,6 +66,18 @@ describe('consultar', () => {
     expect(pagina.cuerpo.elementos).toHaveLength(1);
   });
 
+  it('sinCliente trae solo los de consumidor final y se combina con el texto', async () => {
+    const pasado = primerDiaDelMes(-4);
+    await registrar({ fechaEmision: `${pasado.slice(0, 8)}10`, serie: 'CFINAL', numero: '1' });
+    await registrar({ fechaEmision: `${pasado.slice(0, 8)}11`, serie: 'CFINAL', numero: '2', clienteId: null });
+
+    const sinCliente = await propietario().get(`${RUTA}?texto=cfinal&sinCliente=true`);
+    const todos = await propietario().get(`${RUTA}?texto=cfinal&sinCliente=false`);
+
+    expect(sinCliente.cuerpo.elementos.map((fila: { numero: string }) => fila.numero)).toEqual(['2']);
+    expect(todos.cuerpo.total).toBe(2);
+  });
+
   it('la ficha trae las líneas y las notas; una cuenta ajena no la ve', async () => {
     const factura = await registrar();
     const nota = await registrar({ tipo: 'nota_de_credito', documentoAfectadoId: factura.id });

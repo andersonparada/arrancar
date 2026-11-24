@@ -86,6 +86,12 @@ export const FORMULARIO_DE_DOCUMENTO = {
   ayudaDeLaFacturaAnterior: 'Úsela si la factura es de antes de empezar con este sistema.',
   sinFacturasDelCliente:
     'Este cliente no tiene facturas vigentes registradas. Puede usar los datos de una factura anterior.',
-  sinCliente: 'Escoja primero el cliente para ver sus facturas.',
+  sinCliente: 'Sin cliente: se buscan las facturas de consumidor final.',
+  sinFacturasDeConsumidorFinal:
+    'No hay facturas vigentes de consumidor final. Puede usar los datos de una factura anterior.',
+  sinCoincidencias: 'Ninguna factura vigente coincide con esa serie o número.',
+  errorAlBuscarFacturas:
+    'No se pudieron leer las facturas. Revise su conexión y pulse «Reintentar»; si sigue igual, use los datos de una factura anterior.',
+  hayMasFacturas: 'Se muestran las más recientes. Para otra, escriba su serie o número en el buscador.',
   derogado: 'Ese tipo de documento ya no existe: solo se registra si el documento es de antes de su derogación.',
 } as const;

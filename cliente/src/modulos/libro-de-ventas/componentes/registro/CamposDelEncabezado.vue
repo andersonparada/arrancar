@@ -8,8 +8,9 @@ import {
   nitDelCliente,
   type EdicionDeDocumento,
 } from '../../composables/documentos/edicion-de-documento';
+import type { BusquedaDeFacturas } from '../../composables/documentos/busqueda-de-facturas';
 import { estaDerogado, opcionesDeTipo } from '../../composables/documentos/tipos-de-documento';
-import type { ClienteParaVentas, DocumentoEnLista, TipoDeDocumento } from '../../servicios/documentos.api';
+import type { ClienteParaVentas, TipoDeDocumento } from '../../servicios/documentos.api';
 import { FORMULARIO_DE_DOCUMENTO as textos } from '../../textos-de-documentos';
 import CamposDeLaNota from './CamposDeLaNota.vue';
 
@@ -17,10 +18,10 @@ import CamposDeLaNota from './CamposDeLaNota.vue';
 const props = defineProps<{
   clientes: ClienteParaVentas[];
   clientesNoDisponibles: boolean;
-  facturas: DocumentoEnLista[];
-  cargandoFacturas: boolean;
+  facturas: BusquedaDeFacturas;
   errores: Record<string, string>;
 }>();
+const emit = defineEmits<{ buscarFacturas: [texto: string] }>();
 const edicion = defineModel<EdicionDeDocumento>({ required: true });
 
 const tipos = opcionesDeTipo();
@@ -76,6 +77,11 @@ const cambiarCliente = (clienteId: string | null): void => {
       />
       <p class="text-xs text-tierra-500">{{ ayudaDelCliente }}</p>
     </div>
-    <CamposDeLaNota v-model="edicion" :facturas="facturas" :cargando="cargandoFacturas" :errores="errores" />
+    <CamposDeLaNota
+      v-model="edicion"
+      :facturas="facturas"
+      :errores="errores"
+      @buscar="emit('buscarFacturas', $event)"
+    />
   </div>
 </template>

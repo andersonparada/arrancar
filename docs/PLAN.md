@@ -4437,3 +4437,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   baja, detalles y avisos. **Pendientes:** la etiqueta «Con retención» y las retenciones en la ficha llegan con LV-3
   (el servidor aún no las envía); localidad del DTE y IVA calculado en vivo no se ofrecen (no hay endpoint de vista
   previa en LV-2); probar de punta a punta en el navegador (`pruebas-qa`).
+- **2026-11-23 — Correcciones de la revisión de LV-1c y LV-2c.** (1) **Notas a consumidor final**: la lista del
+  servidor acepta `sinCliente=true` (`cliente_id is null`, combinable con `texto`, `estado`, etc.); el selector de
+  «Factura que corrige» ya no exige cliente: sin cliente busca las facturas de consumidor final. (2) **Búsqueda de la
+  factura**: campo «Buscar la factura» por serie o número (en el servidor, con espera de 300 ms), 50 por búsqueda con
+  aviso si hay más, conserva la factura ya elegida, y un fallo de lectura se dice (con «Reintentar») en vez de pasar
+  por «sin facturas». (3) **Anular con la causa «Se anuló en la SAT»** pide la fecha del DTE (hoy por omisión, entre la
+  emisión y hoy) y la envía como `fechaDeAnulacion`; el error sale en su campo. Pruebas: `busqueda-de-facturas`,
+  `reglas-de-baja-de-documento` y la API de consultas (`sinCliente`).

@@ -103,6 +103,8 @@ export interface FiltroDeDocumentosDeVenta {
   /** Cualquier fecha del mes del libro (`AAAA-MM-DD`): se filtra por ese mes. */
   periodo?: string;
   clienteId?: string;
+  /** Solo los registrados sin cliente (consumidor final). */
+  sinCliente?: boolean;
   tipo?: TipoDeDocumento;
   /** `vigente` oculta los anulados, `anulado` solo los anulados y `todos` no filtra. */
   estado?: 'vigente' | 'anulado' | 'todos';

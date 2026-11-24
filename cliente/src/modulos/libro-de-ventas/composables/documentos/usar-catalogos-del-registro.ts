@@ -1,12 +1,16 @@
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, reactive, ref, watch } from 'vue';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { apiConceptosDeIngreso, type ConceptoDeIngreso } from '../../servicios/conceptos-de-ingreso.api';
-import { apiDocumentos, type ClienteParaVentas, type DocumentoEnLista } from '../../servicios/documentos.api';
+import { apiDocumentos, type ClienteParaVentas } from '../../servicios/documentos.api';
 import { ordenarPorNombre } from '../comunes/cambio-de-estado';
 import type { EdicionDeDocumento } from './edicion-de-documento';
-import { admiteNota, esNota } from './tipos-de-documento';
-
-const MAXIMO_DE_FACTURAS = 200;
+import {
+  busquedaDeFacturasVacia,
+  consultaDeFacturas,
+  resultadoDeFacturas,
+  type BusquedaDeFacturas,
+} from './busqueda-de-facturas';
+import { esNota } from './tipos-de-documento';
 
 /** Los clientes activos por nombre. Si no se pueden leer, el formulario sigue: se registra a consumidor final. */
 function usarClientes() {
@@ -37,37 +41,67 @@ function usarConceptos() {
   return { conceptos, conceptosNoDisponibles: sinPermiso };
 }
 
-/** Las facturas vigentes del cliente escogido, para que una nota diga a cuál corrige. */
-function usarFacturasDelCliente(edicion: EdicionDeDocumento) {
-  const facturas = ref<DocumentoEnLista[]>([]);
-  const cargando = ref(false);
-  async function cargar(): Promise<void> {
-    if (!esNota(edicion.tipo) || !edicion.clienteId) {
-      facturas.value = [];
-      return;
-    }
-    const pedido = edicion.clienteId;
-    cargando.value = true;
-    try {
-      const pagina = await apiDocumentos.listar({ clienteId: pedido, estado: 'vigente', limite: MAXIMO_DE_FACTURAS });
-      if (pedido === edicion.clienteId) facturas.value = pagina.elementos.filter((f) => admiteNota(f.tipo));
-    } catch {
-      facturas.value = [];
-    } finally {
-      cargando.value = false;
-    }
+const ESPERA_DE_LA_BUSQUEDA_MS = 300;
+
+/** Lee las facturas de la nota en `facturas`; `vigente` dice si sigue siendo la última búsqueda pedida. */
+async function leerFacturas(
+  facturas: BusquedaDeFacturas,
+  edicion: EdicionDeDocumento,
+  consulta: { texto: string; vigente: () => boolean },
+): Promise<void> {
+  facturas.cargando = true;
+  try {
+    const pagina = await apiDocumentos.listar(consultaDeFacturas(edicion.clienteId, consulta.texto));
+    if (!consulta.vigente()) return;
+    const elegida = { id: edicion.documentoAfectadoId, anteriores: facturas.elementos };
+    Object.assign(facturas, resultadoDeFacturas(pagina, elegida), { fallo: false });
+  } catch {
+    if (consulta.vigente()) Object.assign(facturas, { elementos: [], hayMas: false, fallo: true });
+  } finally {
+    if (consulta.vigente()) facturas.cargando = false;
   }
-  watch(() => [edicion.tipo, edicion.clienteId], cargar, { immediate: true });
-  return { facturas, cargandoFacturas: cargando };
 }
 
-/** Todo lo que el formulario necesita leer: clientes, conceptos, facturas de las notas y si hay cartera. */
+/**
+ * Las facturas vigentes que una nota puede corregir: las del cliente escogido o, sin cliente, las de consumidor
+ * final. `buscarFacturas` filtra por serie o número en el servidor; si la lectura falla se dice, no se muestra vacía.
+ */
+function usarFacturasDeLaNota(edicion: EdicionDeDocumento) {
+  const facturas = reactive<BusquedaDeFacturas>(busquedaDeFacturasVacia());
+  let texto = '';
+  let turno = 0;
+  let espera: ReturnType<typeof setTimeout> | undefined;
+
+  function cargar(): void {
+    const mio = ++turno;
+    if (!esNota(edicion.tipo)) return void Object.assign(facturas, busquedaDeFacturasVacia());
+    void leerFacturas(facturas, edicion, { texto, vigente: () => mio === turno });
+  }
+
+  /** Espera a que termine de escribir; sin texto (o al reintentar con el mismo) busca de inmediato. */
+  function buscar(nuevo: string): void {
+    texto = nuevo;
+    clearTimeout(espera);
+    if (nuevo === '') cargar();
+    else espera = setTimeout(cargar, ESPERA_DE_LA_BUSQUEDA_MS);
+  }
+
+  watch(
+    () => [edicion.tipo, edicion.clienteId],
+    () => buscar(''),
+    { immediate: true },
+  );
+  onScopeDispose(() => clearTimeout(espera));
+  return { facturas, buscarFacturas: buscar };
+}
+
+/** Todo lo que el formulario necesita leer: clientes, conceptos, búsqueda de las facturas de las notas y si hay cartera. */
 export function usarCatalogosDelRegistro(edicion: EdicionDeDocumento) {
   const sesion = usarSesion();
   return {
     ...usarClientes(),
     ...usarConceptos(),
-    ...usarFacturasDelCliente(edicion),
+    ...usarFacturasDeLaNota(edicion),
     conCartera: computed(() => sesion.moduloActivo('cuentas-por-cobrar')),
   };
 }

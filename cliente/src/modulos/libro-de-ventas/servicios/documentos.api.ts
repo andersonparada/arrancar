@@ -162,6 +162,8 @@ export interface DatosDeAnulacion {
 export interface ConsultaDeDocumentos {
   periodo?: string;
   clienteId?: string;
+  /** Solo los de consumidor final (sin cliente). */
+  sinCliente?: boolean;
   tipo?: TipoDeDocumento;
   estado?: EstadoBuscado;
   destino?: DestinoDeDocumento | 'ninguno';

@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { fichaDeDocumento } from './documentos.soporte';
 import {
   datosDeAnulacion,
+  edicionDeAnulacionAbierta,
+  type EdicionDeAnulacion,
   erroresDeAnulacion,
   explicacionesDeAcciones,
   MAXIMO_DEL_MOTIVO,
@@ -12,6 +14,11 @@ import {
 } from './reglas-de-baja-de-documento';
 
 beforeEach(() => setActivePinia(createPinia()));
+
+const anulacion = (cambios: Partial<EdicionDeAnulacion>): EdicionDeAnulacion => ({
+  ...edicionDeAnulacionAbierta('2026-11-10', '2026-11-20'),
+  ...cambios,
+});
 
 const nota = (estado: 'vigente' | 'anulado') => ({
   id: 'n1',
@@ -25,24 +32,46 @@ const nota = (estado: 'vigente' | 'anulado') => ({
 
 describe('anular un documento', () => {
   it('pide causa y motivo y dice cómo corregir', () => {
-    const errores = erroresDeAnulacion({ abierta: true, causa: '', motivo: ' ' });
+    const errores = erroresDeAnulacion(anulacion({ causa: '', motivo: ' ' }));
 
     expect(errores.causa).toContain('Escoja');
     expect(errores.motivo).toContain('Cuente');
-    expect(erroresDeAnulacion({ abierta: true, causa: 'error_de_captura', motivo: 'Duplicado' })).toEqual({});
+    expect(erroresDeAnulacion(anulacion({ causa: 'error_de_captura', motivo: 'Duplicado' }))).toEqual({});
   });
 
   it('el motivo no pasa del máximo', () => {
     const largo = 'x'.repeat(MAXIMO_DEL_MOTIVO + 1);
 
-    expect(erroresDeAnulacion({ abierta: true, causa: 'error_de_captura', motivo: largo }).motivo).toContain('300');
+    expect(erroresDeAnulacion(anulacion({ causa: 'error_de_captura', motivo: largo })).motivo).toContain('300');
   });
 
   it('manda la causa y el motivo recortado', () => {
-    expect(datosDeAnulacion({ abierta: true, causa: 'fel_anulada_en_la_sat', motivo: ' Ya anulada ' })).toEqual({
-      causa: 'fel_anulada_en_la_sat',
+    expect(datosDeAnulacion(anulacion({ causa: 'error_de_captura', motivo: ' Ya anulada ' }))).toEqual({
+      causa: 'error_de_captura',
       motivo: 'Ya anulada',
     });
+  });
+
+  it('con la causa de la SAT pide la fecha del DTE, entre la emisión y hoy', () => {
+    const base = { causa: 'fel_anulada_en_la_sat' as const, motivo: 'Anulada' };
+
+    expect(erroresDeAnulacion(anulacion({ ...base, fecha: '' })).fechaDeAnulacion).toContain('Escriba');
+    expect(erroresDeAnulacion(anulacion({ ...base, fecha: '2026-11-01' })).fechaDeAnulacion).toContain('anterior');
+    expect(erroresDeAnulacion(anulacion({ ...base, fecha: '2026-12-01' })).fechaDeAnulacion).toContain('posterior');
+    expect(erroresDeAnulacion(anulacion({ ...base, fecha: '2026-11-15' }))).toEqual({});
+  });
+
+  it('con otra causa no pide ni manda la fecha', () => {
+    const edicion = anulacion({ causa: 'error_de_captura', motivo: 'x', fecha: '' });
+
+    expect(erroresDeAnulacion(edicion)).toEqual({});
+    expect(datosDeAnulacion(edicion)).not.toHaveProperty('fechaDeAnulacion');
+  });
+
+  it('con la causa de la SAT manda la fecha escrita', () => {
+    const datos = datosDeAnulacion(anulacion({ causa: 'fel_anulada_en_la_sat', motivo: 'x', fecha: '2026-11-15' }));
+
+    expect(datos.fechaDeAnulacion).toBe('2026-11-15');
   });
 
   it('las causas van por nombre después de la invitación a escoger', () => {

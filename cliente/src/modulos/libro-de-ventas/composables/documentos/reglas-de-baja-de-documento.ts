@@ -1,18 +1,50 @@
-import { formatearMonto } from '@/modulos/core/utilidades/formato';
+import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { CausaDeAnulacion, DatosDeAnulacion, FichaDeDocumento } from '../../servicios/documentos.api';
 import { CAUSAS_DE_ANULACION } from '../../textos-de-documentos';
 import { tituloDeDocumento } from './tipos-de-documento';
 
 export const MAXIMO_DEL_MOTIVO = 300;
 
-/** Lo que se escribe en la ventana de anular; la causa vacía es «todavía no escogió». */
+/**
+ * Lo que se escribe en la ventana de anular; la causa vacía es «todavía no escogió». `fecha` solo se manda si la
+ * SAT anuló el DTE; debe caer entre `desde` (la emisión) y `hasta` (hoy).
+ */
 export interface EdicionDeAnulacion {
   abierta: boolean;
   causa: CausaDeAnulacion | '';
   motivo: string;
+  fecha: string;
+  desde: string;
+  hasta: string;
 }
 
-export const edicionDeAnulacionVacia = (): EdicionDeAnulacion => ({ abierta: false, causa: '', motivo: '' });
+export const edicionDeAnulacionVacia = (): EdicionDeAnulacion => ({
+  abierta: false,
+  causa: '',
+  motivo: '',
+  fecha: '',
+  desde: '',
+  hasta: '',
+});
+
+/** La ventana abierta para esta factura: la fecha de la SAT empieza en hoy y no sale de [emisión, hoy]. */
+export const edicionDeAnulacionAbierta = (emision: string, hoy: string): EdicionDeAnulacion => ({
+  ...edicionDeAnulacionVacia(),
+  abierta: true,
+  fecha: hoy,
+  desde: emision,
+  hasta: hoy,
+});
+
+/** La fecha de la SAT solo se pide cuando la causa es que la SAT ya anuló el DTE. */
+export const pideFechaDeLaSat = (causa: EdicionDeAnulacion['causa']): boolean => causa === 'fel_anulada_en_la_sat';
+
+function errorDeFecha({ fecha, desde, hasta }: EdicionDeAnulacion): string | null {
+  if (!fecha) return 'Escriba la fecha en que la SAT anuló el documento.';
+  if (fecha < desde) return `No puede ser anterior a la emisión (${formatearFecha(desde)}).`;
+  if (fecha > hasta) return 'No puede ser posterior a hoy.';
+  return null;
+}
 
 /** Las causas por nombre, con la invitación a escoger primero. */
 export function opcionesDeCausa(): { valor: CausaDeAnulacion | ''; texto: string }[] {
@@ -23,18 +55,22 @@ export function opcionesDeCausa(): { valor: CausaDeAnulacion | ''; texto: string
 }
 
 /** Errores por campo antes de molestar al servidor; vacío si todo está bien. */
-export function erroresDeAnulacion({ causa, motivo }: EdicionDeAnulacion): Record<string, string> {
+export function erroresDeAnulacion(edicion: EdicionDeAnulacion): Record<string, string> {
+  const { causa, motivo } = edicion;
   const errores: Record<string, string> = {};
   if (!causa) errores.causa = 'Escoja por qué se anula el registro.';
   const largo = motivo.trim().length;
   if (largo === 0) errores.motivo = 'Cuente brevemente qué pasó; así queda claro para quien revise el libro.';
   else if (largo > MAXIMO_DEL_MOTIVO) errores.motivo = `Acórtelo a ${MAXIMO_DEL_MOTIVO} caracteres o menos.`;
+  const errorFecha = pideFechaDeLaSat(causa) ? errorDeFecha(edicion) : null;
+  if (errorFecha) errores.fechaDeAnulacion = errorFecha;
   return errores;
 }
 
 /** El cuerpo de la solicitud; solo se llama con la edición ya validada. */
-export function datosDeAnulacion({ causa, motivo }: EdicionDeAnulacion): DatosDeAnulacion {
-  return { causa: causa as CausaDeAnulacion, motivo: motivo.trim() };
+export function datosDeAnulacion({ causa, motivo, fecha }: EdicionDeAnulacion): DatosDeAnulacion {
+  const datos = { causa: causa as CausaDeAnulacion, motivo: motivo.trim() };
+  return pideFechaDeLaSat(causa) ? { ...datos, fechaDeAnulacion: fecha } : datos;
 }
 
 const descripcion = (ficha: FichaDeDocumento): string =>

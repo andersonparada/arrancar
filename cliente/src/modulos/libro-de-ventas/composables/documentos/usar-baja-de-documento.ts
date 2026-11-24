@@ -4,11 +4,13 @@ import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiDocumentos, type FichaDeDocumento } from '../../servicios/documentos.api';
 import {
   datosDeAnulacion,
+  edicionDeAnulacionAbierta,
   edicionDeAnulacionVacia,
   erroresDeAnulacion,
   mensajeDeEliminacion,
   type EdicionDeAnulacion,
 } from './reglas-de-baja-de-documento';
+import { fechaDe } from './edicion-de-documento';
 
 type FichaActual = Readonly<Ref<FichaDeDocumento | null>>;
 type Peticion = ReturnType<typeof usarPeticion>;
@@ -38,7 +40,8 @@ function usarAnulacion(ficha: FichaActual, { errores, pedir }: Peticion, alAnula
   const edicion = ref<EdicionDeAnulacion>(edicionDeAnulacionVacia());
 
   function abrir(): void {
-    edicion.value = { ...edicionDeAnulacionVacia(), abierta: true };
+    if (!ficha.value) return;
+    edicion.value = edicionDeAnulacionAbierta(ficha.value.fechaEmision, fechaDe(new Date()));
     errores.value = {};
   }
 

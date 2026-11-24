@@ -22,6 +22,11 @@ function condicionDeDestino(destino: FiltroDeDocumentosDeVenta['destino']): SQL 
   return destino === 'ninguno' ? isNull(documentos.destino) : eq(documentos.destino, destino);
 }
 
+function condicionDeCliente({ clienteId, sinCliente }: FiltroDeDocumentosDeVenta): SQL | undefined {
+  if (clienteId) return eq(documentos.clienteId, clienteId);
+  return sinCliente ? isNull(documentos.clienteId) : undefined;
+}
+
 function condicionDeTexto(texto: string | undefined): SQL | undefined {
   if (!texto?.trim()) return undefined;
   const patron = comoTexto(texto.trim());
@@ -42,7 +47,7 @@ function condicionDeEstado(estado: FiltroDeDocumentosDeVenta['estado']): SQL | u
 function condiciones(filtro: FiltroDeDocumentosDeVenta): SQL | undefined {
   return and(
     filtro.periodo ? eq(documentos.periodo, primerDiaDelMes(filtro.periodo)) : undefined,
-    filtro.clienteId ? eq(documentos.clienteId, filtro.clienteId) : undefined,
+    condicionDeCliente(filtro),
     filtro.tipo ? eq(documentos.tipo, filtro.tipo) : undefined,
     condicionDeEstado(filtro.estado),
     condicionDeDestino(filtro.destino),

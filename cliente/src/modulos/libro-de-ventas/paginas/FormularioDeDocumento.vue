@@ -48,9 +48,9 @@ function alPresionarEnter(evento: KeyboardEvent): void {
           v-model="edicion"
           :clientes="catalogos.clientes.value"
           :clientes-no-disponibles="catalogos.clientesNoDisponibles.value"
-          :facturas="catalogos.facturas.value"
-          :cargando-facturas="catalogos.cargandoFacturas.value"
+          :facturas="catalogos.facturas"
           :errores="errores()"
+          @buscar-facturas="catalogos.buscarFacturas"
         />
       </TarjetaBase>
       <TarjetaBase>

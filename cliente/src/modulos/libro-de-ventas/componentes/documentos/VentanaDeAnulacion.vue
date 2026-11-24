@@ -7,6 +7,7 @@ import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import {
   MAXIMO_DEL_MOTIVO,
   opcionesDeCausa,
+  pideFechaDeLaSat,
   type EdicionDeAnulacion,
 } from '../../composables/documentos/reglas-de-baja-de-documento';
 import { AYUDA_DE_ANULAR } from '../../textos-de-documentos';
@@ -29,6 +30,16 @@ const causas = opcionesDeCausa();
       </p>
       <p class="text-sm">{{ resumen }}</p>
       <CampoSelector v-model="edicion.causa" etiqueta="Causa" requerido :opciones="causas" :error="errores.causa" />
+      <CampoTexto
+        v-if="pideFechaDeLaSat(edicion.causa)"
+        v-model="edicion.fecha"
+        tipo="date"
+        etiqueta="Fecha en que la SAT anuló el documento"
+        requerido
+        :maximo="edicion.hasta"
+        ayuda="La que dice el DTE anulado en la SAT; define el mes en que se registra la baja."
+        :error="errores.fechaDeAnulacion"
+      />
       <CampoTexto
         v-model="edicion.motivo"
         etiqueta="Motivo"
