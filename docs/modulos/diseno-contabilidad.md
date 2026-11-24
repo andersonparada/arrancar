@@ -600,6 +600,19 @@ afecta lo que se contabilice después (se audita, §9.2).
   con Activos fijos activo (pendiente: marcarla al activarlo). `retencion_por_pagar` cuadra así: mayor = retenido vigente −
   enterado vigente (no «constancias no enteradas»; la responde Libro de compras); multas e intereses van a gasto propio.
   Desmarcarla es editar la cuenta (el aviso al desmarcar es de la pantalla, CT-2c).
+- **Cuenta general obligatoria** (`generalObligatoria`, dictamen del contador 2026-11-23): en `proveedores` y `caja_chica` la
+  llave del hecho puede venir vacía (proveedor sin categoría, o con la categoría borrada; caja chica sin fondo) y una
+  categoría nueva nace sin enlace, así que la cuenta general se exige siempre y las de cada categoría o fondo son opcionales;
+  sin ella esos documentos terminan en `falta_enlace`. Corrige a §3.9, que los daba por opcionales.
+- **Roles según la operación** (`segunOperacion`, mismo dictamen): `iva_credito_fiscal` (solo con derecho a crédito fiscal),
+  `retencion_por_pagar` (quien retiene ISR o IVA según su operación; no se infiere de `agenteDeRetencionIva`, que solo habla
+  del IVA), `isr_diferido_resultado`, `isr_diferido_activo` y `isr_diferido_pasivo` (NIIF con régimen sobre utilidades, fase 2) y
+  `reserva_legal` (solo sociedades, C. Com. art. 36). No cuentan como faltantes ni impiden el «todo enlazado», pero la pantalla
+  no dice que todo está bien mientras alguno siga sin cuenta: lo muestra como «según su operación» y se exige al llegar el
+  primer hecho, que queda con error visible. `iva_no_acreditable` es la única opcional (va al costo de la línea).
+- **Pendiente de decisión del usuario**: las retenciones de saldo inicial aún no enteradas. Opción A (recomendada por el
+  contador): rol `retenciones_de_apertura`, de balance, sin auxiliar ni llave, que el contador salda al enterar; CxP las
+  responde solo con `proposito = apertura`. Opción B: usar la cuenta de retenciones y justificar la diferencia cada mes.
 - API: `GET /contabilidad/enlaces` (los roles de los módulos activos con sus enlaces), `GET …/llaves/:rol`, `PUT …/:rol`
   (`{ llave, cuentaId }`: crea el enlace o cambia su cuenta) y `DELETE …/:enlaceId`; `…/exportar`, `…/plantilla` y
   `…/importar`. Cambiar o quitar un enlace exige `contabilidad.enlaces.editar` (no hay permisos `crear` ni `eliminar`, §9.1).
