@@ -9,6 +9,7 @@ import {
   numeric,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
   type AnyPgColumn,
@@ -148,6 +149,8 @@ export const movimientos = esquemaBancos.table(
     ...autoria,
   },
   (t) => [
+    /** Para las llaves compuestas `(movimiento_id, empresa_id)` de otros módulos (A-9). */
+    unique('movimientos_id_empresa_unico').on(t.id, t.empresaId),
     index('movimientos_cuenta_fecha_idx').on(t.cuentaBancariaId, t.fecha),
     index('movimientos_beneficiario_para_comparar_idx')
       .on(t.empresaId, t.beneficiarioParaComparar, t.fecha)

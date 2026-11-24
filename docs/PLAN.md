@@ -4866,3 +4866,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   sus tarjetas de subparcelas, con la misma etiqueta que la lista. (3) Con texto de búsqueda el árbol llega incompleto: ni las
   madres ni la localidad muestran sumas (aviso en la lista); sin texto, como antes. Decisión: cálculo en el cliente sobre el
   árbol completo en vez de un campo nuevo del servidor; si el árbol de una localidad crece mucho, mover la suma al servidor.
+- **2026-11-23**: VCJ-0d (Ventas y caja, paso 0d). **A-9:** únicos `core.empresas (id, cuenta_id)`, `core.archivos (id, empresa_id)`
+  (migración core `0037`) y `bancos.movimientos (id, empresa_id)` (Bancos `0040`), para las llaves compuestas de Ventas.
+  **A-10:** permiso `empresas.nit.corregir`; `ActualizarEmpresa` audita todo cambio de NIT (`empresas.empresas:corregir`, con el
+  registro de antes más `nitNuevo`), y quitar o reemplazar el NIT exige el permiso y un motivo (`motivoDelNit` en el cuerpo del
+  PUT). Agregar un NIT a una empresa sin NIT no pide nada, pero también queda en la auditoría. No se dio el permiso a quien ya
+  tenía `empresas.editar`: se asigna a mano (el acceso total lo recibe). **Inscrita (§3.9):** `estaInscrita` y
+  `situacionDeInscripcion` en `core/compartido/dominio/inscripcion-fiscal.ts` (regla pura; `CF` no cuenta). Quien la use leerá
+  el historial de `libro_de_compras.datos_fiscales_de_empresa` con `usaTablasDe` (lo hace VCJ-1).
+- **2026-11-23**: VCJ-0d, correcciones de la revisión. `RepositorioEmpresas.buscarEnCuenta` bloquea la fila (`for no key update`: serializa a dos editores sin chocar con el `for key share` de las inserciones con llave foránea a la empresa; el acceso a la empresa se valida antes de bloquear): ya no se
+  puede deshacer una corrección de NIT con una edición simultánea sin permiso, motivo ni rastro (prueba de concurrencia). Las pruebas de API del NIT ahora dan al editor acceso a las empresas que crean (antes daban 404).
+  **Orden de unión:** Bancos `0040` se regeneró sobre la `0039` de VC-0b (`prevId` 9fc19450…, `when` posterior); **VC-0b (`0039`) se une antes que VCJ-0d**: sin ella `0040` no encadena (en esta rama `drizzle-kit` solo cuadra con la `0039` presente). Se agrega el paso VCJ-0e (cliente de Empresas con el motivo del NIT).

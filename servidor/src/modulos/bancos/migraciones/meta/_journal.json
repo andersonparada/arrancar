@@ -281,6 +281,13 @@
       "when": 1795469011294,
       "tag": "0039_cobros_a_clientes",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1795476399973,
+      "tag": "0040_unico_de_movimientos",
+      "breakpoints": true
     }
   ]
 }

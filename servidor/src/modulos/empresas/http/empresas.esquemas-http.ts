@@ -14,6 +14,8 @@ export const esquemaEmpresa = z.object({
   telefono: textoOpcional(30),
   correo: correoOpcional,
   activa: z.boolean().default(true),
+  /** Por qué se quita o reemplaza el NIT; solo se lee al editar (A-10). */
+  motivoDelNit: textoOpcional(250),
   /** Lo que los módulos activos aportan al formulario (por ejemplo, los datos fiscales de Libro de compras). */
   secciones: seccionesAportadas,
 });

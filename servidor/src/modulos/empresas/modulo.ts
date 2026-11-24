@@ -82,6 +82,10 @@ export const moduloEmpresas: DefinicionModulo = {
     { clave: 'empresas.ver', descripcion: 'Ver las empresas de la cuenta' },
     { clave: 'empresas.crear', descripcion: 'Crear empresas' },
     { clave: 'empresas.editar', descripcion: 'Editar empresas, sus datos fiscales y su fecha de inicio' },
+    {
+      clave: 'empresas.nit.corregir',
+      descripcion: 'Quitar o reemplazar el NIT de una empresa, con su motivo (queda en la auditoría)',
+    },
     { clave: 'empresas.importar', descripcion: 'Importar empresas desde Excel (crea una empresa por fila)' },
     { clave: 'empresas.exportar', descripcion: 'Exportar las empresas a Excel' },
     {
