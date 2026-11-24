@@ -30,6 +30,7 @@ const {
   nombreActual,
   secciones,
   proveedorId,
+  clienteId,
 } = formulario;
 const ventana = VENTANA_DEL_PAPEL[props.papel];
 const permisosDelPapel = PERMISOS_DEL_PAPEL[props.papel];
@@ -63,10 +64,10 @@ async function guardar(): Promise<void> {
     </TarjetaBase>
 
     <SeccionesAportadas
-      v-if="papel === 'proveedor' && puedeGestionarElPapel"
+      v-if="puedeGestionarElPapel"
       v-model="secciones"
-      en="proveedor"
-      :registro-id="proveedorId"
+      :en="papel"
+      :registro-id="papel === 'cliente' ? clienteId : proveedorId"
       :errores="formulario.errores.value"
       tarjetas
     />

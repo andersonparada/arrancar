@@ -14,9 +14,10 @@ function papelesDe(ficha: FichaTercero | null): PapelesDelFormulario {
 }
 
 function asignar(terceroId: string, papel: PapelTercero, { papeles, secciones }: Edicion) {
+  const enviadas = seccionesParaEnviar(secciones);
   return papel === 'cliente'
-    ? apiTerceros.asignarCliente(terceroId, papeles.cliente)
-    : apiTerceros.asignarProveedor(terceroId, papeles.proveedor, seccionesParaEnviar(secciones));
+    ? apiTerceros.asignarCliente(terceroId, papeles.cliente, enviadas)
+    : apiTerceros.asignarProveedor(terceroId, papeles.proveedor, enviadas);
 }
 
 type Edicion = { papeles: PapelesDelFormulario; secciones: Record<string, unknown> };

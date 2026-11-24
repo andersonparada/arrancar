@@ -32,9 +32,10 @@ export async function editarTercero(
     apiTerceros.actualizar(id, { ...datos.value, confirmarDuplicado }),
   );
   if (guardado === DESISTIO) return null;
-  if (papelQueCambia === 'cliente') await apiTerceros.asignarCliente(id, papeles.value.cliente);
+  const enviadas = seccionesParaEnviar(secciones.value);
+  if (papelQueCambia === 'cliente') await apiTerceros.asignarCliente(id, papeles.value.cliente, enviadas);
   if (papelQueCambia === 'proveedor') {
-    await apiTerceros.asignarProveedor(id, papeles.value.proveedor, seccionesParaEnviar(secciones.value));
+    await apiTerceros.asignarProveedor(id, papeles.value.proveedor, enviadas);
   }
   return id;
 }

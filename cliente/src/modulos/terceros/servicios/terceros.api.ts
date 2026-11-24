@@ -139,11 +139,11 @@ export type PapelAlRegistrar = ({ tipo: 'cliente' } & PapelDeCliente) | ({ tipo:
 export interface DatosAltaTercero extends DatosTercero {
   papel: PapelAlRegistrar | null;
   contactos: DatosContacto[];
-  /** Lo que los módulos activos aportan al formulario de proveedores; solo se guarda si entra como proveedor. */
+  /** Lo que los módulos activos aportan al formulario del papel con que entra (cliente o proveedor). */
   secciones?: Record<string, unknown>;
 }
 
-/** Secciones que otros módulos aportan al formulario de proveedores (ver `SeccionAportada`). */
+/** Secciones que otros módulos aportan al formulario de clientes o de proveedores (ver `SeccionAportada`). */
 export type SeccionesDelFormulario = Record<string, unknown>;
 
 export class ApiTerceros {
@@ -202,8 +202,8 @@ export class ApiTerceros {
     return this.http.eliminar(`/terceros/${terceroId}/contactos/${contactoId}`);
   }
 
-  asignarCliente(terceroId: string, datos: PapelDeCliente) {
-    return this.http.reemplazar<Cliente>(`/terceros/${terceroId}/cliente`, datos);
+  asignarCliente(terceroId: string, datos: PapelDeCliente, secciones?: SeccionesDelFormulario) {
+    return this.http.reemplazar<Cliente>(`/terceros/${terceroId}/cliente`, { ...datos, secciones });
   }
 
   quitarCliente(terceroId: string) {

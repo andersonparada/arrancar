@@ -12,13 +12,13 @@ defineProps<{
   papel: PapelTercero | null;
   categorias: CategoriaProveedor[];
   enviando: boolean;
-  /** El proveedor que ya existe (para cargar los datos de sus secciones); `null` si el papel es nuevo. */
-  proveedorId: string | null;
+  /** El cliente o proveedor que ya existe (para cargar los datos de sus secciones); `null` si el papel es nuevo. */
+  registroId: string | null;
   errores: Record<string, string>;
 }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const papeles = defineModel<PapelesDelFormulario>({ required: true });
-/** Lo que aportan los módulos activos al papel de proveedor (p. ej. Datos fiscales). */
+/** Lo que aportan los módulos activos al papel (p. ej. Datos fiscales). */
 const secciones = defineModel<Record<string, unknown>>('secciones', { required: true });
 </script>
 
@@ -32,10 +32,9 @@ const secciones = defineModel<Record<string, unknown>>('secciones', { required: 
       <CamposDelPapel v-model="papeles" :papel="papel" :categorias="categorias" />
       <CampoInterruptor v-model="papeles[papel].activo" etiqueta="Papel activo" />
       <SeccionesAportadas
-        v-if="papel === 'proveedor'"
         v-model="secciones"
-        en="proveedor"
-        :registro-id="proveedorId"
+        :en="papel"
+        :registro-id="registroId"
         :errores="errores"
         class="min-w-0 border-t border-tierra-200 pt-4 dark:border-tierra-700"
       />

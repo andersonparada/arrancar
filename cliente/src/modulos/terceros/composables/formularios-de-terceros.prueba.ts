@@ -17,6 +17,21 @@ describe('alta completa', () => {
     expect(alta.contactos.map((c) => c.nombre)).toEqual(['Marta']);
   });
 
+  it('un cliente nuevo también lleva las secciones que aportan los módulos', () => {
+    const secciones = { 'libro-de-ventas': { agenteDeRetencionIva: 'ninguno' } };
+
+    const alta = altaCompleta(datosVacios(), 'cliente', { papeles: papelesVacios(), contactos: [], secciones });
+
+    expect(alta.papel?.tipo).toBe('cliente');
+    expect(alta.secciones).toEqual(secciones);
+  });
+
+  it('sin secciones no manda el campo', () => {
+    const alta = altaCompleta(datosVacios(), 'cliente', { papeles: papelesVacios(), contactos: [] });
+
+    expect(alta).not.toHaveProperty('secciones');
+  });
+
   it('al editar solo toma de la ficha los datos que se pueden cambiar', () => {
     const ficha = {
       ...datosVacios(),

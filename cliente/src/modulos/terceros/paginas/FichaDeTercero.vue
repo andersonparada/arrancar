@@ -28,6 +28,11 @@ const { ficha, categorias, cargar, nombreDeCategoria } = usarFichaDeTercero(prop
 const contactos = usarContactosDelTercero(props.terceroId, cargar);
 const papeles = usarPapelesDeLaFicha(ficha, cargar);
 const puedeEditar = sesion.puede('terceros.editar');
+/** El cliente o proveedor cuyo papel se edita: sus secciones se leen de él. */
+const registroDelPapel = computed(() => {
+  const abierto = papeles.edicion.abierta;
+  return (abierto && ficha.value?.[abierto]?.id) || null;
+});
 const estado = (activo: boolean) => ({ etiqueta: 'Estado', valor: activo ? 'Activo' : 'Inactivo' });
 
 const comoCliente = computed(() => {
@@ -74,6 +79,7 @@ const editar = () =>
       @editar="papeles.abrir('cliente')"
       @quitar="papeles.quitar('cliente')"
     />
+    <SeccionesEnLaFicha v-if="ficha.cliente" en="cliente" :registro-id="ficha.cliente.id" />
     <TarjetaDePapel
       titulo="Proveedor"
       :icono="Briefcase"
@@ -97,7 +103,7 @@ const editar = () =>
     <VentanaDePapel
       v-model="papeles.edicion.papeles"
       v-model:secciones="papeles.edicion.secciones"
-      :proveedor-id="ficha?.proveedor?.id ?? null"
+      :registro-id="registroDelPapel"
       :errores="papeles.errores.value"
       :papel="papeles.edicion.abierta"
       :categorias="categorias"

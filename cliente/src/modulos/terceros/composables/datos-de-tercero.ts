@@ -70,7 +70,7 @@ export function papelesVacios(): PapelesDelFormulario {
   };
 }
 
-/** Lo que se envía al registrar desde Clientes o Proveedores: entra con ese papel (y, de proveedor, con sus secciones). */
+/** Lo que se envía al registrar desde Clientes o Proveedores: entra con ese papel y con las secciones que aportan los módulos. */
 export function altaCompleta(
   datos: DatosTercero,
   papel: PapelTercero,
@@ -83,6 +83,6 @@ export function altaCompleta(
   const papelAlRegistrar =
     papel === 'cliente' ? { tipo: papel, ...papeles.cliente } : { tipo: papel, ...papeles.proveedor };
   const conNombre = contactos.filter((contacto) => contacto.nombre.trim()).map(conAvisosCoherentes);
-  const deProveedor = papel === 'proveedor' && secciones ? { secciones } : {};
-  return { ...datos, papel: papelAlRegistrar, contactos: conNombre, ...deProveedor };
+  const conSecciones = secciones ? { secciones } : {};
+  return { ...datos, papel: papelAlRegistrar, contactos: conNombre, ...conSecciones };
 }
