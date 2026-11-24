@@ -4404,3 +4404,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   solo se devuelven. Pruebas: 40 unitarias de los casos de uso, 13 del dominio y 24 de API (baja, venta, componentes, anular, acta y
   denuncia, permisos, aislamiento, cierres y concurrencia). Las pruebas con base de datos se corrieron en un PostgreSQL propio (el
   puerto 5433 reseteaba conexiones). Pendiente: AF-9c (pantallas) y AFI-6.
+- **2026-11-23 — AF-9 (revisión): cinco correcciones.** (1) Vender un principal con un bien de control o de terceros ya no falla con
+  `precio_no_repartible`: el precio y el IVA se reparten solo entre los activos con libros; el de control queda como baja «otra» sin
+  precio y el de terceros como `devuelto_al_dueno` (**por validar con `contador-guatemala`**). (2) No se anula la baja de un
+  componente mientras su principal esté dado de baja (`baja_de_componente_con_principal_dado_de_baja`). (3) El cierre toma lo que
+  la baja congeló: en el mes de la baja incluye al activo solo si la baja vigente tiene `cuota_del_mes_* > 0`, no según el
+  `primer_mes` de hoy (se quitó ese parámetro de `activosParaCerrar`). (4) Se rechaza la baja con fecha anterior a una mejora o costo
+  posterior vigente (`baja_anterior_a_una_mejora`). (5) El acta y la denuncia son del acto: viven en la baja del principal y los
+  componentes las leen de ahí (avisos, `tieneActa`, descarga); subir desde un componente las guarda en la del principal
+  (`RepositorioBajas.portadoraDeDocumentos`). Sin migración. Pruebas nuevas: 10 unitarias y 6 de API.
+

@@ -22,7 +22,8 @@ export interface DestinoDelDocumento {
 }
 
 /**
- * Guarda o reemplaza el acta o la denuncia de una baja (PDF o foto). Va en tres tiempos para no retener una conexión
+ * Guarda o reemplaza el acta o la denuncia de una baja (PDF o foto); el acta y la denuncia son de todo el acto, así que
+ * las de un componente que se dio de baja con su principal se guardan en la baja del principal. Va en tres tiempos para no retener una conexión
  * mientras qpdf revisa el PDF: (a) una unidad corta que falla rápido, (b) la revisión fuera de toda transacción y (c) la
  * unidad que bloquea la baja y guarda. Si ya había un archivo, se borra y la auditoría `adjuntar` lo deja como estaba.
  */
@@ -48,6 +49,7 @@ export class AdjuntadorDeDocumentos {
     const { documentos, bajas, auditoria, consultasDeBajas } = this.dependencias;
     const baja = await this.cargarVigente(pedido.bajaId, true);
     const anterior = destino.actual(baja);
+    const registroId = baja.id.valor;
     const guardado = await documentos.guardarRevisado(operador, revisado, { recursoDueno: RECURSO_DE_BAJAS });
     destino.poner(baja, guardado.id);
     await bajas.guardar(baja);
@@ -55,7 +57,7 @@ export class AdjuntadorDeDocumentos {
     const habiaArchivo = anterior !== null;
     await auditoria.registrar({
       recurso: RECURSO_DE_BAJAS,
-      registroId: pedido.bajaId,
+      registroId,
       accion: 'adjuntar',
       anterior: { documento: destino.documento, habiaArchivo, tipoDeActa: anterior?.tipoDeActa ?? null },
     });
@@ -66,9 +68,13 @@ export class AdjuntadorDeDocumentos {
   private async cargarVigente(bajaId: string, bloqueando: boolean): Promise<Baja> {
     const { bajas } = this.dependencias;
     const id = Identificador.desde(bajaId) as BajaId;
-    const baja = await (bloqueando ? bajas.buscarBloqueando(id) : bajas.buscar(id));
-    if (!baja) throw new RecursoNoEncontrado('La baja');
-    if (baja.instantanea().estado === 'anulada') throw new BajaAnulada();
-    return baja;
+    const pedida = await bajas.buscar(id);
+    if (!pedida) throw new RecursoNoEncontrado('La baja');
+    if (pedida.instantanea().estado === 'anulada') throw new BajaAnulada();
+    const portadora = await bajas.portadoraDeDocumentos(pedida);
+    if (!bloqueando) return portadora;
+    const bloqueada = await bajas.buscarBloqueando(portadora.id);
+    if (bloqueada?.instantanea().estado !== 'vigente') throw new BajaAnulada();
+    return bloqueada;
   }
 }

@@ -38,6 +38,17 @@ export class BajasEnMemoria implements RepositorioBajas, ConsultasBajas {
     });
   }
 
+  async portadoraDeDocumentos(baja: Baja): Promise<Baja> {
+    const propias = baja.instantanea();
+    const padreId = this.activos.registros.get(propias.activoId)?.instantanea().activoPadreId;
+    const delActo = await this.delActo(propias);
+    const del = delActo.find((otra) => {
+      const p = otra.instantanea();
+      return p.activoId === padreId && p.estado === propias.estado;
+    });
+    return padreId && del ? del : baja;
+  }
+
   async vigenteDeActivo(activoId: string): Promise<Baja | null> {
     const vigentes = [...this.registros.values()].filter((baja) => {
       const p = baja.instantanea();
@@ -66,11 +77,15 @@ export class BajasEnMemoria implements RepositorioBajas, ConsultasBajas {
       const esHijo = hijo.activoPadreId === propiedades.activoId && otra.instantanea().estado === propiedades.estado;
       return esHijo ? [{ activoId: hijo.id.valor, codigo: hijo.codigo, descripcion: hijo.descripcion }] : [];
     });
-    return bajaADto(propiedades, {
-      activo: { ...activo, id: activo.id.valor, claseNombre: 'Clase de prueba' },
-      componentes,
-      incisoFiscal: this.incisoFiscal,
-      tipoDePersona: this.tipoDePersona,
-    });
+    const { acta, denunciaArchivoId } = (await this.portadoraDeDocumentos(baja)).instantanea();
+    return bajaADto(
+      { ...propiedades, acta, denunciaArchivoId },
+      {
+        activo: { ...activo, id: activo.id.valor, claseNombre: 'Clase de prueba' },
+        componentes,
+        incisoFiscal: this.incisoFiscal,
+        tipoDePersona: this.tipoDePersona,
+      },
+    );
   }
 }

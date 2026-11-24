@@ -13,6 +13,11 @@ export interface RepositorioBajas {
   guardar(baja: Baja): Promise<void>;
   /** Todas las bajas de una misma acta (la del principal y las de sus componentes), vigentes o no, por activo. */
   delActo(acta: { numero: number; anioDeNumero: number }): Promise<Baja[]>;
+  /**
+   * La baja que lleva el acta y la denuncia del acto de `baja` (§3.8: una sola acta por acto): la del principal si
+   * `baja` es de un componente que se dio de baja junto con él (misma acta y mismo estado); si no, la misma `baja`.
+   */
+  portadoraDeDocumentos(baja: Baja): Promise<Baja>;
   /** La baja vigente del activo, o `null` si no está dado de baja. */
   vigenteDeActivo(activoId: string): Promise<Baja | null>;
 }

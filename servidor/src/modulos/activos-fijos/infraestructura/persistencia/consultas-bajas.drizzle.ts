@@ -5,7 +5,9 @@ import { datosFiscalesDeEmpresa } from '../../../libro-de-compras/infraestructur
 import { bajaADto } from '../../aplicacion/dto/baja-a-dto.js';
 import type { BajaDto, ComponenteDeBajaDto } from '../../aplicacion/dto/baja.dto.js';
 import type { ConsultasBajas } from '../../aplicacion/puertos/consultas-bajas.js';
+import type { PropiedadesDeBaja } from '../../dominio/baja.js';
 import type { DatosParaLosAvisos } from '../../dominio/avisos-de-baja.js';
+import { filaPortadoraDeDocumentos } from './baja-portadora.drizzle.js';
 import { mapeadorDeBaja } from './baja.mapeador.js';
 import { bajas } from './bajas.tablas.js';
 import { activos } from './activos.tablas.js';
@@ -41,6 +43,15 @@ async function componentesDe(baja: FilaDeBaja): Promise<ComponenteDeBajaDto[]> {
     .orderBy(asc(activos.codigo));
 }
 
+/** La baja con el acta y la denuncia del acto: las de un componente son las que subió el principal. */
+async function conDocumentosDelActo(fila: FilaDeBaja): Promise<PropiedadesDeBaja> {
+  const propias = mapeadorDeBaja.aEntidad(fila).instantanea();
+  const portadora = await filaPortadoraDeDocumentos(fila);
+  if (!portadora) return propias;
+  const { acta, denunciaArchivoId } = mapeadorDeBaja.aEntidad(portadora).instantanea();
+  return { ...propias, acta, denunciaArchivoId };
+}
+
 /** Lecturas de las bajas y ventas; la seguridad por empresa (RLS) limita lo que se ve. */
 export class ConsultasBajasDrizzle implements ConsultasBajas {
   async obtener(bajaId: string): Promise<BajaDto> {
@@ -62,7 +73,7 @@ export class ConsultasBajasDrizzle implements ConsultasBajas {
       .where(donde);
     if (!fila) return null;
     const { activo, baja } = fila;
-    return bajaADto(mapeadorDeBaja.aEntidad(baja).instantanea(), {
+    return bajaADto(await conDocumentosDelActo(baja), {
       activo: {
         ...{ id: activo.id, codigo: activo.codigo, descripcion: activo.descripcion, cantidad: activo.cantidad },
         ...{ marca: activo.marca, modelo: activo.modelo, numeroDeSerie: activo.numeroDeSerie, placa: activo.placa },

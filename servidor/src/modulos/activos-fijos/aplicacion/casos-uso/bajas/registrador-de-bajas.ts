@@ -9,7 +9,7 @@ import type { CifrasDeBaja, NumeroDeActa } from '../../../dominio/tipos-de-baja.
 import type { BajaDto, SolicitudDeBaja } from '../../dto/baja.dto.js';
 import { exigirMesAbierto, IncisosDeClases } from '../traslados/dependencias-de-traslados.js';
 import { cifrasDelActivo } from './cifras-del-activo.js';
-import { datosDeBajaDe, ventasPorActivo } from './datos-de-baja.js';
+import { costosParaRepartir, datosDeBajaDe, datosDelActivo, ventasPorActivo } from './datos-de-baja.js';
 import { CORRELATIVO_DE_BAJAS, type DependenciasDeBajas } from './dependencias-de-bajas.js';
 import { eventoDeBaja } from './eventos-de-bajas.js';
 
@@ -80,23 +80,33 @@ export class RegistradorDeBajas {
     contexto: { solicitud: SolicitudDeBaja; acta: NumeroDeActa; hoy: string },
   ): Promise<Baja[]> {
     const { repositorio, bajas } = this.dependencias;
-    const datos = datosDeBajaDe(contexto.solicitud);
-    const ventas = ventasPorActivo(
-      datos.venta,
-      calculados.map(({ cifras }) => cifras.costoCentavos),
-    );
-    const nuevas = calculados.map(({ activo, cifras }, i) => {
-      const { id, empresaId, codigo, tipoDeRegistro, fechaDeInicioDeUso } = activo.instantanea();
-      const entrada = { empresaId, activoId: id.valor, cifras, ...contexto.acta };
-      const alContexto = { codigoDelActivo: codigo, tipoDeRegistro, fechaDeInicioDeUso, hoy: contexto.hoy };
-      return Baja.registrar(entrada, { ...datos, venta: ventas[i]! }, alContexto);
-    });
+    const nuevas = this.registrarTodas(calculados, contexto);
     for (const { activo } of calculados) {
       activo.darDeBaja(contexto.solicitud.fecha);
       await repositorio.guardar(activo);
     }
     await bajas.agregarVarios(nuevas);
     return nuevas;
+  }
+
+  /** Una baja por activo: la venta se reparte solo entre los que llevan libros y cada uno valida lo suyo. */
+  private registrarTodas(
+    calculados: readonly ActivoConCifras[],
+    contexto: { solicitud: SolicitudDeBaja; acta: NumeroDeActa; hoy: string },
+  ): Baja[] {
+    const datos = datosDeBajaDe(contexto.solicitud);
+    const partes = calculados.map(({ activo, cifras }) => ({
+      tipoDeRegistro: activo.instantanea().tipoDeRegistro,
+      costoCentavos: cifras.costoCentavos,
+    }));
+    const ventas = ventasPorActivo(datos.venta, costosParaRepartir(partes));
+    return calculados.map(({ activo, cifras }, i) => {
+      const { id, empresaId, codigo, tipoDeRegistro, fechaDeInicioDeUso } = activo.instantanea();
+      const entrada = { empresaId, activoId: id.valor, cifras, ...contexto.acta };
+      const alContexto = { codigoDelActivo: codigo, tipoDeRegistro, fechaDeInicioDeUso, hoy: contexto.hoy };
+      const parte = { tipoDeRegistro, venta: ventas[i]!, enConjunto: calculados.length > 1 };
+      return Baja.registrar(entrada, datosDelActivo(datos, parte), alContexto);
+    });
   }
 
   private async eventosDe(calculados: readonly ActivoConCifras[], bajas: readonly Baja[]): Promise<EventoDominio[]> {

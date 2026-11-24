@@ -1376,14 +1376,24 @@ dos decimales.
 - **Cifras congeladas**: la acumulada de cada libro es `acumuladaAntesDe` (lo cerrado más lo que darían, mes a mes, los meses
   abiertos que van antes: el mismo cálculo de las mejoras) y, con `primer_mes = mes_siguiente`, la cuota del propio mes, que queda
   en `cuota_del_mes_*`. Para que el cierre de esos meses abiertos siga depreciando al activo dado de baja, `activosParaCerrar` ahora
-  incluye a los dados de baja **después** del mes (y en el propio mes solo con `mes_siguiente`).
+  incluye a los dados de baja **después** del mes y, en el propio mes de la baja, **solo si la baja vigente congeló una cuota de ese
+  mes** (`cuota_del_mes_* > 0`): el cierre toma lo congelado y no la regla `primer_mes` de hoy, así que cambiarla después no
+  descuadra los libros ni el resultado de una venta (prueba de API con el cambio de regla en los dos sentidos). Una baja con fecha
+  anterior a una mejora o costo posterior vigente del activo o de sus componentes se rechaza (`baja_anterior_a_una_mejora`): las
+  cifras «al día de la baja» no pueden incluir un costo que todavía no existía.
 - **Costo fiscal** (A1) = Σ costos fiscales (con el del saldo inicial cargado) sin tope del inmueble ni ganado común; la base
   fiscal usa la misma función de poner en uso. Bienes de control y de terceros llevan los montos en cero; un terreno, costo sin
   depreciación. Venta: resultado contable `precio − valor en libros`; fiscal `precio − (costo fiscal − acumulada fiscal)`.
 - **Con componentes**: el principal y sus componentes vigentes se dan de baja a la vez, con **una sola acta** (mismo número
   `activos-fijos.bajas`, una fila por activo). En una venta el precio y el IVA se reparten en proporción al costo de cada activo
-  (sobrante al último; `precio_no_repartible` si a alguno le tocaría menos de un centavo). Un componente se da de baja solo, pero
-  si se dio de baja con su principal solo se anula con el principal (`baja_de_componente_con_su_principal`).
+  (sobrante al último; `precio_no_repartible` si a alguno le tocaría menos de un centavo). **Solo entran al reparto los activos con
+  libros**: un bien de control que va con el principal queda como baja con causa `otra` y sin precio propio, y un bien de terceros
+  no se vende ni se dona con el principal: queda como `devuelto_al_dueno` (decisión conservadora, **pendiente de validar con
+  `contador-guatemala`**). Un componente se da de baja solo, pero si se dio de baja con su principal solo se anula con el principal
+  (`baja_de_componente_con_su_principal`); y uno dado de baja aparte no se anula mientras su principal esté dado de baja
+  (`baja_de_componente_con_principal_dado_de_baja`). **Acta y denuncia son del acto**: se guardan en la baja del principal (subir
+  desde el componente las manda ahí, con su auditoría `adjuntar`) y el componente las lee de ella para los avisos, `tieneActa` y la
+  descarga.
 - **Anular** (`bajas.anular`): mes abierto (`mes_cerrado`), el activo vuelve a `en_uso` y se audita `anular` con la baja como estaba
   (una entrada por activo). `AnularMejora` rechaza un activo dado de baja (`activo_dado_de_baja`): sus cifras están congeladas.
 - **Acta y denuncia**: `POST …/bajas/:id/acta?tipoDeActa=administrativa|notarial` y `…/denuncia` (multipart, `bajas.crear`,

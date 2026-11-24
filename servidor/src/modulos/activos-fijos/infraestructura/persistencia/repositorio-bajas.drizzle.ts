@@ -4,6 +4,7 @@ import type { RepositorioBajas } from '../../aplicacion/puertos/repositorio-baja
 import type { Baja, BajaId } from '../../dominio/baja.js';
 import { mapeadorDeBaja } from './baja.mapeador.js';
 import { bajas } from './bajas.tablas.js';
+import { filaPortadoraDeDocumentos } from './baja-portadora.drizzle.js';
 import { enTandas } from './en-tandas.js';
 
 /** Las tablas tienen seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
@@ -41,6 +42,12 @@ export class RepositorioBajasDrizzle implements RepositorioBajas {
       .where(and(eq(bajas.numero, numero), eq(bajas.anioDeNumero, anioDeNumero)))
       .orderBy(asc(bajas.creadoEn), asc(bajas.id));
     return filas.map((fila) => mapeadorDeBaja.aEntidad(fila));
+  }
+
+  async portadoraDeDocumentos(baja: Baja): Promise<Baja> {
+    const { id, activoId, numero, anioDeNumero, estado } = baja.instantanea();
+    const portadora = await filaPortadoraDeDocumentos({ id: id.valor, activoId, numero, anioDeNumero, estado });
+    return portadora ? mapeadorDeBaja.aEntidad(portadora) : baja;
   }
 
   async vigenteDeActivo(activoId: string): Promise<Baja | null> {

@@ -4,7 +4,11 @@ import type { EventoDominio } from '../../../../core/compartido/dominio/evento-d
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Activo } from '../../../dominio/activo.js';
 import type { Baja, BajaId } from '../../../dominio/baja.js';
-import { BajaDeComponenteConSuPrincipal, BajaNoAnulable } from '../../../dominio/errores-de-baja.js';
+import {
+  BajaDeComponenteConPrincipalDadoDeBaja,
+  BajaDeComponenteConSuPrincipal,
+  BajaNoAnulable,
+} from '../../../dominio/errores-de-baja.js';
 import type { BajaDto } from '../../dto/baja.dto.js';
 import { exigirMesAbierto, IncisosDeClases } from '../traslados/dependencias-de-traslados.js';
 import { RECURSO_DE_BAJAS, type DependenciasDeBajas } from './dependencias-de-bajas.js';
@@ -33,6 +37,7 @@ export class AnularBaja {
    * @throws BajaNoAnulable si ya está anulada; BajaInvalida si falta el motivo.
    * @throws MesCerrado si el mes de la baja ya está cerrado.
    * @throws BajaDeComponenteConSuPrincipal si es un componente que se dio de baja junto con su principal.
+   * @throws BajaDeComponenteConPrincipalDadoDeBaja si es un componente cuyo principal está dado de baja.
    */
   async ejecutar(operador: Operador, pedido: AnulacionPedida): Promise<BajaDto> {
     const { unidadDeTrabajo, publicadorEventos } = this.dependencias;
@@ -82,7 +87,17 @@ export class AnularBaja {
     const propio = activos.find((activo) => activo.id.valor === baja.instantanea().activoId)!;
     const principal = activos.find((activo) => activo.id.valor === propio.instantanea().activoPadreId);
     if (principal) throw new BajaDeComponenteConSuPrincipal(principal.instantanea().codigo);
+    await this.exigirPrincipalEnUso(propio);
     return { baja, bajas: delActo, activos };
+  }
+
+  /** Un componente que se dio de baja solo no vuelve a uso mientras su principal esté dado de baja (§3.8). */
+  private async exigirPrincipalEnUso(componente: Activo): Promise<void> {
+    const padreId = componente.instantanea().activoPadreId;
+    if (!padreId) return;
+    const [principal] = await this.dependencias.repositorio.buscarBloqueando([padreId]);
+    if (principal?.instantanea().estado === 'dado_de_baja')
+      throw new BajaDeComponenteConPrincipalDadoDeBaja(principal.instantanea().codigo);
   }
 
   /** La baja pedida y las de los componentes que se dieron de baja con ella. */

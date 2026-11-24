@@ -70,3 +70,27 @@ export class PrecioNoRepartible extends ReglaDeNegocioInfringida {
     super('El precio es tan pequeño que no alcanza un centavo por cada activo vendido junto con sus componentes.');
   }
 }
+
+/** El activo tuvo una mejora o un costo posterior después de la fecha de la baja: las cifras al día de la baja no cuadrarían. */
+export class BajaAnteriorAUnaMejora extends ReglaDeNegocioInfringida {
+  readonly codigo = 'baja_anterior_a_una_mejora';
+
+  constructor(codigoDelActivo: string, fechaDeLaMejora: string) {
+    super(
+      `El activo ${codigoDelActivo} tiene una mejora o un costo posterior del ${fechaDeLaMejora}: la baja no puede ser anterior.`,
+      { codigoDelActivo, fechaDeLaMejora },
+    );
+  }
+}
+
+/** El principal del componente está dado de baja: el componente no vuelve a uso colgado de él. */
+export class BajaDeComponenteConPrincipalDadoDeBaja extends ReglaDeNegocioInfringida {
+  readonly codigo = 'baja_de_componente_con_principal_dado_de_baja';
+
+  constructor(codigoDelPrincipal: string) {
+    super(
+      `El activo principal ${codigoDelPrincipal} está dado de baja: anule primero su baja para devolver este componente a uso.`,
+      { codigoDelPrincipal },
+    );
+  }
+}

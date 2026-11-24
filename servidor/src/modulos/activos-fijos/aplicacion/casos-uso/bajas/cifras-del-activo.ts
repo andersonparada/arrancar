@@ -1,5 +1,6 @@
 import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { Activo } from '../../../dominio/activo.js';
+import { BajaAnteriorAUnaMejora } from '../../../dominio/errores-de-baja.js';
 import { cifrasDeBaja } from '../../../dominio/depreciacion/cifras-de-baja.js';
 import type { PrimerMes } from '../../../dominio/depreciacion/meses.js';
 import type { CifrasDeBaja } from '../../../dominio/tipos-de-baja.js';
@@ -30,6 +31,7 @@ interface PedidoDeCifras {
 /**
  * Lo que valía el activo al día de la baja, para congelarlo (§6.8): costo, costo fiscal, base fiscal y las acumuladas de
  * los dos libros (con la cuota del propio mes si la convención la deprecia). El activo debe estar bloqueado.
+ * @throws BajaAnteriorAUnaMejora si el activo tiene una mejora o un costo posterior después de la fecha de la baja.
  */
 export async function cifrasDelActivo(
   dependencias: DependenciasDeBajas,
@@ -39,6 +41,8 @@ export async function cifrasDelActivo(
   if (propiedades.tipoDeRegistro !== 'activo') return CIFRAS_EN_CERO;
   const id = propiedades.id.valor;
   const costos = (await dependencias.costos.vigentesDeActivo(id)).map((costo) => costo.instantanea());
+  const posterior = costos.find((costo) => costo.mejoraId !== null && costo.fecha > pedido.fecha);
+  if (posterior) throw new BajaAnteriorAUnaMejora(propiedades.codigo, posterior.fecha);
   const saldo = await dependencias.saldos.fiscalDeActivo(id);
   const incisoFiscal = await new IncisosDeClases(dependencias.clases).de(propiedades.claseId);
   const ganado = propiedades.valorComoGanadoComun === null ? 0 : aCentavos(propiedades.valorComoGanadoComun);

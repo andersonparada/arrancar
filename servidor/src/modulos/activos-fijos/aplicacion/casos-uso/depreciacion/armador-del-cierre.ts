@@ -79,9 +79,8 @@ export class ArmadorDelCierre {
   }
 
   private async calcular(operador: Operador, periodo: string): Promise<CierreArmado> {
-    const { consultas, primerMes } = this.dependencias;
-    const conBajasDelMes = (await primerMes.paraEmpresa(operador)) === 'mes_siguiente';
-    const calculado = calcularCierre(periodo, await consultas.activosParaCerrar(periodo, conBajasDelMes));
+    const { consultas } = this.dependencias;
+    const calculado = calcularCierre(periodo, await consultas.activosParaCerrar(periodo));
     const hallazgos = await this.hallazgosDe(operador, periodo, calculado);
     const totales = totalesDelCierre(calculado.cuotas);
     const regimenIsr = await consultas.regimenIsr(periodo);

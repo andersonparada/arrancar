@@ -16,7 +16,7 @@ export interface DocumentoDeBajaAbierto {
 
 const EXTENSIONES: Record<string, string> = { 'application/pdf': 'pdf', 'image/webp': 'webp' };
 
-/** Abre el acta o la denuncia de una baja (también anulada); solo se llega a ellos por aquí, con el permiso de ver. */
+/** Abre el acta o la denuncia de una baja (también anulada; la de un componente es la del acto de su principal); solo se llega a ellos por aquí, con el permiso de ver. */
 export class AbridorDeDocumentosDeBaja {
   constructor(private readonly dependencias: DependenciasDeBajas) {}
 
@@ -27,9 +27,9 @@ export class AbridorDeDocumentosDeBaja {
   ): Promise<DocumentoDeBajaAbierto> {
     const { unidadDeTrabajo, bajas, documentos } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      const baja = await bajas.buscar(Identificador.desde(pedido.bajaId) as BajaId);
-      if (!baja) throw new RecursoNoEncontrado('La baja');
-      const { acta, denunciaArchivoId } = baja.instantanea();
+      const pedida = await bajas.buscar(Identificador.desde(pedido.bajaId) as BajaId);
+      if (!pedida) throw new RecursoNoEncontrado('La baja');
+      const { acta, denunciaArchivoId } = (await bajas.portadoraDeDocumentos(pedida)).instantanea();
       const archivoId = pedido.documento === 'acta' ? (acta?.archivoId ?? null) : denunciaArchivoId;
       if (archivoId === null) throw new DocumentoDeBajaInexistente(pedido.documento);
       const { tipoMime, tamanoBytes, contenido } = await documentos.abrir(archivoId, RECURSO_DE_BAJAS);
