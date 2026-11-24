@@ -34,6 +34,7 @@ import { ConsultasTiposDeParcelaDrizzle } from '../infraestructura/persistencia/
 import { LigasDeInmueblesDrizzle } from '../infraestructura/persistencia/ligas-de-inmuebles.drizzle.js';
 import { RepositorioMedicionesDrizzle } from '../infraestructura/persistencia/repositorio-mediciones.drizzle.js';
 import { RepositorioParcelasDrizzle } from '../infraestructura/persistencia/repositorio-parcelas.drizzle.js';
+import { RepositorioTiposDeParcelaDrizzle } from '../infraestructura/persistencia/repositorio-tipos-de-parcela.drizzle.js';
 import { atenderOrdenesDeParcelas } from './ordenes-de-parcelas.js';
 
 export const dependenciasDeParcelas = () => ({
@@ -94,6 +95,8 @@ export function rutasDeParcelas() {
       new ObtenerCatalogos({
         unidadDeTrabajo: dependencias.unidadDeTrabajo,
         consultas: new ConsultasDeCatalogosDrizzle(),
+        consultasDeTipos: new ConsultasTiposDeParcelaDrizzle(),
+        repositorioDeTipos: new RepositorioTiposDeParcelaDrizzle(),
       }),
     ),
   ]);

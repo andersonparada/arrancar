@@ -117,7 +117,12 @@ const medicion = defineModel<EdicionDeMedicion>('medicion', { required: true });
 
     <section class="space-y-4" aria-labelledby="parcela-registro">
       <h2 id="parcela-registro" class="text-base font-semibold">Registro de la propiedad</h2>
-      <EditorDeInmuebles v-model="edicion.inmuebles" :opciones="referencias.inmuebleId" :error="errores.inmuebles" />
+      <EditorDeInmuebles
+        v-model="edicion.inmuebles"
+        :opciones="referencias.inmuebleId"
+        :error="errores.inmuebles"
+        :errores="errores"
+      />
     </section>
 
     <CampoTexto

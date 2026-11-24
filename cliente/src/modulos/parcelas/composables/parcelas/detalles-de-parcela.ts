@@ -6,11 +6,28 @@ import { OPCIONES_DE_TENENCIA } from './edicion-de-parcela';
 /** Cómo se escribe una superficie en m² (texto del servidor) en la unidad de la empresa; `—` si no hay. */
 export type MostrarSuperficie = (metrosCuadrados: string | null) => string;
 
-/** Lo que muestra la tarjeta de una parcela en la lista: lo que la identifica. */
-export const resumenDeParcela = (parcela: Parcela, mostrar: MostrarSuperficie): DetalleDeRegistro[] => [
+/** La superficie total que se muestra en una tarjeta cuando no es la medición propia de la parcela. */
+export interface SuperficieCalculada {
+  metrosCuadrados: string | null;
+  /** `true` si es la suma de las subparcelas activas. */
+  esSuma: boolean;
+}
+
+/**
+ * Lo que muestra la tarjeta de una parcela en la lista: lo que la identifica. Con `calculada`, la superficie total es
+ * la suma de las subparcelas (la parcela no tiene medición propia) y la etiqueta lo dice.
+ */
+export const resumenDeParcela = (
+  parcela: Parcela,
+  mostrar: MostrarSuperficie,
+  calculada?: SuperficieCalculada,
+): DetalleDeRegistro[] => [
   { etiqueta: 'Tipo', valor: formatearTexto(parcela.tipoNombre) },
   { etiqueta: 'Tenencia', valor: formatearOpcion(OPCIONES_DE_TENENCIA, parcela.formaDeTenencia) },
-  { etiqueta: 'Superficie total', valor: mostrar(parcela.superficieTotalM2) },
+  {
+    etiqueta: calculada?.esSuma ? 'Superficie total (suma de subparcelas)' : 'Superficie total',
+    valor: mostrar(calculada ? calculada.metrosCuadrados : parcela.superficieTotalM2),
+  },
   { etiqueta: 'Superficie útil', valor: mostrar(parcela.superficieUtilM2) },
 ];
 

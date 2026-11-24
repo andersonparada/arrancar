@@ -14,7 +14,7 @@ async function soloQuienElige(solicitud: FastifyRequest): Promise<void> {
 }
 
 /**
- * `GET /parcelas/catalogos`: las localidades y los inmuebles del formulario de parcelas, sin pedir los permisos de
+ * `GET /parcelas/catalogos`: las localidades, los inmuebles y los tipos de parcela del formulario de parcelas, sin pedir los permisos de
  * Empresas. Pide ver las parcelas y poder crearlas o editarlas.
  */
 export function rutasDeCatalogos(obtener: ObtenerCatalogos): FastifyPluginAsyncZod {

@@ -39,6 +39,16 @@ const parcela: FichaDeParcela = {
   hijasActivas: 0,
 };
 
+describe('superficie calculada en la tarjeta', () => {
+  it('muestra la suma de las subparcelas y la etiqueta lo dice', () => {
+    const detalle = resumenDeParcela(parcela, mostrar, { metrosCuadrados: '9987.87', esSuma: true }).find(
+      ({ etiqueta }) => etiqueta.startsWith('Superficie total'),
+    );
+
+    expect(detalle).toEqual({ etiqueta: 'Superficie total (suma de subparcelas)', valor: '9987.87 m²' });
+  });
+});
+
 describe('tarjeta y ficha de la parcela', () => {
   it('la tarjeta muestra el tipo, la tenencia y las superficies; sin medición, una raya', () => {
     expect(resumenDeParcela(parcela, mostrar)).toEqual([
@@ -134,7 +144,7 @@ describe('opciones de los selectores', () => {
       { id: 't1', nombre: 'Potrero', activo: true },
       { id: 't2', nombre: 'Lote viejo', activo: false },
     ];
-    const fuentes = { catalogos: { localidades: [], inmuebles: [] }, tipos, madres: [] };
+    const fuentes = { catalogos: { localidades: [], inmuebles: [], tipos: [] }, tipos, madres: [] };
 
     expect(opcionesDeParcela(fuentes, null, []).tipoId.map(({ valor }) => valor)).toEqual([null, 't1']);
     expect(opcionesDeParcela(fuentes, 't2', []).tipoId.map(({ valor }) => valor)).toEqual([null, 't1', 't2']);

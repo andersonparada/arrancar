@@ -54,6 +54,16 @@ describe('catálogos de parcelas por API', () => {
     expect(nombres).toEqual(['Finca CAT-1', 'Finca CAT-2']);
   });
 
+  it('ofrecen los tipos de parcela sin pedir su permiso, sembrando la lista sugerida en una empresa nueva', async () => {
+    const respuesta = await encargado.get(RUTA);
+    const nombres = respuesta.cuerpo.tipos.map(({ nombre }: { nombre: string }) => nombre);
+
+    expect(nombres.length).toBeGreaterThan(0);
+    expect(nombres).toEqual([...nombres].sort((a, b) => a.localeCompare(b, 'es')));
+    expect(respuesta.cuerpo.tipos[0]).toEqual({ id: expect.any(String), nombre: expect.any(String), activo: true });
+    expect((await encargado.get('/api/parcelas/tipos-de-parcela')).estado).toBe(403);
+  });
+
   it('quien solo ve las parcelas no necesita elegir nada y no los recibe', async () => {
     expect((await lector.get(RUTA)).estado).toBe(403);
   });

@@ -10,7 +10,9 @@ import { ligaNueva, type LigaEnEdicion } from '../../composables/parcelas/edicio
  * Los inmuebles que abarca la parcela: una fila por inmueble, con los m² de esa finca que abarca (opcional). Una fila
  * sin inmueble elegido no se manda.
  */
-defineProps<{ opciones: OpcionDeRegistro[]; error?: string }>();
+const props = defineProps<{ opciones: OpcionDeRegistro[]; error?: string; errores?: Record<string, string> }>();
+/** El error del servidor de un campo de una fila: llega como `inmuebles.<fila>.<campo>`. */
+const errorDe = (indice: number, campo: string): string | undefined => props.errores?.[`inmuebles.${indice}.${campo}`];
 const ligas = defineModel<LigaEnEdicion[]>({ required: true });
 const quitar = (indice: number): void => {
   ligas.value = ligas.value.filter((_liga, posicion) => posicion !== indice);
@@ -28,8 +30,19 @@ const quitar = (indice: number): void => {
       :key="indice"
       class="grid grid-cols-1 gap-3 rounded-xl p-3 ring-1 ring-tierra-200 sm:grid-cols-[1fr_10rem_auto] sm:items-end dark:ring-tierra-700"
     >
-      <CampoSelector v-model="liga.inmuebleId" :etiqueta="`Inmueble ${indice + 1}`" :opciones="opciones" />
-      <CampoTexto v-model="liga.superficieM2" etiqueta="Porción (m²)" tipo="number" paso="any" />
+      <CampoSelector
+        v-model="liga.inmuebleId"
+        :etiqueta="`Inmueble ${indice + 1}`"
+        :opciones="opciones"
+        :error="errorDe(indice, 'inmuebleId')"
+      />
+      <CampoTexto
+        v-model="liga.superficieM2"
+        etiqueta="Porción (m²)"
+        tipo="number"
+        paso="0.01"
+        :error="errorDe(indice, 'superficieM2')"
+      />
       <BotonBase
         variante="fantasma"
         :icono="Trash2"

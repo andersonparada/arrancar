@@ -4421,4 +4421,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   vista previa, árbol, formulario, mediciones, detalles, pestañas) y 3 de API del catálogo. **Pendiente:** QA en el navegador
   (PA-QA); las pestañas Usos y Contratos y la etiqueta «Cedida» (PA-2c y PA-3c); la unidad del uso vigente en la tarjeta; el
   aviso de la suma de hijas contra la madre (el servidor aún no lo manda); los tipos de parcela siguen pidiendo
-  `parcelas.tipos-de-parcela.ver` para elegirse en el formulario.
+  `parcelas.tipos-de-parcela.ver` para elegirse en el formulario (resuelto en la corrección siguiente).
+- **2026-11-23 — Parcelas PA-1c: correcciones de la revisión.** (1) La tarjeta de una madre sin medición muestra la suma de
+  sus subparcelas activas y la etiqueta lo dice («Superficie total (suma de subparcelas)»). (2) Las parcelas inactivas ya no
+  suman ni en la madre ni en el total de la localidad (reorganizar es inactivar y crear otra: contarlas duplicaba); la tarjeta
+  de la inactiva sigue mostrando su propia medición. (3) Los errores `inmuebles.<n>.<campo>` del servidor se reparten a cada
+  fila del editor de inmuebles y la porción acepta solo 2 decimales (`paso 0.01`). (4) `GET /parcelas/catalogos` incluye ahora
+  los tipos de parcela (con `activo`, por nombre, y la siembra perezosa de la lista sugerida), así que quien solo tiene
+  `parcelas.parcelas.ver` y `.crear` ya puede registrar parcelas; el tipo inactivo que la parcela tiene se conserva. (5) La
+  ficha de una parcela inactiva no ofrece «Agregar subparcela»; si la madre de la dirección no se puede usar se avisa y se
+  quita, y si falla la carga de la lista no se toca. (6) El selector de madre va en orden de árbol (`ordenarComoArbol`).

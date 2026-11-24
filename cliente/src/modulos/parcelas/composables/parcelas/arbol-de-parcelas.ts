@@ -8,6 +8,10 @@ export interface FilaDelArbol {
   profundidad: number;
   tieneHijas: boolean;
   colapsada: boolean;
+  /** La superficie total que se muestra en su tarjeta: la propia o, si no tiene medición, la suma de sus subparcelas. */
+  superficieTotalM2: string | null;
+  /** Si `superficieTotalM2` es la suma de las subparcelas activas y no una medición propia. */
+  esSumaDeSubparcelas: boolean;
 }
 
 /** Las parcelas de una localidad, ya en el orden en que se dibujan. */
@@ -26,13 +30,19 @@ const sumar = (valores: Array<number | null>): number | null => {
   return conValor.length ? conValor.reduce((suma, valor) => suma + valor, 0) : null;
 };
 
-/**
- * La superficie que se cuenta de una parcela, en centésimas de m²: la suya, o, si no tiene medición propia, la suma de
- * sus subparcelas (dictamen §3.2). `null` si ni ella ni sus hijas tienen medición.
- */
-export function superficieDelNodo(nodo: NodoDeParcela): number | null {
+/** La superficie de una parcela en centésimas de m²: la suya o, sin medición propia, la suma de sus subparcelas activas. */
+function superficieMostrada(nodo: NodoDeParcela): number | null {
   if (nodo.superficieTotalM2 !== null) return textoACentesimas(nodo.superficieTotalM2);
   return sumar(nodo.hijas.map(superficieDelNodo));
+}
+
+/**
+ * La superficie que una parcela aporta al total, en centésimas de m²: la suya, o, si no tiene medición propia, la suma
+ * de sus subparcelas (dictamen §3.2). Las inactivas no aportan nada: al reorganizar se inactiva una parcela y se crea
+ * otra, y contar las dos duplicaría la superficie. `null` si no hay medición que contar.
+ */
+export function superficieDelNodo(nodo: NodoDeParcela): number | null {
+  return nodo.activo ? superficieMostrada(nodo) : null;
 }
 
 const contarNodos = (nodo: NodoDeParcela): number => 1 + nodo.hijas.reduce((suma, hija) => suma + contarNodos(hija), 0);
@@ -40,7 +50,15 @@ const contarNodos = (nodo: NodoDeParcela): number => 1 + nodo.hijas.reduce((suma
 /** Las filas de un nodo y, si no está colapsado, las de sus subparcelas debajo, cada una un nivel más adentro. */
 function filasDe(nodo: NodoDeParcela, profundidad: number, colapsadas: ReadonlySet<string>): FilaDelArbol[] {
   const colapsada = colapsadas.has(nodo.id);
-  const fila = { nodo, profundidad, tieneHijas: nodo.hijas.length > 0, colapsada };
+  const suma = nodo.superficieTotalM2 === null ? superficieMostrada(nodo) : null;
+  const fila: FilaDelArbol = {
+    nodo,
+    profundidad,
+    tieneHijas: nodo.hijas.length > 0,
+    colapsada,
+    superficieTotalM2: suma === null ? nodo.superficieTotalM2 : centesimasATexto(suma),
+    esSumaDeSubparcelas: suma !== null,
+  };
   if (colapsada) return [fila];
   return [fila, ...nodo.hijas.flatMap((hija) => filasDe(hija, profundidad + 1, colapsadas))];
 }

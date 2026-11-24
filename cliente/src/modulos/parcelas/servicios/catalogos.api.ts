@@ -5,10 +5,16 @@ export interface OpcionDeCatalogo {
   nombre: string;
 }
 
+/** Un tipo de parcela; los inactivos llegan marcados para conservar el que una parcela ya tiene. */
+export interface TipoParaElegir extends OpcionDeCatalogo {
+  activo: boolean;
+}
+
 /** Lo que Parcelas ofrece para elegir sin pedir los permisos de Empresas. */
 export interface CatalogosDeParcelas {
   localidades: OpcionDeCatalogo[];
   inmuebles: OpcionDeCatalogo[];
+  tipos: TipoParaElegir[];
 }
 
 export class ApiCatalogosDeParcelas {

@@ -19,6 +19,10 @@ const emit = defineEmits<{ alternar: [] }>();
 const NIVELES_DE_SANGRIA = 4;
 const sangria = computed(() => `${Math.min(props.fila.profundidad, NIVELES_DE_SANGRIA)}rem`);
 const parcela = computed(() => props.fila.nodo);
+const calculada = computed(() => ({
+  metrosCuadrados: props.fila.superficieTotalM2,
+  esSuma: props.fila.esSumaDeSubparcelas,
+}));
 const accion = computed(
   () => `${props.fila.colapsada ? 'Mostrar' : 'Esconder'} las subparcelas de ${parcela.value.nombre}`,
 );
@@ -42,7 +46,7 @@ const accion = computed(
     <div class="min-w-0 flex-1">
       <TarjetaDeRegistro
         :titulo="`${parcela.codigo} · ${parcela.nombre}`"
-        :detalles="resumenDeParcela(parcela, mostrar)"
+        :detalles="resumenDeParcela(parcela, mostrar, calculada)"
         permiso="parcelas.parcelas.editar"
         :inactivo="!parcela.activo"
         :insignia="insigniaDeParcela(parcela)"

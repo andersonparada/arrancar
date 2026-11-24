@@ -94,6 +94,35 @@ describe('árbol agrupado por localidad', () => {
   });
 });
 
+describe('parcelas inactivas y suma en la tarjeta', () => {
+  const conInactiva = nodo('m', {
+    hijas: [
+      nodo('m1', { nivel: 2, superficieTotalM2: '100.00' }),
+      nodo('m2', { nivel: 2, superficieTotalM2: '100.00', activo: false }),
+    ],
+  });
+
+  it('las inactivas no suman, ni en la madre ni en el total de la localidad', () => {
+    expect(superficieDelNodo(conInactiva)).toBe(10000);
+    expect(superficieDelNodo(nodo('x', { superficieTotalM2: '50.00', activo: false }))).toBeNull();
+    expect(agruparPorLocalidad([conInactiva], new Set())[0]!.superficieTotalM2).toBe('100.00');
+  });
+
+  it('la fila de una madre sin medición lleva la suma de sus hijas y lo indica', () => {
+    const [grupo] = agruparPorLocalidad([madre], new Set());
+
+    expect(grupo!.filas[0]).toMatchObject({ superficieTotalM2: '9987.87', esSumaDeSubparcelas: true });
+    expect(grupo!.filas[2]).toMatchObject({ superficieTotalM2: '100.00', esSumaDeSubparcelas: false });
+  });
+
+  it('una madre inactiva muestra su propia medición aunque no aporte al total', () => {
+    const fila = agruparPorLocalidad([nodo('i', { superficieTotalM2: '70.00', activo: false })], new Set())[0]!
+      .filas[0]!;
+
+    expect(fila).toMatchObject({ superficieTotalM2: '70.00', esSumaDeSubparcelas: false });
+  });
+});
+
 describe('contraer todo', () => {
   it('lista solo las parcelas que tienen subparcelas, en cualquier nivel', () => {
     expect(idsConHijas([madre, nodo('sola')])).toEqual(['a', 'a1']);

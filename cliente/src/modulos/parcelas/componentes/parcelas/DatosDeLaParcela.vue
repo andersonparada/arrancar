@@ -51,6 +51,7 @@ const enlaces = computed(() => enlacesDelPunto(props.parcela));
       <div class="flex items-center justify-between gap-2">
         <h2 id="subparcelas-de-la-parcela" class="text-lg font-semibold">Subparcelas</h2>
         <BotonBase
+          v-if="parcela.activo"
           v-permiso="'parcelas.parcelas.crear'"
           variante="secundario"
           :icono="Plus"
