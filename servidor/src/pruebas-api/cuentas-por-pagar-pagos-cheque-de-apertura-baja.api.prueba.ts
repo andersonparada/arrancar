@@ -80,6 +80,7 @@ describe('desligar sin anular el cheque', () => {
     expect(respuesta.cuerpo).toMatchObject({
       estado: 'anulado',
       anulacion: { fecha: haceDias(-10), motivo: 'Se ligó a la factura equivocada' },
+      avisos: ['Clasifique el cheque otra vez en Bancos.'],
     });
     expect(await pagoEnBase(pago.id)).toMatchObject({
       estado: 'anulado',

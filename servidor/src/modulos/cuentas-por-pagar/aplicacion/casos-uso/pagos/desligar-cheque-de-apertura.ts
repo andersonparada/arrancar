@@ -11,6 +11,9 @@ import type { DependenciasDeCambiarPagos } from './dependencias-de-pagos.js';
 import { LectorDelPago } from './lector-del-pago.js';
 import { MODULO_DE_ORIGEN } from './orden-a-bancos.js';
 
+/** Lo que el usuario debe saber al desligar: Bancos deja el cheque sin clasificar. */
+export const AVISO_DE_CHEQUE_SIN_CLASIFICAR = 'Clasifique el cheque otra vez en Bancos.';
+
 export interface PeticionParaDesligar {
   pagoId: string;
   /** De 1 a 300 caracteres. */
@@ -61,7 +64,8 @@ export class DesligarChequeDeApertura {
       fechaContable: pago.fecha,
     });
     const desligado = (await pagos.buscar(pago.id))!;
-    return { dto: (await this.lector.leer(operador, desligado)).dto, eventos };
+    const { dto } = await this.lector.leer(operador, desligado);
+    return { dto: { ...dto, avisos: [AVISO_DE_CHEQUE_SIN_CLASIFICAR] }, eventos };
   }
 
   private exigirChequeDeApertura(pago: PagoConLineas): void {
