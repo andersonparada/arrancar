@@ -109,11 +109,18 @@ function reglasDeLaNota(
   return avisosDeLaNota({ tipo, fechaEmision }, facturaAnterior.fecha);
 }
 
+/** La nota de crédito o de débito sobre una factura del sistema anterior sigue el IVA de esa factura; la de abono nunca carga IVA. */
+function siguePorLaFacturaAnterior(solicitud: SolicitudArmada, contexto: ContextoDelArmado): boolean {
+  const { tipo, facturaAnterior } = solicitud;
+  const esCreditoODebito = tipo === 'nota_de_credito' || tipo === 'nota_de_debito';
+  return esCreditoODebito && Boolean(facturaAnterior) && !contexto.facturaAfectada;
+}
+
 /** Si el documento carga IVA y los avisos de ese tratamiento (la nota de una factura anterior no tiene familia que heredar). */
 function tratamientoDelIva(solicitud: SolicitudArmada, contexto: ContextoDelArmado) {
-  const { tipo, facturaAnterior } = solicitud;
+  const { tipo } = solicitud;
   const regimen = contexto.regimen.regimenIva;
-  if (esNota(tipo) && facturaAnterior && !contexto.facturaAfectada) {
+  if (siguePorLaFacturaAnterior(solicitud, contexto)) {
     return tratamientoDeLaNotaSobreFacturaAnterior({
       ivaDelDte: solicitud.ivaDelDte,
       hayLineaGravada: solicitud.lineas.some((linea) => linea.claseFiscal === 'gravada'),

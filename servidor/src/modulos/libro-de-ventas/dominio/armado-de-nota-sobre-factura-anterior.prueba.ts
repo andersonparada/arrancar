@@ -113,4 +113,30 @@ describe('una nota sobre una factura del sistema anterior', () => {
     expect(documento.totales.iva).toBe(1200);
     expect(avisos.join(' ')).toContain('No hay historial fiscal');
   });
+
+  describe('una nota de abono', () => {
+    const abono = (cambios: Partial<SolicitudArmada> = {}) => desdeAnterior({ tipo: 'nota_de_abono', ...cambios });
+
+    it('no carga IVA aunque la factura fuera del régimen general', () => {
+      const { documento } = armarDocumentoDeVenta(
+        abono(),
+        contexto({ fechaDeInicio: '2026-01-01', regimenDeLaFacturaAnterior: enGeneral }),
+      );
+      expect(documento.totales).toMatchObject({ iva: 0, total: 11200 });
+    });
+
+    it('sin historial del mes de la factura tampoco carga IVA', () => {
+      const { documento } = armarDocumentoDeVenta(abono(), contexto({ fechaDeInicio: '2026-01-01' }));
+      expect(documento.totales.iva).toBe(0);
+    });
+
+    it('rechaza un IVA del DTE mayor que cero', () => {
+      expect(() =>
+        armarDocumentoDeVenta(
+          abono({ ivaDelDte: 1200 }),
+          contexto({ fechaDeInicio: '2026-01-01', regimenDeLaFacturaAnterior: enGeneral }),
+        ),
+      ).toThrowError(expect.objectContaining({ codigo: 'linea_invalida' }));
+    });
+  });
 });
