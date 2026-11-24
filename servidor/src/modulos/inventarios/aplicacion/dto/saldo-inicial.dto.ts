@@ -68,3 +68,15 @@ export interface SolicitudDeSaldoInicial {
   /** Sin ella, el día anterior al inicio. */
   fechaDeCapa: string | null;
 }
+
+/** Un renglón como lo ve quien no tiene `costos.ver`: sin dinero (INV-A7). */
+export type SaldoInicialVisible = Omit<SaldoInicialDto, 'costoTotal' | 'costoUnitario'> & {
+  costoTotal: string | null;
+  costoUnitario: string | null;
+};
+
+/** La pantalla como la ve quien no tiene `costos.ver`: sin costos ni valor total. */
+export type SaldosInicialesVisibles = Omit<SaldosInicialesDto, 'saldos' | 'totales'> & {
+  totales: Omit<TotalesDeSaldosIniciales, 'valor'> & { valor: string | null };
+  saldos: SaldoInicialVisible[];
+};

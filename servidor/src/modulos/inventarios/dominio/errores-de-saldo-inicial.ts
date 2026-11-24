@@ -44,3 +44,14 @@ export class InventarioConFechaFueraDeLaCarga extends ReglaDeNegocioInfringida {
     super(`No se puede cambiar la fecha de inicio: ${motivo}`);
   }
 }
+
+/** Un renglón por artículo, bodega, lote y fecha de la capa: repetirlo duplicaría el inventario inicial. */
+export class SaldoInicialRepetido extends ReglaDeNegocioInfringida {
+  readonly codigo = 'saldo_inicial_repetido';
+
+  constructor() {
+    super(
+      'Ya hay un saldo inicial de ese artículo en esa bodega, con ese lote y esa fecha de la capa. Corríjalo en lugar de repetirlo.',
+    );
+  }
+}

@@ -1,4 +1,7 @@
+import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { LlaveDeRenglon } from '../../puertos/consultas-de-saldos-iniciales.js';
+import { SaldoInicialRepetido } from '../../../dominio/errores-de-saldo-inicial.js';
 import type { CausaDeRecalculo } from '../../../dominio/costeo/recalculo.js';
 import { diaAnterior } from '../../../dominio/fechas.js';
 import { planDeSaldoInicial } from '../../../dominio/saldo-inicial.js';
@@ -7,6 +10,14 @@ import { RegistradorDeDocumento, type ResultadoDeRegistro } from '../../kardex/r
 import { ResolutorDeRenglones } from '../../kardex/resolutor-de-renglones.js';
 import type { DependenciasDeSaldosIniciales } from './dependencias-de-saldos-iniciales.js';
 import { ResolutorDeLoteDeSaldo } from './resolutor-de-lote-de-saldo.js';
+
+const renglonDe = (solicitud: SolicitudDeSaldoInicial, loteId: string | null) => ({
+  articuloId: solicitud.articuloId,
+  loteId,
+  cantidad: solicitud.cantidad,
+  unidadId: solicitud.unidadId,
+  costoTotal: solicitud.costoTotal,
+});
 
 export interface PedidoDeSaldo {
   solicitud: SolicitudDeSaldoInicial;
@@ -39,23 +50,30 @@ export class RegistradorDeSaldos {
     const { solicitud, fechaDeInicio, causa } = pedido;
     const { almacen, documentos } = this.dependencias;
     await almacen.bloquear([solicitud.articuloId]);
+    await documentos.bloquearSaldosInicialesDeBodegas([solicitud.bodegaId]);
     const loteId = await this.lotes.resolver(operador, solicitud);
-    const resueltos = await this.resolutor.resolver([
-      {
-        articuloId: solicitud.articuloId,
-        loteId,
-        cantidad: solicitud.cantidad,
-        unidadId: solicitud.unidadId,
-        costoTotal: solicitud.costoTotal,
-      },
-    ]);
+    const resueltos = await this.resolutor.resolver([renglonDe(solicitud, loteId)]);
+    const fecha = diaAnterior(fechaDeInicio);
     const plan = planDeSaldoInicial({
-      fecha: diaAnterior(fechaDeInicio),
+      fecha,
       bodegaId: solicitud.bodegaId,
       observaciones: null,
       renglones: resueltos.renglones.map((renglon) => ({ ...renglon, fechaDeCapa: solicitud.fechaDeCapa })),
     });
+    await this.exigirSinRepetir({ ...solicitud, loteId, fechaDeCapa: solicitud.fechaDeCapa ?? fecha });
     const documento = await documentos.buscarSaldoInicialDeBodega(solicitud.bodegaId);
     return this.registrador.registrar(operador, { plan, articulos: resueltos.articulos, documento, causa });
+  }
+
+  /**
+   * Con los candados ya tomados: un renglón por artículo, bodega, lote y fecha de la capa. Antes se comprueba que la
+   * bodega se ve: los movimientos no llevan alcance, y decir «repetido» de una bodega ajena revelaría lo que tiene.
+   */
+  private async exigirSinRepetir(llave: LlaveDeRenglon): Promise<void> {
+    const { articuloId, bodegaId, loteId, fechaDeCapa } = llave;
+    if (!(await this.dependencias.catalogos.bodega(bodegaId))) throw new RecursoNoEncontrado('La bodega');
+    if (await this.dependencias.saldos.existeRenglon({ articuloId, bodegaId, loteId, fechaDeCapa })) {
+      throw new SaldoInicialRepetido();
+    }
   }
 }

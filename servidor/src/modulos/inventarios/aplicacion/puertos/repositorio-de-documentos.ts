@@ -53,6 +53,11 @@ export interface RepositorioDeDocumentos {
   anular(id: string, anulacion: AnulacionDeDocumento): Promise<void>;
   /** El saldo inicial vigente de la bodega (a lo más uno), si el usuario ve esa bodega. */
   buscarSaldoInicialDeBodega(bodegaId: string): Promise<DocumentoGuardado | null>;
+  /**
+   * Toma el candado de los documentos de saldo inicial de esas bodegas (ordenadas, hasta que termine la transacción):
+   * quien agrega o quita renglones lo toma antes de buscar el documento o decidir anularlo, y así no se pisan.
+   */
+  bloquearSaldosInicialesDeBodegas(bodegaIds: readonly string[]): Promise<void>;
   /** Pone la salida de un traslado en tránsito o recibida (con la entrada que la recibió). */
   cambiarTraslado(id: string, cambio: CambioDeTraslado): Promise<void>;
 }

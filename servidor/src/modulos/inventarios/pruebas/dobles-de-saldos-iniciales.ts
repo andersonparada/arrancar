@@ -5,6 +5,7 @@ import type { AlmacenDeLotes } from '../aplicacion/puertos/almacen-de-lotes.js';
 import type {
   ConflictosConLaFechaDeInicio,
   ConsultasDeSaldosIniciales,
+  LlaveDeRenglon,
   ResumenDeSaldosIniciales,
 } from '../aplicacion/puertos/consultas-de-saldos-iniciales.js';
 import type { MovimientoDelKardex } from '../dominio/costeo/movimientos-del-kardex.js';
@@ -87,6 +88,16 @@ export class SaldosEnMemoria implements ConsultasDeSaldosIniciales {
       loteCodigo: lote?.codigo ?? null,
       loteVencimiento: lote?.fechaDeVencimiento ?? null,
     };
+  }
+
+  async existeRenglon(llave: LlaveDeRenglon): Promise<boolean> {
+    return this.renglones().some(
+      (m) =>
+        m.articuloId === llave.articuloId &&
+        m.bodegaId === llave.bodegaId &&
+        m.loteId === llave.loteId &&
+        m.fechaDeCapa === llave.fechaDeCapa,
+    );
   }
 
   async resumenParaLaRevision(fechaDeInicio: string): Promise<ResumenDeSaldosIniciales> {

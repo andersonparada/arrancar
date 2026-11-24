@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { deLaTransaccion } from '../../../core/base-datos/columnas.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
@@ -60,6 +60,14 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
         and(eq(documentos.clase, 'saldo_inicial'), eq(documentos.bodegaId, bodegaId), eq(documentos.estado, 'vigente')),
       );
     return fila ? aDocumento(fila) : null;
+  }
+
+  async bloquearSaldosInicialesDeBodegas(bodegaIds: readonly string[]): Promise<void> {
+    for (const id of [...new Set(bodegaIds)].sort()) {
+      await transaccionEnCurso().execute(
+        sql`select pg_advisory_xact_lock(hashtextextended('inventarios.saldo_inicial:' || current_setting('app.empresa_id', true) || ':' || ${id}::text, 0))`,
+      );
+    }
   }
 
   async anular(id: string, { motivo, usuarioId, ahora }: AnulacionDeDocumento): Promise<void> {

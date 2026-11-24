@@ -5,6 +5,7 @@ import type { SaldoInicialDto } from '../../aplicacion/dto/saldo-inicial.dto.js'
 import type {
   ConflictosConLaFechaDeInicio,
   ConsultasDeSaldosIniciales,
+  LlaveDeRenglon,
   ResumenDeSaldosIniciales,
 } from '../../aplicacion/puertos/consultas-de-saldos-iniciales.js';
 import { aCentavosEnteros, aDiezmilesimas } from '../../dominio/decimales.js';
@@ -125,6 +126,15 @@ export class ConsultasDeSaldosInicialesDrizzle implements ConsultasDeSaldosInici
     return fila ? aSaldo(fila) : null;
   }
 
+  async existeRenglon(llave: LlaveDeRenglon): Promise<boolean> {
+    const { rows } = await transaccionEnCurso().execute(sql`
+      select 1 from inventarios.movimientos m
+       where ${SOLO_SALDOS} and m.articulo_id = ${llave.articuloId}::uuid and m.bodega_id = ${llave.bodegaId}::uuid
+         and m.lote_id is not distinct from ${llave.loteId}::uuid and m.fecha_de_capa = ${llave.fechaDeCapa}::date
+       limit 1`);
+    return rows.length > 0;
+  }
+
   async resumenParaLaRevision(fechaDeInicio: string): Promise<ResumenDeSaldosIniciales> {
     return { existencias: await this.existencias(), lotesVencidos: await this.lotesVencidos(fechaDeInicio) };
   }
@@ -169,7 +179,7 @@ export class ConsultasDeSaldosInicialesDrizzle implements ConsultasDeSaldosInici
   async conflictosConLaFechaDeInicio(nueva: string): Promise<ConflictosConLaFechaDeInicio> {
     const { rows } = await transaccionEnCurso().execute<{ anteriores: string; capas: string }>(sql`
       select count(*) filter (where m.fecha_de_capa is null and m.vigente and m.fecha < ${nueva}::date)::text as anteriores,
-             count(*) filter (where m.fecha_de_capa is not null and m.fecha_de_capa <> m.fecha
+             count(*) filter (where m.fecha_de_capa is not null and m.vigente and m.fecha_de_capa <> m.fecha
                                 and m.fecha_de_capa >= ${nueva}::date)::text as capas
         from inventarios.movimientos m`);
     return { movimientosAnteriores: Number(rows[0]!.anteriores), capasPosteriores: Number(rows[0]!.capas) };

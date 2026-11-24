@@ -111,7 +111,7 @@ describe('lotes de los saldos iniciales', () => {
 
   it('crea el lote escrito con su vencimiento y lo reutiliza en el renglón siguiente', async () => {
     const primero = await e.registrarSaldo('10', '20.00', { loteCodigo: 'L-1', loteVencimiento: '2026-12-01' });
-    const segundo = await e.registrarSaldo('5', '10.00', { loteCodigo: 'l-1' });
+    const segundo = await e.registrarSaldo('5', '10.00', { loteCodigo: 'l-1', fechaDeCapa: '2026-08-01' });
 
     expect(e.lotes.lotes).toHaveLength(1);
     expect(primero.loteId).toBe(segundo.loteId);

@@ -3755,6 +3755,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   fijos), la pantalla (INV-7c) y que el cierre mensual (INV-8) lea los saldos. Pruebas: dominio y casos de uso en memoria
   (`saldo-inicial.prueba.ts`, `saldos-iniciales.prueba.ts`) y de API (`inventarios-saldos-iniciales*.api.prueba.ts`: registro,
   PEPS, corregir, eliminar, cuadre del kardex, cierre de la carga, fecha de inicio, Excel, alcance por bodega y reglas de la base).
+- **2026-11-23 — INV-7 (Inventarios, servidor): correcciones de la revisión.** Migración
+  `0010_inv7_saldo_inicial_sin_repetir`. (1) **Carrera al quitar el último renglón y agregar otro:** los candados eran por
+  artículo y nada protegía el documento de la bodega; ahora `RepositorioDeDocumentos.bloquearSaldosInicialesDeBodegas` toma un
+  `pg_advisory_xact_lock` por empresa y bodega (ordenado, después de los del artículo) antes de buscar el documento, de releer el
+  renglón y de decidir anularlo (`RegistradorDeSaldos`, `RetiradorDeSaldos.tomar`, que en corregir también toma la bodega destino);
+  prueba de API con borrar y agregar a la vez en 4 bodegas (falla sin el candado). (2) **Renglón repetido:** único parcial
+  `movimientos_saldo_inicial_unico` (empresa, artículo, bodega, lote —nulo cuenta como uno— y fecha de la capa, solo vigentes) y,
+  antes de él, `existeRenglon` en el caso de uso con el error `saldo_inicial_repetido` (422; por fila en Excel); se comprueba
+  después de que la bodega se ve, para no revelar lo de una bodega ajena. (3) `conflictosConLaFechaDeInicio` solo cuenta capas
+  vigentes. (4) `reubicar_saldos_iniciales` (reemplazada con `create or replace`, misma superficie de seguridad) mueve también
+  `capas.fecha` a la fecha de capa de su movimiento. (5) **Costos:** sin `inventarios.costos.ver` la lista, el alta y la corrección
+  llevan `costoTotal`, `costoUnitario` y `totales.valor` en `null` (`vista-de-saldos.ts`, recorte en el controlador) y el Excel de
+  exportar da 403 (lleva el costo de cada renglón); se revoca la decisión (2) de arriba, que contradecía INV-A7. Importar sigue
+  con `.importar`: el usuario escribe los costos. Pruebas nuevas: `inventarios-saldos-iniciales-revision.api.prueba.ts` y
+  `saldos-iniciales-repetidos.prueba.ts`. **Pendiente:** la pantalla INV-7c debe pedir `costos.ver` para mostrar y capturar montos.
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

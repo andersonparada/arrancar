@@ -22,6 +22,7 @@ let e: EscenarioDeKardex;
 let conLotes: string;
 let importador: ClienteApi;
 let exportador: ClienteApi;
+let exportadorSinCostos: ClienteApi;
 let codigoDeArticulo: string;
 let codigoDeBodega: string;
 let codigoConLotes: string;
@@ -81,7 +82,9 @@ beforeAll(async () => {
   const crear = (nombres: string, permisos: string[]) =>
     crearUsuarioConPermisos(entorno, e.cuenta, { nombres, apellidos: 'Excel', permisos });
   importador = await crear('Importa', ['inventarios.saldos-iniciales.importar', 'inventarios.bodegas.ver-todas']);
-  exportador = await crear('Exporta', ['inventarios.saldos-iniciales.exportar', 'inventarios.bodegas.ver-todas']);
+  const paraExportar = ['inventarios.saldos-iniciales.exportar', 'inventarios.bodegas.ver-todas'];
+  exportador = await crear('Exporta', [...paraExportar, 'inventarios.costos.ver']);
+  exportadorSinCostos = await crear('Sincostos', paraExportar);
 });
 
 afterAll(async () => {
@@ -143,7 +146,13 @@ describe('importar', () => {
           Cantidad: 10,
           'Costo total': 30,
         }),
-        fila({ 'Artículo (código)': codigoConLotes, Lote: 'l-1', Cantidad: 5, 'Costo total': 15 }),
+        fila({
+          'Artículo (código)': codigoConLotes,
+          Lote: 'l-1',
+          Cantidad: 5,
+          'Costo total': 15,
+          'Fecha de la capa (compra)': '01/08/2026',
+        }),
       ],
       false,
     );
@@ -161,6 +170,13 @@ describe('importar', () => {
       [e.articuloId],
     );
     expect(capas.map((c) => c.fecha)).toEqual(['2026-03-01', '2026-08-01']);
+  });
+
+  it('un renglón repetido (mismo artículo, bodega, lote y fecha de capa) se rechaza en su fila, también contra lo ya cargado', async () => {
+    const resultado = await importarFilas([fila({ 'Fecha de la capa (compra)': '02/03/2026' }), fila()], true);
+
+    expect(resultado.errores).toEqual([expect.objectContaining({ fila: 3 })]);
+    expect(JSON.stringify(resultado.errores)).toContain('Ya hay un saldo inicial');
   });
 
   it('el lote existente con otro vencimiento se rechaza en su fila', async () => {
@@ -183,6 +199,12 @@ describe('exportar y permisos', () => {
     expect(hoja.rowCount).toBe(5);
     expect(hoja.getRow(2).getCell(1).value).toBe(codigoDeArticulo);
     expect(hoja.getRow(2).getCell(2).value).toBe(codigoDeBodega);
+  });
+
+  it('sin el permiso de ver costos no se exporta: el Excel lleva el costo de cada renglón', async () => {
+    const respuesta = await exportadorSinCostos.get(`${SALDOS_DE_INVENTARIO}/exportar`);
+
+    expect(respuesta.estado).toBe(403);
   });
 
   it('quien solo importa no exporta, quien solo exporta no importa y ninguno de los dos crea ni ve a mano', async () => {

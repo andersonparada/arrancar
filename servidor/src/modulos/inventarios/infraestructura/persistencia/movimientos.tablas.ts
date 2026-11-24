@@ -9,6 +9,7 @@ import {
   smallint,
   text,
   unique,
+  uniqueIndex,
   uuid,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
@@ -100,7 +101,20 @@ const llavesDeCatalogos = (t: Columnas) => [
   }),
 ];
 
+/** Un renglón vigente de saldo inicial por artículo, bodega, lote (nulo cuenta como uno solo) y fecha de la capa (§8). */
+const indiceDeSaldoInicialUnico = (t: Columnas) =>
+  uniqueIndex('movimientos_saldo_inicial_unico')
+    .on(
+      t.empresaId,
+      t.articuloId,
+      t.bodegaId,
+      sql`coalesce(${t.loteId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
+      t.fechaDeCapa,
+    )
+    .where(sql`${t.fechaDeCapa} is not null and ${t.vigente}`);
+
 const indices = (t: Columnas) => [
+  indiceDeSaldoInicialUnico(t),
   unique('movimientos_id_empresa_unico').on(t.id, t.empresaId),
   index('movimientos_documento_idx').on(t.documentoId),
   index('movimientos_kardex_idx')

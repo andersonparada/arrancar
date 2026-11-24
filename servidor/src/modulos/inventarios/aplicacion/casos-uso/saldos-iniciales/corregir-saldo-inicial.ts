@@ -41,7 +41,10 @@ export class CorregirSaldoInicial {
   private async corregir(operador: Operador, datos: { movimientoId: string; solicitud: SolicitudDeSaldoInicial }) {
     const { solicitud } = datos;
     const fechaDeInicio = await exigirCargaAbierta(this.dependencias, operador);
-    const anterior = await this.retirador.tomar(datos.movimientoId, [solicitud.articuloId]);
+    const anterior = await this.retirador.tomar(datos.movimientoId, {
+      articulos: [solicitud.articuloId],
+      bodegas: [solicitud.bodegaId],
+    });
     await this.retirador.desactivar(anterior);
     const causa = 'saldo_inicial_corregido';
     const registro = await this.registrador.registrar(operador, { solicitud, fechaDeInicio, causa });

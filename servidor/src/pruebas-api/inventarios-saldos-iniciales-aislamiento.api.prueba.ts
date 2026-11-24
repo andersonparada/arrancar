@@ -22,6 +22,7 @@ const PERMISOS = [
   'inventarios.saldos-iniciales.crear',
   'inventarios.saldos-iniciales.editar',
   'inventarios.saldos-iniciales.eliminar',
+  'inventarios.costos.ver',
 ];
 let e: EscenarioDeKardex;
 let ajena: EscenarioDeKardex;
@@ -88,10 +89,10 @@ describe('alcance por bodega', () => {
   });
 
   it('en su bodega sí carga y corrige, y el documento de la bodega sigue siendo uno', async () => {
-    const nuevo = await bodeguero1.post(
-      SALDOS_DE_INVENTARIO,
-      datosDeSaldoInicial({ articuloId: articulo, bodegaId: e.bodegaId }, '3', '6.00'),
-    );
+    const nuevo = await bodeguero1.post(SALDOS_DE_INVENTARIO, {
+      ...datosDeSaldoInicial({ articuloId: articulo, bodegaId: e.bodegaId }, '3', '6.00'),
+      fechaDeCapa: '2026-08-01',
+    });
     const corregido = await bodeguero1.put(
       `${SALDOS_DE_INVENTARIO}/${saldoDeBodega1}`,
       datosDeSaldoInicial({ articuloId: articulo, bodegaId: e.bodegaId }, '10', '25.00'),

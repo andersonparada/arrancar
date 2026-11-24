@@ -19,6 +19,14 @@ export interface ResumenDeSaldosIniciales {
   lotesVencidos: { lotes: number; valor: bigint };
 }
 
+/** Lo que distingue un renglón de saldo inicial de otro (§8). */
+export interface LlaveDeRenglon {
+  articuloId: string;
+  bodegaId: string;
+  loteId: string | null;
+  fechaDeCapa: string;
+}
+
 /** Lo que impide cambiar la fecha de inicio (§8). */
 export interface ConflictosConLaFechaDeInicio {
   /** Movimientos vigentes que no son de saldo inicial con fecha anterior a la nueva. */
@@ -33,6 +41,8 @@ export interface ConsultasDeSaldosIniciales {
   listar(): Promise<SaldoInicialDto[]>;
   /** Nulo si no es un renglón vigente de saldo inicial o el usuario no ve su bodega. */
   obtener(movimientoId: string): Promise<SaldoInicialDto | null>;
+  /** Si ya hay un renglón vigente con esa llave (un renglón por artículo, bodega, lote y fecha de la capa), vea o no su bodega. */
+  existeRenglon(llave: LlaveDeRenglon): Promise<boolean>;
   /** Sin el alcance por bodega: la revisión es de toda la empresa. */
   resumenParaLaRevision(fechaDeInicio: string): Promise<ResumenDeSaldosIniciales>;
   /** Si hay algún conteo físico que respalde el saldo inicial (los conteos llegan con INV-9: hoy, ninguno). */

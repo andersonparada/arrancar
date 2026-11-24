@@ -8,6 +8,12 @@ import { eventoDeRecalculo } from '../../kardex/eventos-del-kardex.js';
 import { RecalculadorDeArticulo } from '../../kardex/recalculador-de-articulo.js';
 import type { DependenciasDeSaldosIniciales } from './dependencias-de-saldos-iniciales.js';
 
+/** Lo que se suma a los candados del renglón: los artículos y bodegas a los que irá lo corregido. */
+export interface SeSuma {
+  articulos: readonly string[];
+  bodegas: readonly string[];
+}
+
 const MOTIVO_DEL_DOCUMENTO_VACIO = 'Se quitó su último renglón de saldo inicial.';
 
 /**
@@ -24,15 +30,16 @@ export class RetiradorDeSaldos {
   }
 
   /**
-   * Toma los candados del artículo del renglón (y de los que se sumen) y lo lee ya con ellos en la mano: así no lo
-   * quitan dos a la vez.
+   * Toma los candados del artículo del renglón y de la bodega de su documento (y de los que se sumen) y lo lee ya con
+   * ellos en la mano: así no lo quitan dos a la vez ni se anula el documento mientras otro le agrega un renglón.
    * @throws RecursoNoEncontrado si el renglón no existe, ya no es vigente o su bodega no se ve.
    */
-  async tomar(movimientoId: string, tambienArticulos: readonly string[]): Promise<SaldoInicialDto> {
-    const { saldos, almacen } = this.dependencias;
+  async tomar(movimientoId: string, tambien: Partial<SeSuma> = {}): Promise<SaldoInicialDto> {
+    const { saldos, almacen, documentos } = this.dependencias;
     const visto = await saldos.obtener(movimientoId);
     if (!visto) throw new RecursoNoEncontrado('El saldo inicial');
-    await almacen.bloquear([visto.articuloId, ...tambienArticulos]);
+    await almacen.bloquear([visto.articuloId, ...(tambien.articulos ?? [])]);
+    await documentos.bloquearSaldosInicialesDeBodegas([visto.bodegaId, ...(tambien.bodegas ?? [])]);
     const anterior = await saldos.obtener(movimientoId);
     if (!anterior) throw new RecursoNoEncontrado('El saldo inicial');
     return anterior;

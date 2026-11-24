@@ -97,11 +97,10 @@ export class KardexEnMemoria
   }
 
   async actualizarMovimientos(cambios: readonly CambioDeMovimiento[]): Promise<void> {
-    for (const cambio of cambios)
-      Object.assign(
-        this.movimientos.find((m) => m.id === cambio.id)!,
-        cambio,
-      );
+    for (const cambio of cambios) {
+      const movimiento = this.movimientos.find((m) => m.id === cambio.id)!;
+      Object.assign(movimiento, cambio);
+    }
   }
 
   async desactivarMovimientosDelDocumento(documentoId: string): Promise<void> {
@@ -153,6 +152,7 @@ export class KardexEnMemoria
     const vigente = (d: DocumentoGuardado) => d.clase === 'saldo_inicial' && d.estado === 'vigente';
     return [...this.documentosGuardados.values()].find((d) => vigente(d) && d.bodegaId === bodegaId) ?? null;
   }
+  async bloquearSaldosInicialesDeBodegas(): Promise<void> {}
 
   async anular(id: string, _anulacion: AnulacionDeDocumento): Promise<void> {
     this.documentosGuardados.get(id)!.estado = 'anulado';

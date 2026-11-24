@@ -28,7 +28,7 @@ export class EliminarSaldoInicial {
 
   private async eliminar(operador: Operador, movimientoId: string) {
     await exigirCargaAbierta(this.dependencias, operador);
-    const anterior = await this.retirador.tomar(movimientoId, []);
+    const anterior = await this.retirador.tomar(movimientoId);
     await this.retirador.desactivar(anterior);
     const metodo = await this.metodo.usarParaMover(operador, anterior.fechaDeCapa);
     const eventos = await this.retirador.recalcular(operador, { anterior, metodo });
