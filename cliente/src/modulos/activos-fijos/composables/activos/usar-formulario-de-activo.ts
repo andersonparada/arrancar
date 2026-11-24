@@ -1,4 +1,5 @@
 import { ref, watch, type Ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
@@ -25,12 +26,22 @@ function usarCamposCoherentes(edicion: Ref<EdicionDeActivo>, departamentos: Ref<
   );
 }
 
+/**
+ * Un componente que se da de alta desde una mejora llega con `padre` (el activo principal) y `descripcion` en la
+ * ruta: así no se vuelve a escribir.
+ */
+function precargarDesdeLaRuta(edicion: EdicionDeActivo, consulta: Record<string, unknown>): void {
+  if (typeof consulta.padre === 'string') edicion.activoPadreId = consulta.padre;
+  if (typeof consulta.descripcion === 'string') edicion.descripcion = consulta.descripcion;
+}
+
 /** El alta manual de un activo en página completa (sin costos: llegan con la bandeja y los costos manuales). */
 export function usarFormularioDeActivo() {
   const avisos = usarAvisos();
   const { config } = usarSesion();
   const { enviando, errores, enviar } = usarFormulario();
   const edicion = ref(edicionNueva(fechaDeHoyEn(config('core.regional.zona_horaria', 'America/Guatemala'))));
+  precargarDesdeLaRuta(edicion.value, useRoute().query);
   const referencias = usarReferenciasDeActivo(edicion);
   usarCamposCoherentes(edicion, referencias.departamentos);
 

@@ -4671,3 +4671,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   rechaza la anulación con `division_con_movimientos_posteriores` y un mensaje claro (no se borra nada). (2) `AnularCosto`
   rechaza con `costo_anterior_a_division` un costo vigente que no viene de la división y es anterior a una división vigente de
   su activo (origen o nuevo): se anula primero la división. Pruebas: 4 de API nuevas (`activos-fijos-divisiones-rastro`).
+
+- **2026-11-23 — AF-7c y AF-8c (cliente de Activos fijos).** Acciones en la ficha del activo: trasladar con boleta, mejora o costo
+  posterior (pestaña Mejoras, con la sugerencia de componente de V-3 que lleva al alta con el principal ya elegido), revisar la
+  estimación y cambiar matrícula o catastro; boleta de traslado imprimible (página propia, anulable) y enlace a ella desde el
+  historial de ubicación. Sin cambios en el servidor. Pendientes anotados en `docs/modulos/diseno-activos-fijos.md`: mejora con
+  líneas del libro, selección múltiple para trasladar desde la lista y subir la boleta firmada (AFI-4c).
+- **2026-11-23 — Correcciones de la revisión de AF-7c y AF-8c.** El traslado desde la ficha parte de la localidad, el
+  departamento y el responsable actuales (el servidor reemplaza la ubicación completa), y la confirmación dice qué queda
+  («sin localidad», «sin responsable»); la pestaña Costos se vuelve a traer al registrar o anular una mejora; los avisos de
+  mejora ya no prometen el mes de la depreciación (lo decide la regla `primer_mes` de la empresa y los cierres); la sugerencia de
+  componente ya no dice que se traslada aparte.
+- **2026-11-23 — Segunda corrección de AF-7c y AF-8c.** La primera apertura de la ventana de traslado ya no borra el
+  departamento actual: el departamento solo se depura contra la localidad cuando las ubicaciones ya cargaron. El traslado
+  de un solo activo conserva si está en la bodega (`enBodega` precarga `aBodega`) y la confirmación avisa si el bien sale de
+  ella. Pruebas del composable con la carga pendiente.

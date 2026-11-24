@@ -7,11 +7,15 @@ import EtiquetasDeActivo from '../componentes/activos/EtiquetasDeActivo.vue';
 import HistorialDeUbicacion from '../componentes/activos/HistorialDeUbicacion.vue';
 import PanelDeDepreciacion from '../componentes/depreciacion/PanelDeDepreciacion.vue';
 import PanelDeSaldoInicial from '../componentes/saldos-iniciales/PanelDeSaldoInicial.vue';
+import AccionesDeFicha from '../componentes/activos/AccionesDeFicha.vue';
 import PestanasDeFicha from '../componentes/activos/PestanasDeFicha.vue';
+import VentanasDeAcciones from '../componentes/activos/VentanasDeAcciones.vue';
+import PanelDeMejoras from '../componentes/mejoras/PanelDeMejoras.vue';
 import VentanaDeMotivo from '../componentes/comunes/VentanaDeMotivo.vue';
 import PanelDeCostos from '../componentes/costos/PanelDeCostos.vue';
 import VentanaDeCosto from '../componentes/costos/VentanaDeCosto.vue';
 import { usarFichaDeActivo } from '../composables/activos/usar-ficha-de-activo';
+import { usarAccionesDeFicha } from '../composables/activos/usar-acciones-de-ficha';
 import { usarAnulacionDeCosto } from '../composables/costos/usar-anulacion-de-costo';
 import { usarCostosDeActivo } from '../composables/costos/usar-costos-de-activo';
 import { usarSaldoDeFicha } from '../composables/saldos-iniciales/usar-saldo-de-ficha';
@@ -24,10 +28,14 @@ const { registro, cargando, cargar, detalles, etiquetas } = usarFichaDeActivo(pr
 const costos = usarCostosDeActivo(props.activoId, () => registro.value?.incisoFiscal === 'edificios', cargar);
 const anulacion = usarAnulacionDeCosto(() => costos.datos.value.total, costos.anular);
 const saldo = usarSaldoDeFicha(() => registro.value);
+// Una mejora cambia los costos (y su total): la pestaña Costos se vuelve a traer junto con la ficha.
+const cargarTodo = async () => void (await Promise.all([cargar(), costos.cargar()]));
+const acciones = usarAccionesDeFicha(props.activoId, registro, cargarTodo);
 const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: 'activos-fijos.activos' } };
 const pestanas = [
   { clave: 'datos', texto: 'Datos' },
   { clave: 'costos', texto: 'Costos' },
+  { clave: 'mejoras', texto: 'Mejoras' },
   { clave: 'depreciacion', texto: 'Depreciación' },
 ];
 const pestana = ref('datos');
@@ -41,6 +49,14 @@ const pestana = ref('datos');
       :volver="volver"
     >
       <EtiquetasDeActivo :etiquetas="etiquetas" />
+      <AccionesDeFicha
+        :dado-de-baja="registro.estado === 'dado_de_baja'"
+        :es-edificio="acciones.esEdificio()"
+        @trasladar="acciones.trasladar"
+        @mejora="acciones.mejoras.abrir"
+        @estimacion="acciones.revisiones.abrirEstimacion"
+        @matricula="acciones.revisiones.abrirMatricula"
+      />
     </EncabezadoPagina>
 
     <PestanasDeFicha v-model="pestana" :pestanas="pestanas" />
@@ -48,12 +64,19 @@ const pestana = ref('datos');
       <template v-if="pestana === 'datos'">
         <DatosDelRegistro :detalles="detalles" />
         <PanelDeSaldoInicial v-if="saldo" :saldo="saldo" />
-        <HistorialDeUbicacion :traslados="registro.traslados" />
+        <HistorialDeUbicacion :traslados="registro.traslados" @anular="acciones.anularTraslado" />
       </template>
       <PanelDeDepreciacion
         v-else-if="pestana === 'depreciacion'"
         :tramos="registro.tramos"
         :en-construccion="registro.estado === 'en_construccion'"
+      />
+      <PanelDeMejoras
+        v-else-if="pestana === 'mejoras'"
+        :mejoras="acciones.mejoras.mejoras.value"
+        :cargando="acciones.mejoras.cargando.value"
+        @registrar="acciones.mejoras.abrir"
+        @anular="acciones.mejoras.anulacion.pedir"
       />
       <PanelDeCostos
         v-else
@@ -65,6 +88,12 @@ const pestana = ref('datos');
       />
     </div>
 
+    <VentanasDeAcciones
+      :acciones="acciones"
+      :es-edificio="acciones.esEdificio()"
+      :vida-total="registro.vidaUtilContableMeses"
+      :residual="registro.valorResidual"
+    />
     <VentanaDeCosto
       v-model="costos.edicion.value"
       :abierta="costos.ventanaAbierta.value"

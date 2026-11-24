@@ -1324,11 +1324,11 @@ dos decimales.
 | **AF-6** | Saldos iniciales (con costo fiscal, A1; con «Cantidad» y «En bodega», AFI), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | **Programado, en revisión** (2026-11-19; migración `0006_af6_saldos_iniciales`; notas abajo) |
 | AF-6c | Saldos iniciales (Administración) | frontend | **Programado** (2026-11-19; incluye el saldo inicial en la ficha del activo) |
 | **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend **Programado, en revisión** (2026-11-19; migración `0007_af7_mejoras`; notas abajo) |
-| AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | |
+| AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | **Programado** (2026-11-23; notas abajo) |
 | **AF-8** | Traslados con boleta (grupo), anular | backend | **Programado, en revisión** (2026-11-19; sin migración; notas abajo) |
 | **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | **Programado** (2026-11-23; migración `0008_af8_boletas_firmadas`; `aBodega`, `marcarOcioso` y el título desde 2026-11-19; ver notas de AF-8) |
-| AF-8c | Traslados y boleta imprimible | frontend | |
-| AFI-4c (con AF-8c) | Entregar y devolver; casilla «A la bodega»; selección múltiple; subir la boleta firmada | frontend | |
+| AF-8c | Traslados y boleta imprimible | frontend | **Programado** (2026-11-23; notas abajo) |
+| AFI-4c (con AF-8c) | Entregar y devolver; casilla «A la bodega»; selección múltiple; subir la boleta firmada | frontend | **Parcial** (2026-11-23): hecha la casilla «A la bodega» con «Marcar como ocioso» en la ventana de traslado; faltan la selección múltiple en la lista y subir la boleta firmada |
 | **AFI-5** (después de AF-7 y AF-8) | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl` (y su uso en cierre, ficha y bajas), dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §7.6 y 50 divisiones de 1, y de integración (cierre después de dividir, baja después de dividir, anular) | backend **Programado** (2026-11-23; migración `0010_afi5_divisiones`; sin la división automática de traslado, baja e inventario, que es AFI-6 y AFI-8; notas abajo; segunda ronda de correcciones hecha: anular con historial del activo nuevo y costos anteriores a la división) |
 | **AF-9** | Bajas y ventas con archivos, tipo de acta, costo fiscal y resultados (A1), avisos de donación y reproductor (V-10, V-12) | backend | **Programado** (2026-11-23; migración `0009_af9_bajas`; sin la baja parcial, que es AFI-6; notas abajo) |
 | **AFI-6** (después de AFI-5 y AF-9) | Traslado y baja con cantidad parcial (división automática) | backend | |
@@ -1484,6 +1484,27 @@ dos decimales.
   (`saldo_con_movimientos_posteriores`) si el activo recibió costos de otro origen o tiene tramos de otra causa.
 - Excel: las filas se crean en orden; el padre se escribe por su código y debe ir antes que su componente o ya estar cargado.
 - Falta para AF-6c: mostrar el saldo inicial (costo fiscal y acumuladas) en la ficha del activo.
+
+**Notas de lo programado en AF-7c y AF-8c (cliente, 2026-11-23):**
+
+- La ficha del activo trae los botones «Trasladar», «Mejora o costo posterior», «Revisar estimación» y, en edificios, «Cambiar matrícula
+  o catastro», cada uno con su permiso; un activo dado de baja no los muestra. Si el servidor no admite la acción en el estado del
+  activo (terreno, obra sin poner en uso), su mensaje se muestra tal cual: el cliente no adivina esas reglas.
+- Pestaña **Mejoras** (lista, registrar, anular con la explicación de lo que pasará). El formulario agrupa costos **escritos a mano**
+  (uno o varios renglones); el total y el efecto sobre el costo del activo se muestran antes de confirmar. Un costo posterior admite
+  montos negativos (nota de crédito), una mejora no; nunca cero.
+- **Sugerencia de componente (V-3):** en una mejora, la pregunta «Se puede separar y tiene vida propia» muestra la sugerencia y el
+  botón «Darlo de alta como componente» (con `activos.crear`), que abre el alta con `padre` y `descripcion` en la ruta ya cargados.
+  No bloquea registrar la mejora.
+- La pestaña Costos indica cuáles costos están agrupados en una mejora (`mejoraId`).
+- Traslado desde la ficha (un activo; los componentes van con su principal): fecha, casilla «A la bodega de activos» con «Marcar como
+  ocioso», destino (selectores por nombre), responsable, quien recibe y motivo; confirmación con resumen. Al terminar, el aviso lleva
+  a la **boleta** (`/activos-fijos/traslados/:grupoId/boleta`): hoja imprimible con título de la empresa, número, destino, activos,
+  firmas de «Entrega» y «Recibe», modo claro al imprimir, y «Anular boleta» (con `traslados.anular`). El historial de ubicación de la
+  ficha enlaza cada boleta y permite anularla.
+- Pendiente: **mejora con líneas del libro de compras** (el servidor las admite; el formulario solo ofrece costos manuales, y las
+  facturas siguen entrando por «Por capitalizar»); traslado de varios activos desde la lista (AFI-4c); subir la boleta firmada
+  (espera a `seguridad`); un campo del servidor que diga qué acciones admite cada activo, si el contador lo quiere más fino.
 
 **Notas de lo programado en AF-3c y AFI-2c (cliente):**
 

@@ -11,6 +11,7 @@ export interface Costo {
   activoId: string;
   origen: OrigenDeCosto;
   claseDeCosto: ClaseDeCosto;
+  mejoraId: string | null;
   documentoDeCompraId: string | null;
   lineaDeDocumentoId: string | null;
   documento: string | null;

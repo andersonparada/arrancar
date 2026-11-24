@@ -20,6 +20,7 @@ const costo = (cambios: Partial<Costo> = {}): Costo => ({
   activoId: 'a1',
   origen: 'manual',
   claseDeCosto: 'importacion',
+  mejoraId: null,
   documentoDeCompraId: null,
   lineaDeDocumentoId: null,
   documento: null,

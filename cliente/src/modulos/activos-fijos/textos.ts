@@ -15,6 +15,9 @@ export const VENTANAS_ACTIVOS_FIJOS = {
     nuevo: 'Nuevo activo',
     ficha: 'Ficha del activo',
   },
+  boleta: {
+    titulo: 'Boleta de traslado',
+  },
   porCapitalizar: {
     titulo: 'Por capitalizar',
     descripcion:

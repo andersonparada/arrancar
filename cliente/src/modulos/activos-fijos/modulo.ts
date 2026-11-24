@@ -35,6 +35,13 @@ export const moduloActivosFijos: DefinicionModuloCliente = {
       meta: { permiso: 'activos-fijos.activos.ver', titulo: VENTANAS_ACTIVOS_FIJOS.activos.titulo },
     },
     {
+      path: '/activos-fijos/traslados/:grupoId/boleta',
+      name: 'activos-fijos.boleta',
+      component: () => import('./paginas/BoletaDeTraslado.vue'),
+      props: true,
+      meta: { permiso: 'activos-fijos.activos.ver', titulo: VENTANAS_ACTIVOS_FIJOS.boleta.titulo },
+    },
+    {
       path: '/activos-fijos/por-capitalizar',
       name: 'activos-fijos.por-capitalizar',
       component: () => import('./paginas/PorCapitalizar.vue'),
