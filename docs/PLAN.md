@@ -4402,3 +4402,23 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-23 — Parcelas PA-1: útil del Excel con cuatro decimales.** La útil exportada ya no usa los decimales de pantalla (la
   cuerda muestra 2): se calcula con los cuatro que admite la importación, y si queda en cero o no se puede reimportar se usa la
   cifra original, así una útil de 0.001 cuerdas ya no impide exportar todas las parcelas. Prueba nueva del caso de uso.
+- **2026-11-23 — Parcelas PA-1c: pantallas de Parcelas (cliente).** El catálogo de tipos de parcela ya lo había dejado el
+  generador (lista y ventana, con Excel); este paso hace Parcelas: **lista en árbol** por localidad (`ListaDeParcelas`: grupos con
+  su cantidad y su superficie total, tarjetas con sangría de hasta 4 niveles para que no desborde en el celular, botón para
+  esconder o mostrar las subparcelas con `aria-expanded`, filtros de localidad, texto con pausa y «mostrar inactivas», estados
+  vacíos distintos para «no hay parcelas» y «ninguna coincide», Excel de administración), **formulario en página**
+  (`CamposDeParcela`: localidad y madre al crear y fijas al editar, tipo, tenencia, primera medición opcional, punto en el mapa,
+  colindancias e inmuebles con su porción) y **ficha con pestañas** (Datos con los avisos del servidor, el enlace al mapa y las
+  subparcelas con «Agregar subparcela», que abre el formulario ya con localidad y madre; Mediciones con «Rige hoy», registrar y
+  anular con motivo; Inmuebles). La **calculadora de superficie** (`CamposDeMedicion` y `CalculadoraDeSuperficie`) convierte lo
+  escrito (cifra, unidad y varas de la cuerda) a m², ha y mz en vivo con `edicion-de-superficie.ts`, copia exacta del dominio del
+  servidor (mismos `BigInt` y mismas pruebas, V-1 incluida) y los factores de la sesión (`parcelas.unidades.*`); avisa antes de
+  guardar si la útil pasa de la total. Las superficies se muestran en la unidad de la empresa
+  (`parcelas.unidades.unidad_para_mostrar`) con los decimales de la unidad: `formatearCantidad` admite un tercer parámetro de
+  decimales. Cambio en el servidor: `GET /parcelas/catalogos` (las localidades activas que el operador ve y los inmuebles activos,
+  por nombre; exige `parcelas.parcelas.ver` y poder crear o editar) para que quien registra parcelas no necesite permisos de
+  Empresas; las localidades del filtro de la lista salen de la propia lista. Pruebas: 59 del módulo en el cliente (conversión,
+  vista previa, árbol, formulario, mediciones, detalles, pestañas) y 3 de API del catálogo. **Pendiente:** QA en el navegador
+  (PA-QA); las pestañas Usos y Contratos y la etiqueta «Cedida» (PA-2c y PA-3c); la unidad del uso vigente en la tarjeta; el
+  aviso de la suma de hijas contra la madre (el servidor aún no lo manda); los tipos de parcela siguen pidiendo
+  `parcelas.tipos-de-parcela.ver` para elegirse en el formulario.
