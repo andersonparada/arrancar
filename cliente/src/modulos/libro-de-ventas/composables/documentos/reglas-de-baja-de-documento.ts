@@ -27,11 +27,11 @@ export const edicionDeAnulacionVacia = (): EdicionDeAnulacion => ({
   hasta: '',
 });
 
-/** La ventana abierta para esta factura: la fecha de la SAT empieza en hoy y no sale de [emisión, hoy]. */
+/** La ventana abierta para esta factura: la fecha de la SAT empieza vacía (que la escriba a propósito) y no sale de [emisión, hoy]. */
 export const edicionDeAnulacionAbierta = (emision: string, hoy: string): EdicionDeAnulacion => ({
   ...edicionDeAnulacionVacia(),
   abierta: true,
-  fecha: hoy,
+  fecha: '',
   desde: emision,
   hasta: hoy,
 });

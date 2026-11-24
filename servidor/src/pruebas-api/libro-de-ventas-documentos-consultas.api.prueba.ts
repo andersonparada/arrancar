@@ -51,6 +51,7 @@ describe('consultar', () => {
     const soloAnulados = await propietario().get(`${RUTA}?periodo=${pasado}&estado=anulado`);
     const porCliente = await propietario().get(`${RUTA}?periodo=${pasado}&clienteId=${escenario.clienteId}`);
     const porTexto = await propietario().get(`${RUTA}?texto=lista&estado=todos`);
+    const porSerieYNumero = await propietario().get(`${RUTA}?texto=${encodeURIComponent('LISTA-2')}&estado=todos`);
     const sinDestino = await propietario().get(`${RUTA}?periodo=${pasado}&destino=ninguno`);
     const porTipo = await propietario().get(`${RUTA}?periodo=${pasado}&tipo=nota_de_credito`);
     const pagina = await propietario().get(`${RUTA}?estado=todos&limite=1&pagina=2`);
@@ -60,6 +61,7 @@ describe('consultar', () => {
     expect(soloAnulados.cuerpo.elementos.map((fila: { numero: string }) => fila.numero)).toEqual(['2']);
     expect(porCliente.cuerpo.total).toBe(1);
     expect(porTexto.cuerpo.total).toBe(3);
+    expect(porSerieYNumero.cuerpo.elementos.map((fila: { numero: string }) => fila.numero)).toEqual(['2']);
     expect(sinDestino.cuerpo.total).toBe(2);
     expect(porTipo.cuerpo.total).toBe(0);
     expect(pagina.cuerpo).toMatchObject({ pagina: 2, limite: 1 });

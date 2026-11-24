@@ -31,6 +31,14 @@ const nota = (estado: 'vigente' | 'anulado') => ({
 });
 
 describe('anular un documento', () => {
+  it('la ventana abierta no trae fecha: con la SAT hay que escribirla', () => {
+    const abierta = edicionDeAnulacionAbierta('2026-11-10', '2026-11-20');
+
+    expect(abierta.fecha).toBe('');
+    const errores = erroresDeAnulacion({ ...abierta, causa: 'fel_anulada_en_la_sat', motivo: 'Anulada' });
+    expect(errores.fechaDeAnulacion).toContain('Escriba');
+  });
+
   it('pide causa y motivo y dice cómo corregir', () => {
     const errores = erroresDeAnulacion(anulacion({ causa: '', motivo: ' ' }));
 

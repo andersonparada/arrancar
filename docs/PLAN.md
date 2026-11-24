@@ -4445,3 +4445,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   por «sin facturas». (3) **Anular con la causa «Se anuló en la SAT»** pide la fecha del DTE (hoy por omisión, entre la
   emisión y hoy) y la envía como `fechaDeAnulacion`; el error sale en su campo. Pruebas: `busqueda-de-facturas`,
   `reglas-de-baja-de-documento` y la API de consultas (`sinCliente`).
+- **2026-11-23 — Segunda ronda de correcciones de LV-1c y LV-2c.** (1) La fecha de la SAT al anular ya no empieza en
+  hoy: la ventana la abre vacía y obliga a escribirla (una fecha de hoy por descuido viajaba en `documento_anulado`
+  hacia el reverso contable). (2) La búsqueda de documentos (lista y selector de «Factura que corrige») también
+  compara `serie-numero` (`concat_ws('-', serie, numero)`), así «A-123» encuentra la factura como se muestra. Pruebas:
+  `reglas-de-baja-de-documento` y la API de consultas («LISTA-2»).

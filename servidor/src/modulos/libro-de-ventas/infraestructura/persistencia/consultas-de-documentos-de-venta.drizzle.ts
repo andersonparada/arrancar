@@ -33,6 +33,7 @@ function condicionDeTexto(texto: string | undefined): SQL | undefined {
   return or(
     ilike(documentos.serie, patron),
     ilike(documentos.numero, patron),
+    ilike(sql`concat_ws('-', ${documentos.serie}, ${documentos.numero})`, patron),
     ilike(documentos.nombreReceptor, patron),
     ilike(documentos.nitReceptor, patron),
   );
