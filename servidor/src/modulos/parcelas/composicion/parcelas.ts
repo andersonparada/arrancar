@@ -16,6 +16,8 @@ import { ListarParcelasParaExcel } from '../aplicacion/casos-uso/parcelas/listar
 import { ObtenerParcela } from '../aplicacion/casos-uso/parcelas/obtener-parcela.js';
 import { ReactivarParcela } from '../aplicacion/casos-uso/parcelas/reactivar-parcela.js';
 import type { FilaDeParcelaEnExcel, SolicitudDeParcelaEnExcel } from '../aplicacion/parcelas-en-excel.js';
+import { ObtenerCatalogos } from '../aplicacion/casos-uso/catalogos/obtener-catalogos.js';
+import { rutasDeCatalogos } from '../http/catalogos.rutas.js';
 import { MedicionesControlador } from '../http/mediciones.controlador.js';
 import { rutasMediciones } from '../http/mediciones.rutas.js';
 import { ParcelasControlador } from '../http/parcelas.controlador.js';
@@ -24,6 +26,7 @@ import { esquemaParcelaEnExcel } from '../http/parcelas.esquemas-excel.js';
 import { rutasParcelas } from '../http/parcelas.rutas.js';
 import { AvisosDeParcelaEnMediador } from '../infraestructura/avisos-de-parcela-en-mediador.js';
 import { ConfiguracionDeParcelasEnConfiguracion } from '../infraestructura/configuracion-de-parcelas-en-configuracion.js';
+import { ConsultasDeCatalogosDrizzle } from '../infraestructura/persistencia/consultas-de-catalogos.drizzle.js';
 import { ConsultasLocalidadesParaExcel } from '../infraestructura/persistencia/consultas-localidades-para-excel.drizzle.js';
 import { ConsultasMedicionesDrizzle } from '../infraestructura/persistencia/consultas-mediciones.drizzle.js';
 import { ConsultasParcelasDrizzle } from '../infraestructura/persistencia/consultas-parcelas.drizzle.js';
@@ -87,5 +90,11 @@ export function rutasDeParcelas() {
   return rutasDelModulo([
     rutasParcelas(new ParcelasControlador(casos), intercambioDeParcelas(casos, dependencias)),
     rutasMediciones(new MedicionesControlador(casosDeMediciones(dependencias))),
+    rutasDeCatalogos(
+      new ObtenerCatalogos({
+        unidadDeTrabajo: dependencias.unidadDeTrabajo,
+        consultas: new ConsultasDeCatalogosDrizzle(),
+      }),
+    ),
   ]);
 }
