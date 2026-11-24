@@ -147,7 +147,7 @@ export async function sembrarVale(fondoId: string, empresaId: string, monto: str
   numeroDeVale += 1;
   await comoPropietario(
     `insert into caja_chica.vales_provisionales (empresa_id, fondo_id, numero, fecha, entregado_a, monto, motivo)
-     values ($1, $2, $3, current_date, 'Pedro López', $4, 'Compra de insumos')`,
-    [empresaId, fondoId, numeroDeVale, monto],
+     values ($1, $2, $3, $5::date, 'Pedro López', $4, 'Compra de insumos')`,
+    [empresaId, fondoId, numeroDeVale, monto, HOY],
   );
 }

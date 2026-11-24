@@ -1,6 +1,6 @@
 /**
  * Prueba de integración contra PostgreSQL (base `arrancar_pruebas`): las llaves foráneas entre
- * esquemas solo pueden apuntar a `core`, a un módulo esencial o a un módulo del `dependeDe`
+ * esquemas solo pueden apuntar a `core`, a un módulo esencial o a un módulo de su `dependeDe` o `usaTablasDe`
  * (directo o por otro módulo) del dueño de la tabla. Así el migrador, que aplica los módulos en
  * ese orden, siempre encuentra la tabla a la que se apunta (docs/PLAN.md §3.2).
  */
@@ -22,12 +22,16 @@ interface LlaveEntreEsquemas {
 /** Los módulos de los que `clave` depende, directamente o a través de otros. */
 function dependenciasTransitivas(clave: string, modulos: readonly DefinicionModulo[]): Set<string> {
   const porClave = new Map(modulos.map((modulo) => [modulo.clave, modulo]));
-  const pendientes = [...(porClave.get(clave)?.dependeDe ?? [])];
+  const vecinos = (actual: string) => {
+    const definicion = porClave.get(actual);
+    return [...(definicion?.dependeDe ?? []), ...(definicion?.usaTablasDe ?? [])];
+  };
+  const pendientes = vecinos(clave);
   const encontradas = new Set<string>();
   for (let actual = pendientes.pop(); actual !== undefined; actual = pendientes.pop()) {
     if (encontradas.has(actual)) continue;
     encontradas.add(actual);
-    pendientes.push(...(porClave.get(actual)?.dependeDe ?? []));
+    pendientes.push(...vecinos(actual));
   }
   return encontradas;
 }
@@ -47,13 +51,13 @@ function llavesNoPermitidas(
   });
 }
 
-const modulo = (clave: string, dependeDe: string[] = [], esencial = false): DefinicionModulo => ({
+const modulo = (clave: string, dependeDe: string[] = [], extra: Partial<DefinicionModulo> = {}): DefinicionModulo => ({
   clave,
   nombre: clave,
   descripcion: '',
   permisos: [],
   dependeDe,
-  esencial,
+  ...extra,
 });
 
 const llave = (origen: string, destino: string): LlaveEntreEsquemas => ({
@@ -67,16 +71,21 @@ const llave = (origen: string, destino: string): LlaveEntreEsquemas => ({
 describe('la regla de llaves entre esquemas', () => {
   const modulos = [
     modulo('core'),
-    modulo('empresas', [], true),
+    modulo('empresas', [], { esencial: true }),
     modulo('bancos'),
     modulo('cheques', ['bancos']),
     modulo('caja', ['cheques']),
+    modulo('ventas', [], { usaTablasDe: ['bancos'] }),
   ];
 
   it('permite core, los esenciales y los módulos de dependeDe, también los transitivos', () => {
     const permitidas = [llave('bancos', 'core'), llave('bancos', 'empresas'), llave('caja', 'cheques')];
 
     expect(llavesNoPermitidas([...permitidas, llave('caja', 'bancos')], modulos)).toEqual([]);
+  });
+
+  it('permite apuntar a un módulo de usaTablasDe', () => {
+    expect(llavesNoPermitidas([llave('ventas', 'bancos'), llave('ventas', 'cheques')], modulos)).toHaveLength(1);
   });
 
   it('rechaza apuntar a un módulo que no está en dependeDe', () => {

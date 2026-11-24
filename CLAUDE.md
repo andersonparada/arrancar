@@ -102,11 +102,11 @@ datos de otro archivo ni de recursos globales (puertos, carpetas fijas).
 - Cada módulo tiene un `modulo.ts` en el servidor y otro en el cliente, que se
   registran en `modulos/indice.ts`.
 - Lo que usan todos los módulos va en `core`. `empresas` es esencial (siempre activo).
-- `DefinicionModulo` declara: `dependeDe`, `permisos`, `recursosConAlcance`,
+- `DefinicionModulo` declara: `dependeDe`, `usaTablasDe` (tablas de módulos que pueden estar apagados; solo orden del migrador y llaves), `permisos`, `recursosConAlcance`,
   `configuracion` y `rutas`. El registro valida las dependencias al arrancar.
 - Los módulos no se importan entre sí para colaborar (salvo los `*.tablas.js` de otro
   módulo, solo desde `infraestructura`, para leer y poner llaves foráneas entre esquemas
-  hacia `core` o su `dependeDe`, que una prueba revisa; `docs/PLAN.md` §3.2): usan eventos
+  hacia `core`, su `dependeDe` o su `usaTablasDe`, que una prueba revisa; `docs/PLAN.md` §3.2): usan eventos
   (`core/eventos/bus-eventos.ts`). Un módulo sí puede importar de `core`.
 
 ### Importar y exportar (Excel)
