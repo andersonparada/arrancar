@@ -19,7 +19,7 @@ declare module '../eventos/bus-eventos.js' {
       altaConjuntaId: string | null;
       costos: {
         costoId: string;
-        origen: 'linea_de_compra' | 'manual' | 'saldo_inicial';
+        origen: 'linea_de_compra' | 'manual' | 'saldo_inicial' | 'division';
         claseDeCosto: string;
         documentoDeCompraId: string | null;
         lineaDeDocumentoId: string | null;

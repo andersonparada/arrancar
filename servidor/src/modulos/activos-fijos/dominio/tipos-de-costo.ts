@@ -1,5 +1,5 @@
-/** De dónde viene un costo: una línea del Libro de compras, un soporte escrito a mano o el saldo inicial. */
-export const ORIGENES_DE_COSTO = ['linea_de_compra', 'manual', 'saldo_inicial'] as const;
+/** De dónde viene un costo: una línea del Libro de compras, un soporte escrito a mano, el saldo inicial o una división. */
+export const ORIGENES_DE_COSTO = ['linea_de_compra', 'manual', 'saldo_inicial', 'division'] as const;
 export type OrigenDeCosto = (typeof ORIGENES_DE_COSTO)[number];
 
 /** Las clases que se eligen a mano (aporte y donación van como «adquisición», con su soporte escrito). */
@@ -16,7 +16,11 @@ export const CLASES_DE_COSTO_ELEGIBLES = [
 export type ClaseDeCostoElegible = (typeof CLASES_DE_COSTO_ELEGIBLES)[number];
 
 /** Las notas del libro fijan su clase solas: la nota de crédito resta y la de débito suma. */
-export type ClaseDeCosto = ClaseDeCostoElegible | 'nota_de_credito' | 'nota_de_debito';
+export type ClaseDeCosto = ClaseDeCostoElegible | 'nota_de_credito' | 'nota_de_debito' | ClaseDeCostoDeDivision;
+
+/** Lo que una división quita al activo de origen (negativo) y da al nuevo (positivo); lo fija la división sola. */
+export const CLASES_DE_COSTO_DE_DIVISION = ['division_cedida', 'division_recibida'] as const;
+export type ClaseDeCostoDeDivision = (typeof CLASES_DE_COSTO_DE_DIVISION)[number];
 
 export const ESTADOS_DE_COSTO = ['vigente', 'anulado'] as const;
 export type EstadoDeCosto = (typeof ESTADOS_DE_COSTO)[number];

@@ -264,6 +264,12 @@ export class Activo extends Entidad<ActivoId> {
     this.propiedades = { ...this.propiedades, ...valoresDelInmuebleValidos(this.propiedades, valores, inciso) };
   }
 
+  /** Deja la cantidad de piezas (una división o su anulación); lo demás lo reparte quien divide. */
+  cambiarCantidad(cantidad: number): void {
+    if (!Number.isInteger(cantidad) || cantidad < 1) throw new ActivoInvalido('La cantidad es un entero desde 1.');
+    this.propiedades = { ...this.propiedades, cantidad };
+  }
+
   /** Copia de solo lectura de sus propiedades, para guardarla. */
   instantanea(): Readonly<PropiedadesDeActivo> {
     return { ...this.propiedades };

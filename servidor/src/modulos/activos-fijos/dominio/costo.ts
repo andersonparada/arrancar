@@ -17,6 +17,8 @@ export interface PropiedadesDeCosto {
   lineaDeDocumentoId: string | null;
   /** La mejora o el costo posterior que lo agrupa (activo en uso); nulo si es de la capitalización. */
   mejoraId: string | null;
+  /** La división que lo creó (AFI-5); nulo en los demás. */
+  divisionId: string | null;
   fecha: string;
   montoCentavos: number;
   aplicaAlLibroFiscal: boolean;
@@ -62,9 +64,9 @@ function datosFiscalesValidos({ aplicaAlLibroFiscal, motivoFueraDelLibroFiscal }
   return { aplicaAlLibroFiscal, motivoFueraDelLibroFiscal: aplicaAlLibroFiscal ? null : motivo };
 }
 
-/** Lo que un costo nuevo trae de fábrica: vigente, sin archivo, sin anulación ni soporte. */
 const PROPIEDADES_INICIALES = {
   mejoraId: null,
+  divisionId: null,
   noEsEdificacion: false,
   documentoDeSoporte: null,
   archivoId: null,
@@ -167,29 +169,35 @@ export class Costo extends Entidad<CostoId> {
 
   /**
    * Anula el costo con su motivo; la fila se queda como rastro.
-   * @throws CostoNoAnulable si ya está anulado o es el saldo inicial (se corrige en Saldos iniciales).
+   * @throws CostoNoAnulable si ya está anulado, es el saldo inicial o es de una división.
    * @throws CostoInvalido si falta el motivo.
    */
   anular(entrada: { motivo: string; usuarioId: string; ahora: Date }): void {
     this.exigirAnulable();
-    const motivo = textoLimitado(entrada.motivo, 'Motivo', MOTIVO_MAXIMO);
-    if (!motivo) throw new CostoInvalido('Escriba el motivo de la anulación.');
-    this.propiedades = {
-      ...this.propiedades,
-      estado: 'anulado',
-      anuladoEn: entrada.ahora,
-      anuladoPor: entrada.usuarioId,
-      motivoDeAnulacion: motivo,
-    };
+    this.marcarAnulado(entrada);
   }
 
-  /**
-   * @throws CostoNoAnulable si ya está anulado o es el saldo inicial (se corrige en Saldos iniciales).
-   */
+  /** Anula el costo de una división: solo lo hace la anulación de la división. */
+  anularPorDivision(entrada: { motivo: string; usuarioId: string; ahora: Date }): void {
+    if (this.propiedades.origen !== 'division' || this.propiedades.estado === 'anulado')
+      throw new CostoNoAnulable('Solo el costo vigente de una división se anula con ella.');
+    this.marcarAnulado(entrada);
+  }
+
+  private marcarAnulado(entrada: { motivo: string; usuarioId: string; ahora: Date }): void {
+    const motivo = textoLimitado(entrada.motivo, 'Motivo', MOTIVO_MAXIMO);
+    if (!motivo) throw new CostoInvalido('Escriba el motivo de la anulación.');
+    const anulado = { estado: 'anulado', anuladoEn: entrada.ahora, anuladoPor: entrada.usuarioId } as const;
+    this.propiedades = { ...this.propiedades, ...anulado, motivoDeAnulacion: motivo };
+  }
+
+  /** @throws CostoNoAnulable si ya está anulado, es el saldo inicial o es de una división. */
   exigirAnulable(): void {
     if (this.propiedades.estado === 'anulado') throw new CostoNoAnulable('El costo ya está anulado.');
-    if (this.propiedades.origen === 'saldo_inicial')
+    const { origen } = this.propiedades;
+    if (origen === 'saldo_inicial')
       throw new CostoNoAnulable('El costo del saldo inicial se corrige en Saldos iniciales.');
+    if (origen === 'division') throw new CostoNoAnulable('El costo de una división se deshace anulando la división.');
   }
 
   instantanea(): Readonly<PropiedadesDeCosto> {

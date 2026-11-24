@@ -1,8 +1,11 @@
 import { EventoDominio } from '../../core/compartido/dominio/evento-dominio.js';
 import type { EventosDominio } from '../../core/eventos/bus-eventos.js';
 import '../../core/contratos/activos-fijos.contratos.js';
+import '../../core/contratos/activos-fijos-divisiones.contratos.js';
 
 export type DatosDeActivoCapitalizado = EventosDominio['activos-fijos.activo_capitalizado'];
+export type DatosDeActivoDividido = EventosDominio['activos-fijos.activo_dividido'];
+export type DatosDeDivisionAnulada = EventosDominio['activos-fijos.division_anulada'];
 export type DatosDeCostoAnulado = EventosDominio['activos-fijos.costo_anulado'];
 export type DatosDeMejoraCapitalizada = EventosDominio['activos-fijos.mejora_capitalizada'];
 export type DatosDeBaseFiscalCambiada = EventosDominio['activos-fijos.base_fiscal_cambiada'];
@@ -109,6 +112,24 @@ export class BajaDeActivoAnulada extends EventoDominio<DatosDeBajaAnulada> {
   readonly nombre = 'activos-fijos.baja_anulada';
 
   constructor(datos: DatosDeBajaAnulada) {
+    super(datos);
+  }
+}
+
+/** Un activo se dividió: salió otro con parte de sus unidades, su costo y su depreciación. Se publica tras confirmar. */
+export class ActivoDividido extends EventoDominio<DatosDeActivoDividido> {
+  readonly nombre = 'activos-fijos.activo_dividido';
+
+  constructor(datos: DatosDeActivoDividido) {
+    super(datos);
+  }
+}
+
+/** Se anuló una división: el activo nuevo se borró y el origen recuperó su cantidad. Se publica tras confirmar. */
+export class DivisionAnulada extends EventoDominio<DatosDeDivisionAnulada> {
+  readonly nombre = 'activos-fijos.division_anulada';
+
+  constructor(datos: DatosDeDivisionAnulada) {
     super(datos);
   }
 }
