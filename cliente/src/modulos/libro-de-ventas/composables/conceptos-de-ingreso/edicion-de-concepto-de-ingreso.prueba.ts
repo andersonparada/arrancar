@@ -7,7 +7,7 @@ const datos: DatosConceptoDeIngreso = {
   tipo: 'bien',
   activo: true,
 };
-const conceptoDeIngreso: ConceptoDeIngreso = { id: 'registro-1', ...datos };
+const conceptoDeIngreso: ConceptoDeIngreso = { id: 'registro-1', claveDeSistema: null, ...datos };
 
 describe('ventana de conceptos de ingreso', () => {
   it('lo que se abre para editar se manda igual si no se cambia nada', () => {

@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { Inbox, Plus } from 'lucide-vue-next';
+import { Plus, Tags } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/AccionesDeIntercambio.vue';
 import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
-import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
+import TarjetaDeConceptoDeIngreso from '../componentes/conceptos-de-ingreso/TarjetaDeConceptoDeIngreso.vue';
 import VentanaDeConceptoDeIngreso from '../componentes/conceptos-de-ingreso/VentanaDeConceptoDeIngreso.vue';
-import { detallesDeConceptoDeIngreso } from '../composables/conceptos-de-ingreso/detalles-de-concepto-de-ingreso';
 import { usarConceptosDeIngreso } from '../composables/conceptos-de-ingreso/usar-conceptos-de-ingreso';
 import { VENTANAS_LIBRO_DE_VENTAS } from '../textos';
 
@@ -16,7 +15,8 @@ const PERMISOS_DE_INTERCAMBIO = {
   importar: 'libro-de-ventas.conceptos-de-ingreso.importar',
   exportar: 'libro-de-ventas.conceptos-de-ingreso.exportar',
 };
-const { registros, cargando, intercambio, edicion, enviando, errores, abrir, guardar } = usarConceptosDeIngreso();
+const { registros, cargando, intercambio, edicion, enviando, errores, abrir, guardar, cambiarEstado, eliminar } =
+  usarConceptosDeIngreso();
 </script>
 
 <template>
@@ -33,15 +33,23 @@ const { registros, cargando, intercambio, edicion, enviando, errores, abrir, gua
     </EncabezadoPagina>
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
-    <EstadoVacio v-else-if="!registros.length" :icono="Inbox" titulo="Todavía no hay conceptos de ingreso" />
-    <ul v-else class="grid gap-3 md:grid-cols-2">
+    <EstadoVacio
+      v-else-if="!registros.length"
+      :icono="Tags"
+      titulo="Todavía no hay conceptos de ingreso"
+      descripcion="Son los rubros en que se clasifican las ventas: venta de bienes, servicios, venta de ganado o de cosecha… Cree uno o impórtelos desde Excel."
+    >
+      <BotonBase v-permiso="'libro-de-ventas.conceptos-de-ingreso.crear'" :icono="Plus" @click="abrir()">{{
+        ventana.nuevo
+      }}</BotonBase>
+    </EstadoVacio>
+    <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in registros" :key="registro.id">
-        <TarjetaDeRegistro
-          :titulo="String(registro.nombre)"
-          :detalles="detallesDeConceptoDeIngreso(registro)"
-          permiso="libro-de-ventas.conceptos-de-ingreso.editar"
-          :inactivo="!registro.activo"
+        <TarjetaDeConceptoDeIngreso
+          :registro="registro"
           @editar="abrir(registro)"
+          @eliminar="eliminar(registro)"
+          @cambiar-estado="cambiarEstado(registro)"
         />
       </li>
     </ul>

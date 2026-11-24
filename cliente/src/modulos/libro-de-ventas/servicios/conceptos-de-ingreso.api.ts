@@ -6,10 +6,12 @@ export interface ConceptoDeIngreso {
   id: string;
   nombre: string;
   tipo: 'bien' | 'servicio';
+  /** Los de sistema (la venta de un activo fijo) no se editan, inactivan ni eliminan. */
+  claveDeSistema: 'venta_de_activo_fijo' | null;
   activo: boolean;
 }
 
-export type DatosConceptoDeIngreso = Omit<ConceptoDeIngreso, 'id'>;
+export type DatosConceptoDeIngreso = Omit<ConceptoDeIngreso, 'id' | 'claveDeSistema'>;
 
 const RUTA = '/libro-de-ventas/conceptos-de-ingreso';
 
@@ -35,6 +37,10 @@ export class ApiConceptosDeIngreso {
 
   actualizar(id: string, datos: DatosConceptoDeIngreso) {
     return this.http.reemplazar<ConceptoDeIngreso>(`${RUTA}/${id}`, datos);
+  }
+
+  eliminar(id: string) {
+    return this.http.eliminar(`${RUTA}/${id}`);
   }
 }
 

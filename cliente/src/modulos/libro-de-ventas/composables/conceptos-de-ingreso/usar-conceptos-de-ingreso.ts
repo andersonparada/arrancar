@@ -1,10 +1,13 @@
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiConceptosDeIngreso, type ConceptoDeIngreso } from '../../servicios/conceptos-de-ingreso.api';
+import { ordenarPorNombre } from '../comunes/cambio-de-estado';
+import { usarCambioDeEstado } from '../comunes/usar-cambio-de-estado';
 import { datosDeConceptoDeIngreso, edicionDe, type EdicionDeConceptoDeIngreso } from './edicion-de-concepto-de-ingreso';
+import { NOMBRE_DE_CONCEPTO_DE_INGRESO, datosParaCambiarEstado } from './reglas-de-concepto-de-ingreso';
 
 const SIN_REGISTROS: ConceptoDeIngreso[] = [];
 
@@ -35,16 +38,23 @@ function usarVentanaDeConceptosDeIngreso(cargar: () => Promise<void>) {
   return { edicion, enviando, errores, abrir, guardar };
 }
 
-/** Los conceptos de ingreso de la empresa: listarlos, registrarlos y editarlos en una ventana. */
+/** Los conceptos de ingreso de la empresa por nombre: listarlos, registrarlos, editarlos, inactivarlos y eliminarlos. */
 export function usarConceptosDeIngreso() {
   const {
-    datos: registros,
+    datos: recibidos,
     cargando,
     cargar,
   } = usarCarga(() => apiConceptosDeIngreso.listar(), SIN_REGISTROS, 'No se pudieron cargar los conceptos de ingreso.');
+  const registros = computed(() => ordenarPorNombre(recibidos.value));
   const ventana = usarVentanaDeConceptosDeIngreso(cargar);
+  const { cambiarEstado, eliminar } = usarCambioDeEstado(NOMBRE_DE_CONCEPTO_DE_INGRESO, {
+    actualizar: (concepto: ConceptoDeIngreso) =>
+      apiConceptosDeIngreso.actualizar(concepto.id, datosParaCambiarEstado(concepto)),
+    eliminar: (concepto: ConceptoDeIngreso) => apiConceptosDeIngreso.eliminar(concepto.id),
+    alTerminar: cargar,
+  });
 
   const intercambio = usarIntercambio(apiConceptosDeIngreso.intercambio, cargar);
 
-  return { registros, cargando, cargar, intercambio, ...ventana };
+  return { registros, cargando, cargar, intercambio, cambiarEstado, eliminar, ...ventana };
 }
