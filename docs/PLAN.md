@@ -4415,3 +4415,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   del formulario presentado en «Remanente del mes anterior» al declarar. Opción A del contador (captura en el mes
   siguiente), sin campos nuevos. Pendiente del servidor: exponer el saldo vigente en el detalle del período para
   mostrarlo en la ventana de rectificar.
+- **2026-11-24 — Libro de compras: un cierre nacido de un cero supuesto no pasa al mes siguiente.** Si el mes previo se
+  calculó con un saldo supuesto en cero y ya hay declaraciones anteriores a él, el mes siguiente queda sin dato con un
+  aviso que pide rectificar el previo o escribir el saldo (`remanentes-del-periodo.ts`); con prueba de tres meses.

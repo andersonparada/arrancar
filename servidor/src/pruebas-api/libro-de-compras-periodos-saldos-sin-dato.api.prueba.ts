@@ -18,6 +18,7 @@ let escenario: EscenarioDeDocumentos;
 let pequeno: EscenarioDeDocumentos;
 let primerMes: EscenarioDeDocumentos;
 let primerMesConVentas: EscenarioDeDocumentos;
+let cadenaSupuesta: EscenarioDeDocumentos;
 
 const propietario = () => escenario.cuenta.propietario;
 
@@ -41,6 +42,7 @@ beforeAll(async () => {
   pequeno = await prepararEscenario(entorno, 'saldosindatopeq');
   primerMes = await prepararEscenario(entorno, 'saldoscero');
   primerMesConVentas = await prepararEscenario(entorno, 'saldoscerov');
+  cadenaSupuesta = await prepararEscenario(entorno, 'saldoscadena');
   await configurarEmpresa(pequeno.cuenta, { regimenIva: 'pequeno_contribuyente', agenteDeRetencionIva: 'ninguno' });
   mediador.responder('terceros', 'libro-de-compras.cifras_para_la_declaracion', async ({ periodo }) =>
     respuestaDe(periodo),
@@ -173,5 +175,25 @@ describe('el cero supuesto del primer mes no se guarda como dato', () => {
     const foto = rectificada.cuerpo.declaracion.foto;
     expect(foto.remanentes).toBeUndefined();
     expect(foto.saldosIniciales.aviso).toContain('se declaró sin ventas');
+  });
+});
+
+describe('un cierre que vino de un cero supuesto no se traslada como dato', () => {
+  it('febrero con cero supuesto, enero declarado después: marzo queda sin dato y avisa', async () => {
+    const [ENERO, FEBRERO, MARZO] = [mesDe(-26), mesDe(-25), mesDe(-24)];
+    const propia = cadenaSupuesta.cuenta.propietario;
+    responder(FEBRERO, { debito: '0.00', retenciones_de_iva: '5.00' });
+    await declarar(propia, FEBRERO);
+    await declarar(propia, ENERO, { remanenteDeRetencionesAnterior: '10.00', remanenteDeCreditoAnterior: '4.00' });
+    responder(MARZO, { debito: '100.00', retenciones_de_iva: '0.00' });
+
+    const declarada = await declarar(propia, MARZO);
+
+    const foto = declarada.cuerpo.declaracion.foto;
+    expect(foto.remanentes).toBeUndefined();
+    expect(foto.saldosIniciales).toMatchObject({ retenciones: null, credito: null });
+    expect(foto.saldosIniciales.aviso).toContain('saldo supuesto en cero');
+    const { cuerpo } = await propia.get(`${RUTA_SAT}?periodo=${MARZO.slice(0, 7)}`);
+    expect(cuerpo.avisoDeSaldos).toContain('saldo supuesto en cero');
   });
 });

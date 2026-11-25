@@ -63,10 +63,18 @@ export function saldosDeInicioDeLaFoto(
   };
 }
 
-/** El cierre CALCULADO del mes previo con el mismo formulario; los saldos iniciales de un mes sin ventas no son cierre. */
-function cierreCalculado(foto: FotoDelPeriodo | null, formulario: FormularioConRemanente): SaldosDeInicio | null {
-  const calculado = foto?.remanentes;
+/**
+ * El cierre CALCULADO del mes previo con el mismo formulario; los saldos iniciales de un mes sin ventas no son cierre,
+ * ni lo es el de un mes que se calculó con un cero supuesto cuando ya hay declaraciones anteriores a él.
+ */
+async function cierreCalculado(
+  periodos: RepositorioDePeriodos,
+  previo: { periodo: string; foto: FotoDelPeriodo | null },
+  formulario: FormularioConRemanente,
+): Promise<SaldosDeInicio | null> {
+  const calculado = previo.foto?.remanentes;
   if (calculado?.formulario !== formulario) return null;
+  if (calculado.supuestos && (await periodos.hayDeclaracionesAntesDe(previo.periodo))) return null;
   return {
     retencionesCentavos: aCentavos(calculado.remanenteAlSiguiente),
     creditoCentavos: aCentavos(calculado.creditoAlSiguiente ?? '0.00'),
@@ -95,6 +103,9 @@ async function avisoDeSaldoFaltante(
     if (!(await periodos.hayDeclaracionesAntesDe(pedido.periodo))) return null;
     return `Falta declarar ${previo}; escriba el saldo del formulario o declare ese mes.`;
   }
+  if (previa.remanentes?.formulario === pedido.formulario && previa.remanentes.supuestos) {
+    return `${previo} se calculó con un saldo supuesto en cero porque faltaba el de ${nombreDelPeriodo(sumarMeses(pedido.periodo, -2))}; rectifique ${previo} o escriba el saldo del formulario presentado.`;
+  }
   const formularioPrevio = formularioDeLaFoto(previa);
   if (formularioPrevio === pedido.formulario) {
     return `${previo} se declaró sin ventas y no se puede calcular con qué saldo cerró; escriba el saldo del formulario presentado.`;
@@ -112,8 +123,9 @@ export async function remanenteAnteriorDelPeriodo(
   periodos: RepositorioDePeriodos,
   pedido: PedidoDeRemanenteAnterior,
 ): Promise<SaldosAnteriores> {
-  const previa = await ultimaFotoDe(periodos, sumarMeses(pedido.periodo, -1));
-  const cierre = cierreCalculado(previa, pedido.formulario);
+  const previo = sumarMeses(pedido.periodo, -1);
+  const previa = await ultimaFotoDe(periodos, previo);
+  const cierre = await cierreCalculado(periodos, { periodo: previo, foto: previa }, pedido.formulario);
   if (cierre) return cierre;
   const propia = saldosDeInicioDeLaFoto(await ultimaFotoDe(periodos, pedido.periodo), pedido.formulario);
   const saldos = conLoEscrito(propia, pedido.escrito);
