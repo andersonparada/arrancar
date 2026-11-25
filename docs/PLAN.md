@@ -4470,4 +4470,4 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `retencion_por_pagar` con un enlace solo en la regla r1 ya no sale en verde ni se oculta con «solo lo que falta».
   (2) `consecuenciaDeQuitar` cubre el registro sin cuenta general: lo de ese registro queda por contabilizar con error y los
   demás siguen igual. El rol `retenciones_de_apertura` llega por la API y es obligatorio de enlazar; no requirió código propio.
-  Pruebas del archivo: 24 → 29.
+  Cuatro pruebas nuevas en el archivo (29 en total).
