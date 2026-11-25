@@ -50,6 +50,7 @@ function alPresionarEnter(evento: KeyboardEvent): void {
           :clientes-no-disponibles="catalogos.clientesNoDisponibles.value"
           :facturas="catalogos.facturas"
           :errores="errores()"
+          :pide-el-iva="registro.pideElIva.value"
           @buscar-facturas="catalogos.buscarFacturas"
         />
       </TarjetaBase>
@@ -67,7 +68,12 @@ function alPresionarEnter(evento: KeyboardEvent): void {
           :intentado="registro.intentado.value"
         />
       </TarjetaBase>
-      <MasDatosDelDocumento v-model="edicion" :con-cartera="catalogos.conCartera.value" :errores="errores()" />
+      <MasDatosDelDocumento
+        v-model="edicion"
+        :con-cartera="catalogos.conCartera.value"
+        :errores="errores()"
+        :pide-el-iva="registro.pideElIva.value"
+      />
     </div>
     <BarraDeRegistro
       :total="sumaDeLineas(edicion.lineas)"

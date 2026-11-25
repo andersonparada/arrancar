@@ -1,4 +1,4 @@
-import { computed, reactive, ref, type Ref } from 'vue';
+import { computed, reactive, ref, watch, type Ref } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
@@ -12,6 +12,7 @@ import {
   edicionVacia,
   erroresDeEdicion,
   pendientesDeEdicion,
+  pendientesDelIvaDeLaNota,
   type EdicionDeDocumento,
 } from './edicion-de-documento';
 import { usarCatalogosDelRegistro } from './usar-catalogos-del-registro';
@@ -32,15 +33,27 @@ function preguntarAntesDeSalir(edicion: EdicionDeDocumento, registrado: Ref<bool
   return () => (inicial = JSON.stringify(edicion));
 }
 
+/** El servidor no supo el IVA de la nota sobre factura anterior: el campo sale a la vista y se vuelve obligatorio. */
+function usarPedidoDeIva(edicion: EdicionDeDocumento) {
+  const pideElIva = ref(false);
+  watch(
+    () => edicion.usaFacturaAnterior,
+    () => (pideElIva.value = false),
+  );
+  const pendientesCon = () => [...pendientesDeEdicion(edicion), ...pendientesDelIvaDeLaNota(edicion, pideElIva.value)];
+  return { pideElIva, pendientesCon };
+}
+
 /** Registrar el documento: valida lo evidente, envía y deja el motivo del rechazo a la vista, no solo en un aviso. */
 function usarEnvio(edicion: EdicionDeDocumento) {
   const { enviando, errores, enviar } = usarFormulario();
   const problema = ref<string | null>(null);
   const intentado = ref(false);
+  const { pideElIva, pendientesCon } = usarPedidoDeIva(edicion);
 
   async function registrar(): Promise<RegistroDeDocumento | null> {
     intentado.value = true;
-    const falta = pendientesDeEdicion(edicion);
+    const falta = pendientesCon();
     problema.value = falta.length > 0 ? avisoDeLaFalta(falta) : null;
     if (falta.length > 0) return null;
     let creado: RegistroDeDocumento | null = null;
@@ -48,6 +61,7 @@ function usarEnvio(edicion: EdicionDeDocumento) {
       try {
         creado = await apiDocumentos.registrar(datosDeDocumento(edicion));
       } catch (error) {
+        pideElIva.value = error instanceof ErrorApi && error.codigo === 'iva_de_la_nota_requerido';
         const deCampos = error instanceof ErrorApi && error.erroresCampos.length > 0;
         problema.value = deCampos ? 'Revise los campos marcados.' : error instanceof Error ? error.message : null;
         throw error;
@@ -56,7 +70,7 @@ function usarEnvio(edicion: EdicionDeDocumento) {
     return creado;
   }
 
-  return { enviando, errores, problema, intentado, registrar };
+  return { enviando, errores, problema, intentado, pideElIva, pendientesCon, registrar };
 }
 
 /** Registrar: con éxito va a la ficha; «y seguir con otro» deja el formulario listo para el próximo documento. */
@@ -93,9 +107,20 @@ export function usarRegistroDeDocumento() {
   const catalogos = usarCatalogosDelRegistro(edicion);
   const envio = usarEnvio(edicion);
   const acciones = usarAcciones(edicion, envio, ref(false));
-  const { enviando, errores, problema, intentado } = envio;
-  const pendientes = computed(() => pendientesDeEdicion(edicion));
+  const { enviando, errores, problema, intentado, pideElIva } = envio;
+  const pendientes = computed(() => envio.pendientesCon());
   const erroresLocales = computed(() => erroresDeEdicion(edicion));
 
-  return { edicion, catalogos, enviando, errores, problema, intentado, pendientes, erroresLocales, ...acciones };
+  return {
+    edicion,
+    catalogos,
+    enviando,
+    errores,
+    problema,
+    intentado,
+    pideElIva,
+    pendientes,
+    erroresLocales,
+    ...acciones,
+  };
 }

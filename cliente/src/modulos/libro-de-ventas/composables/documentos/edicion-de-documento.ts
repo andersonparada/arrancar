@@ -142,6 +142,14 @@ export function datosDeDocumento(edicion: EdicionDeDocumento): DatosDeDocumento 
   };
 }
 
+/** El servidor pidió el IVA de la nota (0 es válido): mientras siga vacío, falta. */
+export function pendientesDelIvaDeLaNota(edicion: EdicionDeDocumento, pedido: boolean): string[] {
+  const sinIva = edicion.ivaDelDte.trim() === '';
+  return pedido && esNota(edicion.tipo) && edicion.usaFacturaAnterior && sinIva
+    ? ['el IVA que dice la nota (escriba 0 si no lleva)']
+    : [];
+}
+
 function pendientesDeLaNota(edicion: EdicionDeDocumento): string[] {
   if (!esNota(edicion.tipo)) return [];
   if (!edicion.usaFacturaAnterior) return edicion.documentoAfectadoId ? [] : ['la factura que corrige la nota'];

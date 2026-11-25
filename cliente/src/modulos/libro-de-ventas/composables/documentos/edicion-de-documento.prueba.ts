@@ -9,6 +9,7 @@ import {
   edicionParaOtro,
   nitDelCliente,
   pendientesDeEdicion,
+  pendientesDelIvaDeLaNota,
   type EdicionDeDocumento,
 } from './edicion-de-documento';
 
@@ -176,5 +177,21 @@ describe('otras ayudas', () => {
     expect(nitDelCliente(clientes, 'c1')).toBe('1234567');
     expect(nitDelCliente(clientes, null)).toBe('');
     expect(nitDelCliente(clientes, 'zz')).toBe('');
+  });
+});
+
+describe('el IVA que pide el servidor para una nota sobre factura anterior', () => {
+  const nota = (cambios: Partial<EdicionDeDocumento> = {}) =>
+    completa({ tipo: 'nota_de_credito', usaFacturaAnterior: true, ...cambios });
+
+  it('falta mientras el campo siga vacío, y el 0 cuenta como escrito', () => {
+    expect(pendientesDelIvaDeLaNota(nota(), true)).toEqual(['el IVA que dice la nota (escriba 0 si no lleva)']);
+    expect(pendientesDelIvaDeLaNota(nota({ ivaDelDte: '0' }), true)).toEqual([]);
+  });
+
+  it('no se exige si el servidor no lo pidió o si la nota no es sobre factura anterior', () => {
+    expect(pendientesDelIvaDeLaNota(nota(), false)).toEqual([]);
+    expect(pendientesDelIvaDeLaNota(nota({ usaFacturaAnterior: false }), true)).toEqual([]);
+    expect(pendientesDelIvaDeLaNota(completa(), true)).toEqual([]);
   });
 });

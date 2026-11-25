@@ -7,7 +7,7 @@ import type { EdicionDeDocumento } from '../../composables/documentos/edicion-de
 import { DESTINOS_DE_DOCUMENTO, TIPOS_DE_IDENTIFICACION } from '../../textos-de-documentos';
 
 /** Lo que casi nunca se toca: el receptor tal como salió en el DTE, el destino, el IVA del DTE y las observaciones. */
-const props = defineProps<{ conCartera: boolean; errores: Record<string, string> }>();
+const props = defineProps<{ conCartera: boolean; errores: Record<string, string>; pideElIva: boolean }>();
 const edicion = defineModel<EdicionDeDocumento>({ required: true });
 
 const identificaciones = [
@@ -48,6 +48,7 @@ const destinos = computed(() => [
             :error="errores.destino"
           />
           <CampoTexto
+            v-if="!pideElIva"
             v-model="edicion.ivaDelDte"
             etiqueta="IVA según el DTE"
             tipo="text"

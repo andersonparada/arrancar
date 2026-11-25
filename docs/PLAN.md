@@ -4438,6 +4438,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   turno). **Pendiente del usuario:** si `no_corresponde_a_la_empresa` libera el número (hoy sí, con aviso), cómo
   anular una factura de papel anulada en el talonario, si el aviso de nuevo registro exige confirmar, y a futuro (LV-4)
   cruzar con la bandeja de DTE emitidos.
+- **2026-11-24 — Libro de ventas: IVA de la nota pedido en el formulario (cliente).** Si el servidor responde
+  `iva_de_la_nota_requerido`, el formulario muestra «IVA que dice la nota» dentro del bloque de la factura anterior
+  (con ayuda «escriba 0 si no lleva»), lo vuelve obligatorio (`pendientesDelIvaDeLaNota`) y esconde el mismo campo de
+  «Más datos». El aviso de nuevo registro llega por los avisos del servidor, sin cambios en el cliente.
 - **2026-11-23 — LV-1c y LV-2c (cliente de Libro de ventas) hechos.** (1) **Clientes recibe secciones de otros módulos**
   como Proveedores: `DondeSeAporta` suma `'cliente'`; el formulario en página, la ventana del papel y la ficha de
   Clientes muestran las secciones activas y las envían en `secciones` (alta y edición; `asignarCliente` las acepta).

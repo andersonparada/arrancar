@@ -11,7 +11,7 @@ import { esNota, tituloDeDocumento } from '../../composables/documentos/tipos-de
 import { FORMULARIO_DE_DOCUMENTO as textos } from '../../textos-de-documentos';
 
 /** Solo en las notas: la factura que corrigen, de este sistema o de uno anterior. */
-const props = defineProps<{ facturas: BusquedaDeFacturas; errores: Record<string, string> }>();
+const props = defineProps<{ facturas: BusquedaDeFacturas; errores: Record<string, string>; pideElIva: boolean }>();
 const emit = defineEmits<{ buscar: [texto: string] }>();
 const edicion = defineModel<EdicionDeDocumento>({ required: true });
 const texto = ref('');
@@ -91,5 +91,15 @@ const ayuda = computed(() => {
         :error="errores['facturaAnterior.fecha']"
       />
     </div>
+    <CampoTexto
+      v-if="edicion.usaFacturaAnterior && pideElIva"
+      v-model="edicion.ivaDelDte"
+      etiqueta="IVA que dice la nota"
+      requerido
+      tipo="text"
+      sin-correccion
+      ayuda="Cópielo de la nota. Escriba 0 si no lleva IVA."
+      :error="errores.ivaDelDte"
+    />
   </fieldset>
 </template>

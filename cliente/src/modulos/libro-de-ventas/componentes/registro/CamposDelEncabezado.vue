@@ -20,6 +20,7 @@ const props = defineProps<{
   clientesNoDisponibles: boolean;
   facturas: BusquedaDeFacturas;
   errores: Record<string, string>;
+  pideElIva: boolean;
 }>();
 const emit = defineEmits<{ buscarFacturas: [texto: string] }>();
 const edicion = defineModel<EdicionDeDocumento>({ required: true });
@@ -81,6 +82,7 @@ const cambiarCliente = (clienteId: string | null): void => {
       v-model="edicion"
       :facturas="facturas"
       :errores="errores"
+      :pide-el-iva="pideElIva"
       @buscar="emit('buscarFacturas', $event)"
     />
   </div>
