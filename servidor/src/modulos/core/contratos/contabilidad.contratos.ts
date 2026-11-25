@@ -22,6 +22,7 @@ export const ROLES_DE_CUENTA = [
   'isr_sobre_intereses',
   'fondos_en_transito',
   'apertura_por_regularizar',
+  'retenciones_de_apertura',
   'iva_por_rectificar',
   'caja_chica',
   'anticipos_por_liquidar',

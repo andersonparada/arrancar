@@ -116,6 +116,15 @@ describe('catálogo de roles', () => {
     expect(DEFINICIONES_DE_ROLES[rol].esDeAuxiliar).toBe(false);
   });
 
+  it('retenciones_de_apertura es de balance, sin auxiliar ni llave, de Cuentas por pagar y obligatoria de enlazar', () => {
+    const definicion = DEFINICIONES_DE_ROLES.retenciones_de_apertura;
+
+    expect(definicion.esDeAuxiliar).toBe(false);
+    expect(definicion.admiteLlave).toBe(false);
+    expect(definicion.modulos).toEqual(['cuentas-por-pagar']);
+    expect(definicion.opcional).toBe(false);
+  });
+
   it('describe todos los roles del contrato, cada uno con al menos un módulo y un nombre', () => {
     for (const rol of ROLES_DE_CUENTA) {
       const definicion = DEFINICIONES_DE_ROLES[rol];

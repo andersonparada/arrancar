@@ -85,6 +85,7 @@ export const DEFINICIONES_DE_ROLES: Readonly<Record<RolDeCuenta, DefinicionDeRol
   isr_sobre_intereses: rol('ISR sobre intereses (gasto)', [BANCOS]),
   fondos_en_transito: rol('Fondos en tránsito', [BANCOS]),
   apertura_por_regularizar: rol('Apertura por regularizar', [PAGAR]),
+  retenciones_de_apertura: rol('Retenciones de apertura', [PAGAR]),
   iva_por_rectificar: rol('IVA por rectificar', [COMPRAS]),
   caja_chica: rol('Caja chica', [CAJA], { llave: 'Fondo', auxiliar: true, generalObligatoria: true }),
   anticipos_por_liquidar: rol('Anticipos por liquidar', [LIQUIDAR, PAGAR, CAJA], { auxiliar: true }),

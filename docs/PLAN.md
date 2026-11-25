@@ -4458,3 +4458,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     enlace en un solo registro sin conocer los demás sigue faltando, así «solo lo que falta» no lo oculta. (3) «Quitar el enlace»
     explica la consecuencia real (`consecuenciaDeQuitar`, función pura): opcional va al costo de cada línea, con cuenta general
     el registro pasa a usarla, sin respaldo queda por contabilizar con error. Pruebas del módulo: 37 → 42.
+- **2026-11-24 (Contabilidad, servidor: retenciones de apertura)**: el usuario eligió la opción A. Rol nuevo
+  `retenciones_de_apertura` (Cuentas por pagar; de balance, sin auxiliar, sin llave, obligatorio de enlazar) en el contrato,
+  en el catálogo de roles, en el CHECK `enlaces_rol_valido` (migración 0003 y snapshots, sin cambiar sus id) y en §5.3. Queda
+  fijado para CT-3: el cierre da `pide_motivo` mientras tenga saldo y Cuentas por pagar responde `retenciones_por_practicar`
+  solo con `proposito = apertura`; hoy nadie responde `saldos_de_auxiliares` ni hay cierre contable. Los dos hallazgos de
+  `edicion-de-enlaces.ts` son del cliente y no se tocaron aquí.

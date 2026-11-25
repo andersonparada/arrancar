@@ -596,7 +596,7 @@ afecta lo que se contabilice después (se audita, §9.2).
   `pagos_por_aplicar`, no este rol), `cuentas_por_cobrar_a_empleados` (ningún módulo registra su recuperación; control
   sustituto: la cuenta pide tercero; se marca cuando exista Planilla), `iva_credito_fiscal` (la liquidación mensual es partida
   manual normal; se revisa con el movimiento Debe del mes, dato propio que falta en el contrato), `puente_de_apertura` (su
-  control es dejarlo en 0) y `iva_por_rectificar`, `apertura_por_regularizar`. `puente_compras_de_activos` es de control solo
+  control es dejarlo en 0) y `iva_por_rectificar`, `apertura_por_regularizar` y `retenciones_de_apertura`. `puente_compras_de_activos` es de control solo
   con Activos fijos activo (pendiente: marcarla al activarlo). `retencion_por_pagar` cuadra así: mayor = retenido vigente −
   enterado vigente (no «constancias no enteradas»; la responde Libro de compras); multas e intereses van a gasto propio.
   Desmarcarla es editar la cuenta (el aviso al desmarcar es de la pantalla, CT-2c).
@@ -610,9 +610,12 @@ afecta lo que se contabilice después (se audita, §9.2).
   `reserva_legal` (solo sociedades, C. Com. art. 36). No cuentan como faltantes ni impiden el «todo enlazado», pero la pantalla
   no dice que todo está bien mientras alguno siga sin cuenta: lo muestra como «según su operación» y se exige al llegar el
   primer hecho, que queda con error visible. `iva_no_acreditable` es la única opcional (va al costo de la línea).
-- **Pendiente de decisión del usuario**: las retenciones de saldo inicial aún no enteradas. Opción A (recomendada por el
-  contador): rol `retenciones_de_apertura`, de balance, sin auxiliar ni llave, que el contador salda al enterar; CxP las
-  responde solo con `proposito = apertura`. Opción B: usar la cuenta de retenciones y justificar la diferencia cada mes.
+- **Retenciones de apertura** (decisión del usuario, opción A del contador): rol `retenciones_de_apertura` (Cuentas por pagar),
+  de balance, sin auxiliar ni llave, en cuenta aparte, para lo retenido antes del inicio y aún no enterado. El contador lo
+  salda al enterar; no es de control y el cierre da `pide_motivo` mientras tenga saldo (como `apertura_por_regularizar`).
+  Cuentas por pagar responde `retenciones_por_practicar` en `saldos_de_auxiliares` solo con `proposito = apertura`, nunca en
+  `cuadratura`: así la cuenta de `retencion_por_pagar` cuadra exacto con Libro de compras. Aún no hay quien responda esa pregunta
+  ni cierre contable; se programan con CT-3.
 - API: `GET /contabilidad/enlaces` (los roles de los módulos activos con sus enlaces), `GET …/llaves/:rol`, `PUT …/:rol`
   (`{ llave, cuentaId }`: crea el enlace o cambia su cuenta) y `DELETE …/:enlaceId`; `…/exportar`, `…/plantilla` y
   `…/importar`. Cambiar o quitar un enlace exige `contabilidad.enlaces.editar` (no hay permisos `crear` ni `eliminar`, §9.1).
