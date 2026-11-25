@@ -3,7 +3,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
 import type { Activo } from '../../../dominio/activo.js';
 import { Baja } from '../../../dominio/baja.js';
-import { BajaParcialNoDisponible } from '../../../dominio/errores-de-baja.js';
+import { BajaParcialNoDisponible, VentaDeControlConComponentesConLibros } from '../../../dominio/errores-de-baja.js';
 import { FechaAnteriorAlUltimoTraslado } from '../../../dominio/errores-de-traslado.js';
 import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { NumeroDeActa } from '../../../dominio/tipos-de-baja.js';
@@ -51,13 +51,18 @@ export class RegistradorDeBajas {
   }
 
   /** El activo pedido y sus componentes vigentes, bloqueados; el principal primero. */
-  private async cargarActivos({ activoId, cantidad }: SolicitudDeBaja): Promise<Activo[]> {
+  private async cargarActivos(solicitud: SolicitudDeBaja): Promise<Activo[]> {
+    const { activoId, cantidad } = solicitud;
     const { repositorio } = this.dependencias;
     const [principal] = await repositorio.buscarBloqueando([activoId]);
     if (!principal) throw new RecursoNoEncontrado('El activo');
     const { codigo, cantidad: delActivo } = principal.instantanea();
     if (cantidad !== undefined && cantidad !== delActivo) throw new BajaParcialNoDisponible(codigo);
-    return [principal, ...(await repositorio.componentesDe([activoId]))];
+    const componentes = await repositorio.componentesDe([activoId]);
+    const conLibros = componentes.some((c) => c.instantanea().tipoDeRegistro === 'activo');
+    if (solicitud.causa === 'venta' && principal.instantanea().tipoDeRegistro === 'bien_de_control' && conLibros)
+      throw new VentaDeControlConComponentesConLibros(codigo);
+    return [principal, ...componentes];
   }
 
   private async calcular(operador: Operador, pedido: { activos: Activo[]; solicitud: SolicitudDeBaja }) {

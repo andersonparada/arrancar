@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { BajaInvalida } from '../../../dominio/errores-de-baja.js';
+import { BajaInvalida, VentaDeControlConComponentesConLibros } from '../../../dominio/errores-de-baja.js';
 import { armarBajas, solicitudDeVenta, type EscenarioDeBajas } from '../../../pruebas/escenario-de-bajas.soporte.js';
 
 let e: EscenarioDeBajas;
@@ -174,20 +174,13 @@ describe('venta de un bien de control', () => {
     expect(e.bajas.registros.size).toBe(0);
   });
 
-  it('un principal de control con un componente con libros se vende: el precio es del componente', async () => {
-    e.bajas.datosFiscales = SIMPLIFICADO;
+  it('un principal de control con un componente con libros no se vende: se rechaza sin dejar nada', async () => {
     const principal = await taladro();
     const clase = await e.claseDe('maquinaria_y_vehiculos', '20.00');
     const hijo = await e.activoConCosto(clase, '5000.00', { activoPadreId: principal.id.valor });
     await e.poner(hijo);
 
-    const venta = await e.vender(solicitudDeVenta(principal));
-
-    const registros = [...e.bajas.registros.values()].map((baja) => baja.instantanea());
-    const delPrincipal = registros.find((baja) => baja.activoId === principal.id.valor)!;
-    const delHijo = registros.find((baja) => baja.activoId === hijo.id.valor)!;
-    expect(delPrincipal).toMatchObject({ causa: 'otra', venta: null, cifras: { costoFiscalCentavos: 0 } });
-    expect(delHijo.venta).toMatchObject({ precioCentavos: 10000000 });
-    expect(venta.componentes).toHaveLength(1);
+    await expect(e.vender(solicitudDeVenta(principal))).rejects.toBeInstanceOf(VentaDeControlConComponentesConLibros);
+    expect(e.bajas.registros.size).toBe(0);
   });
 });

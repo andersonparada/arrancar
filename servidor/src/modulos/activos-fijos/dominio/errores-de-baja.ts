@@ -71,6 +71,18 @@ export class PrecioNoRepartible extends ReglaDeNegocioInfringida {
   }
 }
 
+/** Se vendería un bien de control junto con componentes que llevan libros: el precio no tiene dónde quedar a su nombre. */
+export class VentaDeControlConComponentesConLibros extends ReglaDeNegocioInfringida {
+  readonly codigo = 'venta_de_control_con_componentes_con_libros';
+
+  constructor(codigoDelActivo: string) {
+    super(
+      `${codigoDelActivo} es un bien de control con componentes que llevan libros: venda cada componente por separado o dé de baja el conjunto sin venta.`,
+      { codigoDelActivo },
+    );
+  }
+}
+
 /** El activo tuvo una mejora o un costo posterior después de la fecha de la baja: las cifras al día de la baja no cuadrarían. */
 export class BajaAnteriorAUnaMejora extends ReglaDeNegocioInfringida {
   readonly codigo = 'baja_anterior_a_una_mejora';
