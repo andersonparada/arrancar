@@ -22,7 +22,7 @@ la contabilidad.
 | Conceptos | Semilla perezosa de cuatro; `venta_de_activo_fijo` es de sistema (no se edita, inactiva ni elimina) |
 | Datos fiscales del cliente | Sección aportada al formulario de Clientes; sin fila el cliente no retiene nada |
 | Auditoría permanente | `libro-de-ventas.documentos` y `.retenciones` (migración `0001`) |
-| Documento | Inmutable: se anula (queda como rastro y su número no se reutiliza) o se elimina si está «limpio». El régimen de IVA e ISR del **mes de emisión** se copia al documento |
+| Documento | Inmutable: se anula (queda como rastro; el número lo ocupan lo vigente y lo anulado en la SAT, no lo anulado por error interno) o se elimina si está «limpio». El régimen de IVA e ISR del **mes de emisión** se copia al documento |
 | Período | El mes de emisión. Los períodos declarados y el control de bloqueo son de Libro de compras; aquí se leen |
 | Destino | `cuentas-por-cobrar` si la cartera está activa y hay cliente (el consumidor final, según `libro-de-ventas.destino.consumidor_final`); la factura especial recibida y el recibo no son cartera; una nota va al destino de su factura |
 
@@ -44,7 +44,7 @@ la contabilidad.
 
 - `documentos` (`0002`): RLS por empresa; llaves compuestas a `terceros.clientes (id, cuenta_id)`, a `documentos`
   (`documento_afectado_id`, misma empresa), a `empresas.localidades` y a `core.monedas`; único del número
-  `(empresa, coalesce(tipo_dte, tipo), coalesce(serie, ''), numero)` (incluye anulados) y de la autorización FEL;
+  `(empresa, coalesce(tipo_dte, tipo), coalesce(serie, ''), numero)` y de la autorización FEL, ambos solo sobre lo vigente o anulado con `fel_anulada_en_la_sat`;
   `check` de familia contra código SAT, receptor (`CF` solo sin cliente), totales que cuadran por columna, período = mes de
   emisión, notas (factura del libro o anterior, nunca las dos), anulación completa y moneda en quetzales.
 - `lineas_de_documento`: llave `(documento_id, empresa_id)` con cascada, llave `(concepto_de_ingreso_id, empresa_id)`,
@@ -62,7 +62,7 @@ la contabilidad.
   es del régimen del mes avisa. Solo el régimen general carga débito (más la factura especial recibida); el recibo y la
   nota de abono nunca llevan IVA. El IVA del DTE puede apartarse del calculado hasta `max(5, líneas)` centavos.
 - **Notas**: corrigen una factura vigente del mismo cliente (o una del sistema anterior, de antes de la fecha de inicio);
-  la de crédito no pasa del total ni del IVA de la factura más sus notas de débito; después de los dos meses de la
+  la de crédito se mide con dos topes absolutos e independientes (`medirElTopeDeNotasDeCredito`): el total acumulado no pasa del total de la factura más sus notas de débito, y el IVA acumulado no pasa del IVA de la factura más una tolerancia de `max(Q0.05, Q0.01 por nota de crédito vigente, contando la nueva)`; no hay tope proporcional, porque una nota puede devolver solo lo exento o solo lo gravado. Se registra el IVA exacto del DTE aunque pase por centavos, con aviso. La tolerancia del registro cuenta líneas y la del tope cuenta notas: no se unifican sin criterio. La misma regla rige al anular una nota de débito. Una nota que pasa del total se bloquea: «Si el DTE se emitió así, anúlelo en la SAT dentro del plazo y emita el correcto; consulte a su contador». Sobre una factura del sistema anterior manda el IVA del DTE; sin él, el régimen del historial en el mes de la factura; sin ninguno **se pide el IVA de la nota** (0 es válido, `iva_de_la_nota_requerido`); después de los dos meses de la
   factura avisa (rebaja el débito del mes de la nota); sobre una factura especial recibida es
   `nota_sobre_factura_especial`; la de abono avisa que no rebaja el IVA.
 - **Anular**: causa (`fel_anulada_en_la_sat`, `error_de_captura`, `no_corresponde_a_la_empresa`), motivo de hasta 300
@@ -109,7 +109,8 @@ documentos, en LV-2c.
 
 - **Único del número**: `(empresa, coalesce(tipo_dte, tipo), coalesce(serie, ''), numero)` en lugar de
   `(tipo_dte, serie, numero) nulls not distinct` del §5.3, porque en papel el código SAT es nulo y una nota y una factura
-  con el mismo número habrían chocado. Incluye anulados.
+  con el mismo número habrían chocado. Ocupan el número lo vigente y lo anulado en la SAT; lo anulado por `error_de_captura` o `no_corresponde_a_la_empresa` es un registro interno equivocado: no lo ocupa y el DTE correcto se vuelve a registrar (dictamen del contador, 2026-11-24). Al volver a registrarlo sale el aviso «Este DTE ya tuvo un registro anulado por error interno el dd/mm/aaaa. Confirme en la Agencia Virtual que sigue vigente».
+- **Libro y reportes para la SAT (LV-3)**: filtran `estado = 'vigente' or causa_de_anulacion = 'fel_anulada_en_la_sat'`; lo anulado por error interno solo sale en la auditoría y en la ficha. Un registro mal digitado no es un documento emitido; si no, el libro mostraría dos filas del mismo DTE.
 - **Cliente de otra cuenta**: la seguridad por filas lo oculta, así que responde `no_encontrado` (el error
   `cliente_de_otra_cuenta` del §11.4 no se distingue de un cliente inexistente).
 - **Columnas de la bandeja**: `origen` ya existe (solo `manual` hoy); `dte_emitido_id` y su llave se agregan en LV-4 junto

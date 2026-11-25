@@ -408,7 +408,7 @@ Sin fila = no retiene nada (no se supone). La ficha del cliente lo muestra en «
 | `tipo_de_identificacion` | text | no | `in ('nit', 'cui', 'extranjero', 'cf')` |
 | `nit_receptor` | text | no | 1–20; `'CF'` si `tipo_de_identificacion = 'cf'` (check) |
 | `nombre_receptor` | text | no | 1–200 (como lo dice el DTE) |
-| `serie`, `numero` | text | sí, no | 1–40; único `(empresa_id, tipo_dte, serie, numero) nulls not distinct` entre vigentes y anulados |
+| `serie`, `numero` | text | sí, no | 1–40; único `(empresa_id, tipo_dte, serie, numero) nulls not distinct` entre lo vigente y lo anulado en la SAT (`fel_anulada_en_la_sat`); lo anulado por error de captura o por no ser de la empresa no ocupa el número |
 | `autorizacion_fel` | uuid | sí | Único parcial `(empresa_id, autorizacion_fel) where not null` |
 | `localidad_id` | uuid | sí | FK compuesta a `empresas.localidades (id, empresa_id)`; la del código de establecimiento del DTE; índice parcial |
 | `fecha_emision` | date | no | No anterior a la fecha de inicio de la empresa (dominio, §7.1) |

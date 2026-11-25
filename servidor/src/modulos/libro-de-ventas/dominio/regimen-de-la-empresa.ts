@@ -1,4 +1,4 @@
-import { RegimenDerogado } from './errores-de-documento.js';
+import { IvaDeLaNotaRequerido, RegimenDerogado } from './errores-de-documento.js';
 import { FAMILIAS_DEROGADAS, type TipoDeDocumento } from './tipos-de-documento.js';
 
 export const REGIMENES_DE_IVA = [
@@ -70,16 +70,14 @@ export function cobraIva(datos: {
   return FAMILIAS_CON_IVA.includes(tipo);
 }
 
-export const AVISO_DE_IVA_DE_LA_FACTURA_ANTERIOR_SIN_HISTORIAL =
-  'No hay historial fiscal del mes de la factura del sistema anterior: el IVA de la nota se calculó con el régimen del mes de la nota. Revise el IVA.';
-
 export const AVISO_DE_IVA_QUE_NO_CONCUERDA_CON_LA_FACTURA_ANTERIOR =
   'El IVA del DTE no concuerda con el régimen de la empresa en el mes de la factura del sistema anterior; se respetó el del DTE. Revise sus datos fiscales.';
 
 /**
  * El IVA de una nota sobre una factura del sistema anterior, de la que solo se conoce la fecha. El IVA que dice el DTE
  * manda (la SAT ya lo certificó); si el DTE no lo dice, se usa el régimen de la empresa en el mes de la factura (solo el
- * general carga IVA), y sin historial de ese mes, el del mes de la nota. Lo dudoso da un aviso, nunca un bloqueo (§3.4).
+ * general carga IVA). Sin ninguno de los dos no se presume nada: se pide el IVA de la nota (0 es válido), porque el
+ * dato está impreso en ella y presumirlo podría rebajar un débito sin base. Lo dudoso en lo demás da un aviso (§3.4).
  * El aviso de que no concuerda sale solo con IVA 0 y alguna línea gravada en régimen general, o con IVA en un régimen sin
  * débito: IVA 0 sobre una venta exenta o de exportación es normal.
  */
@@ -88,9 +86,8 @@ export function tratamientoDeLaNotaSobreFacturaAnterior(datos: {
   /** Alguna línea de la nota es gravada: IVA 0 en régimen general solo es normal si todas son exentas, de exportación o no afectas. */
   hayLineaGravada: boolean;
   regimenDeLaFactura: RegimenDeIva | null;
-  regimenDelMesDeLaNota: RegimenDeIva;
 }): { cobraIva: boolean; avisos: string[] } {
-  const { ivaDelDte, hayLineaGravada, regimenDeLaFactura, regimenDelMesDeLaNota } = datos;
+  const { ivaDelDte, hayLineaGravada, regimenDeLaFactura } = datos;
   if (ivaDelDte !== null) {
     const cobraIva = ivaDelDte > 0;
     const concuerda =
@@ -98,10 +95,7 @@ export function tratamientoDeLaNotaSobreFacturaAnterior(datos: {
     return { cobraIva, avisos: concuerda ? [] : [AVISO_DE_IVA_QUE_NO_CONCUERDA_CON_LA_FACTURA_ANTERIOR] };
   }
   if (regimenDeLaFactura !== null) return { cobraIva: regimenDeLaFactura === 'general', avisos: [] };
-  return {
-    cobraIva: regimenDelMesDeLaNota === 'general',
-    avisos: [AVISO_DE_IVA_DE_LA_FACTURA_ANTERIOR_SIN_HISTORIAL],
-  };
+  throw new IvaDeLaNotaRequerido();
 }
 
 /**

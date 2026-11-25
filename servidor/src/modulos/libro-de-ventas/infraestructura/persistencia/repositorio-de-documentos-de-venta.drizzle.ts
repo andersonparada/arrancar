@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { deLaTransaccion } from '../../../core/base-datos/columnas.js';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
@@ -18,6 +18,17 @@ import { fichaDe, type FilaDeDocumento } from './ficha-de-documento-de-venta.map
 import { lineasDeDocumento } from './lineas-de-documento.tablas.js';
 
 const cambioDeAutoria = () => ({ actualizadoEn: new Date(), actualizadoPor: deLaTransaccion.usuario() });
+
+/** Mismo tipo, serie y número, o la misma autorización FEL. */
+function conElMismoNumeroOAutorizacion(clave: ClaveDeDocumentoDeVenta) {
+  const mismoNumero = and(
+    sql`coalesce(${documentos.tipoDte}, ${documentos.tipo}) = ${clave.tipoOTipoDte}`,
+    sql`coalesce(${documentos.serie}, '') = ${clave.serie ?? ''}`,
+    eq(documentos.numero, clave.numero),
+  );
+  const misma = clave.autorizacionFel ? sql`${documentos.autorizacionFel} = ${clave.autorizacionFel}` : sql`false`;
+  return sql`((${mismoNumero}) or ${misma})`;
+}
 
 /** Las notas (de cualquier clase, vigentes o anuladas) que corrigen al documento. */
 async function notasDe(documentoId: string): Promise<NotaDeLaFacturaDto[]> {
@@ -93,23 +104,32 @@ export class RepositorioDeDocumentosDeVentaDrizzle implements RepositorioDeDocum
    * por no ser de la empresa no estorba al documento correcto. Es la misma condición de los índices únicos.
    */
   async buscarRepetido(clave: ClaveDeDocumentoDeVenta): Promise<{ id: string } | null> {
-    const mismoNumero = and(
-      sql`coalesce(${documentos.tipoDte}, ${documentos.tipo}) = ${clave.tipoOTipoDte}`,
-      sql`coalesce(${documentos.serie}, '') = ${clave.serie ?? ''}`,
-      eq(documentos.numero, clave.numero),
-    );
-    const misma = clave.autorizacionFel ? sql`${documentos.autorizacionFel} = ${clave.autorizacionFel}` : sql`false`;
     const [fila] = await transaccionEnCurso()
       .select({ id: documentos.id })
       .from(documentos)
       .where(
         and(
-          sql`((${mismoNumero}) or ${misma})`,
+          conElMismoNumeroOAutorizacion(clave),
           sql`(${documentos.causaDeAnulacion} is null or ${documentos.causaDeAnulacion} = 'fel_anulada_en_la_sat')`,
         ),
       )
       .limit(1);
     return fila ?? null;
+  }
+
+  async fechaDeUnRegistroAnuladoPorError(clave: ClaveDeDocumentoDeVenta): Promise<string | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ anuladoEn: documentos.anuladoEn })
+      .from(documentos)
+      .where(
+        and(
+          conElMismoNumeroOAutorizacion(clave),
+          sql`${documentos.causaDeAnulacion} in ('error_de_captura', 'no_corresponde_a_la_empresa')`,
+        ),
+      )
+      .orderBy(desc(documentos.anuladoEn))
+      .limit(1);
+    return fila?.anuladoEn ? fila.anuladoEn.toISOString().slice(0, 10) : null;
   }
 
   async buscar(documentoId: string, bloquear: boolean): Promise<DocumentoGuardadoDeVenta | null> {

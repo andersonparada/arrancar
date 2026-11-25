@@ -251,7 +251,7 @@ describe('notas', () => {
     const anterior = { serie: 'A', numero: '9', fecha: '2025-12-01' };
 
     const { documento, avisos } = armarDocumentoDeVenta(
-      nota({ documentoAfectadoId: null, facturaAnterior: anterior, fechaEmision: '2026-03-10' }),
+      nota({ documentoAfectadoId: null, facturaAnterior: anterior, ivaDelDte: 0, fechaEmision: '2026-03-10' }),
       contexto({ fechaDeInicio: '2026-01-01' }),
     );
 

@@ -12,6 +12,7 @@ import type { SolicitudDeDocumentoDeVenta } from '../../dto/solicitud-de-documen
 import { DocumentoRepetido } from '../../errores.js';
 import type {
   CatalogosParaDocumentos,
+  ClaveDeDocumentoDeVenta,
   ControlDePeriodosParaVentas,
   DestinosDeVenta,
   RepositorioDeDocumentosDeVenta,
@@ -29,6 +30,13 @@ interface Dependencias extends DependenciasDelCargador {
   destinos: DestinosDeVenta;
   publicadorEventos: PublicadorEventos;
 }
+
+const claveDe = (documento: DocumentoDeVenta): ClaveDeDocumentoDeVenta => ({
+  tipoOTipoDte: documento.tipoDte ?? documento.tipo,
+  serie: documento.serie,
+  numero: documento.numero,
+  autorizacionFel: documento.autorizacionFel,
+});
 
 /** La solicitud con el tipo resuelto, las líneas en centavos y el IVA del DTE en centavos. */
 function solicitudArmada(
@@ -68,11 +76,13 @@ export class RegistrarDocumentoDeVenta {
     const avisosDelPeriodo = await revisarElPeriodo(this.dependencias.control, primerDiaDelMes(solicitud.fechaEmision));
     const { armado, tieneVentaDeActivo } = await this.armar(operador, solicitud);
     const { documento } = armado;
-    await this.exigirQueNoEsteRepetido(documento);
+    const claveRepetida = claveDe(documento);
+    await this.exigirQueNoEsteRepetido(claveRepetida);
+    const avisoDeReregistro = await this.avisoDeNuevoRegistro(claveRepetida);
     await repositorio.agregar(documento);
     const avisosDelDestino = await this.enviarAlDestino(operador, documento, tieneVentaDeActivo);
     const guardado = await repositorio.buscar(documento.id, false);
-    const avisos = [...avisosDelPeriodo, ...armado.avisos, ...avisosDelDestino];
+    const avisos = [...avisosDelPeriodo, ...armado.avisos, ...avisoDeReregistro, ...avisosDelDestino];
     return { documento, salida: { documento: guardado!.ficha, avisos } };
   }
 
@@ -95,13 +105,18 @@ export class RegistrarDocumentoDeVenta {
     );
   }
 
-  private async exigirQueNoEsteRepetido(documento: DocumentoDeVenta): Promise<void> {
-    const repetido = await this.dependencias.repositorio.buscarRepetido({
-      tipoOTipoDte: documento.tipoDte ?? documento.tipo,
-      serie: documento.serie,
-      numero: documento.numero,
-      autorizacionFel: documento.autorizacionFel,
-    });
+  private async exigirQueNoEsteRepetido(clave: ClaveDeDocumentoDeVenta): Promise<void> {
+    const repetido = await this.dependencias.repositorio.buscarRepetido(clave);
     if (repetido) throw new DocumentoRepetido(repetido.id);
+  }
+
+  /** Un DTE con un registro anulado por error interno se vuelve a registrar, pero se pide confirmar que sigue vigente. */
+  private async avisoDeNuevoRegistro(clave: ClaveDeDocumentoDeVenta): Promise<string[]> {
+    const fecha = await this.dependencias.repositorio.fechaDeUnRegistroAnuladoPorError(clave);
+    if (!fecha) return [];
+    const [anio, mes, dia] = fecha.split('-');
+    return [
+      `Este DTE ya tuvo un registro anulado por error interno el ${dia}/${mes}/${anio}. Confirme en la Agencia Virtual que sigue vigente.`,
+    ];
   }
 }

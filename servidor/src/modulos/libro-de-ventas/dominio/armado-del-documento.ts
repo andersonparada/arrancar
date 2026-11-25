@@ -125,7 +125,6 @@ function tratamientoDelIva(solicitud: SolicitudArmada, contexto: ContextoDelArma
       ivaDelDte: solicitud.ivaDelDte,
       hayLineaGravada: solicitud.lineas.some((linea) => linea.claseFiscal === 'gravada'),
       regimenDeLaFactura: contexto.regimenDeLaFacturaAnterior?.regimenIva ?? null,
-      regimenDelMesDeLaNota: regimen,
     });
   }
   const tipoDeLaFactura = contexto.facturaAfectada?.tipo ?? null;

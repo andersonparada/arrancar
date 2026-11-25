@@ -125,11 +125,9 @@ describe('documentos: números únicos', () => {
     await insertar(documento({ tipoDte: 'FACT', autorizacionFel: libre, ...anulado('error_de_captura') }));
     await insertar(documento({ tipoDte: 'FACT', autorizacionFel: ocupada, ...anulado('fel_anulada_en_la_sat') }));
 
-    const otraVez = insertar(documento({ tipoDte: 'FACT', autorizacionFel: libre }));
-    const repetida = insertar(documento({ tipoDte: 'FACT', autorizacionFel: ocupada }));
-
-    await expect(otraVez).resolves.toBeTruthy();
-    expect(await restriccionQueViola(repetida)).toBe('documentos_autorizacion_fel_unica');
+    await expect(insertar(documento({ tipoDte: 'FACT', autorizacionFel: libre }))).resolves.toBeTruthy();
+    const repetida = restriccionQueViola(insertar(documento({ tipoDte: 'FACT', autorizacionFel: ocupada })));
+    expect(await repetida).toBe('documentos_autorizacion_fel_unica');
   });
 
   it('la autorización FEL no se repite en la empresa', async () => {

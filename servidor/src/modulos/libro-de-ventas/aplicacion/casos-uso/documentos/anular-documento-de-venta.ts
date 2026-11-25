@@ -49,7 +49,9 @@ interface Dependencias {
  * a la cartera (`documento_por_anular`) antes de cambiar nada, lo deja `anulado` con su fecha y usuario, lo audita con
  * la ficha anterior y, tras confirmar, publica `documento_anulado`. Con el control de períodos encendido, un mes declarado
  * no se toca; apagado, avisa que hay que rectificar. Si la causa es un error de captura y ya pasó el plazo de la SAT para
- * anular el DTE, avisa que solo cabe una nota de crédito. Los números anulados no se vuelven a usar.
+ * anular el DTE, avisa que solo cabe una nota de crédito. El número y la autorización FEL los ocupan lo vigente y lo anulado en la SAT; lo anulado por
+ * error de captura o por no ser de la empresa es un registro interno equivocado, no ocupa el número y el DTE correcto se
+ * vuelve a registrar.
  */
 export class AnularDocumentoDeVenta {
   constructor(private readonly dependencias: Dependencias) {}

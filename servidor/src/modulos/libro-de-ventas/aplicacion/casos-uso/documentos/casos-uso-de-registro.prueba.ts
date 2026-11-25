@@ -105,6 +105,16 @@ describe('registrar una factura', () => {
     await expect(registrar({ serie: 'B', numero: '2' })).resolves.toBeDefined();
   });
 
+  it('volver a registrar un DTE anulado por error interno avisa que se confirme en la SAT', async () => {
+    const primera = await registrar({ serie: 'C', numero: '1' });
+    expect(primera.avisos.join(' ')).not.toContain('Agencia Virtual');
+    await e.anular.ejecutar(e.operador, { documentoId: primera.documento.id, motivo: 'x', causa: 'error_de_captura' });
+
+    const otraVez = await registrar({ serie: 'C', numero: '1' });
+
+    expect(otraVez.avisos.join(' ')).toContain('Este DTE ya tuvo un registro anulado por error interno el 01/01/2026');
+  });
+
   it('el IVA del DTE se acepta dentro de la tolerancia', async () => {
     const { documento } = await registrar({ ivaDelDte: '12.03' });
 

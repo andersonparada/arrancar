@@ -107,11 +107,17 @@ describe('una nota sobre una factura del sistema anterior', () => {
     expect(armarDocumentoDeVenta(desdeAnterior(), contextoDe(enGeneral)).documento.totales.iva).toBe(1200);
   });
 
-  it('sin historial de ese mes usa el de la nota y avisa', () => {
-    const { documento, avisos } = armarDocumentoDeVenta(desdeAnterior(), contexto({ fechaDeInicio: '2026-01-01' }));
+  it('sin IVA del DTE ni historial de ese mes pide el IVA de la nota', () => {
+    const armar = () => armarDocumentoDeVenta(desdeAnterior(), contexto({ fechaDeInicio: '2026-01-01' }));
 
-    expect(documento.totales.iva).toBe(1200);
-    expect(avisos.join(' ')).toContain('No hay historial fiscal');
+    expect(armar).toThrowError(expect.objectContaining({ codigo: 'iva_de_la_nota_requerido' }));
+  });
+
+  it('con el IVA escrito en 0 y sin historial se registra sin IVA', () => {
+    const solicitud = desdeAnterior({ ivaDelDte: 0 });
+    const { documento } = armarDocumentoDeVenta(solicitud, contexto({ fechaDeInicio: '2026-01-01' }));
+
+    expect(documento.totales.iva).toBe(0);
   });
 
   describe('una nota de abono', () => {

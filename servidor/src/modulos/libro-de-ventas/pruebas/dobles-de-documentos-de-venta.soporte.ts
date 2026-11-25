@@ -128,6 +128,16 @@ export class RepositorioDeDocumentosDeVentaEnMemoria implements RepositorioDeDoc
     return repetido ? { id: repetido.documento.id } : null;
   }
 
+  async fechaDeUnRegistroAnuladoPorError(clave: ClaveDeDocumentoDeVenta): Promise<string | null> {
+    const anulado = [...this.guardados.values()].find(
+      (guardado) =>
+        (guardado.anulacion?.causa === 'error_de_captura' ||
+          guardado.anulacion?.causa === 'no_corresponde_a_la_empresa') &&
+        esElMismoDocumento(guardado.documento, clave),
+    );
+    return anulado ? '2026-01-01' : null;
+  }
+
   async buscar(documentoId: string, bloquear: boolean): Promise<DocumentoGuardadoDeVenta | null> {
     this.lecturas.push({ id: documentoId, bloquear });
     const guardado = this.guardados.get(documentoId);

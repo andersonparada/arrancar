@@ -50,6 +50,8 @@ export interface DatosDeAnulacionGuardada {
 export interface RepositorioDeDocumentosDeVenta {
   agregar(documento: DocumentoDeVenta): Promise<void>;
   buscarRepetido(clave: ClaveDeDocumentoDeVenta): Promise<{ id: string } | null>;
+  /** La fecha (AAAA-MM-DD) del último registro anulado por error interno que tuvo ese número o esa autorización FEL. */
+  fechaDeUnRegistroAnuladoPorError(clave: ClaveDeDocumentoDeVenta): Promise<string | null>;
   /** Con `bloquear` toma la fila con `for update`: dos bajas o dos notas a la vez no se pisan. */
   buscar(documentoId: string, bloquear: boolean): Promise<DocumentoGuardadoDeVenta | null>;
   /** La factura con sus notas vigentes sumadas; con `bloquear`, su fila con `for update`. */

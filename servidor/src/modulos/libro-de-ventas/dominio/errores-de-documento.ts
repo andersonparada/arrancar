@@ -114,3 +114,15 @@ export class DocumentoInvalido extends DatoInvalido {
     super(mensaje, detalles);
   }
 }
+
+/** La nota cita una factura del sistema anterior sin IVA en el DTE y sin historial fiscal del mes de esa factura. */
+export class IvaDeLaNotaRequerido extends DatoInvalido {
+  readonly codigo = 'iva_de_la_nota_requerido';
+
+  constructor() {
+    super(
+      'No se sabe si la factura del sistema anterior llevaba IVA: escriba el IVA que dice la nota (0 si no lleva).',
+      { campo: 'ivaDelDte' },
+    );
+  }
+}

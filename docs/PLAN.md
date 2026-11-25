@@ -4416,11 +4416,28 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   toma el IVA del régimen del mes de la nota: manda el IVA del DTE (`ivaDelDte`; con aviso si no concuerda con el
   régimen de la empresa en el mes de la factura); sin él, decide el régimen del historial en `facturaAnterior.fecha`
   (solo el general carga IVA, `ContextoDelArmado.regimenDeLaFacturaAnterior`); sin historial de ese mes se usa el de la
-  nota con aviso (`tratamientoDeLaNotaSobreFacturaAnterior`). **Pendiente de validar con `contador-guatemala`.**
-  (2) y (3) El tope de las notas de crédito es una sola regla (`dominio/tope-de-notas.ts`, `notasDeCreditoCaben`) que
-  comparten registrar una nota y anular o eliminar una nota de débito: el total no pasa del tope y el IVA no pasa del
-  IVA proporcional al total acumulado más Q0.05 (así varias notas parciales toleran el redondeo de cada una sin
-  agotar el total).
+  nota con aviso (`tratamientoDeLaNotaSobreFacturaAnterior`; ver la corrección del 2026-11-24: sin historial se pide
+  el IVA). (2) y (3) El tope de las notas de crédito es una sola regla (`dominio/tope-de-notas.ts`,
+  `medirElTopeDeNotasDeCredito`) que comparten registrar una nota y anular o eliminar una nota de débito: dos topes
+  absolutos e independientes (total acumulado ≤ total de la factura más sus notas de débito; IVA acumulado ≤ su IVA más
+  `max(Q0.05, Q0.01 por nota de crédito vigente, contando la nueva)`); no hay tope proporcional. Validado por el
+  contador el 2026-11-24.
+- **2026-11-24 — Libro de ventas: dictamen del contador y correcciones de la revisión (servidor).** (1) Dictamen:
+  los dos topes absolutos y la tolerancia son correctos (el libro refleja el DTE tal como se emitió, Ley del IVA art. 37;
+  la tolerancia del registro cuenta líneas y la del tope cuenta notas, no se unifican sin criterio); la nota de crédito
+  que pasa del total se bloquea con el mensaje de anular el DTE en la SAT y consultar al contador. (2) **Número y
+  autorización FEL**: los ocupan lo vigente y lo anulado en la SAT; lo anulado por `error_de_captura` o
+  `no_corresponde_a_la_empresa` es un registro interno equivocado y no los ocupa (e8a32cee se conserva). Diseño,
+  `libro-de-ventas.md` y el TSDoc de `AnularDocumentoDeVenta` corregidos. Al volver a registrar un DTE con un registro
+  anulado por error interno sale el aviso «confirme en la Agencia Virtual que sigue vigente». **Regla para LV-3 y
+  `arquitecto-de-datos`:** el libro y los reportes para la SAT filtran `estado = 'vigente' or causa_de_anulacion =
+  'fel_anulada_en_la_sat'`. (3) **IVA de la nota sobre factura anterior** (respuesta del usuario): sin IVA en el DTE y sin
+  historial del mes de la factura ya no se presume el régimen de la nota: se rechaza con `iva_de_la_nota_requerido` y se
+  pide el IVA (0 es válido). La nota de abono nunca carga IVA (b18b640d) y la fecha de la SAT al anular es obligatoria
+  en el servidor. (4) Prueba inestable de `documentos-restricciones.prueba.ts` arreglada (cada inserción se espera por
+  turno). **Pendiente del usuario:** si `no_corresponde_a_la_empresa` libera el número (hoy sí, con aviso), cómo
+  anular una factura de papel anulada en el talonario, si el aviso de nuevo registro exige confirmar, y a futuro (LV-4)
+  cruzar con la bandeja de DTE emitidos.
 - **2026-11-23 — LV-1c y LV-2c (cliente de Libro de ventas) hechos.** (1) **Clientes recibe secciones de otros módulos**
   como Proveedores: `DondeSeAporta` suma `'cliente'`; el formulario en página, la ventana del papel y la ficha de
   Clientes muestran las secciones activas y las envían en `secciones` (alta y edición; `asignarCliente` las acepta).

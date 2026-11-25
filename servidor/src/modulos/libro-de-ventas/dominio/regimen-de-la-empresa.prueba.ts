@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RegimenDerogado } from './errores-de-documento.js';
+import { IvaDeLaNotaRequerido, RegimenDerogado } from './errores-de-documento.js';
 import {
   AVISO_DE_EMPRESA_INSCRITA,
   avisosDeFamiliaContraRegimen,
@@ -76,14 +76,19 @@ describe('nota sobre una factura del sistema anterior', () => {
     expect(tratamientoDeLaNotaSobreFacturaAnterior(general).avisos).toHaveLength(1);
   });
 
-  it('sin IVA del DTE decide el régimen del mes de la factura, y sin historial el de la nota con aviso', () => {
+  it('sin IVA del DTE decide el régimen del mes de la factura, y sin historial pide el IVA', () => {
     expect(tratamientoDeLaNotaSobreFacturaAnterior({ ...base, regimenDeLaFactura: 'pequeno_contribuyente' })).toEqual({
       cobraIva: false,
       avisos: [],
     });
-    const sinHistorial = tratamientoDeLaNotaSobreFacturaAnterior(base);
-    expect(sinHistorial.cobraIva).toBe(true);
-    expect(sinHistorial.avisos).toHaveLength(1);
+    expect(() => tratamientoDeLaNotaSobreFacturaAnterior(base)).toThrow(IvaDeLaNotaRequerido);
+  });
+
+  it('con el IVA escrito, 0 incluido, no hace falta historial', () => {
+    expect(tratamientoDeLaNotaSobreFacturaAnterior({ ...base, ivaDelDte: 0, hayLineaGravada: false }).cobraIva).toBe(
+      false,
+    );
+    expect(tratamientoDeLaNotaSobreFacturaAnterior({ ...base, ivaDelDte: 1200 }).cobraIva).toBe(true);
   });
 });
 
