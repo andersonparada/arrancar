@@ -4885,3 +4885,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Migración `0011_af9b_costo_fiscal_de_venta` (columnas `origen_del_costo_fiscal` y `motivo_del_costo_fiscal`, tres checks y
   relleno `en_libros`). Avisos propios de IVA (general y pequeño contribuyente) e ISR (utilidades, simplificado, pequeño). Se
   ajustan §3.2, §3.4, §5.12 y §6.8 del diseño. Pendiente AF-9c (ventana).
+- **2026-11-24 — AF-9b (Activos fijos, cliente): ventana de baja y venta.** Botón «Dar de baja o vender» en la ficha, con la causa,
+  los datos de la venta (IVA 0.00 para el pequeño contribuyente), el costo fiscal del contador solo con su permiso, confirmación con
+  resumen y ventana de resultado con el origen del costo fiscal y los avisos de IVA e ISR. Quedan para AF-9c el acta y la denuncia
+  (subir, abrir, imprimir) y anular la baja desde la pantalla.

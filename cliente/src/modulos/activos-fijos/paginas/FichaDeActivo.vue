@@ -56,6 +56,7 @@ const pestana = ref('datos');
         @mejora="acciones.mejoras.abrir"
         @estimacion="acciones.revisiones.abrirEstimacion"
         @matricula="acciones.revisiones.abrirMatricula"
+        @baja="acciones.baja.abrir"
       />
     </EncabezadoPagina>
 

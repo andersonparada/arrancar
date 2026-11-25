@@ -1445,8 +1445,11 @@ dos decimales.
   auditoría de `activos-fijos.bajas` con lo que daba la regla, lo que quedó y el motivo.
 - «Obligada a contabilidad completa» no necesita campo nuevo: es la casilla «Lleva contabilidad completa» de los datos fiscales
   de la empresa, con la vigencia de la fecha de la venta (puerto `LectorDeDatosFiscales`).
-- Falta para AF-9c: la ventana de venta de un bien de control (precio, IVA en 0 si es pequeño contribuyente, costo del contador
-  solo con su permiso) y mostrar los avisos nuevos.
+- Cliente (AF-9b): el botón «Dar de baja o vender» de la ficha (permiso `bajas.crear`) abre `VentanaDeBaja`: causa, quién
+  autoriza y, si se vende, `CamposDeVenta` (comprador, precio sin IVA, IVA en 0.00 del pequeño contribuyente, factura FEL y,
+  solo con `bajas.costo-fiscal-manual` y en un bien de control, el costo fiscal del contador con su motivo). La confirmación
+  resume lo que pasará y `VentanaDeResultadoDeBaja` muestra el resultado, el origen del costo fiscal y los avisos del servidor.
+  Falta de AF-9c: subir y abrir el acta y la denuncia, imprimir el acta y la anulación de la baja desde la pantalla.
 
 **Notas de lo programado en AFI-5 (servidor, migración `0010_afi5_divisiones`):**
 
