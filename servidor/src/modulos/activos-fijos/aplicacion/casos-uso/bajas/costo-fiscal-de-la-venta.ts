@@ -21,6 +21,8 @@ interface PedidoDelCostoFiscal {
   esPrincipal: boolean;
   solicitud: SolicitudDeBaja;
   cifras: CifrasDeBaja;
+  /** Algún componente del acto lleva libros: el precio se reparte entre ellos y el principal de control no recibe venta. */
+  componentesConLibros: boolean;
 }
 
 async function documentadoDe(dependencias: DependenciasDeBajas, activoId: string): Promise<number> {
@@ -32,9 +34,25 @@ async function documentadoDe(dependencias: DependenciasDeBajas, activoId: string
   );
 }
 
-/** El principal de una venta, si es un bien de control (los demás del acto no llevan precio). */
-function vendeControl({ activo, esPrincipal, solicitud }: PedidoDelCostoFiscal): boolean {
-  return esPrincipal && solicitud.venta !== null && activo.instantanea().tipoDeRegistro === 'bien_de_control';
+/** El principal de una venta, si es un bien de control y le toca venta (los demás del acto no llevan precio). */
+function vendeControl({ activo, esPrincipal, solicitud, componentesConLibros }: PedidoDelCostoFiscal): boolean {
+  const esDeControl = activo.instantanea().tipoDeRegistro === 'bien_de_control';
+  return esPrincipal && solicitud.venta !== null && esDeControl && !componentesConLibros;
+}
+
+/**
+ * En el pequeño contribuyente la factura no desglosa IVA: el total va como precio y el IVA en cero.
+ * @throws BajaInvalida (campo `venta.iva`) si hay IVA en la venta de un pequeño contribuyente.
+ */
+export async function exigirIvaSegunElRegimen(
+  dependencias: DependenciasDeBajas,
+  solicitud: SolicitudDeBaja,
+): Promise<void> {
+  if (!solicitud.venta || aCentavos(solicitud.venta.iva) === 0) return;
+  const { regimenDeIva } = await dependencias.datosFiscales.en(solicitud.fecha);
+  if (!regimenDeIva?.startsWith('pequeno_contribuyente')) return;
+  const mensaje = 'Su factura no desglosa IVA: escriba el total como precio y 0.00 de IVA.';
+  throw new BajaInvalida(mensaje, [{ campo: 'venta.iva', mensaje }]);
 }
 
 /**

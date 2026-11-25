@@ -10,7 +10,7 @@ import type { NumeroDeActa } from '../../../dominio/tipos-de-baja.js';
 import type { BajaDto, SolicitudDeBaja } from '../../dto/baja.dto.js';
 import { exigirMesAbierto, IncisosDeClases } from '../traslados/dependencias-de-traslados.js';
 import { cifrasDelActivo } from './cifras-del-activo.js';
-import { conCostoFiscal, type CifrasConCostoFiscal } from './costo-fiscal-de-la-venta.js';
+import { conCostoFiscal, exigirIvaSegunElRegimen, type CifrasConCostoFiscal } from './costo-fiscal-de-la-venta.js';
 import { costosParaRepartir, datosDeBajaDe, datosDelActivo, ventasPorActivo } from './datos-de-baja.js';
 import { CORRELATIVO_DE_BAJAS, RECURSO_DE_BAJAS, type DependenciasDeBajas } from './dependencias-de-bajas.js';
 import { eventoDeBaja } from './eventos-de-bajas.js';
@@ -42,6 +42,7 @@ export class RegistradorDeBajas {
     const { numero, anio } = await correlativos.siguiente(CORRELATIVO_DE_BAJAS, solicitud.fecha);
     const acta = { numero, anioDeNumero: anio };
     const hoy = await reloj.hoy(operador);
+    await exigirIvaSegunElRegimen(this.dependencias, solicitud);
     const calculados = await this.calcular(operador, { activos, solicitud });
     const bajas = await this.darDeBaja(calculados, { solicitud, acta, hoy });
     await this.auditarCostoDelContador(calculados[0]!, bajas[0]!);
@@ -64,6 +65,7 @@ export class RegistradorDeBajas {
     const regla = await primerMes.paraEmpresa(operador);
     const { solicitud } = pedido;
     const { fecha } = solicitud;
+    const componentesConLibros = pedido.activos.some((a, i) => i > 0 && a.instantanea().tipoDeRegistro === 'activo');
     const calculados: ActivoConCifras[] = [];
     for (const [i, activo] of pedido.activos.entries()) {
       const [ultimo] = await traslados.recientesDeActivo(activo.id.valor, 1);
@@ -71,7 +73,10 @@ export class RegistradorDeBajas {
         throw new FechaAnteriorAlUltimoTraslado(activo.instantanea().codigo, ultimo.fecha);
       activo.exigirPuedeDarseDeBaja();
       const cifras = await cifrasDelActivo(this.dependencias, { activo, fecha, primerMes: regla });
-      const conCosto = await conCostoFiscal(this.dependencias, { activo, esPrincipal: i === 0, solicitud, cifras });
+      const esPrincipal = i === 0;
+      const conCosto = await conCostoFiscal(this.dependencias, {
+        ...{ activo, esPrincipal, solicitud, cifras, componentesConLibros },
+      });
       calculados.push({ activo, ...conCosto });
     }
     return calculados;

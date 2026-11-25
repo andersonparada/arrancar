@@ -74,8 +74,17 @@ export interface ParteDeLaBaja {
 }
 
 /**
+ * Un principal que es bien de control no recibe precio cuando algún componente lleva libros (el precio es de ellos):
+ * se va con su venta como «otra» causa. Cualquier otro principal conserva lo pedido y el dominio lo valida.
+ */
+function principalSinPrecio(datos: DatosDeBaja, tipoDeRegistro: TipoDeRegistro): DatosDeBaja {
+  const sinPrecio = datos.causa === 'venta' && tipoDeRegistro === 'bien_de_control';
+  return sinPrecio ? { ...datos, causa: 'otra', venta: null } : { ...datos, venta: null };
+}
+
+/**
  * Los datos de la baja de un activo en un acto con otros (§3.8). El principal conserva lo pedido y el dominio lo valida
- * (un principal de terceros o de control no se vende). Un componente sin venta propia en una venta queda como «otra»
+ * (un principal de terceros no se vende; uno de control solo si ningún componente lleva libros). Un componente sin venta propia en una venta queda como «otra»
  * causa (un bien de control se va sin precio). Un componente de terceros no se vende, ni se dona, ni se da por obsoleto
  * con su principal; en las demás causas no hereda la del principal en silencio: quien da de baja confirma cada bien.
  * @throws BienDeTercerosSinDestino si un componente de terceros iría con una venta, donación u obsolescencia.
@@ -83,7 +92,8 @@ export interface ParteDeLaBaja {
  */
 export function datosDelActivo(datos: DatosDeBaja, parte: ParteDeLaBaja): DatosDeBaja {
   const { codigo, tipoDeRegistro, venta, esComponente, confirmado } = parte;
-  if (venta || !esComponente) return { ...datos, venta };
+  if (venta) return { ...datos, venta };
+  if (!esComponente) return principalSinPrecio(datos, tipoDeRegistro);
   if (tipoDeRegistro === 'de_terceros') {
     if (CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS.includes(datos.causa)) throw new BienDeTercerosSinDestino(codigo);
     if (!confirmado) throw new BienDeTercerosSinConfirmar(codigo);

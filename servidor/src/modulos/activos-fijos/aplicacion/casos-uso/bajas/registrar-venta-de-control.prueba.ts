@@ -75,10 +75,11 @@ describe('venta de un bien de control', () => {
 
   it('el pequeño contribuyente sostiene el costo documentado y su aviso de IVA es el suyo', async () => {
     e.bajas.datosFiscales = PEQUENO;
+    const solicitud = solicitudDeVenta(await taladro());
 
-    const venta = await e.vender(solicitudDeVenta(await taladro()));
+    const venta = await e.vender({ ...solicitud, venta: { ...solicitud.venta!, iva: '0.00' } });
 
-    expect(venta).toMatchObject({ costoFiscal: '800.00', origenDelCostoFiscal: 'documentado' });
+    expect(venta).toMatchObject({ iva: '0.00', costoFiscal: '800.00', origenDelCostoFiscal: 'documentado' });
     expect(venta.avisos.find((aviso) => aviso.codigo === 'venta_con_iva')!.mensaje).toContain('pequeño contribuyente');
   });
 
@@ -160,5 +161,33 @@ describe('venta de un bien de control', () => {
     const baja = await e.darDeBaja({ ...solicitudDeVenta(await taladro()), causa: 'destruccion', venta: null });
 
     expect(baja).toMatchObject({ origenDelCostoFiscal: null, costoFiscal: '0.00' });
+  });
+
+  it('el pequeño contribuyente no puede escribir IVA: el error cae en el campo venta.iva', async () => {
+    e.bajas.datosFiscales = PEQUENO;
+    const solicitud = solicitudDeVenta(await taladro());
+
+    const error = await e.vender(solicitud).catch((falla: unknown) => falla);
+
+    expect(error).toBeInstanceOf(BajaInvalida);
+    expect((error as BajaInvalida).detalles).toMatchObject([{ campo: 'venta.iva' }]);
+    expect(e.bajas.registros.size).toBe(0);
+  });
+
+  it('un principal de control con un componente con libros se vende: el precio es del componente', async () => {
+    e.bajas.datosFiscales = SIMPLIFICADO;
+    const principal = await taladro();
+    const clase = await e.claseDe('maquinaria_y_vehiculos', '20.00');
+    const hijo = await e.activoConCosto(clase, '5000.00', { activoPadreId: principal.id.valor });
+    await e.poner(hijo);
+
+    const venta = await e.vender(solicitudDeVenta(principal));
+
+    const registros = [...e.bajas.registros.values()].map((baja) => baja.instantanea());
+    const delPrincipal = registros.find((baja) => baja.activoId === principal.id.valor)!;
+    const delHijo = registros.find((baja) => baja.activoId === hijo.id.valor)!;
+    expect(delPrincipal).toMatchObject({ causa: 'otra', venta: null, cifras: { costoFiscalCentavos: 0 } });
+    expect(delHijo.venta).toMatchObject({ precioCentavos: 10000000 });
+    expect(venta.componentes).toHaveLength(1);
   });
 });

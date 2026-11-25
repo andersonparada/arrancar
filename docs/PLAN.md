@@ -4889,3 +4889,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   los datos de la venta (IVA 0.00 para el pequeño contribuyente), el costo fiscal del contador solo con su permiso, confirmación con
   resumen y ventana de resultado con el origen del costo fiscal y los avisos de IVA e ISR. Quedan para AF-9c el acta y la denuncia
   (subir, abrir, imprimir) y anular la baja desde la pantalla.
+- **2026-11-24 — AF-9b (Activos fijos, servidor): correcciones de la revisión.** Un principal de control con componentes con
+  libros se vende: el precio y el IVA se reparten entre los componentes y el principal se va como «otra» causa, sin costo fiscal
+  propio (`vendeControl` exige que el principal reciba la venta). Con régimen de IVA de pequeño contribuyente a la fecha, el
+  servidor rechaza `iva > 0` con `BajaInvalida` en el campo `venta.iva`; la ayuda de la ventana lo explica.

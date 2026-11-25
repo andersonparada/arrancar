@@ -31,7 +31,7 @@ const edicion = defineModel<EdicionDeBaja>({ required: true });
         etiqueta="Precio sin IVA"
         requerido
         paso="any"
-        ayuda="Es lo que cuenta como ingreso de la venta."
+        ayuda="Es lo que cuenta como ingreso de la venta. Pequeño contribuyente: el total de la factura."
         :error="errores['venta.precio']"
       />
       <CampoTexto
@@ -39,7 +39,7 @@ const edicion = defineModel<EdicionDeBaja>({ required: true });
         etiqueta="IVA de la factura"
         requerido
         paso="any"
-        ayuda="Pequeño contribuyente: 0.00, su factura no desglosa IVA."
+        ayuda="Pequeño contribuyente: escriba el total como precio y 0.00 aquí; su factura no desglosa IVA."
         :error="errores['venta.iva']"
       />
       <CampoTexto v-model="edicion.serieFel" etiqueta="Serie de la factura" :longitud-maxima="60" />
