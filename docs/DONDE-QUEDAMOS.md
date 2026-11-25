@@ -60,6 +60,13 @@ Actualizado: **2026-11-23** (noche). El usuario pidió seguir mañana. Si otra s
 - **Recomendaciones aceptadas en todos los puntos:** Cuentas por cobrar y Ventas (VC-P1 a VC-P24), Contabilidad (CT-P1 a
   CT-P18), Bancos aprobaciones y tarjeta (§16) y Parcelas (PA-1 a PA-19).
 
+**En curso (2026-11-24):** dos workflows (reanudables con `resumeFromRunId` en la misma sesión):
+- `arrancar-inventarios-completo` (run `wf_002a1ede-0ec`): INV-6c, 7c y 8c desde `main`; cadena INV-9 → 10 → 11 → 12 → 14 → 13, cada pantalla
+  (9c a 13c) sale de la rama de su paso; QA de punta a punta al final. Cada paso con revisión de Opus y hasta dos correcciones.
+- `arrancar-retenidas-y-decisiones` (run `wf_467850ed-b30`): las cuatro cadenas retenidas (`cc`, `vcc`, `lv`, `ct`) en sus mismas ramas, con
+  las respuestas del usuario del 2026-11-24 (`pendientes-tanda-9.md`); además AF-9b, venta de bienes de control (rama nueva desde `main`), y la
+  pantalla de VCJ-0d (cambio de NIT, rama nueva). Contador antes donde hay regla fiscal.
+
 **Cierre del 2026-11-23 (noche).** En `main`, con suite completa en verde: CL-7 corregida; INV-6, 7 y 8; INV-2c, 4c y 5c; AFI-3, resto de
 AFI-4, AF-9 y AFI-5; AF-7c y AF-8c; VC-0b y VC-0a cliente; AP-1, 2 y 3; PA-0b, PA-1 y PA-1c; VCJ-0a y VCJ-0d (falta su pantalla: pedir
 el motivo al quitar o cambiar el NIT).
