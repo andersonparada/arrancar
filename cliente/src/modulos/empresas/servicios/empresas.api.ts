@@ -25,6 +25,8 @@ export interface DatosEmpresa {
   telefono: string | null;
   correo: string | null;
   activa: boolean;
+  /** Por qué se quita o cambia el NIT (obligatorio en ese caso). */
+  motivoDelNit?: string | null;
   /** Lo que los módulos activos aportan al formulario (`secciones[<módulo>]`). */
   secciones?: Record<string, unknown>;
 }

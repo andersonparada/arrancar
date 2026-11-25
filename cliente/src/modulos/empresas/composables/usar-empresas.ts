@@ -5,14 +5,17 @@ import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-int
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiEmpresas, type Empresa } from '../servicios/empresas.api';
-import { datosDeLaEmpresa, edicionDe, type EdicionDeEmpresa } from './edicion-de-empresa';
+import { datosDeLaEmpresa, edicionDe, senalarElMotivo, type EdicionDeEmpresa } from './edicion-de-empresa';
 import { usarCargaInicial } from './usar-carga-inicial';
 import { usarDatosDeEmpresa } from './usar-datos-de-empresa';
 
 const guardarEmpresa = (edicion: EdicionDeEmpresa) =>
-  edicion.empresaId
+  (edicion.empresaId
     ? apiEmpresas.actualizar(edicion.empresaId, datosDeLaEmpresa(edicion))
-    : apiEmpresas.crear(datosDeLaEmpresa(edicion));
+    : apiEmpresas.crear(datosDeLaEmpresa(edicion))
+  ).catch((error) => {
+    throw senalarElMotivo(error);
+  });
 
 const listarEmpresas = () =>
   usarCarga(() => apiEmpresas.listar(), [] as Empresa[], 'No se pudieron cargar las empresas.');

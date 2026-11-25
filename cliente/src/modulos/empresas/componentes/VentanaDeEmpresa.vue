@@ -5,8 +5,9 @@ import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import SeccionesAportadas from '@/modulos/core/componentes/SeccionesAportadas.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { puedeCerrarLaCarga } from '../composables/datos-de-empresa';
-import type { EdicionDeEmpresa } from '../composables/edicion-de-empresa';
+import { cambiaElNitExistente, nitBloqueado, type EdicionDeEmpresa } from '../composables/edicion-de-empresa';
 import type { CargaInicialEnEdicion } from '../composables/usar-carga-inicial';
 import SeccionDeCargaInicial from './SeccionDeCargaInicial.vue';
 import SeccionDeDatosFiscales from './SeccionDeDatosFiscales.vue';
@@ -19,6 +20,9 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const edicion = defineModel<EdicionDeEmpresa>({ required: true });
+const sesion = usarSesion();
+const bloqueado = computed(() => nitBloqueado(edicion.value, sesion.puede('empresas.nit.corregir')));
+const pideMotivo = computed(() => cambiaElNitExistente(edicion.value));
 const puedeCerrar = computed(() => puedeCerrarLaCarga(edicion.value, props.cargaInicial.carga));
 
 /** Con otra ventana encima (cierre, reapertura, historial…), Escape solo debe cerrar esa. */
@@ -39,7 +43,28 @@ const cerrarVentana = () => (props.cargaInicial.hayVentanaEncima ? undefined : e
         requerido
         :error="errores.nombre"
       />
-      <CampoTexto v-model="edicion.nit" etiqueta="NIT" placeholder="Ej. 1234567-8" :error="errores.nit" />
+      <CampoTexto
+        v-model="edicion.nit"
+        etiqueta="NIT"
+        placeholder="Ej. 1234567-8"
+        :error="errores.nit"
+        :solo-lectura="bloqueado"
+        :ayuda="
+          bloqueado
+            ? 'Solo quien tiene el permiso «Corregir el NIT de la empresa» puede quitarlo o cambiarlo.'
+            : undefined
+        "
+      />
+      <CampoTexto
+        v-if="pideMotivo"
+        v-model="edicion.motivoDelNit"
+        etiqueta="Motivo del cambio de NIT"
+        placeholder="Ej. El NIT estaba mal digitado"
+        ayuda="Quitar o cambiar el NIT queda registrado en la auditoría y afecta los avisos de Ventas y caja."
+        requerido
+        :longitud-maxima="250"
+        :error="errores.motivoDelNit"
+      />
       <CampoTexto v-model="edicion.direccion" etiqueta="Dirección" :error="errores.direccion" />
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <CampoTexto v-model="edicion.telefono" etiqueta="Teléfono" tipo="tel" :error="errores.telefono" />
