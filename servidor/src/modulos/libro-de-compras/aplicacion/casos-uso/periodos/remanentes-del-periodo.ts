@@ -71,14 +71,31 @@ async function cierreCalculado(
   periodos: RepositorioDePeriodos,
   previo: { periodo: string; foto: FotoDelPeriodo | null },
   formulario: FormularioConRemanente,
-): Promise<SaldosDeInicio | null> {
+): Promise<(SaldosDeInicio & { supuestos?: SaldosSupuestos }) | null> {
   const calculado = previo.foto?.remanentes;
   if (calculado?.formulario !== formulario) return null;
-  if (calculado.supuestos && (await periodos.hayDeclaracionesAntesDe(previo.periodo))) return null;
+  if (calculado.supuestos) {
+    const origen = await origenDeSupuestos(periodos, previo.periodo, formulario);
+    if (await periodos.hayDeclaracionesAntesDe(origen)) return null;
+  }
   return {
     retencionesCentavos: aCentavos(calculado.remanenteAlSiguiente),
     creditoCentavos: aCentavos(calculado.creditoAlSiguiente ?? '0.00'),
+    // La marca pasa al mes siguiente: su cierre también descansa en ese cero supuesto.
+    ...(calculado.supuestos ? { supuestos: calculado.supuestos } : {}),
   };
+}
+
+/** El primer mes de la cadena de meses calculados uno con el cierre supuesto del otro, que es donde nació el cero. */
+async function origenDeSupuestos(
+  periodos: RepositorioDePeriodos,
+  periodo: string,
+  formulario: FormularioConRemanente,
+): Promise<string> {
+  const previo = sumarMeses(periodo, -1);
+  const remanentes = (await ultimaFotoDe(periodos, previo))?.remanentes;
+  if (remanentes?.formulario !== formulario || !remanentes.supuestos) return periodo;
+  return origenDeSupuestos(periodos, previo, formulario);
 }
 
 const primero = (...valores: Array<number | null | undefined>): number | null =>
