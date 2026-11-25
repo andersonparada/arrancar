@@ -5137,3 +5137,4 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   decidiera el usuario ni lo validara el contador; contradecía a `retencion_por_pagar` y el criterio de no asumir agente
   retenedor (una empresa que nunca retuvo veía un faltante imposible de resolver). Ahora es `segunOperacion` (se exige al llegar
   el primer hecho). Prueba de `enlace.prueba.ts` ajustada y §5.3 corregida.
+- **2026-11-24**: VCJ-0d, cliente. La ventana de empresas pide el motivo al quitar o cambiar un NIT existente (no al agregarlo por primera vez) y manda `motivoDelNit`; sin `empresas.nit.corregir` el campo NIT queda de solo lectura con la explicación. El 400 `motivo_del_cambio_de_nit_requerido` se marca en el campo del motivo y el 403 sale como aviso. Pruebas en `edicion-de-empresa.prueba.ts`.
