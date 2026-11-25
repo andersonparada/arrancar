@@ -4464,3 +4464,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   fijado para CT-3: el cierre da `pide_motivo` mientras tenga saldo y Cuentas por pagar responde `retenciones_por_practicar`
   solo con `proposito = apertura`; hoy nadie responde `saldos_de_auxiliares` ni hay cierre contable. Los dos hallazgos de
   `edicion-de-enlaces.ts` son del cliente y no se tocaron aquí.
+- **2026-11-24 (Contabilidad, cliente: Enlaces)**: (1) `sinElegirSegunOperacion` y `totalSegunOperacionSinElegir` reciben las
+  llaves: un rol «según la operación» con llave y sin cuenta general queda «sin elegir» si no se pudo traer la lista de
+  registros o si queda alguno activo sin enlace (un huérfano no cubre), sin sumarlo a los faltantes obligatorios; así
+  `retencion_por_pagar` con un enlace solo en la regla r1 ya no sale en verde ni se oculta con «solo lo que falta».
+  (2) `consecuenciaDeQuitar` cubre el registro sin cuenta general: lo de ese registro queda por contabilizar con error y los
+  demás siguen igual. El rol `retenciones_de_apertura` llega por la API y es obligatorio de enlazar; no requirió código propio.
+  Pruebas del archivo: 24 → 29.

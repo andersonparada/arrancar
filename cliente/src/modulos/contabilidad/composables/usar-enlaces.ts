@@ -112,7 +112,7 @@ function usarCambiosDeEnlace(datos: Ref<Datos>, cuentas: ComputedRef<Cuenta[]>) 
 /** Los grupos que se muestran; con el filtro, solo los roles con cuentas faltantes o «según la operación» sin elegir. */
 function gruposVisibles(roles: RolDeEnlace[], llaves: Record<string, LlavesDelRol>, soloFaltantes: boolean) {
   const conFalta = (rol: RolDeEnlace) =>
-    faltantesDelRol(rol, llaves[rol.rol] ?? null) > 0 || sinElegirSegunOperacion(rol);
+    faltantesDelRol(rol, llaves[rol.rol] ?? null) > 0 || sinElegirSegunOperacion(rol, llaves[rol.rol] ?? null);
   return agruparPorModulo(roles.filter((rol) => !soloFaltantes || conFalta(rol)));
 }
 
@@ -127,7 +127,7 @@ export function usarEnlaces(puedeVerCuentas: boolean) {
   );
   const resumen = {
     faltantes: computed(() => totalDeFaltantes(datos.value.roles, datos.value.llaves)),
-    segunOperacion: computed(() => totalSegunOperacionSinElegir(datos.value.roles)),
+    segunOperacion: computed(() => totalSegunOperacionSinElegir(datos.value.roles, datos.value.llaves)),
   };
   const cuentas = computed(() => cuentasEnlazables(datos.value.cuentas));
   const grupos = computed(() => gruposVisibles(datos.value.roles, datos.value.llaves, soloFaltantes.value));

@@ -8,6 +8,7 @@ import {
   faltantesDelRol,
   filasDeRol,
   rolesDeAuxiliarDeLaCuenta,
+  sinElegirSegunOperacion,
   totalDeFaltantes,
   totalSegunOperacionSinElegir,
 } from './edicion-de-enlaces';
@@ -170,6 +171,13 @@ describe('consecuenciaDeQuitar', () => {
     expect(consecuenciaDeQuitar(conGeneral, fila('a'))).toContain('cuenta general 1.1');
   });
 
+  it('quitar un registro sin cuenta general no dice que todo el rol queda con error', () => {
+    const r = { ...conLlave, enlaces: [enlace('cuenta_bancaria', 'a'), enlace('cuenta_bancaria', 'b')] };
+    const texto = consecuenciaDeQuitar(r, fila('a'));
+    expect(texto).toContain('los demás registros siguen igual');
+    expect(texto).not.toContain('para este rol');
+  });
+
   it('sin respaldo queda por contabilizar con error', () => {
     expect(consecuenciaDeQuitar(conLlave, fila('a'))).toContain('con un error');
     expect(consecuenciaDeQuitar(rol('x'), fila(null))).toContain('con un error');
@@ -203,12 +211,44 @@ describe('roles según la operación sin cuenta', () => {
       rol('retencion_por_pagar', { segunOperacion: true }),
     ];
     expect(totalDeFaltantes(roles, {})).toBe(0);
-    expect(totalSegunOperacionSinElegir(roles)).toBe(2);
+    expect(totalSegunOperacionSinElegir(roles, {})).toBe(2);
   });
 
   it('uno con enlace ya no cuenta', () => {
     const roles = [rol('reserva_legal', { segunOperacion: true, enlaces: [enlace('reserva_legal', null)] })];
-    expect(totalSegunOperacionSinElegir(roles)).toBe(0);
+    expect(totalSegunOperacionSinElegir(roles, {})).toBe(0);
+  });
+
+  describe('con llave y sin cuenta general', () => {
+    const retencion = rol('retencion_por_pagar', {
+      admiteLlave: true,
+      segunOperacion: true,
+      enlaces: [enlace('retencion_por_pagar', 'a')],
+    });
+    const reglas: LlaveDeEnlace[] = [
+      { llave: 'a', nombre: 'R1', activo: true },
+      { llave: 'b', nombre: 'R2', activo: true },
+    ];
+
+    it('queda sin elegir si falta una regla activa, sin sumarla a los faltantes', () => {
+      expect(sinElegirSegunOperacion(retencion, reglas)).toBe(true);
+      expect(totalSegunOperacionSinElegir([retencion], { retencion_por_pagar: reglas })).toBe(1);
+      expect(totalDeFaltantes([retencion], { retencion_por_pagar: reglas })).toBe(0);
+    });
+
+    it('queda sin elegir si no se pudo traer la lista de reglas', () => {
+      expect(sinElegirSegunOperacion(retencion, null)).toBe(true);
+    });
+
+    it('con todas las reglas cubiertas, o con cuenta general, ya está resuelto', () => {
+      const completa = {
+        ...retencion,
+        enlaces: [enlace('retencion_por_pagar', 'a'), enlace('retencion_por_pagar', 'b')],
+      };
+      expect(sinElegirSegunOperacion(completa, reglas)).toBe(false);
+      const general = { ...retencion, enlaces: [enlace('retencion_por_pagar', null)] };
+      expect(sinElegirSegunOperacion(general, null)).toBe(false);
+    });
   });
 });
 

@@ -140,17 +140,26 @@ export function consecuenciaDeQuitar(rol: RolDeEnlace, fila: FilaDeEnlace): stri
   const general = enlaceDe(rol, null);
   if (fila.llave !== null && general)
     return `Lo de este registro pasará a usar la cuenta general ${general.cuentaCodigo} ${general.cuentaNombre}.${YA_CONTABILIZADO}`;
+  if (fila.llave !== null)
+    return `Lo de este registro quedará por contabilizar con un error hasta que tenga cuenta; los demás registros siguen igual.${YA_CONTABILIZADO}`;
   if (fila.llave === null && rol.enlaces.some((enlace) => enlace.llave !== null))
     return `Los registros con cuenta propia siguen igual. Los demás quedarán por contabilizar con error hasta que tengan cuenta.${YA_CONTABILIZADO}`;
   return `Lo que llegue de los módulos para este rol quedará por contabilizar con un error hasta que lo enlace de nuevo.${YA_CONTABILIZADO}`;
 }
 
-/** Un rol «según la operación» sin ninguna cuenta: no se exige, pero su primer hecho quedaría en `falta_enlace`. */
-export const sinElegirSegunOperacion = (rol: RolDeEnlace): boolean => rol.segunOperacion && rol.enlaces.length === 0;
+/**
+ * Un rol «según la operación» sin cuenta: no se exige, pero su primer hecho quedaría en `falta_enlace`. Con llave y sin
+ * cuenta general, lo está si no se pudo traer la lista de registros o si queda algún registro activo sin enlace.
+ */
+export function sinElegirSegunOperacion(rol: RolDeEnlace, llaves: LlavesDelRol = null): boolean {
+  if (!rol.segunOperacion) return false;
+  if (!rol.admiteLlave || rol.enlaces.some((enlace) => enlace.llave === null)) return rol.enlaces.length === 0;
+  return rol.enlaces.length === 0 || llaves === null || llavesSinEnlace(rol, llaves).length > 0;
+}
 
 /** Cuántos roles «según la operación» siguen sin cuenta (no cuentan como faltantes, pero no están resueltos). */
-export function totalSegunOperacionSinElegir(roles: RolDeEnlace[]): number {
-  return roles.filter(sinElegirSegunOperacion).length;
+export function totalSegunOperacionSinElegir(roles: RolDeEnlace[], llavesPorRol: Record<string, LlavesDelRol>): number {
+  return roles.filter((rol) => sinElegirSegunOperacion(rol, llavesPorRol[rol.rol] ?? null)).length;
 }
 
 /** El total de cuentas que faltan por elegir en todos los roles. */
