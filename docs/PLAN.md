@@ -4408,3 +4408,5 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ellos (servidor). Al escribir un tope mayor que el monto del fondo (alta y edición) se avisa antes de guardar. El faltante y el
   sobrante dejan de verse como «Faltante · —»: llevan el arqueo y el destino. Sin hacer: el motivo de la diferencia del arqueo en la
   hoja (el comprobante no lo trae), la salida del gasto sin factura de un vale liquidado y el botón «Anular vale» de ese caso.
+
+- **2026-11-24** (Caja chica, QA CC-11): el reemplazo del documento anulado por una FEL de otro monto sigue sin permitirse, pero el mensaje ya no manda a una devolución o cobro (camino que dejaba la FEL suelta en la bandeja y el comprobante sin respaldo fiscal). Pendiente de decisión del usuario (pregunta 2 del dictamen): aceptar un monto menor y registrar la diferencia como devolución o cobro en la misma operación, sin cambiar la reposición.

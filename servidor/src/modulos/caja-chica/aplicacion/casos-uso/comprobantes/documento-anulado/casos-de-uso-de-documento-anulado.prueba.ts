@@ -188,6 +188,18 @@ describe('reemplazar el documento anulado', () => {
     expect(procesados).toEqual([[nuevo.documentoId, true]]);
   });
 
+  it('el rechazo por otro monto no manda a una devolución o cobro que dejaría la FEL suelta', async () => {
+    const anulado = await porResolver();
+    const otroMonto = await recibido({ totalCentavos: 25_000 });
+
+    const error = await reemplazar()
+      .ejecutar(operador, { comprobanteId: anulado.id, reemplazoId: otroMonto.id, motivo: 'x' })
+      .catch((e: Error) => e);
+
+    expect(error).toMatchObject({ codigo: 'reemplazo_no_valido' });
+    expect((error as Error).message).not.toMatch(/devoluci|cobro/i);
+  });
+
   it('rechaza otro monto, otro proveedor, uno ya asignado y uno fuera del libro', async () => {
     const anulado = await porResolver();
     const otroMonto = await recibido({ totalCentavos: 25_000 });

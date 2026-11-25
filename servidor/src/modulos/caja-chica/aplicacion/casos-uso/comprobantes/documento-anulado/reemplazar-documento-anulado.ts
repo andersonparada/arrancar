@@ -36,7 +36,7 @@ function exigirQueReemplace(anulado: Comprobante, nuevo: Comprobante): void {
   }
   if (nuevo.esNotaDeCredito !== anulado.esNotaDeCredito || nuevo.montoCentavos !== anulado.montoCentavos) {
     throw new ReemplazoNoValido(
-      `El documento ${etiqueta} debe ser del mismo monto y clase: si cambia el monto, resuelva la diferencia con una devolución o un cobro.`,
+      `El documento ${etiqueta} debe ser del mismo monto y clase que el anulado: el reemplazo por otro monto aún no está disponible. Pida al emisor una FEL del mismo monto.`,
     );
   }
 }
