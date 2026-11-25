@@ -3,7 +3,14 @@ import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { BajaAnulada, BajaInvalida, BajaNoAnulable } from './errores-de-baja.js';
 import { datosDeBajaValidos, type ContextoDeBaja } from './reglas-de-baja.js';
 import { resultadosDeVenta } from './resultados-de-venta.js';
-import type { CifrasDeBaja, DatosDeBaja, EstadoDeBaja, NumeroDeActa, TipoDeActa } from './tipos-de-baja.js';
+import type {
+  CifrasDeBaja,
+  CostoFiscalDeLaVenta,
+  DatosDeBaja,
+  EstadoDeBaja,
+  NumeroDeActa,
+  TipoDeActa,
+} from './tipos-de-baja.js';
 import { TIPOS_DE_ACTA } from './tipos-de-baja.js';
 
 export type BajaId = Identificador<'Baja'>;
@@ -22,6 +29,8 @@ export interface PropiedadesDeBaja extends DatosDeBaja, NumeroDeActa {
   /** Solo en una venta; en las demás causas la pérdida es el valor en libros. */
   resultadoContableCentavos: number | null;
   resultadoFiscalCentavos: number | null;
+  /** Solo en una venta: de dónde sale el costo fiscal con el que se calculó el resultado fiscal (AF-9b). */
+  costoFiscalDeLaVenta: CostoFiscalDeLaVenta | null;
   acta: ActaDeBaja | null;
   denunciaArchivoId: string | null;
   estado: EstadoDeBaja;
@@ -35,6 +44,8 @@ export interface EntradaDeBaja extends NumeroDeActa {
   empresaId: Identificador<'Empresa'>;
   activoId: string;
   cifras: CifrasDeBaja;
+  /** De dónde sale el costo fiscal de las cifras; solo se guarda si la baja es una venta. */
+  costoFiscal: CostoFiscalDeLaVenta;
 }
 
 const MOTIVO_MAXIMO = 300;
@@ -51,13 +62,15 @@ export class Baja extends Entidad<BajaId> {
   /** @throws BajaInvalida, FechaDeBajaAnteriorAlUso o CausaDeBajaNoPermitida si los datos no valen. */
   static registrar(entrada: EntradaDeBaja, datos: DatosDeBaja, contexto: ContextoDeBaja): Baja {
     const validos = datosDeBajaValidos(datos, contexto);
+    const { costoFiscal, ...resto } = entrada;
     const resultados = validos.venta ? resultadosDeVenta(validos.venta.precioCentavos, entrada.cifras) : null;
     return new Baja({
-      ...entrada,
+      ...resto,
       ...validos,
       id: Identificador.nuevo(),
       resultadoContableCentavos: resultados?.contableCentavos ?? null,
       resultadoFiscalCentavos: resultados?.fiscalCentavos ?? null,
+      costoFiscalDeLaVenta: validos.venta ? costoFiscal : null,
       acta: null,
       denunciaArchivoId: null,
       estado: 'vigente',

@@ -43,6 +43,7 @@ const entrada = {
   empresaId: Identificador.nuevo<'Empresa'>(),
   activoId: 'a1',
   cifras: CIFRAS,
+  costoFiscal: { origen: 'en_libros' as const, motivo: null },
   numero: 1,
   anioDeNumero: 2027,
 };
@@ -185,7 +186,10 @@ describe('avisosDeBaja', () => {
     tipoDeActa: 'notarial',
     tieneDenuncia: true,
     esDeTerceros: false,
+    esDeControl: false,
     regimenDeIva: 'general',
+    regimenDeIsr: 'utilidades',
+    origenDelCostoFiscal: null,
     componentes: 0,
     incisoFiscal: 'maquinaria_y_vehiculos',
     tipoDePersona: 'juridica',

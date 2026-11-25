@@ -4,13 +4,20 @@ import type { BajaDto } from '../aplicacion/dto/baja.dto.js';
 import type { ConsultasBajas } from '../aplicacion/puertos/consultas-bajas.js';
 import type { RepositorioBajas } from '../aplicacion/puertos/repositorio-bajas.js';
 import type { Baja, BajaId } from '../dominio/baja.js';
+import type { DatosFiscalesDeLaVenta } from '../dominio/costo-fiscal-de-control.js';
+import type { LectorDeDatosFiscales } from '../aplicacion/puertos/lector-de-datos-fiscales.js';
 import type { IncisoFiscal } from '../dominio/incisos-fiscales.js';
 import type { ActivosEnMemoria } from './dobles-de-activos.js';
 
 /** Las bajas en memoria: repositorio y consultas a la vez, con los avisos que da el dominio. */
 export class BajasEnMemoria implements RepositorioBajas, ConsultasBajas {
   readonly registros = new Map<string, Baja>();
-  tipoDePersona: 'individual' | 'juridica' | null = 'juridica';
+  datosFiscales: DatosFiscalesDeLaVenta = {
+    tipoDePersona: 'juridica',
+    regimenDeIva: 'general',
+    regimenDeIsr: 'utilidades',
+    llevaContabilidadCompleta: true,
+  };
   incisoFiscal: IncisoFiscal = 'maquinaria_y_vehiculos';
 
   constructor(private readonly activos: ActivosEnMemoria) {}
@@ -84,10 +91,19 @@ export class BajasEnMemoria implements RepositorioBajas, ConsultasBajas {
         activo: { ...activo, id: activo.id.valor, claseNombre: 'Clase de prueba' },
         componentes,
         incisoFiscal: this.incisoFiscal,
-        tipoDePersona: this.tipoDePersona,
-        regimenDeIva: 'general',
+        ...this.datosFiscales,
         esDeTerceros: activo.tipoDeRegistro === 'de_terceros',
+        esDeControl: activo.tipoDeRegistro === 'bien_de_control',
       },
     );
+  }
+}
+
+/** Los datos fiscales en memoria: los mismos para cualquier fecha. */
+export class DatosFiscalesEnMemoria implements LectorDeDatosFiscales {
+  constructor(private readonly bajas: BajasEnMemoria) {}
+
+  async en(): Promise<DatosFiscalesDeLaVenta> {
+    return this.bajas.datosFiscales;
   }
 }

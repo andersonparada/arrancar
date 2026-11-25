@@ -4877,3 +4877,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-23**: VCJ-0d, correcciones de la revisión. `RepositorioEmpresas.buscarEnCuenta` bloquea la fila (`for no key update`: serializa a dos editores sin chocar con el `for key share` de las inserciones con llave foránea a la empresa; el acceso a la empresa se valida antes de bloquear): ya no se
   puede deshacer una corrección de NIT con una edición simultánea sin permiso, motivo ni rastro (prueba de concurrencia). Las pruebas de API del NIT ahora dan al editor acceso a las empresas que crean (antes daban 404).
   **Orden de unión:** Bancos `0040` se regeneró sobre la `0039` de VC-0b (`prevId` 9fc19450…, `when` posterior); **VC-0b (`0039`) se une antes que VCJ-0d**: sin ella `0040` no encadena (en esta rama `drizzle-kit` solo cuadra con la `0039` presente). Se agrega el paso VCJ-0e (cliente de Empresas con el motivo del NIT).
+- **2026-11-24 — AF-9b (Activos fijos, servidor): venta de bienes de control.** Según las respuestas del usuario y el dictamen
+  de `contador-guatemala`, un bien de control se vende con su resultado: valor en libros cero, `resultado_contable = precio` (a
+  otros ingresos) y `costo_fiscal` por el criterio de «lleva contabilidad completa» (casilla de los datos fiscales, no el
+  régimen): cero si la lleva; el costo documentado de sus costos de referencia si no; cero sin documento; o el que escriba el
+  contador con el permiso nuevo `activos-fijos.bajas.costo-fiscal-manual`, con motivo y rastro `corregir` en la auditoría.
+  Migración `0011_af9b_costo_fiscal_de_venta` (columnas `origen_del_costo_fiscal` y `motivo_del_costo_fiscal`, tres checks y
+  relleno `en_libros`). Avisos propios de IVA (general y pequeño contribuyente) e ISR (utilidades, simplificado, pequeño). Se
+  ajustan §3.2, §3.4, §5.12 y §6.8 del diseño. Pendiente AF-9c (ventana).

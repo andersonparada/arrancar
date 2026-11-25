@@ -143,12 +143,13 @@ describe('vender un principal con un componente sin libros', () => {
     expect(e.bajas.registros.size).toBe(0);
   });
 
-  it('un bien de control no se vende como activo, con o sin componentes', async () => {
+  it('un bien de control sí se vende, con su resultado (AF-9b)', async () => {
     const clase = await e.claseDe('herramientas', '25.00');
     const taladro = await e.activoConCosto(clase, '800.00', { tipoDeRegistro: 'bien_de_control' });
 
-    await expect(e.vender(solicitudDeVenta(taladro))).rejects.toBeInstanceOf(CausaDeBajaNoPermitida);
-    await expect(e.vender(solicitudDeVenta(taladro))).rejects.toThrow('consulte a su contador');
+    const venta = await e.vender(solicitudDeVenta(taladro));
+
+    expect(venta).toMatchObject({ causa: 'venta', valorEnLibros: '0.00', resultadoContable: '100000.00' });
   });
 
   it('un bien de terceros solo no se vende', async () => {

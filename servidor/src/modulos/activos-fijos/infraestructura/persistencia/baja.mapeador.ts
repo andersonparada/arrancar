@@ -1,7 +1,7 @@
 import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
 import { Baja, type BajaId, type PropiedadesDeBaja } from '../../dominio/baja.js';
-import type { CifrasDeBaja, DatosDeVenta } from '../../dominio/tipos-de-baja.js';
+import type { CifrasDeBaja, CostoFiscalDeLaVenta, DatosDeVenta } from '../../dominio/tipos-de-baja.js';
 import type { bajas } from './bajas.tablas.js';
 
 type Fila = typeof bajas.$inferSelect;
@@ -75,6 +75,11 @@ function ventaAFila(p: PropiedadesDeBaja) {
   };
 }
 
+function costoFiscalDeFila(fila: Fila): CostoFiscalDeLaVenta | null {
+  if (fila.origenDelCostoFiscal === null) return null;
+  return { origen: fila.origenDelCostoFiscal, motivo: fila.motivoDelCostoFiscal };
+}
+
 function documentosYEstadoAFila(p: PropiedadesDeBaja) {
   return {
     actaArchivoId: p.acta?.archivoId ?? null,
@@ -102,6 +107,7 @@ export const mapeadorDeBaja = {
       venta: ventaDeFila(fila),
       resultadoContableCentavos: enCentavos(fila.resultadoContable),
       resultadoFiscalCentavos: enCentavos(fila.resultadoFiscal),
+      costoFiscalDeLaVenta: costoFiscalDeFila(fila),
       acta: fila.actaArchivoId ? { archivoId: fila.actaArchivoId, tipo: fila.tipoDeActa! } : null,
       denunciaArchivoId: fila.denunciaArchivoId,
       estado: fila.estado,
@@ -123,6 +129,8 @@ export const mapeadorDeBaja = {
       anioDeNumero: p.anioDeNumero,
       ...cifrasAFila(p.cifras),
       ...ventaAFila(p),
+      origenDelCostoFiscal: p.costoFiscalDeLaVenta?.origen ?? null,
+      motivoDelCostoFiscal: p.costoFiscalDeLaVenta?.motivo ?? null,
       ...documentosYEstadoAFila(p),
     };
   },

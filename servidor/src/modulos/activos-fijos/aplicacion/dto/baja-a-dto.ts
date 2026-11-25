@@ -11,7 +11,9 @@ export interface ContextoDeBajaDto {
   incisoFiscal: DatosParaLosAvisos['incisoFiscal'];
   tipoDePersona: DatosParaLosAvisos['tipoDePersona'];
   regimenDeIva: DatosParaLosAvisos['regimenDeIva'];
+  regimenDeIsr: DatosParaLosAvisos['regimenDeIsr'];
   esDeTerceros: boolean;
+  esDeControl: boolean;
 }
 
 const dinero = (centavos: number | null): string | null => (centavos === null ? null : deCentavos(centavos));
@@ -54,6 +56,13 @@ function ventaADto({ venta, resultadoContableCentavos, resultadoFiscalCentavos }
   };
 }
 
+function costoFiscalADto({ costoFiscalDeLaVenta }: PropiedadesDeBaja) {
+  return {
+    origenDelCostoFiscal: costoFiscalDeLaVenta?.origen ?? null,
+    motivoDelCostoFiscal: costoFiscalDeLaVenta?.motivo ?? null,
+  };
+}
+
 function avisosDe(baja: PropiedadesDeBaja, contexto: ContextoDeBajaDto): BajaDto['avisos'] {
   if (baja.estado === 'anulada') return [];
   return avisosDeBaja({
@@ -64,6 +73,9 @@ function avisosDe(baja: PropiedadesDeBaja, contexto: ContextoDeBajaDto): BajaDto
     tieneDenuncia: baja.denunciaArchivoId !== null,
     esDeTerceros: contexto.esDeTerceros,
     regimenDeIva: contexto.regimenDeIva,
+    regimenDeIsr: contexto.regimenDeIsr,
+    esDeControl: contexto.esDeControl,
+    origenDelCostoFiscal: baja.costoFiscalDeLaVenta?.origen ?? null,
     componentes: contexto.componentes.length,
     incisoFiscal: contexto.incisoFiscal,
     tipoDePersona: contexto.tipoDePersona,
@@ -84,6 +96,7 @@ export function bajaADto(baja: PropiedadesDeBaja, contexto: ContextoDeBajaDto): 
     tieneDenuncia: baja.denunciaArchivoId !== null,
     ...cifrasADto(baja.cifras),
     ...ventaADto(baja),
+    ...costoFiscalADto(baja),
     estado: baja.estado,
     anuladaEn: baja.anuladaEn?.toISOString() ?? null,
     motivoDeAnulacion: baja.motivoDeAnulacion,

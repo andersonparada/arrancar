@@ -36,18 +36,13 @@ function obligatorio(valor: string, opciones: { nombre: string; maximo: number }
 
 /**
  * Los bienes de terceros solo se devuelven, se destruyen, se roban, se extravían, faltan o tienen otra causa; no se
- * venden, ni se donan, ni se dan por obsoletos (el tenedor los devuelve). La venta de un bien de control se rechaza
- * mientras el usuario decide cómo se registra (tiene resultado, IVA e ISR): el mensaje no sugiere otra causa para que no
- * se oculte el ingreso.
+ * venden, ni se donan, ni se dan por obsoletos (el tenedor los devuelve). Un bien de control sí se vende, con su
+ * resultado (AF-9b): su valor en libros es cero y el costo fiscal lo decide `costoFiscalDeControl`.
  */
 function exigirCausaDelBien(causa: DatosDeBaja['causa'], tipoDeRegistro: TipoDeRegistro): void {
   const esDeTerceros = tipoDeRegistro === 'de_terceros';
   if (causa === 'devuelto_al_dueno' && !esDeTerceros)
     throw new CausaDeBajaNoPermitida('«Devuelto al dueño» solo vale para los bienes de terceros.');
-  if (causa === 'venta' && tipoDeRegistro === 'bien_de_control')
-    throw new CausaDeBajaNoPermitida(
-      'Esta venta aún no se puede registrar aquí; emita la factura y consulte a su contador.',
-    );
   if (esDeTerceros && CAUSAS_QUE_NO_SE_HACEN_A_TERCEROS.includes(causa))
     throw new CausaDeBajaNoPermitida('Un bien de terceros no se vende ni se dona: devuélvalo a su dueño.');
 }

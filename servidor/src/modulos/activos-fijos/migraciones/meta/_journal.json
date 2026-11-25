@@ -78,6 +78,13 @@
       "when": 1795481034674,
       "tag": "0010_afi5_divisiones",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795574122785,
+      "tag": "0011_af9b_costo_fiscal_de_venta",
+      "breakpoints": true
     }
   ]
 }

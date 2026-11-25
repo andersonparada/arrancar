@@ -94,6 +94,10 @@ export const moduloActivosFijos: DefinicionModulo = {
     },
     { clave: 'activos-fijos.bajas.anular', descripcion: 'Anular bajas y ventas de activos' },
     {
+      clave: 'activos-fijos.bajas.costo-fiscal-manual',
+      descripcion: 'Escribir el costo fiscal de la venta de un bien de control, con su motivo (queda en la auditoría)',
+    },
+    {
       clave: 'activos-fijos.divisiones.crear',
       descripcion: 'Dividir activos con cantidad y separarlos en unidades (a mano)',
     },

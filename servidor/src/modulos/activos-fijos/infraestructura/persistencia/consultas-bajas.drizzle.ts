@@ -1,34 +1,18 @@
-import { and, asc, eq, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, type SQL } from 'drizzle-orm';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import { datosFiscalesDeEmpresa } from '../../../libro-de-compras/infraestructura/persistencia/datos-fiscales.tablas.js';
 import { bajaADto } from '../../aplicacion/dto/baja-a-dto.js';
 import type { BajaDto, ComponenteDeBajaDto } from '../../aplicacion/dto/baja.dto.js';
 import type { ConsultasBajas } from '../../aplicacion/puertos/consultas-bajas.js';
 import type { PropiedadesDeBaja } from '../../dominio/baja.js';
-import type { DatosParaLosAvisos } from '../../dominio/avisos-de-baja.js';
 import { filaPortadoraDeDocumentos } from './baja-portadora.drizzle.js';
+import { datosFiscalesEn } from './datos-fiscales-en.js';
 import { mapeadorDeBaja } from './baja.mapeador.js';
 import { bajas } from './bajas.tablas.js';
 import { activos } from './activos.tablas.js';
 import { clases } from './clases.tablas.js';
 
 type FilaDeBaja = typeof bajas.$inferSelect;
-
-/** El tipo de persona y el régimen de IVA de la empresa con la vigencia de la fecha de la baja; `null` si no hay datos fiscales. */
-async function datosFiscalesEn(fecha: string): Promise<Pick<DatosParaLosAvisos, 'tipoDePersona' | 'regimenDeIva'>> {
-  const [fila] = await transaccionEnCurso()
-    .select({ tipo: datosFiscalesDeEmpresa.tipoDePersona, regimen: datosFiscalesDeEmpresa.regimenIva })
-    .from(datosFiscalesDeEmpresa)
-    .where(or(isNull(datosFiscalesDeEmpresa.vigenteDesde), lte(datosFiscalesDeEmpresa.vigenteDesde, fecha)))
-    .orderBy(sql`${datosFiscalesDeEmpresa.vigenteDesde} desc nulls last`)
-    .limit(1);
-  const tipo = fila?.tipo;
-  return {
-    tipoDePersona: tipo === 'individual' || tipo === 'juridica' ? tipo : null,
-    regimenDeIva: fila?.regimen ?? null,
-  };
-}
 
 /** Los componentes que se dieron de baja junto con el activo: las bajas de su acta cuyo activo es hijo suyo. */
 async function componentesDe(baja: FilaDeBaja): Promise<ComponenteDeBajaDto[]> {
@@ -87,6 +71,7 @@ export class ConsultasBajasDrizzle implements ConsultasBajas {
       incisoFiscal: fila.incisoFiscal,
       ...(await datosFiscalesEn(baja.fecha)),
       esDeTerceros: activo.tipoDeRegistro === 'de_terceros',
+      esDeControl: activo.tipoDeRegistro === 'bien_de_control',
     });
   }
 }

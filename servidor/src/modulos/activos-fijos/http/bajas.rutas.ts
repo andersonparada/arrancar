@@ -1,5 +1,8 @@
+import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { limitarSubidas } from '../../core/archivos/http/limite-de-subidas.js';
+import { AccesoDenegado } from '../../core/compartido/aplicacion/errores.js';
+import { contextoDe } from '../../core/compartido/http/contexto-de-la-solicitud.js';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import type { BajasControlador } from './bajas.controlador.js';
 import {
@@ -7,10 +10,19 @@ import {
   esquemaBaja,
   esquemaConsultaDeActa,
   esquemaParamsBaja,
+  type BajaSolicitada,
 } from './bajas.esquemas-http.js';
 
 const etiquetas = ['Activos fijos'];
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
+
+const PERMISO_DEL_COSTO_FISCAL = 'activos-fijos.bajas.costo-fiscal-manual';
+
+/** Escribir el costo fiscal de la venta de un bien de control exige, además, el permiso del contador. */
+async function exigirPermisoDelCostoFiscal(solicitud: FastifyRequest<{ Body: BajaSolicitada }>): Promise<void> {
+  if (solicitud.body.costoFiscalDelContador && !contextoDe(solicitud).permisos.has(PERMISO_DEL_COSTO_FISCAL))
+    throw new AccesoDenegado();
+}
 
 /** El acta y la denuncia (PDF o foto): se suben con `bajas.crear` y se abren con `activos.ver`. */
 function rutasDeLosDocumentos(app: Aplicacion, controlador: BajasControlador) {
@@ -43,7 +55,7 @@ export function rutasBajas(controlador: BajasControlador): FastifyPluginAsyncZod
   return async (app) => {
     app.post('/activos-fijos/bajas', {
       schema: { tags: etiquetas, body: esquemaBaja },
-      preHandler: proteger({ permiso: 'activos-fijos.bajas.crear' }),
+      preHandler: [proteger({ permiso: 'activos-fijos.bajas.crear' }), exigirPermisoDelCostoFiscal],
       handler: controlador.registrar,
     });
     app.post('/activos-fijos/bajas/:id/anular', {

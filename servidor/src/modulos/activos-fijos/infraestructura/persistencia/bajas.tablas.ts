@@ -2,7 +2,7 @@ import { date, integer, numeric, smallint, text, timestamp, unique, uuid } from 
 import { archivos } from '../../../core/archivos/infraestructura/persistencia/archivos.tablas.js';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
-import type { CausaDeBaja, EstadoDeBaja, TipoDeActa } from '../../dominio/tipos-de-baja.js';
+import type { CausaDeBaja, EstadoDeBaja, OrigenDelCostoFiscal, TipoDeActa } from '../../dominio/tipos-de-baja.js';
 import { indicesDeBaja, llavesDeBaja, reglasDeBaja } from './bajas.llaves-y-reglas.js';
 import { esquemaActivosFijos } from './esquema.tablas.js';
 
@@ -51,6 +51,8 @@ export const bajas = esquemaActivosFijos.table(
     autorizacionFel: uuid(),
     resultadoContable: dinero(),
     resultadoFiscal: dinero(),
+    origenDelCostoFiscal: text().$type<OrigenDelCostoFiscal>(),
+    motivoDelCostoFiscal: text(),
     estado: text().$type<EstadoDeBaja>().notNull().default('vigente'),
     anuladaEn: timestamp({ withTimezone: true }),
     anuladaPor: uuid(),

@@ -20,6 +20,25 @@ export type EstadoDeBaja = 'vigente' | 'anulada';
 /** Las causas que dejan constancia en un acta y una denuncia: robo y extravío. */
 export const CAUSAS_CON_DENUNCIA: readonly CausaDeBaja[] = ['robo', 'extravio'];
 
+/**
+ * De dónde sale el costo fiscal de una venta (AF-9b): `en_libros` (el del activo con libros, o cero en el bien de
+ * control de quien lleva contabilidad completa), `documentado` (el costo de compra respaldado), `sin_documento` (cero,
+ * sin respaldo) o `criterio_del_contador` (lo escribió quien tiene el permiso, con su motivo).
+ */
+export const ORIGENES_DEL_COSTO_FISCAL = [
+  'en_libros',
+  'documentado',
+  'sin_documento',
+  'criterio_del_contador',
+] as const;
+export type OrigenDelCostoFiscal = (typeof ORIGENES_DEL_COSTO_FISCAL)[number];
+
+/** El origen del costo fiscal de una venta y, si lo escribió el contador, su motivo. */
+export interface CostoFiscalDeLaVenta {
+  origen: OrigenDelCostoFiscal;
+  motivo: string | null;
+}
+
 /** La venta: a quién, por cuánto y la factura (FEL) que se emitió afuera. Todo el dinero en centavos. */
 export interface DatosDeVenta {
   comprador: string;

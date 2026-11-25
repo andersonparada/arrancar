@@ -21,6 +21,12 @@ const esquemaVenta = z.object({
   autorizacionFel: z.uuid('La autorización de la factura debe ser un identificador válido.'),
 });
 
+/** El costo fiscal que sostiene el contador al vender un bien de control; exige un permiso aparte. */
+const esquemaCostoFiscalDelContador = z.object({
+  monto: decimalObligatorio(2),
+  motivo: textoObligatorio(300),
+});
+
 /** Forma de lo que llega al dar de baja o vender; las reglas de negocio las revisan el dominio y el caso de uso. */
 export const esquemaBaja = z.object({
   activoId: idObligatorio(),
@@ -34,6 +40,7 @@ export const esquemaBaja = z.object({
   inventarioId: idOpcional(),
   tercerosConfirmados: z.array(textoObligatorio(30)).max(100).optional(),
   venta: esquemaVenta.nullish().transform((venta) => venta ?? null),
+  costoFiscalDelContador: esquemaCostoFiscalDelContador.nullish().transform((costo) => costo ?? null),
 });
 
 export const esquemaAnulacionDeBaja = z.object({ motivo: textoObligatorio(300) });

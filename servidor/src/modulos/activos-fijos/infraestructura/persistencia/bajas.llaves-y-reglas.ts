@@ -31,6 +31,8 @@ type Columnas = Record<
   | 'autorizacionFel'
   | 'resultadoContable'
   | 'resultadoFiscal'
+  | 'origenDelCostoFiscal'
+  | 'motivoDelCostoFiscal'
   | 'estado'
   | 'anuladaEn'
   | 'anuladaPor'
@@ -111,8 +113,23 @@ function reglasDeCifras(t: Columnas) {
   ];
 }
 
+function reglasDelCostoFiscal(t: Columnas) {
+  return [
+    check(
+      'bajas_origen_del_costo_fiscal',
+      sql`${t.origenDelCostoFiscal} is null or ${t.origenDelCostoFiscal} in ('en_libros', 'documentado', 'sin_documento', 'criterio_del_contador')`,
+    ),
+    check('bajas_origen_solo_en_venta', sql`(${t.causa} = 'venta') = (${t.origenDelCostoFiscal} is not null)`),
+    check(
+      'bajas_motivo_del_costo_fiscal',
+      sql`(${t.origenDelCostoFiscal} is not distinct from 'criterio_del_contador') = (${t.motivoDelCostoFiscal} is not null) and (${t.motivoDelCostoFiscal} is null or char_length(btrim(${t.motivoDelCostoFiscal})) between 1 and 300)`,
+    ),
+  ];
+}
+
 function reglasDeVenta(t: Columnas) {
   return [
+    ...reglasDelCostoFiscal(t),
     check(
       'bajas_venta_completa',
       sql`(${t.causa} = 'venta') = (${t.precio} is not null and ${t.comprador} is not null and ${t.numeroFel} is not null and ${t.autorizacionFel} is not null and ${t.resultadoContable} is not null and ${t.resultadoFiscal} is not null)`,
