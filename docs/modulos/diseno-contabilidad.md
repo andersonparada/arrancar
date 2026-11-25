@@ -611,7 +611,7 @@ afecta lo que se contabilice después (se audita, §9.2).
   no dice que todo está bien mientras alguno siga sin cuenta: lo muestra como «según su operación» y se exige al llegar el
   primer hecho, que queda con error visible. `iva_no_acreditable` es la única opcional (va al costo de la línea).
 - **Retenciones de apertura** (decisión del usuario, opción A del contador): rol `retenciones_de_apertura` (Cuentas por pagar),
-  de balance, sin auxiliar ni llave, en cuenta aparte, para lo retenido antes del inicio y aún no enterado. El contador lo
+  de balance, sin auxiliar ni llave, «según su operación» (no toda empresa retiene; no es faltante obligatorio), en cuenta aparte, para lo retenido antes del inicio y aún no enterado. El contador lo
   salda al enterar; no es de control y el cierre da `pide_motivo` mientras tenga saldo (como `apertura_por_regularizar`).
   Cuentas por pagar responde `retenciones_por_practicar` en `saldos_de_auxiliares` solo con `proposito = apertura`, nunca en
   `cuadratura`: así la cuenta de `retencion_por_pagar` cuadra exacto con Libro de compras. Aún no hay quien responda esa pregunta

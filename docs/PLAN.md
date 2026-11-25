@@ -4459,7 +4459,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     explica la consecuencia real (`consecuenciaDeQuitar`, función pura): opcional va al costo de cada línea, con cuenta general
     el registro pasa a usarla, sin respaldo queda por contabilizar con error. Pruebas del módulo: 37 → 42.
 - **2026-11-24 (Contabilidad, servidor: retenciones de apertura)**: el usuario eligió la opción A. Rol nuevo
-  `retenciones_de_apertura` (Cuentas por pagar; de balance, sin auxiliar, sin llave, obligatorio de enlazar) en el contrato,
+  `retenciones_de_apertura` (Cuentas por pagar; de balance, sin auxiliar, sin llave; obligatorio de enlazar al principio, corregido abajo) en el contrato,
   en el catálogo de roles, en el CHECK `enlaces_rol_valido` (migración 0003 y snapshots, sin cambiar sus id) y en §5.3. Queda
   fijado para CT-3: el cierre da `pide_motivo` mientras tenga saldo y Cuentas por pagar responde `retenciones_por_practicar`
   solo con `proposito = apertura`; hoy nadie responde `saldos_de_auxiliares` ni hay cierre contable. Los dos hallazgos de
@@ -4471,3 +4471,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (2) `consecuenciaDeQuitar` cubre el registro sin cuenta general: lo de ese registro queda por contabilizar con error y los
   demás siguen igual. El rol `retenciones_de_apertura` llega por la API y es obligatorio de enlazar; no requirió código propio.
   Cuatro pruebas nuevas en el archivo (29 en total).
+- **2026-11-24 (Contabilidad, servidor: corrección de `retenciones_de_apertura`)**: el rol era obligatorio de enlazar sin que lo
+  decidiera el usuario ni lo validara el contador; contradecía a `retencion_por_pagar` y el criterio de no asumir agente
+  retenedor (una empresa que nunca retuvo veía un faltante imposible de resolver). Ahora es `segunOperacion` (se exige al llegar
+  el primer hecho). Prueba de `enlace.prueba.ts` ajustada y §5.3 corregida.
