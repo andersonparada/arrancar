@@ -24,6 +24,14 @@ export interface SaldosAnteriores {
   creditoCentavos: number | null;
   /** Por qué falta algún saldo y qué hacer; solo cuando falta. */
   aviso?: string | undefined;
+  /** Los saldos que son un cero supuesto del primer mes en Arrancar, no un dato: no se guardan como si lo fueran. */
+  supuestos?: SaldosSupuestos | undefined;
+}
+
+/** Cuáles saldos de apertura se supusieron en cero por ser el primer mes en Arrancar. */
+export interface SaldosSupuestos {
+  retenciones?: true;
+  credito?: true;
 }
 
 /** Los saldos que el cálculo necesita: las retenciones siempre; el crédito fiscal solo en el SAT-2237. */
@@ -55,6 +63,8 @@ export interface RemanentesDeRetenciones {
   formulario: FormularioConRemanente;
   retencionesDelPeriodo: string;
   remanenteAnterior: string;
+  /** Los saldos de apertura que eran un cero supuesto (primer mes): una rectificación los vuelve a evaluar. */
+  supuestos?: SaldosSupuestos;
   /** El remanente del crédito fiscal con que empezó el mes (SAT-2237; cero en el SAT-2046). Ausente en fotos viejas. */
   creditoAnterior?: string;
   /**
@@ -114,7 +124,9 @@ export function calcularRemanentesDeRetenciones(
 ): RemanentesDeRetenciones | null {
   const anterior = saldosConocidos(entrada.formulario, entrada.anterior);
   if (!anterior) return null;
-  return calcularConSaldos({ ...entrada, anterior });
+  const calculado = calcularConSaldos({ ...entrada, anterior });
+  const supuestos = entrada.anterior.supuestos;
+  return calculado && supuestos ? { ...calculado, supuestos } : calculado;
 }
 
 function calcularConSaldos(entrada: EntradaDeRemanentes): RemanentesDeRetenciones | null {

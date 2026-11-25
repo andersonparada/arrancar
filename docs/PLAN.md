@@ -4401,3 +4401,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `contador-guatemala` si el crédito de un mes sin ventas debe pasar al siguiente; no bloquea. (2) Al declarar, cada saldo
   que el usuario deja vacío conserva el de la declaración anterior del mismo período (antes el vacío pasaba a 0). (3) La
   tabla «cambió después de declarar» nombra las cifras `remanentes.*` en español y, con el SAT-2046, habla de constancias.
+- **2026-11-24 — Tercera corrección de la revisión de VC-0c2 y VC-0c.** Respuesta del usuario a la consulta del contador: un
+  mes sin débito conocido deja su saldo al siguiente «sin determinar» y el saldo se escribe en el mes siguiente con los
+  campos de «remanente del mes anterior» (opción A); mientras falte, ese mes muestra sus cifras por confirmar. Ya estaba
+  programado. Falta cerrar un camino: el cero del primer mes en Arrancar (sin declaraciones anteriores) se guardaba como
+  dato y una rectificación posterior, ya con un mes previo declarado, lo reutilizaba sin aviso. Ahora ese cero se marca
+  como supuesto (`supuestos` en `remanentes`; en `saldosIniciales` se guarda `null`), se usa solo al calcular y la
+  rectificación lo vuelve a evaluar: con un mes previo queda sin dato con el aviso. La marca no entra en la tabla de
+  cambios. Sin migración.

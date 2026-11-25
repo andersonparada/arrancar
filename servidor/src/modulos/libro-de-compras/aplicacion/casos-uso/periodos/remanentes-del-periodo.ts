@@ -2,7 +2,12 @@ import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import { sumarMeses } from '../../../dominio/periodo-del-libro.js';
 import type { FotoDelPeriodo } from '../../../dominio/periodos/foto-del-periodo.js';
 import { nombreDelPeriodo } from '../../../dominio/periodos/nombre-del-periodo.js';
-import type { FormularioConRemanente, SaldosAnteriores } from '../../../dominio/periodos/remanentes-de-retenciones.js';
+import type {
+  FormularioConRemanente,
+  RemanentesDeRetenciones,
+  SaldosAnteriores,
+  SaldosSupuestos,
+} from '../../../dominio/periodos/remanentes-de-retenciones.js';
 import type { RepositorioDePeriodos } from '../../puertos/puertos-de-periodos.js';
 
 export interface PedidoDeRemanenteAnterior {
@@ -34,18 +39,22 @@ async function ultimaFotoDe(periodos: RepositorioDePeriodos, periodo: string): P
 const formularioDeLaFoto = (foto: FotoDelPeriodo | null) =>
   foto?.remanentes?.formulario ?? foto?.saldosIniciales?.formulario;
 
+/** El saldo guardado, o `null` si era un cero supuesto del primer mes. */
+const dato = (monto: string, supuesto?: true): number | null => (supuesto ? null : aCentavos(monto));
+
+/** Con lo que empezó el cálculo guardado en la foto; un cero supuesto del primer mes no cuenta como dato. */
+const saldosDelCalculo = (calculado: RemanentesDeRetenciones): SaldosDeInicio => ({
+  retencionesCentavos: dato(calculado.remanenteAnterior, calculado.supuestos?.retenciones),
+  creditoCentavos: dato(calculado.creditoAnterior ?? '0.00', calculado.supuestos?.credito),
+});
+
 /** Con lo que empezó la foto: el remanente que calculó o, sin ventas, los saldos iniciales que guardó (puede faltar alguno). */
 export function saldosDeInicioDeLaFoto(
   foto: FotoDelPeriodo | null,
   formulario: FormularioConRemanente,
 ): SaldosDeInicio | null {
   const calculado = foto?.remanentes;
-  if (calculado?.formulario === formulario) {
-    return {
-      retencionesCentavos: aCentavos(calculado.remanenteAnterior),
-      creditoCentavos: aCentavos(calculado.creditoAnterior ?? '0.00'),
-    };
-  }
+  if (calculado?.formulario === formulario) return saldosDelCalculo(calculado);
   const guardado = foto?.saldosIniciales;
   if (guardado?.formulario !== formulario) return null;
   return {
@@ -111,8 +120,19 @@ export async function remanenteAnteriorDelPeriodo(
   if (pedido.formulario === 'SAT-2046') saldos.creditoCentavos = 0;
   if (saldos.retencionesCentavos !== null && saldos.creditoCentavos !== null) return saldos;
   const aviso = await avisoDeSaldoFaltante(periodos, pedido, previa);
-  if (aviso === null) {
-    return { retencionesCentavos: saldos.retencionesCentavos ?? 0, creditoCentavos: saldos.creditoCentavos ?? 0 };
-  }
+  if (aviso === null) return primerMes(saldos);
   return { ...saldos, aviso };
+}
+
+/** El primer mes en Arrancar: lo que falta es cero, pero se anota como supuesto para no guardarlo como dato. */
+function primerMes(saldos: SaldosDeInicio): SaldosAnteriores {
+  const supuestos: SaldosSupuestos = {
+    ...(saldos.retencionesCentavos === null ? { retenciones: true as const } : {}),
+    ...(saldos.creditoCentavos === null ? { credito: true as const } : {}),
+  };
+  return {
+    retencionesCentavos: saldos.retencionesCentavos ?? 0,
+    creditoCentavos: saldos.creditoCentavos ?? 0,
+    ...(Object.keys(supuestos).length > 0 ? { supuestos } : {}),
+  };
 }

@@ -81,10 +81,14 @@ function modulosEnComun(anterior: FotoDelPeriodo, actual: FotoDelPeriodo): Set<s
   return new Set((actual.ventas ?? []).map((v) => v.modulo).filter((modulo) => delAnterior.has(modulo)));
 }
 
+/** Los supuestos son una marca interna del primer mes, no una cifra que comparar. */
+const sinSupuestos = (remanentes: FotoDelPeriodo['remanentes']) =>
+  remanentes && Object.fromEntries(Object.entries(remanentes).filter(([clave]) => clave !== 'supuestos'));
+
 function cifrasDe(foto: FotoDelPeriodo, modulos: Set<string>, conRemanentes: boolean): Map<string, string> {
   const cifras = new Map<string, string>([['documentos', String(foto.documentos)]]);
   aplanar(foto.resumen, 'resumen', cifras);
-  if (conRemanentes) aplanar(foto.remanentes, 'remanentes', cifras);
+  if (conRemanentes) aplanar(sinSupuestos(foto.remanentes), 'remanentes', cifras);
   for (const { modulo, clave, cifras: deVentas } of foto.ventas ?? []) {
     if (!modulos.has(modulo)) continue;
     for (const cifra of deVentas) cifras.set(`${clave}[${modulo}].${cifra.clave}`, cifra.valor);

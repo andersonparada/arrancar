@@ -71,6 +71,7 @@ describe('remanente de retenciones en varios meses seguidos (SAT-2237)', () => {
       creditoAlSiguiente: deCentavos(creditoDe(declarada)),
       impuestoAPagar: '0.00',
       remanenteAlSiguiente: '125.00',
+      supuestos: { credito: true },
     });
   });
 
@@ -236,6 +237,7 @@ describe('saldo de constancias del SAT-2046', () => {
       creditoAlSiguiente: '0.00',
       impuestoAPagar: '0.00',
       remanenteAlSiguiente: '30.00',
+      supuestos: { retenciones: true },
     });
   });
 

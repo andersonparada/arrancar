@@ -16,6 +16,8 @@ const RUTA_SAT = '/api/libro-de-compras/libro/sat-2237';
 const RESPUESTAS = new Map<string, Record<string, string>>();
 let escenario: EscenarioDeDocumentos;
 let pequeno: EscenarioDeDocumentos;
+let primerMes: EscenarioDeDocumentos;
+let primerMesConVentas: EscenarioDeDocumentos;
 
 const propietario = () => escenario.cuenta.propietario;
 
@@ -37,6 +39,8 @@ beforeAll(async () => {
   instalarDestinoFalso();
   escenario = await prepararEscenario(entorno, 'saldosindato');
   pequeno = await prepararEscenario(entorno, 'saldosindatopeq');
+  primerMes = await prepararEscenario(entorno, 'saldoscero');
+  primerMesConVentas = await prepararEscenario(entorno, 'saldoscerov');
   await configurarEmpresa(pequeno.cuenta, { regimenIva: 'pequeno_contribuyente', agenteDeRetencionIva: 'ninguno' });
   mediador.responder('terceros', 'libro-de-compras.cifras_para_la_declaracion', async ({ periodo }) =>
     respuestaDe(periodo),
@@ -130,5 +134,44 @@ describe('saldos del SAT-2046 y cambio de formulario', () => {
     const saldos = declarada.cuerpo.declaracion.foto.saldosIniciales;
     expect(saldos).toMatchObject({ formulario: 'SAT-2237', retenciones: null, credito: null });
     expect(saldos.aviso).toContain('otro formulario');
+  });
+});
+
+describe('el cero supuesto del primer mes no se guarda como dato', () => {
+  it('sin ventas: declarar un mes reciente primero y luego el anterior deja el saldo sin dato al rectificar', async () => {
+    const [ENERO, FEBRERO] = [mesDe(-13), mesDe(-12)];
+    const propia = primerMes.cuenta.propietario;
+    const primera = await declarar(propia, FEBRERO);
+    expect(primera.cuerpo.declaracion.foto.saldosIniciales).toEqual({
+      formulario: 'SAT-2237',
+      retenciones: null,
+      credito: null,
+    });
+    await declarar(propia, ENERO, { remanenteDeRetencionesAnterior: '10.00', remanenteDeCreditoAnterior: '4.00' });
+    responder(FEBRERO, { debito: '8.00', retenciones_de_iva: '0.00' });
+
+    const rectificada = await declarar(propia, FEBRERO);
+
+    const foto = rectificada.cuerpo.declaracion.foto;
+    expect(foto.remanentes).toBeUndefined();
+    expect(foto.saldosIniciales.aviso).toContain('se declaró sin ventas');
+  });
+
+  it('con ventas: el cero del primer mes se calcula, pero al rectificar con un mes previo vuelve a quedar sin dato', async () => {
+    const [ENERO, FEBRERO] = [mesDe(-21), mesDe(-20)];
+    const propia = primerMesConVentas.cuenta.propietario;
+    responder(FEBRERO, { debito: '8.00', retenciones_de_iva: '0.00' });
+    const primera = await declarar(propia, FEBRERO);
+    expect(primera.cuerpo.declaracion.foto.remanentes).toMatchObject({
+      remanenteAnterior: '0.00',
+      impuestoAPagar: '8.00',
+    });
+    await declarar(propia, ENERO, { remanenteDeRetencionesAnterior: '10.00', remanenteDeCreditoAnterior: '4.00' });
+
+    const rectificada = await declarar(propia, FEBRERO);
+
+    const foto = rectificada.cuerpo.declaracion.foto;
+    expect(foto.remanentes).toBeUndefined();
+    expect(foto.saldosIniciales.aviso).toContain('se declaró sin ventas');
   });
 });
