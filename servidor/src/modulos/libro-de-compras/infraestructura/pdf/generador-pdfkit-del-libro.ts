@@ -4,62 +4,46 @@ import type {
   DatosDelPdfDelLibro,
   GeneradorDePdfDelLibro,
 } from '../../aplicacion/puertos/generador-de-pdf-del-libro.js';
-import { textoParaElPdf } from '../../dominio/libro/texto-para-el-pdf.js';
-import { dibujarHojaDeResumen } from './hoja-de-resumen.js';
-import { periodoParaElPdf } from './monto-del-pdf.js';
-import { PincelDelPdf } from './pincel-del-pdf.js';
+import { periodoParaElPdf } from '../../../core/impresion/pdf/monto-del-pdf.js';
+import { PincelDelPdf } from '../../../core/impresion/pdf/pincel-del-pdf.js';
 import {
-  ANCHO_UTIL,
   MARGEN,
-  columnasDeLaTabla,
-  dibujarEncabezadoDeLaTabla,
-  dibujarFilasDeLaHoja,
-} from './tabla-del-pdf.js';
+  TAMANO_DE_HOJA,
+  dibujarPieDeHoja,
+  dibujarSelloDeFolio,
+  hojaConFolio,
+  type HojaConFolio,
+} from '../../../core/impresion/pdf/hoja-con-folio.js';
+import { dibujarEncabezadoDeLaTabla, dibujarFilasDeLaHoja } from '../../../core/impresion/pdf/tabla-del-pdf.js';
+import { textoParaElPdf } from '../../../core/impresion/pdf/texto-para-el-pdf.js';
+import { columnasDeLaTabla } from './columnas-de-la-tabla.js';
+import { dibujarHojaDeResumen } from './hoja-de-resumen.js';
 
-/** Oficio horizontal, en puntos. */
-const TAMANO_DE_HOJA: [number, number] = [936, 612];
 const NOMBRE_DEL_LIBRO = 'Libro de compras y servicios recibidos';
 
-interface Hoja {
-  numero: number;
-  total: number;
-  folio: number | null;
-}
-
-function dibujarEncabezado(pincel: PincelDelPdf, datos: DatosDelPdfDelLibro, hoja: Hoja): void {
+function dibujarEncabezado(pincel: PincelDelPdf, datos: DatosDelPdfDelLibro, hoja: HojaConFolio): void {
   const { empresa, tipoDeLibro, periodo } = datos;
   pincel.texto(empresa.nombre, { x: MARGEN, y: 30, ancho: 600 }, { tamano: 11, negrita: true, maximo: 100 });
   pincel.texto(`NIT: ${empresa.nit ?? 'sin NIT'}`, { x: MARGEN, y: 46, ancho: 600 }, { tamano: 8, maximo: 40 });
   const nombre = tipoDeLibro === 'completo' ? NOMBRE_DEL_LIBRO : `${NOMBRE_DEL_LIBRO} (simplificado)`;
   pincel.texto(nombre, { x: MARGEN, y: 60, ancho: 600 }, { tamano: 10, negrita: true });
   pincel.texto(`Período: ${periodoParaElPdf(periodo)}`, { x: MARGEN, y: 74, ancho: 600 }, { tamano: 8 });
-  const folio = hoja.folio === null ? 'BORRADOR — sin folio' : `Folio ${hoja.folio}`;
-  const color = hoja.folio === null ? '#B00020' : '#000000';
-  pincel.texto(
-    folio,
-    { x: MARGEN + ANCHO_UTIL - 250, y: 30, ancho: 250 },
-    { tamano: 13, negrita: true, alinear: 'right', color },
-  );
-}
-
-function dibujarPie(pincel: PincelDelPdf, hoja: Hoja): void {
-  const texto = `Hoja ${hoja.numero} de ${hoja.total} de este libro`;
-  pincel.texto(texto, { x: MARGEN, y: 584, ancho: ANCHO_UTIL }, { tamano: 7, alinear: 'center', color: '#444444' });
+  dibujarSelloDeFolio(pincel, hoja);
 }
 
 function dibujarLibro(pincel: PincelDelPdf, datos: DatosDelPdfDelLibro): void {
   const { libro, primerFolio } = datos;
   const columnas = columnasDeLaTabla(datos.tipoDeLibro);
   for (let indice = 0; indice < libro.hojas; indice++) {
-    const hoja = { numero: indice + 1, total: libro.hojas, folio: primerFolio === null ? null : primerFolio + indice };
+    const hoja = hojaConFolio(indice, libro.hojas, primerFolio);
     pincel.documento.addPage();
     dibujarEncabezado(pincel, datos, hoja);
     const pagina = libro.paginas[indice];
     if (pagina) {
       dibujarEncabezadoDeLaTabla(pincel, columnas);
-      dibujarFilasDeLaHoja(pincel, datos.tipoDeLibro, pagina);
+      dibujarFilasDeLaHoja(pincel, columnas, pagina);
     } else dibujarHojaDeResumen(pincel, datos);
-    dibujarPie(pincel, hoja);
+    dibujarPieDeHoja(pincel, hoja);
   }
 }
 

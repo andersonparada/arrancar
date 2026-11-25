@@ -2,9 +2,9 @@ import { COLUMNAS_DEL_LIBRO, esCampoDeTexto } from '../../dominio/libro/columnas
 import type { ColumnaDeDinero } from '../../dominio/libro/fila-del-libro.js';
 import type { DatosDelPdfDelLibro } from '../../aplicacion/puertos/generador-de-pdf-del-libro.js';
 import { NOMBRE_DEL_MOTIVO_EN_EL_LIBRO } from '../../dominio/libro/motivos-del-libro.js';
-import { montoParaElPdf } from './monto-del-pdf.js';
-import type { PincelDelPdf } from './pincel-del-pdf.js';
-import { MARGEN } from './tabla-del-pdf.js';
+import { montoParaElPdf } from '../../../core/impresion/pdf/monto-del-pdf.js';
+import type { PincelDelPdf } from '../../../core/impresion/pdf/pincel-del-pdf.js';
+import { MARGEN } from '../../../core/impresion/pdf/hoja-con-folio.js';
 
 interface LineaDeResumen {
   etiqueta: string;

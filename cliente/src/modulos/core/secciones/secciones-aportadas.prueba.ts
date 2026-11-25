@@ -84,3 +84,16 @@ describe('secciones que se envían', () => {
     expect(seccionesParaEnviar({})).toEqual({});
   });
 });
+
+describe('secciones del formulario de clientes', () => {
+  it('un módulo aporta al formulario de clientes sin mezclarse con el de proveedores', () => {
+    const modulos = [
+      modulo('libro-de-ventas', [seccion({ en: 'cliente', titulo: 'Datos fiscales (ventas)' })]),
+      modulo('libro-de-compras', [seccion({ titulo: 'Fiscal de proveedor' })]),
+    ];
+
+    expect(seccionesDe(modulos, 'cliente', () => true).map(({ modulo: m }) => m)).toEqual(['libro-de-ventas']);
+    expect(seccionesDe(modulos, 'proveedor', () => true).map(({ modulo: m }) => m)).toEqual(['libro-de-compras']);
+    expect(seccionesDe(modulos, 'cliente', (clave) => clave !== 'libro-de-ventas')).toEqual([]);
+  });
+});

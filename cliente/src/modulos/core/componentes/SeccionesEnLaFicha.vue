@@ -6,7 +6,7 @@ import { seccionesDe } from '../secciones/secciones-aportadas';
 import type { DondeSeAporta } from '../tipos';
 
 /**
- * Las secciones que los módulos activos aportan a la ficha de una empresa o de un proveedor (solo lectura). Cada
+ * Las secciones que los módulos activos aportan a la ficha de una empresa, de un proveedor o de un cliente (solo lectura). Cada
  * una pone su título y sus datos con `DatosDelRegistro`, que ya es una tarjeta.
  */
 const props = defineProps<{ en: DondeSeAporta; registroId: string }>();

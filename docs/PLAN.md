@@ -4877,3 +4877,136 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-23**: VCJ-0d, correcciones de la revisión. `RepositorioEmpresas.buscarEnCuenta` bloquea la fila (`for no key update`: serializa a dos editores sin chocar con el `for key share` de las inserciones con llave foránea a la empresa; el acceso a la empresa se valida antes de bloquear): ya no se
   puede deshacer una corrección de NIT con una edición simultánea sin permiso, motivo ni rastro (prueba de concurrencia). Las pruebas de API del NIT ahora dan al editor acceso a las empresas que crean (antes daban 404).
   **Orden de unión:** Bancos `0040` se regeneró sobre la `0039` de VC-0b (`prevId` 9fc19450…, `when` posterior); **VC-0b (`0039`) se une antes que VCJ-0d**: sin ella `0040` no encadena (en esta rama `drizzle-kit` solo cuadra con la `0039` presente). Se agrega el paso VCJ-0e (cliente de Empresas con el motivo del NIT).
+- **2026-11-23 — VC-0d (servidor) hecho: piezas del PDF y foliación genérica en `core/impresion/pdf`.** Se mudaron con
+  `git mv` `pincel-del-pdf`, `monto-del-pdf`, `texto-para-el-pdf` (y su prueba); `tabla-del-pdf` quedó genérica
+  (`ColumnaDeTabla<F, M>`: cada columna dice cómo leer su texto o monto) y las columnas del libro de compras
+  pasaron a `libro-de-compras/infraestructura/pdf/columnas-de-la-tabla.ts`. La paginación con «Vienen»/«Van» y
+  `foliosQueGasta` son ahora `paginarConSubtotales` (core, con su prueba); `paginarLibro` de compras es un envoltorio
+  con las mismas firmas. El PDF del libro de compras no cambia (sus pruebas pasan sin tocarse). Libro de ventas (LV-5)
+  ya puede emitir con folios sin importar a compras.
+  Corrección de la revisión: también subieron a `core/impresion/pdf/hoja-con-folio.ts` el tamaño de hoja, el cálculo del
+  folio por hoja, el sello «Folio N» / «BORRADOR — sin folio» y el pie «Hoja N de M» (sin cambiar los bytes del PDF), y se
+  agregó una prueba de caracterización de la tabla con un pincel doble (columnas de ambos libros, Vienen/Van/Total,
+  ceros omitidos en filas y visibles en subtotales).
+- **2026-11-23 — LV-1 (servidor) hecho: esqueleto del módulo `libro-de-ventas`.** Módulo generado con
+  `dependeDe: ['libro-de-compras']` (trae Terceros). Migraciones `0000_conceptos_de_ingreso` (esquema y tabla, del
+  generador) y `0001_lv1_conceptos_y_datos_de_cliente` (clave de sistema, único por nombre normalizado, `check`s, llave
+  `(id, empresa_id)`, tabla `datos_fiscales_de_cliente` por cuenta con llave compuesta a `terceros.clientes` y la
+  auditoría permanente de `libro-de-ventas.documentos` y `.retenciones` con el motivo corregido). Conceptos de ingreso
+  (recurso generado, con semilla perezosa de cuatro conceptos —uno de sistema, `venta_de_activo_fijo`, que no se edita,
+  inactiva ni elimina—, eliminar con auditoría y Excel). Datos fiscales de cliente: escucha de
+  `terceros.cliente_guardado`, sección `libro-de-ventas` validada por campo, auditoría `corregir` al cambiar y
+  `GET /api/libro-de-ventas/clientes/:clienteId/datos-fiscales` (`terceros.ver`). Configuración declarada: las tres
+  `ict.*`, `pequeno_contribuyente.limites_anuales`, `destino.consumidor_final` y `anticipos.tratamiento` (las de la
+  tarjeta se declaran en CXC-5). Pruebas de tablas (RLS, `check`s, llave compuesta, auditoría permanente), dominio, casos
+  de uso, módulo/configuración y API (permisos, aislamiento entre cuentas, módulo apagado). Pendiente: el eliminar del
+  concepto revisa «líneas de documentos» recién en LV-2 (`enUso` devuelve falso mientras no exista la tabla); el cliente
+  generado de conceptos de ingreso (lista y ventana) ya está; LV-1c le suma el eliminar y la sección «Datos fiscales
+  (ventas)» de Clientes.
+- **2026-11-23 — LV-1: corrección de la semilla de conceptos de ingreso.** El concepto de sistema
+  `venta_de_activo_fijo` ya no depende de que alguien liste primero: `AsegurarConceptosDeSistema` lo deja en la empresa
+  al crear o importar (que no exigen `.ver`) y al listar con el catálogo ya sembrado. Si la empresa traía un concepto
+  manual con ese nombre normalizado, este cede el nombre y pasa a «… (manual)». La lista sugerida sigue sembrándose solo
+  con el catálogo vacío. Pruebas: casos de uso (crear antes de listar, renombrado) y API (crear antes de abrir; datos
+  heredados).
+- **2026-11-23 — LV-2 (servidor) hecho: documentos de venta y sus líneas (registrar, anular, eliminar).** Migración
+  `0002_lv2_documentos_y_lineas` de `libro-de-ventas`: `documentos` (receptor, régimen del mes copiado, totales por
+  columna del libro, nota que corrige una factura del libro o del sistema anterior, destino, anulación completa, moneda
+  en quetzales con las columnas de Multimoneda) y `lineas_de_documento` (clase fiscal; solo la gravada lleva IVA), con
+  RLS por empresa, llaves compuestas (cliente por cuenta; factura corregida, localidad y concepto por empresa) y los
+  `check` de la forma. Casos de uso `RegistrarDocumentoDeVenta`, `AnularDocumentoDeVenta`, `EliminarDocumentoDeVenta`,
+  `ListarDocumentosDeVenta`, `ObtenerDocumentoDeVenta` y la orden `libro-de-ventas.marcar_procesado`; el armado fiscal es
+  dominio puro (`armarDocumentoDeVenta`). Reglas de §7.1 y §7.2 con la validación del contador: régimen **del mes del
+  documento** (con `for share` del historial), `regimen_derogado` (régimen o familia derogados desde la variable
+  `libro-de-compras.regimenes.fecha_de_derogacion`; antes vale como histórico), fecha de inicio (rechazo y aviso de mes
+  incompleto), período declarado (rechazo con el control encendido, aviso apagado; lee `libro_de_compras.periodos`), notas
+  (factura del libro o del sistema anterior, mismo cliente, tope de total e IVA con las notas de débito, plazo de dos
+  meses con aviso, `nota_sobre_factura_especial`, aviso de la nota de abono sin IVA), factura especial recibida con aviso
+  de empresa inscrita, plazo de anulación en la SAT (vencimiento de la declaración corrido al día hábil, solo aviso) y
+  avisos a la cartera (`documento_por_anular` / `_por_eliminar`, `cuentas-por-cobrar.recibir_documento`; sin escucha
+  todavía, la cartera llega en CXC-1). Contratos nuevos `core/contratos/libro-de-ventas.contratos.ts` y
+  `cuentas-por-cobrar.contratos.ts`. Auditoría `anular` y `eliminar` con la ficha anterior (recurso permanente de la
+  `0001`). El eliminar de conceptos de ingreso ya revisa las líneas (`enUso`). Pruebas: dominio, casos de uso con dobles,
+  tablas (RLS, `check`s, únicos, llaves) y API (registro, consultas, permisos, aislamiento, régimen del mes, fecha de
+  inicio, períodos declarados, notas, cartera falsa). Decisiones de LV-2 en `docs/modulos/libro-de-ventas.md`.
+  Pendiente: las retenciones esperadas, el ajuste proporcional por nota de crédito y la comprobación de «constancias» al
+  eliminar llegan en LV-3; la bandeja (`dte_emitido_id`, el origen `bandeja_sat` y «anulado en la SAT») en LV-4; las
+  pantallas en LV-2c.
+- **2026-11-23 — LV-2: correcciones de la revisión.** (1) El IVA de un documento sale de su **familia**, no del régimen
+  del mes (`cobraIva({ regimen, tipo, tipoDeLaFactura })`): llevan IVA la factura, la cambiaria y la especial; no la
+  de pequeño contribuyente, agropecuario o primario, el recibo ni la nota de abono. Un tipo que no corresponde al
+  régimen solo avisa y respeta el IVA del DTE. (2) La nota de crédito o de débito hereda el tratamiento de la factura
+  del libro que corrige; si la factura es del sistema anterior (no se conoce su familia) se usa el régimen del mes
+  (pendiente de validar con `contador-guatemala`). (3) La nota de crédito que agota el total de la factura tolera hasta
+  Q0.05 de IVA de más por el redondeo de cada documento; si no agota el total, el tope del IVA es exacto. (4) Un cliente
+  con NIT `CF` se factura como consumidor final por omisión (tipo `cf`), también con solo `tipoDeIdentificacion: 'cf'`
+  o `nitReceptor: 'CF'`. Con pruebas de dominio y de API.
+- **2026-11-23 — LV-2: segunda ronda de correcciones.** (1) La nota sobre una factura del **sistema anterior** ya no
+  toma el IVA del régimen del mes de la nota: manda el IVA del DTE (`ivaDelDte`; con aviso si no concuerda con el
+  régimen de la empresa en el mes de la factura); sin él, decide el régimen del historial en `facturaAnterior.fecha`
+  (solo el general carga IVA, `ContextoDelArmado.regimenDeLaFacturaAnterior`); sin historial de ese mes se usa el de la
+  nota con aviso (`tratamientoDeLaNotaSobreFacturaAnterior`; ver la corrección del 2026-11-24: sin historial se pide
+  el IVA). (2) y (3) El tope de las notas de crédito es una sola regla (`dominio/tope-de-notas.ts`,
+  `medirElTopeDeNotasDeCredito`) que comparten registrar una nota y anular o eliminar una nota de débito: dos topes
+  absolutos e independientes (total acumulado ≤ total de la factura más sus notas de débito; IVA acumulado ≤ su IVA más
+  `max(Q0.05, Q0.01 por nota de crédito vigente, contando la nueva)`); no hay tope proporcional. Validado por el
+  contador el 2026-11-24.
+- **2026-11-24 — Libro de ventas: dictamen del contador y correcciones de la revisión (servidor).** (1) Dictamen:
+  los dos topes absolutos y la tolerancia son correctos (el libro refleja el DTE tal como se emitió, Ley del IVA art. 37;
+  la tolerancia del registro cuenta líneas y la del tope cuenta notas, no se unifican sin criterio); la nota de crédito
+  que pasa del total se bloquea con el mensaje de anular el DTE en la SAT y consultar al contador. (2) **Número y
+  autorización FEL**: los ocupan lo vigente y lo anulado en la SAT; lo anulado por `error_de_captura` o
+  `no_corresponde_a_la_empresa` es un registro interno equivocado y no los ocupa (e8a32cee se conserva). Diseño,
+  `libro-de-ventas.md` y el TSDoc de `AnularDocumentoDeVenta` corregidos. Al volver a registrar un DTE con un registro
+  anulado por error interno sale el aviso «confirme en la Agencia Virtual que sigue vigente». **Regla para LV-3 y
+  `arquitecto-de-datos`:** el libro y los reportes para la SAT filtran `estado = 'vigente' or causa_de_anulacion =
+  'fel_anulada_en_la_sat'`. (3) **IVA de la nota sobre factura anterior** (respuesta del usuario): sin IVA en el DTE y sin
+  historial del mes de la factura ya no se presume el régimen de la nota: se rechaza con `iva_de_la_nota_requerido` y se
+  pide el IVA (0 es válido). La nota de abono nunca carga IVA (b18b640d) y la fecha de la SAT al anular es obligatoria
+  en el servidor. (4) Prueba inestable de `documentos-restricciones.prueba.ts` arreglada (cada inserción se espera por
+  turno). **Pendiente del usuario:** si `no_corresponde_a_la_empresa` libera el número (hoy sí, con aviso), cómo
+  anular una factura de papel anulada en el talonario, si el aviso de nuevo registro exige confirmar, y a futuro (LV-4)
+  cruzar con la bandeja de DTE emitidos.
+- **2026-11-24 — Libro de ventas: IVA de la nota pedido en el formulario (cliente).** Si el servidor responde
+  `iva_de_la_nota_requerido`, el formulario muestra «IVA que dice la nota» dentro del bloque de la factura anterior
+  (con ayuda «escriba 0 si no lleva»), lo vuelve obligatorio (`pendientesDelIvaDeLaNota`) y esconde el mismo campo de
+  «Más datos». El aviso de nuevo registro llega por los avisos del servidor, sin cambios en el cliente.
+- **2026-11-23 — LV-1c y LV-2c (cliente de Libro de ventas) hechos.** (1) **Clientes recibe secciones de otros módulos**
+  como Proveedores: `DondeSeAporta` suma `'cliente'`; el formulario en página, la ventana del papel y la ficha de
+  Clientes muestran las secciones activas y las envían en `secciones` (alta y edición; `asignarCliente` las acepta).
+  (2) **«Datos fiscales (ventas)»** (`SeccionFiscalDeCliente` y su ficha): agente de retención del IVA (por nombre),
+  exporta productos agropecuarios, retiene ISR y retiene IVA a pequeños contribuyentes; lo que no cabe se apaga solo
+  (sin agente no hay retención de pequeño contribuyente; solo un exportador exporta) y una nota explica qué se
+  propondrá al vender sin calcular nada en el cliente. (3) **Conceptos de ingreso** completos: orden por nombre,
+  inactivar/reactivar y eliminar con confirmación, concepto de sistema solo lectura. (4) **Documentos de venta**: lista
+  con filtros (período, cliente, tipo, destino, estado, búsqueda) y páginas; formulario en página con líneas (concepto,
+  total con IVA, clase fiscal), receptor, FEL, nota con la factura que corrige (o factura anterior), destino si hay
+  cartera, «Registrar y seguir con otro» y aviso al salir con cambios; ficha con totales por columna, líneas, notas,
+  anular (causa y motivo) y eliminar según `puedeAnular`/`puedeEliminar` del servidor. Los motivos de rechazo del
+  servidor quedan a la vista con foco. Pruebas de cliente: lógica pura de datos fiscales, filtros, líneas, edición,
+  baja, detalles y avisos. **Pendientes:** la etiqueta «Con retención» y las retenciones en la ficha llegan con LV-3
+  (el servidor aún no las envía); localidad del DTE y IVA calculado en vivo no se ofrecen (no hay endpoint de vista
+  previa en LV-2); probar de punta a punta en el navegador (`pruebas-qa`).
+- **2026-11-23 — Correcciones de la revisión de LV-1c y LV-2c.** (1) **Notas a consumidor final**: la lista del
+  servidor acepta `sinCliente=true` (`cliente_id is null`, combinable con `texto`, `estado`, etc.); el selector de
+  «Factura que corrige» ya no exige cliente: sin cliente busca las facturas de consumidor final. (2) **Búsqueda de la
+  factura**: campo «Buscar la factura» por serie o número (en el servidor, con espera de 300 ms), 50 por búsqueda con
+  aviso si hay más, conserva la factura ya elegida, y un fallo de lectura se dice (con «Reintentar») en vez de pasar
+  por «sin facturas». (3) **Anular con la causa «Se anuló en la SAT»** pide la fecha del DTE (hoy por omisión, entre la
+  emisión y hoy) y la envía como `fechaDeAnulacion`; el error sale en su campo. Pruebas: `busqueda-de-facturas`,
+  `reglas-de-baja-de-documento` y la API de consultas (`sinCliente`).
+- **2026-11-23 — Segunda ronda de correcciones de LV-1c y LV-2c.** (1) La fecha de la SAT al anular ya no empieza en
+  hoy: la ventana la abre vacía y obliga a escribirla (una fecha de hoy por descuido viajaba en `documento_anulado`
+  hacia el reverso contable). (2) La búsqueda de documentos (lista y selector de «Factura que corrige») también
+  compara `serie-numero` (`concat_ws('-', serie, numero)`), así «A-123» encuentra la factura como se muestra. Pruebas:
+  `reglas-de-baja-de-documento` y la API de consultas («LISTA-2»).
+- **2026-11-24 — Libro de ventas (servidor): correcciones de la revisión del IVA de la nota y del mensaje del tope.**
+  (1) La nota sobre una factura del sistema anterior sin IVA del DTE ya no presume el régimen de la fila base del
+  historial (`vigente_desde` nulo, «rige desde el inicio»): para meses anteriores a la fecha de inicio de la empresa
+  solo cuenta una vigencia con fecha (`regimenConVigenciaEn`); sin ella se pide el IVA de la nota (0 es válido,
+  `iva_de_la_nota_requerido`). Prueba de API del rechazo y del registro con IVA 0. (2) `NotaExcedeLaFactura` dice ahora
+  qué hacer («anúlelo en la SAT dentro del plazo y emita el correcto; consulte a su contador») y la anulación de una
+  nota de débito que sostiene notas de crédito tiene su propio texto; con pruebas. **Pendiente del usuario (pregunta 4
+  del contador):** ¿se mantiene el bloqueo de la nota que pasa del total o se registra con aviso fuerte y un motivo?
+  Quedan también las preguntas 1 a 3 del dictamen (liberar `no_corresponde_a_la_empresa`, texto de la causa para el
+  talonario y aviso que solo informa o exige confirmar).

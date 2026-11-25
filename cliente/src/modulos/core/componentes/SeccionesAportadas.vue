@@ -7,12 +7,12 @@ import type { DondeSeAporta } from '../tipos';
 import TarjetaBase from './TarjetaBase.vue';
 
 /**
- * Las secciones que los módulos activos aportan al formulario de Empresas o al de Proveedores. El valor de cada
+ * Las secciones que los módulos activos aportan al formulario de Empresas, de Proveedores o de Clientes. El valor de cada
  * una viaja en `v-model` (`{ '<módulo>': valor }`) y se envía en `secciones` con el resto del formulario.
  */
 const props = defineProps<{
   en: DondeSeAporta;
-  /** La empresa o el proveedor que se edita; `null` si es nuevo. */
+  /** La empresa, el proveedor o el cliente que se edita; `null` si es nuevo. */
   registroId: string | null;
   errores: Record<string, string>;
   /** Cada sección dentro de una tarjeta (formularios en página) en vez de un grupo simple (ventanas). */
