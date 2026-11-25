@@ -39,6 +39,12 @@ export const SECCION_DE_VENTAS = {
   remanentesAyuda:
     'El remanente de retenciones va aparte del remanente del crédito fiscal, que también pasa de un mes al siguiente. La casilla exacta del formulario se confirmará con una captura de la SAT: por ahora son cifras de apoyo.',
   impuestoAPagar: 'Impuesto por pagar',
+  porConfirmar: {
+    titulo: 'Saldos por confirmar',
+    ayuda:
+      'Sin el saldo con que cerró el mes anterior no se pueden calcular estas cifras. Escríbalo en «Remanente del mes anterior» al declarar este mes, con el dato del formulario presentado a la SAT.',
+    valor: 'Por confirmar',
+  },
   retenciones: {
     delPeriodo: 'Retenciones del período',
     anterior: 'Remanente de retenciones anterior',

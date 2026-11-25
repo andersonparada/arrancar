@@ -3,8 +3,8 @@ import { SECCION_DE_VENTAS as textos } from '../../textos-del-sat-2237';
 
 export interface LineaDeRemanente {
   etiqueta: string;
-  /** Monto con dos decimales, como lo manda el servidor. */
-  valor: string;
+  /** Monto con dos decimales, como lo manda el servidor; `null` si está por confirmar. */
+  valor: string | null;
   /** Lo que se traslada o se paga: se resalta. */
   destacada: boolean;
 }
@@ -32,4 +32,13 @@ function lineaDeCredito(remanentes: RemanentesDeRetenciones, cual: 'anterior' | 
   const valor = cual === 'anterior' ? remanentes.creditoAnterior : remanentes.creditoAlSiguiente;
   if (remanentes.formulario !== 'SAT-2237' || valor === undefined) return [];
   return [{ etiqueta: textos.credito[cual], valor, destacada: cual === 'alSiguiente' }];
+}
+
+/** Lo que no se puede calcular mientras falte el saldo del mes anterior: los nombres del formulario, sin monto. */
+export function lineasPorConfirmar(formulario: RemanentesDeRetenciones['formulario'] | null): LineaDeRemanente[] {
+  const nombres = formulario === 'SAT-2046' ? textos.constancias : textos.retenciones;
+  return [
+    { etiqueta: textos.impuestoAPagar, valor: null, destacada: true },
+    { etiqueta: nombres.alSiguiente, valor: null, destacada: true },
+  ];
 }

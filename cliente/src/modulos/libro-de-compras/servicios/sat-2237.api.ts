@@ -95,6 +95,8 @@ interface Encabezado {
   /** Vacío si ningún módulo de ventas responde. */
   ventas: RespuestaDeVentas[];
   remanentes: RemanentesDeRetenciones | null;
+  /** Por qué no se puede calcular con qué saldo empieza el mes (sus cifras quedan «por confirmar»); `null` si no falta. */
+  avisoDeSaldos: string | null;
 }
 
 export interface Sat2237 extends Encabezado {

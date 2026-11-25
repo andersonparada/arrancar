@@ -4409,3 +4409,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   como supuesto (`supuestos` en `remanentes`; en `saldosIniciales` se guarda `null`), se usa solo al calcular y la
   rectificación lo vuelve a evaluar: con un mes previo queda sin dato con el aviso. La marca no entra en la tabla de
   cambios. Sin migración.
+- **2026-11-24 — Parte de cliente de la tercera corrección de VC-0c2 y VC-0c.** Las pantallas de datos del SAT-2237 y del
+  SAT-2046 reciben `avisoDeSaldos` y, cuando falta el saldo del mes anterior (el remanente no se calcula), muestran el
+  aviso y «Por confirmar» en el impuesto por pagar y en lo que pasa al mes siguiente, con la indicación de escribir el saldo
+  del formulario presentado en «Remanente del mes anterior» al declarar. Opción A del contador (captura en el mes
+  siguiente), sin campos nuevos. Pendiente del servidor: exponer el saldo vigente en el detalle del período para
+  mostrarlo en la ventana de rectificar.

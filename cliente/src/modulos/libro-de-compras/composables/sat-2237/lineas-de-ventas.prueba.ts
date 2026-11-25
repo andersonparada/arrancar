@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RemanentesDeRetenciones, RespuestaDeVentas } from '../../servicios/sat-2237.api';
-import { cifrasDeVentas, lineasDeRemanente } from './lineas-de-ventas';
+import { cifrasDeVentas, lineasDeRemanente, lineasPorConfirmar } from './lineas-de-ventas';
 
 const remanentes = (formulario: RemanentesDeRetenciones['formulario']): RemanentesDeRetenciones => ({
   formulario,
@@ -34,6 +34,16 @@ describe('líneas del remanente', () => {
 
     expect(lineas[0]?.etiqueta).toBe('Constancias del período');
     expect(lineas.at(-1)?.etiqueta).toBe('Saldo de constancias para el mes siguiente');
+  });
+});
+
+describe('cifras por confirmar', () => {
+  it('sin el saldo del mes anterior, el impuesto por pagar y lo que pasa al mes siguiente no llevan monto', () => {
+    const lineas = lineasPorConfirmar('SAT-2237');
+
+    expect(lineas.map((linea) => linea.valor)).toEqual([null, null]);
+    expect(lineas[1]?.etiqueta).toBe('Remanente de retenciones para el mes siguiente');
+    expect(lineasPorConfirmar('SAT-2046')[1]?.etiqueta).toBe('Saldo de constancias para el mes siguiente');
   });
 });
 

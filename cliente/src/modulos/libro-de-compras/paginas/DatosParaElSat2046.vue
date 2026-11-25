@@ -31,7 +31,13 @@ const delSat2046 = computed(() => (datos.value?.formulario === 'SAT-2046' ? dato
     <div class="mt-6 max-w-3xl">
       <CampoSelector v-model="periodo" etiqueta="Período" :opciones="opcionesDePeriodo" class="max-w-xs" />
       <div :aria-busy="cargando">
-        <SeccionDeVentas v-if="delSat2046" :ventas="delSat2046.ventas" :remanentes="delSat2046.remanentes" />
+        <SeccionDeVentas
+          v-if="delSat2046"
+          :ventas="delSat2046.ventas"
+          :remanentes="delSat2046.remanentes"
+          :aviso-de-saldos="delSat2046.avisoDeSaldos"
+          formulario="SAT-2046"
+        />
         <p v-if="datos && !delSat2046" class="mt-3 text-sm text-tierra-600 dark:text-tierra-300" role="status">
           {{ textos.sinSat2046 }}
         </p>

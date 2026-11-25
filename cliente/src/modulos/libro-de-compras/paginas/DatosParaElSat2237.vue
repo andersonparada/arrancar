@@ -53,7 +53,12 @@ const { periodo, datos, cargando, descargando, opcionesDePeriodo, exportar } = u
         <PestanasDelSat2237 v-model="comoEnElFormulario" />
         <VistaComoEnElFormulario v-if="comoEnElFormulario" :datos="datos" />
         <VistaPorRubros v-else :datos="datos" />
-        <SeccionDeVentas :ventas="datos.ventas" :remanentes="datos.remanentes" />
+        <SeccionDeVentas
+          :ventas="datos.ventas"
+          :remanentes="datos.remanentes"
+          :aviso-de-saldos="datos.avisoDeSaldos"
+          formulario="SAT-2237"
+        />
       </template>
     </div>
   </div>
