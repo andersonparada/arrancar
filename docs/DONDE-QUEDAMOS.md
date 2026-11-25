@@ -60,15 +60,66 @@ Actualizado: **2026-11-23** (noche). El usuario pidió seguir mañana. Si otra s
 - **Recomendaciones aceptadas en todos los puntos:** Cuentas por cobrar y Ventas (VC-P1 a VC-P24), Contabilidad (CT-P1 a
   CT-P18), Bancos aprobaciones y tarjeta (§16) y Parcelas (PA-1 a PA-19).
 
-**En curso (2026-11-24, noche):** tres workflows (reanudables con `resumeFromRunId` en la misma sesión).
-- **Ya en `main` hoy:** las cuatro cadenas retenidas (Caja chica CC-11, Libro de compras VC-0c, Libro de ventas hasta LV-2c, Contabilidad hasta
-  CT-2c), AF-9b (venta de bienes de control) y la pantalla de cambio de NIT. Suite: servidor 9584, cliente 2692, generador 46.
-- `arrancar-inventarios-completo` (run `wf_002a1ede-0ec`): INV-6c, 7c y 8c; cadena INV-9 → 10 → 11 → 12 → 14 → 13 con sus pantallas; QA al final.
-- `arrancar-cuarto-frente` (run `wf_c690a7c8-0ab`): Libro de ventas LV-3 → 4 → 5 → 5b → 6 con pantallas; Contabilidad CT-3 → 4 → 6 con
-  pantallas; AF-9c y AFI-6 → AFI-6c; Caja chica: diseño de la disputa en Libro de compras (arquitecto), CC-12, CC-13 y CC-13c.
-- `arrancar-mas-frentes` (run `wf_e5ea3971-420`): Parcelas PA-2 → 3 → 4 → AR (revisión de `seguridad`) → 5, con sus pantallas; aprobaciones de
-  Bancos AB-1 → 2 → 3 y AB-5 (AB-4 espera a Caja chica); reportes AF-10 con AFI-7 y sus pantallas; dictamen del contador sobre las
-  liquidaciones de Ventas y cobros (§24.8-B y Criterio SAT 1-2023) y revisión de `seguridad` del disparador `preparar_empresa`.
+**Pausa del 2026-11-25 (madrugada), a pedido del usuario.** Se detuvieron los tres workflows. **Nada de lo siguiente está en `main`**; cada paso
+vive en su rama. Al retomar: revisar con Opus lo «corregido después de la última revisión», terminar lo detenido, y unir por cadena en
+`integracion` (cada rama de una cadena contiene la anterior; las pantallas salen de la rama de su paso). Ojo: estos worktrees quedaron con
+cambios **sin commit** de agentes detenidos a media corrección: `wf_002a1ede-0ec-41` (INV-12c), `wf_e5ea3971-420-61` (PA-5c),
+`wf_c690a7c8-0ab-1` (LV-3), `wf_c690a7c8-0ab-21` y `wf_c690a7c8-0ab-27`: revisarlos antes de seguir (completar o descartar).
+
+Ya en `main` el 2026-11-24: las cuatro cadenas retenidas, AF-9b y la pantalla de NIT (suite: servidor 9584, cliente 2692, generador 46).
+Dictámenes de diseño de Ventas y cobros guardados: `dictamen-ventas-y-cobros-liquidaciones-2026-11-24.md` (contador) y
+`revision-seguridad-preparar-empresa-2026-11-24.md` (seguridad); falta llevar sus correcciones al diseño §24.
+
+**Inventarios** (run `wf_002a1ede-0ec`):
+
+- INV-6c: revisado, listo para unir; rama `worktree-wf_002a1ede-0ec-1`
+- INV-7c: revisado, listo para unir; rama `worktree-wf_002a1ede-0ec-2`
+- INV-8c: revisado, listo para unir; rama `worktree-wf_002a1ede-0ec-3`
+- INV-9: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_002a1ede-0ec-4`
+- INV-9c: revisado, listo para unir; rama `worktree-wf_002a1ede-0ec-18`
+- INV-10: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_002a1ede-0ec-19`
+- INV-10c: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_002a1ede-0ec-27`
+- INV-11: revisado, listo para unir; rama `worktree-wf_002a1ede-0ec-28`
+- INV-11c: revisado, listo para unir; rama `worktree-wf_002a1ede-0ec-32`
+- INV-12: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_002a1ede-0ec-33`
+- INV-12c: detenido en «corregir1»; rama `worktree-wf_002a1ede-0ec-41`
+- INV-14: detenido en «corregir1»; rama `worktree-wf_002a1ede-0ec-42`
+
+**Parcelas, aprobaciones de Bancos y reportes de Activos fijos** (run `wf_e5ea3971-420`):
+
+- disparador: terminado (documento, sin revisión); rama `—`
+- liquidaciones: terminado (documento, sin revisión); rama `—`
+- PA-2: revisado, listo para unir; rama `worktree-wf_e5ea3971-420-3`
+- AB-1: revisado, listo para unir; rama `worktree-wf_e5ea3971-420-4`
+- AF-10 con AFI-7: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_e5ea3971-420-5`
+- PA-2c: revisado, listo para unir; rama `worktree-wf_e5ea3971-420-10`
+- PA-3: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_e5ea3971-420-11`
+- AB-2: revisado, listo para unir; rama `worktree-wf_e5ea3971-420-14`
+- AF-10c con AFI-7c: revisado, listo para unir; rama `worktree-wf_e5ea3971-420-17`
+- AB-3: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_e5ea3971-420-27`
+- PA-3c: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_e5ea3971-420-29`
+- PA-4: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_e5ea3971-420-30`
+- PA-4c: revisado, listo para unir; rama `worktree-wf_e5ea3971-420-42`
+- PA-AR: revisado, listo para unir; rama `worktree-wf_e5ea3971-420-43`
+- AB-5: revisado, listo para unir; rama `worktree-wf_e5ea3971-420-46`
+- PA-ARc: revisado, listo para unir; rama `worktree-wf_e5ea3971-420-54`
+- PA-5: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_e5ea3971-420-55`
+- PA-5c: detenido en «corregir1»; rama `worktree-wf_e5ea3971-420-61`
+
+**Libro de ventas, Contabilidad, bajas de Activos fijos y Caja chica** (run `wf_c690a7c8-0ab`):
+
+- LV-3: detenido en «corregir2»; rama `worktree-wf_c690a7c8-0ab-1`
+- CT-3: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_c690a7c8-0ab-2`
+- disputa: terminado (documento, sin revisión); rama `worktree-wf_c690a7c8-0ab-3`
+- AF-9c: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_c690a7c8-0ab-4`
+- AFI-6: corregido después de la última revisión; falta revisarlo; rama `worktree-wf_c690a7c8-0ab-5`
+- CC-12 disputa: revisado, listo para unir; rama `worktree-wf_c690a7c8-0ab-6`
+- CC-13: detenido en «programar»; rama `—`
+- CT-3c: detenido en «programar»; rama `—`
+- CT-4: detenido en «corregir1»; rama `worktree-wf_c690a7c8-0ab-28`
+- AFI-6c: detenido en «programar»; rama `—`
+
+
 - **No se lanzaron** por chocar con lo que corre o esperar al usuario: Multimoneda MM-B/L/C (migraciones de Bancos, Libro y CP), tarjeta TC-1 a
   TC-9 (Bancos, después de AB), AP-4a a AP-6 (esperan P-1 a P-5 de §19 del diseño de aprobaciones), CT-3 en adelante (tras `ct`), LV-3 (tras
   `lv`), VCJ-0b (migración de Inventarios, tras la cadena INV) y AFI-6, AF-9c y AF-12 (tras AF-9b).
