@@ -36,6 +36,7 @@ export const comprobante = (cambios: Partial<Comprobante>): Comprobante => ({
   asignadoPor: null,
   motivoDeAnulacion: null,
   motivoDocumentoAnulado: null,
+  seguimiento: null,
   reposicionNumero: null,
   documento: {
     tipo: 'FACT',

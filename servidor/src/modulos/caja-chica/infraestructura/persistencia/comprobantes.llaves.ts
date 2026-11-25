@@ -17,10 +17,27 @@ type T = Record<
   | 'arqueoId'
   | 'valeProvisionalId'
   | 'documentoDeCompraId'
+  | 'documentoAnuladoId'
   | 'proveedorId'
   | 'destinoDelDocumento',
   AnyPgColumn
 >;
+
+/** Las llaves al documento del libro y a la factura anulada que un reemplazo dejó atrás (mismo proveedor, destino caja chica). */
+const llavesDelDocumento = (t: T) => [
+  // Documento de la misma empresa, del mismo proveedor y con destino caja chica (lo que luego suma la bancarización).
+  foreignKey({
+    name: 'comprobantes_documento_fk',
+    columns: [t.documentoDeCompraId, t.empresaId, t.proveedorId, t.destinoDelDocumento],
+    foreignColumns: [documentos.id, documentos.empresaId, documentos.proveedorId, documentos.destino],
+  }),
+  // La factura anulada que un reemplazo dejó atrás: del mismo proveedor y con destino caja chica.
+  foreignKey({
+    name: 'comprobantes_documento_anulado_fk',
+    columns: [t.documentoAnuladoId, t.empresaId, t.proveedorId, t.destinoDelDocumento],
+    foreignColumns: [documentos.id, documentos.empresaId, documentos.proveedorId, documentos.destino],
+  }),
+];
 
 /** Las llaves compuestas de un comprobante hacia el fondo y el concepto de gasto (de la misma empresa). */
 const llavesDeLaEmpresa = (t: T) => [
@@ -33,12 +50,6 @@ const llavesDeLaEmpresa = (t: T) => [
     name: 'comprobantes_concepto_de_gasto_fk',
     columns: [t.conceptoDeGastoId, t.empresaId],
     foreignColumns: [conceptosDeGasto.id, conceptosDeGasto.empresaId],
-  }),
-  // Documento de la misma empresa, del mismo proveedor y con destino caja chica (lo que luego suma la bancarización).
-  foreignKey({
-    name: 'comprobantes_documento_fk',
-    columns: [t.documentoDeCompraId, t.empresaId, t.proveedorId, t.destinoDelDocumento],
-    foreignColumns: [documentos.id, documentos.empresaId, documentos.proveedorId, documentos.destino],
   }),
   foreignKey({
     name: 'comprobantes_proveedor_fk',
@@ -53,6 +64,7 @@ const llavesDeLaEmpresa = (t: T) => [
  */
 export const llavesDeComprobante = (t: T) => [
   ...llavesDeLaEmpresa(t),
+  ...llavesDelDocumento(t),
   foreignKey({
     name: 'comprobantes_afectado_fk',
     columns: [t.documentoAfectadoId, t.empresaId, t.fondoId],

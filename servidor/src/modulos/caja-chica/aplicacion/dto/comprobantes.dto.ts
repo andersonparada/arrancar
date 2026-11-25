@@ -12,6 +12,20 @@ export interface DocumentoDelComprobanteDto {
   motivoFueraDelLibro: string | null;
 }
 
+/** En qué va el documento anulado por su emisor; el dinero viaja como texto con dos decimales. */
+export interface SeguimientoDelDocumentoDto {
+  situacion: 'por_resolver' | 'en_disputa' | 'resuelto';
+  salida: 'reemplazo' | 'devolucion' | 'cobro' | 'sin_recuperacion' | null;
+  /** La factura anulada que un reemplazo dejó atrás. */
+  documentoAnuladoId: string | null;
+  motivoDeLaResolucion: string | null;
+  /** Lo que se recupera, en la devolución y el cobro. */
+  monto: string | null;
+  destino: 'proveedor' | 'custodio' | null;
+  /** En disputa: el motivo, la prueba de pago y hasta cuándo se puede tomar el crédito (fecha del documento más dos meses). */
+  disputa: { motivo: string; prueba: string; hasta: string } | null;
+}
+
 /** Un comprobante: documento, vale de gasto, faltante o sobrante. El dinero viaja como texto con dos decimales. */
 export interface ComprobanteDto {
   id: string;
@@ -47,6 +61,8 @@ export interface ComprobanteDto {
   motivoDeAnulacion: string | null;
   /** Con valor, el emisor anuló la FEL y el comprobante está «documento anulado, por resolver»; el efectivo no cambia. */
   motivoDocumentoAnulado: string | null;
+  /** En qué va ese documento anulado: por resolver, en disputa o resuelto; `null` si no hay documento anulado. */
+  seguimiento: SeguimientoDelDocumentoDto | null;
   /** Está en una reposición vigente (su número); `null` si sigue pendiente. */
   reposicionNumero: number | null;
   documento: DocumentoDelComprobanteDto | null;

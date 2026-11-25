@@ -128,6 +128,24 @@ declare module '../eventos/bus-eventos.js' {
       motivo: 'devuelto_a_la_bandeja' | 'anulado';
     };
     /**
+     * Se resolvió un documento anulado por su emisor (la FEL se anuló después de gastar). El efectivo y la reposición no
+     * cambian; lo que cambia es la clasificación del gasto y su IVA. Con `reemplazo`, `documentoDeCompraId` es la FEL nueva y
+     * `documentoAnuladoId` la anulada (mismo monto); con `devolucion` o `cobro`, `salidaCentavos` es lo que se recupera y
+     * `destino` a quién; con `sin_recuperacion` el gasto queda no deducible por completo.
+     */
+    'caja-chica.documento_anulado_resuelto': {
+      empresaId: string;
+      fondoId: string;
+      comprobanteId: string;
+      documentoDeCompraId: string;
+      documentoAnuladoId: string | null;
+      salida: 'reemplazo' | 'devolucion' | 'cobro' | 'sin_recuperacion';
+      montoCentavos: number;
+      salidaCentavos: number | null;
+      destino: 'proveedor' | 'custodio' | null;
+      fecha: string;
+    };
+    /**
      * Se repuso el fondo: el cheque o la nota de débito ya está en Bancos. `lineas` trae cada comprobante con su monto
      * firmado (lo que resta, negativo), su documento del libro, concepto (solo en el vale de gasto), activo fijo y si es
      * deducible; `desglose` es el reparto por concepto de Bancos (operación, activo fijo y faltantes), que suma el monto.

@@ -11,6 +11,12 @@ function cifrasDe(fondo: Fondo, datos: DatosDeLectura): DatosDeLectura {
     : datos;
 }
 
+/** El aviso de los documentos que su emisor anuló y siguen sin resolverse (reemplazo, devolución, cobro o pérdida). */
+const avisoDeDocumentosPorResolver = (cantidad: number): string[] =>
+  cantidad === 0
+    ? []
+    : [`${cantidad} documento(s) anulado(s) por su emisor sin resolver: no dan crédito fiscal ni son deducibles.`];
+
 /** La fila de la lista: lo del fondo con sus cifras (§2.3 del diseño). */
 export function resumenDelFondo(fondo: Fondo, lectura: DatosDeLectura): FondoResumenDto {
   const datos = cifrasDe(fondo, lectura);
@@ -30,8 +36,16 @@ export function resumenDelFondo(fondo: Fondo, lectura: DatosDeLectura): FondoRes
     valesAbiertos: deCentavos(datos.valesCentavos),
     valeMasViejo: datos.valeMasViejo,
     ultimoArqueo: datos.ultimoArqueo,
-    avisos: [],
+    documentosPorResolver: datos.documentosPorResolver,
+    avisos: avisoDeDocumentosPorResolver(datos.documentosPorResolver),
   };
+}
+
+/** El tope mayor que el monto del fondo se acepta (es política interna), pero no tendrá efecto: se avisa. */
+function avisoDelTope(fondo: Fondo, lectura: DatosDeLectura): string[] {
+  const { topeCentavos, estado } = fondo;
+  if (estado !== 'abierto' || topeCentavos === null || topeCentavos <= lectura.montoCentavos) return [];
+  return ['El tope es mayor que el fondo y no tendrá efecto.'];
 }
 
 const custodioDto = ({ id: _id, ...custodio }: CustodioDelFondo): CustodioDto => custodio;
@@ -56,11 +70,12 @@ export interface FondoPorArmar {
 export function fichaDelFondo(por: FondoPorArmar): FondoDto {
   const { fondo, cambios } = por;
   const abierto = fondo.estado === 'abierto';
+  const resumen = resumenDelFondo(fondo, por.lectura);
   const vigentes = cambios.filter(({ estado }) => estado === 'vigente');
   const soloLaApertura = vigentes.length === 1 && vigentes[0]!.tipo === 'apertura';
   return {
-    ...resumenDelFondo(fondo, por.lectura),
-    avisos: [...por.avisos],
+    ...resumen,
+    avisos: [...resumen.avisos, ...por.avisos, ...avisoDelTope(fondo, por.lectura)],
     topePorComprobante: fondo.topeCentavos === null ? null : deCentavos(fondo.topeCentavos),
     cuentaBancariaId: fondo.cuentaBancariaId,
     cuentaBancariaNombre: por.lectura.cuentaBancariaNombre,

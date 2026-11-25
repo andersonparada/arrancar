@@ -4,6 +4,7 @@ import type {
   EvaluacionDeBancarizacion,
 } from '../../../core/contratos/libro-de-compras.contratos.js';
 import type { Comprobante } from '../../dominio/comprobantes.js';
+import type { SeguimientoDelDocumento } from '../../dominio/documento-anulado.js';
 
 /** Un documento del libro que llega a la bandeja; `documentoAfectadoId` ya es el comprobante de la factura. */
 export interface DocumentoRecibido {
@@ -67,6 +68,10 @@ export interface RepositorioDeComprobantes {
   anular(id: string, anulacion: AnulacionDelComprobante): Promise<void>;
   /** Deja el comprobante vigente pero «documento anulado, por resolver» (la FEL la anuló su emisor). */
   marcarDocumentoAnulado(id: string, motivo: string): Promise<void>;
+  /** Escribe en qué va el documento anulado: por resolver, en disputa o resuelto con su salida. */
+  guardarSeguimiento(id: string, seguimiento: SeguimientoDelDocumento): Promise<void>;
+  /** Apunta el comprobante a otro documento del libro (el que reemplaza a la factura anulada). */
+  ponerDocumento(id: string, documentoDeCompraId: string): Promise<void>;
   /** Borra el comprobante (solo cuando el libro elimina su documento). */
   eliminar(id: string): Promise<void>;
   /** Cuántas notas de crédito vigentes tiene la factura dentro de un fondo (las de la bandeja no la atan). */

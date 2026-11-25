@@ -4,6 +4,7 @@ import type { Comprobante } from '../../../dominio/comprobantes.js';
 import { desglosarLaReposicion, totalDeLaReposicion } from '../../../dominio/desglose-de-reposicion.js';
 import type { LineaDeReposicionEmitida } from '../../../dominio/eventos-de-reposiciones.js';
 import { efectoEnLoPendiente } from '../../../dominio/reglas-de-comprobantes.js';
+import { esDeducible } from '../../../dominio/reglas-de-reportes.js';
 import type {
   ComprobanteParaDesglosar,
   DesgloseDeReposicion,
@@ -99,7 +100,7 @@ export const lineasEmitidas = (firmados: readonly ComprobanteFirmado[]): LineaDe
     conceptoDeGastoId: comprobante.conceptoDeGastoId,
     montoCentavos: firmadoCentavos,
     conActivoFijo: comprobante.conActivoFijo,
-    deducible: comprobante.documento?.enElLibro ?? false,
+    deducible: esDeducible(comprobante),
   }));
 
 /**

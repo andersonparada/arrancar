@@ -20,6 +20,8 @@ import type {
   ParamsDeFondo,
 } from './fondos.esquemas-http.js';
 
+const PERMISO_CERRAR_CON_DOCUMENTOS_POR_RESOLVER = 'caja-chica.fondos.cerrar-con-documentos-por-resolver';
+
 export interface CasosDeUsoDeFondos {
   abrir: AbrirFondo;
   listar: ListarFondos;
@@ -71,5 +73,10 @@ export class FondosControlador {
     });
 
   cerrar = (solicitud: ConId<CierreSolicitado>) =>
-    this.casosDeUso.cerrar.ejecutar(operadorDe(solicitud), { fondoId: solicitud.params.id, ...solicitud.body });
+    this.casosDeUso.cerrar.ejecutar(operadorDe(solicitud), {
+      fondoId: solicitud.params.id,
+      ...solicitud.body,
+      puedeCerrarConDocumentosPorResolver:
+        solicitud.contexto?.permisos.has(PERMISO_CERRAR_CON_DOCUMENTOS_POR_RESOLVER) ?? false,
+    });
 }

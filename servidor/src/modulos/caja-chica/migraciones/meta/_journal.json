@@ -50,6 +50,13 @@
       "when": 1795485837678,
       "tag": "0006_nombre_de_quien_arquea",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795574211950,
+      "tag": "0007_seguimiento_del_documento_anulado",
+      "breakpoints": true
     }
   ]
 }

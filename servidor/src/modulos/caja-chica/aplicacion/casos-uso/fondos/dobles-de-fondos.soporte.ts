@@ -111,6 +111,7 @@ export const consultas = (cifras: Partial<DatosDeLectura> = {}): ConsultasDeFond
           valeMasViejo: null,
           ultimoArqueo: null,
           aperturaAnulada: false,
+          documentosPorResolver: 0,
           ...cifras,
         },
       ]),

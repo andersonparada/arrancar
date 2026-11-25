@@ -1,3 +1,5 @@
+import type { SeguimientoDelDocumento } from './documento-anulado.js';
+
 /** El recurso de auditoría y de eventos de los comprobantes. */
 export const RECURSO_DE_COMPROBANTES = 'caja-chica.comprobantes';
 
@@ -54,6 +56,8 @@ export interface Comprobante {
   motivoDeAnulacion: string | null;
   /** El emisor anuló la FEL: el comprobante sigue vigente (el efectivo salió) y queda «por resolver» con este motivo. */
   motivoDocumentoAnulado: string | null;
+  /** En qué va ese documento anulado (por resolver, en disputa o resuelto); `null` si no hay documento anulado. */
+  seguimiento: SeguimientoDelDocumento | null;
   reposicionNumero: number | null;
   documento: DocumentoDelComprobante | null;
 }

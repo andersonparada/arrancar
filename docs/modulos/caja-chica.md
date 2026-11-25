@@ -50,6 +50,20 @@ cambios) deja el fondo `cerrado` con `aperturaAnulada` en la ficha. El módulo a
 apertura o aumento; el resto se rechaza). Eventos: `fondo_abierto`, `monto_del_fondo_cambiado`, `cambio_de_monto_anulado` y
 `custodio_cambiado`.
 
+## Documento anulado por su emisor (CC-11, dictamen del 2026-11-24)
+
+La anulación de la FEL es un hecho fiscal: el dinero ya salió. Si el comprobante está en un fondo (pendiente, repuesto, de un
+vale liquidado o de un fondo cerrado) queda **vigente y «por resolver»** (`seguimiento.situacion`), sin cambiar el efectivo
+esperado, la reposición ni el movimiento de Bancos; en la bandeja se anula como siempre. No es deducible en CC-R1, CC-R2 ni en
+los eventos de reposición, y CC-R3 lo trae con su motivo. Se resuelve (`caja-chica.comprobantes.resolver`) con **reemplazo**
+(la FEL nueva de la bandeja, del mismo proveedor y monto, ocupa su lugar; la anulada queda en `documento_anulado_id`),
+**devolución**, **cobro** (monto y destino proveedor o custodio) o **sin recuperación**, y publica `documento_anulado_resuelto`
+para Contabilidad. La **disputa** (la empresa no reconoce la anulación) lleva motivo, referencia de la prueba de pago y la
+fecha límite (fecha del documento más dos meses); no reactiva el documento. Un fondo con documentos por resolver o en disputa
+no se cierra sin `caja-chica.fondos.cerrar-con-documentos-por-resolver` (el motivo del cierre queda en la auditoría). Marcar
+«por resolver» audita `corregir`; resolver, `ajustar`. Un tope por comprobante mayor que el fondo se acepta con el aviso «el
+tope es mayor que el fondo y no tendrá efecto».
+
 ## Pendiente (pasos siguientes del diseño §14)
 
 La configuración (§9.5), los comprobantes, reposiciones, arqueos, vales, cierre y las pantallas (CC-3 en adelante); la pregunta `libro-de-compras.pagado_al_proveedor_en_el_mes` (CCL-M, CCL-BZ) y la referencia de destino

@@ -4381,3 +4381,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   vigente): por ejemplo reabrir o revertir la liquidación del vale con auditoría. Se corrigió el informe, que decía que anular el vale era la salida.
   Entorno: el puerto 5433 del PostgreSQL de desarrollo no se alcanzaba desde el equipo (puente de Docker viejo con la misma red 172.19.0.0/16
   que `arrancar-dev_default`): la QA usó un PostgreSQL propio y desechable.
+
+- **2026-11-24 (CC-11, servidor: factura anulada por el emisor, disputa y tope):** con el dictamen del contador sobre la regla del
+  usuario. Se **cambió** «anular el movimiento bancario y volver la liquidación a guardada» por «Reemplazar el documento anulado»:
+  la caja, el banco, el vale y la reposición no se tocan, solo cambia la clasificación del gasto. Con la FEL anulada por el emisor, un
+  comprobante que está en un fondo (también uno vigente sin reponer: antes se anulaba y el efectivo esperado subía, dando un faltante
+  falso) queda vigente y «por resolver»; la auditoría ahora dice `corregir`. Corregido el hallazgo alto: CC-R1, CC-R2, CC-R3 y los eventos
+  de reposición lo tratan como no deducible (CC-R3 lo trae con su motivo). Migración `0007` (situación, salida, factura anulada,
+  monto y destino de la salida, disputa). Rutas nuevas con el permiso `caja-chica.comprobantes.resolver`:
+  `POST /caja-chica/comprobantes/:id/documento-anulado/{resolver,reemplazar,disputa,retirar-disputa}`; resolver audita `ajustar`
+  (devolución, cobro o sin recuperación; monto y destino, sin pasar de lo gastado), el reemplazo exige la FEL nueva en la bandeja, del
+  mismo proveedor, monto y clase (otro monto se resuelve con devolución o cobro) y marca la nueva como procesada si ya estaba repuesto;
+  la disputa lleva motivo, prueba de pago y fecha límite de dos meses. Un fondo con documentos por resolver o en disputa no se cierra
+  sin el permiso nuevo `caja-chica.fondos.cerrar-con-documentos-por-resolver` (la excepción queda en el motivo de la auditoría); la
+  ficha trae `documentosPorResolver` y un aviso. El tope por comprobante mayor que el fondo se acepta con el aviso «el tope es mayor
+  que el fondo y no tendrá efecto». Evento nuevo `caja-chica.documento_anulado_resuelto` (nadie lo escucha todavía). Corregida la
+  prueba en rojo de `causa` en el libro y el fallo de CC-R4 (la prueba sembraba el vale con la fecha de la base en UTC, no la de
+  Guatemala). Sin hacer, por decisión o por ser de otra parte: la marca de disputa en el documento del Libro de compras, la prueba de
+  pago como PDF adjunto, las partidas de Contabilidad, el aviso en el arqueo y todo el cliente.

@@ -19,10 +19,19 @@ export const PERMISOS_DE_CAJA_CHICA: DefinicionPermiso[] = [
   { clave: 'caja-chica.fondos.cambiar-monto', descripcion: 'Aumentar y disminuir el monto del fondo' },
   { clave: 'caja-chica.fondos.cerrar', descripcion: 'Cerrar un fondo y anular una apertura sin uso' },
   {
+    clave: 'caja-chica.fondos.cerrar-con-documentos-por-resolver',
+    descripcion: 'Cerrar un fondo que aún tiene documentos anulados por su emisor sin resolver (con motivo)',
+  },
+  {
     clave: 'caja-chica.comprobantes.crear',
     descripcion: 'Asignar documentos a un fondo, devolverlos a la bandeja y registrar vales de gasto',
   },
   { clave: 'caja-chica.comprobantes.anular', descripcion: 'Anular vales de gasto' },
+  {
+    clave: 'caja-chica.comprobantes.resolver',
+    descripcion:
+      'Resolver un documento anulado por su emisor: reemplazo, devolución, cobro, sin recuperación y su disputa',
+  },
   {
     clave: 'caja-chica.comprobantes.sobre-el-tope',
     descripcion: 'Asignar o registrar un comprobante que pasa del tope, con motivo',

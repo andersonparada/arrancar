@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, gte, inArray, isNotNull, lte, notExists, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, gt, gte, inArray, isNotNull, isNull, lte, ne, notExists, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { conceptosDeGasto } from '../../../libro-de-compras/infraestructura/persistencia/conceptos-de-gasto.tablas.js';
@@ -115,6 +115,12 @@ export async function pendientesAlCorteDe({ corte, fondoId }: FiltroAlCorte): Pr
   return conFondoYConcepto(filas);
 }
 
+/** El emisor anuló la FEL y no hay otra que la reemplace: el gasto no tiene documento fiscal. */
+const sinDocumentoVigente = and(
+  isNotNull(comprobantes.motivoDocumentoAnulado),
+  or(isNull(comprobantes.salidaDelDocumento), ne(comprobantes.salidaDelDocumento, 'reemplazo')),
+);
+
 /** CC-R3: vales de gasto y documentos fuera del libro, vigentes y de la fecha del período. */
 export async function sinDocumentoFiscalDe({
   desde,
@@ -131,7 +137,7 @@ export async function sinDocumentoFiscalDe({
         lte(comprobantes.fecha, hasta),
         or(
           eq(comprobantes.clase, 'vale_de_gasto'),
-          and(eq(comprobantes.clase, 'documento'), eq(documentos.muestraEnReportesSat, false)),
+          and(eq(comprobantes.clase, 'documento'), or(eq(documentos.muestraEnReportesSat, false), sinDocumentoVigente)),
         ),
       ),
     )
