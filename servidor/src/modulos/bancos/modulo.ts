@@ -21,6 +21,7 @@ import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 import { rutasDeTransferencias } from './composicion/transferencias.js';
 import { rutasDeIntereses } from './composicion/intereses.js';
 import { rutasDeConceptos } from './composicion/conceptos.js';
+import { respuestaDeLlavesDeEnlaceComponida } from './composicion/llaves-de-enlace.js';
 import { ordenesDeBancos } from './composicion/ordenes.js';
 import { rutasDeReportesPorConcepto } from './composicion/reportes-por-concepto.js';
 import { rutasDeSaldosPorCuenta } from './composicion/saldos-por-cuenta.js';
@@ -190,6 +191,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeIntereses(),
     ordenesDeBancos(),
     escuchasDeFechaDeInicioDeBancos(),
+    respuestaDeLlavesDeEnlaceComponida(),
     // generador: rutas
   ]),
 };

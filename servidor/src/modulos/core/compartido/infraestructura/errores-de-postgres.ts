@@ -60,6 +60,7 @@ const MENSAJES_DE_LLAVE: Readonly<Record<string, string>> = {
     'El documento tiene costos capitalizados en Activos fijos, aunque estén anulados, y no se puede eliminar: anúlelo en su lugar.',
   movimientos_linea_de_compra_fk: MENSAJE_DE_DOCUMENTO_CON_MOVIMIENTOS,
   documentos_compra_fk: MENSAJE_DE_DOCUMENTO_CON_MOVIMIENTOS,
+  cuentas_padre_fk: 'La cuenta tiene cuentas inferiores: elimínelas antes o déjela como está.',
 };
 
 /** Restricciones únicas cuyo valor repetido lo escribe el usuario en un campo: el cliente lo marca ahí. */

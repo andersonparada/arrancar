@@ -82,6 +82,8 @@ beforeEach(async () => {
         avisados.push(aviso);
         if (rechazo) throw rechazo;
       },
+      cargaPorCerrar: async () => {},
+      cargaPorReabrir: async () => {},
     },
     preguntas: { revisar: async () => [] },
   };

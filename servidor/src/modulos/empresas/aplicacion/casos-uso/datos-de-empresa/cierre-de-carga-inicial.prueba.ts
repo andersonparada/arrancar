@@ -95,7 +95,11 @@ beforeEach(async () => {
     repositorioCargas: cargas,
     consultas: new ConsultasDeDatosDeEmpresaEnMemoria(fiscales, cargas, new Map([[empresaId, 'Rancho El Quiroa']])),
     auditoria,
-    avisos: { fechaDeInicioPorCambiar: async () => {} },
+    avisos: {
+      fechaDeInicioPorCambiar: async () => {},
+      cargaPorCerrar: async () => {},
+      cargaPorReabrir: async () => {},
+    },
     preguntas: {
       revisar: async (quien, datos) => {
         preguntados.push({ ...datos, operadorEmpresaId: quien.empresaId });

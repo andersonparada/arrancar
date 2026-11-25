@@ -7,6 +7,7 @@ import type { ChequeCobradoAntes, DatosParaAvisosDelCorte } from '../../puertos/
 /** Las leyendas fijas de los reportes de saldos (§2.1 y §2.3 del diseño de CP5). */
 export const LEYENDAS_DE_SALDOS = [
   'Las aplicaciones de notas y los pagos reaplicados se muestran como están hoy; el saldo neto de cada proveedor no depende de eso.',
+  'Este reporte no incluye documentos eliminados, aunque se hayan eliminado después de la fecha de corte. Si ya cerró ese mes con un reporte anterior, el saldo puede ser distinto.',
   'Los cheques posfechados no rebajan el saldo antes de su fecha (NIIF para las Pymes, sección 11).',
 ];
 

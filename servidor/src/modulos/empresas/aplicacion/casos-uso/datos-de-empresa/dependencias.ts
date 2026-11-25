@@ -1,6 +1,6 @@
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
-import type { AvisosDeFechaDeInicio } from '../../puertos/avisos-de-empresa.js';
+import type { AvisosDeFechaDeInicio, AvisosDeLaCarga } from '../../puertos/avisos-de-empresa.js';
 import type { EjecutorEnEmpresa } from '../../ejecutor-en-empresa.js';
 import type { ConsultasDeDatosDeEmpresa } from '../../puertos/consultas-de-datos-de-empresa.js';
 import type { PreguntasDeCierre } from '../../puertos/preguntas-de-cierre.js';
@@ -15,6 +15,6 @@ export interface DependenciasDeDatosDeEmpresa {
   repositorioCargas: RepositorioDeCargasIniciales;
   consultas: ConsultasDeDatosDeEmpresa;
   auditoria: Auditoria;
-  avisos: AvisosDeFechaDeInicio;
+  avisos: AvisosDeFechaDeInicio & AvisosDeLaCarga;
   preguntas: PreguntasDeCierre;
 }

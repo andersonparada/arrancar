@@ -12,6 +12,7 @@ import { moduloInventarios } from './inventarios/modulo';
 import { moduloMultimoneda } from './multimoneda/modulo';
 import { moduloParcelas } from './parcelas/modulo';
 import { moduloLibroDeVentas } from './libro-de-ventas/modulo';
+import { moduloContabilidad } from './contabilidad/modulo';
 // generador: importaciones
 
 /** Módulos del frontend, en el orden del menú; el core va al final (Cuenta y Soporte). */
@@ -28,6 +29,7 @@ export const modulosCliente: readonly DefinicionModuloCliente[] = [
   moduloMultimoneda,
   moduloParcelas,
   moduloLibroDeVentas,
+  moduloContabilidad,
   // generador: modulos
   moduloCore,
 ];

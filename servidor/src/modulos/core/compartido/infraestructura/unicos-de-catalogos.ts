@@ -29,6 +29,11 @@ export const UNICOS_DE_CATALOGOS: Readonly<Record<string, UnicoRepetido>> = {
     mensaje: 'Ya existe una parcela con ese nombre en esa localidad.',
     campo: 'nombre',
   },
+  cuentas_codigo_unico: { mensaje: 'Ya existe una cuenta con ese código.', campo: 'codigo' },
+  cuentas_nombre_unico: {
+    mensaje: 'Ya existe una cuenta con ese nombre bajo la misma cuenta superior.',
+    campo: 'nombre',
+  },
 };
 
 /** Los mensajes por restricción, para sumarlos a los demás. */

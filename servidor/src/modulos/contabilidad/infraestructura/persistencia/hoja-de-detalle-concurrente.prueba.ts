@@ -1,0 +1,155 @@
+/**
+ * Prueba de integración: dos transacciones a la vez no pueden dejar una cuenta de detalle con cuentas inferiores. El
+ * disparador bloquea a la cuenta superior, así que la segunda espera a la primera y ve lo que esta confirmó.
+ */
+import pg, { type DatabaseError } from 'pg';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { configuracion } from '../../../../configuracion.js';
+import { bd, grupoConexiones } from '../../../core/base-datos/conexion.js';
+import { migrarModulos } from '../../../core/base-datos/migrador.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
+import type { ContextoEmpresa } from '../../../core/compartido/aplicacion/contexto-empresa.js';
+import { enTransaccionSegura } from '../../../core/compartido/pruebas/en-transaccion-segura.js';
+import { cuentas as cuentasDeSuscriptor } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
+import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
+import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
+import { definicionesModulos } from '../../../indice.js';
+import { count, eq } from 'drizzle-orm';
+import { cuentas } from './cuentas.tablas.js';
+
+let contexto: ContextoEmpresa;
+let padreId: string;
+
+const espera = (milisegundos: number) => new Promise((resolver) => setTimeout(resolver, milisegundos));
+
+beforeAll(async () => {
+  await migrarModulos(configuracion.DATABASE_URL_PROPIETARIO!, definicionesModulos);
+  const propietario = new pg.Client({ connectionString: configuracion.DATABASE_URL_PROPIETARIO });
+  await propietario.connect();
+  await propietario.query('truncate core.cuentas, core.usuarios cascade');
+  await propietario.end();
+  const [suscriptor] = await bd.insert(cuentasDeSuscriptor).values({ nombre: 'Cuenta C' }).returning();
+  const [usuario] = await bd
+    .insert(usuarios)
+    .values({ usuario: 'contabilidaddos', nombres: 'Contabilidad', hashContrasena: 'x' })
+    .returning();
+  const [empresa] = await bdPropietario
+    .insert(empresas)
+    .values({ cuentaId: suscriptor!.id, nombre: 'Empresa C' })
+    .returning();
+  contexto = { empresaId: empresa!.id, cuentaId: suscriptor!.id, usuarioId: usuario!.id };
+  const [padre] = await enTransaccionSegura(contexto, (tx) =>
+    tx
+      .insert(cuentas)
+      .values({
+        empresaId: empresa!.id,
+        codigo: '1',
+        nombre: 'Activo',
+        nivel: 1,
+        naturaleza: 'deudora',
+        tipo: 'balance',
+        esDeDetalle: false,
+      })
+      .returning(),
+  );
+  padreId = padre!.id;
+});
+
+afterAll(async () => {
+  await grupoConexiones.end();
+});
+
+describe('disparador cuentas_hoja_de_detalle con dos conexiones', () => {
+  it('quien vuelve de detalle a la cuenta superior espera a quien le inserta una hija, y falla', async () => {
+    let soltar!: () => void;
+    const puerta = new Promise<void>((resolver) => (soltar = resolver));
+    const hija = enTransaccionSegura(contexto, async (tx) => {
+      await tx.insert(cuentas).values({
+        empresaId: contexto.empresaId,
+        codigo: '1.1',
+        nombre: 'Hija',
+        nivel: 2,
+        padreId,
+        naturaleza: 'deudora',
+        tipo: 'balance',
+        esDeDetalle: false,
+      });
+      await puerta;
+    });
+    await espera(300);
+    const cambio = enTransaccionSegura(contexto, (tx) =>
+      tx.update(cuentas).set({ esDeDetalle: true, rubro: 'efectivo' }).where(eq(cuentas.id, padreId)),
+    ).then(
+      () => undefined,
+      (error: unknown) => (error as { cause?: DatabaseError }).cause ?? error,
+    );
+    await espera(500);
+    soltar();
+    await hija;
+
+    const error = (await cambio) as DatabaseError | undefined;
+    expect(error?.code).toBe('23514');
+  });
+
+  it('quien cambia a la cuenta superior con for no key update espera la hija en curso y la ve al seguir', async () => {
+    const [otra] = await enTransaccionSegura(contexto, (tx) =>
+      tx
+        .insert(cuentas)
+        .values({
+          empresaId: contexto.empresaId,
+          codigo: '2',
+          nombre: 'Pasivo',
+          nivel: 1,
+          naturaleza: 'acreedora',
+          tipo: 'balance',
+          esDeDetalle: false,
+        })
+        .returning(),
+    );
+    let soltar!: () => void;
+    const puerta = new Promise<void>((resolver) => (soltar = resolver));
+    const hija = enTransaccionSegura(contexto, async (tx) => {
+      await tx.insert(cuentas).values({
+        empresaId: contexto.empresaId,
+        codigo: '2.1',
+        nombre: 'Hija pasivo',
+        nivel: 2,
+        padreId: otra!.id,
+        naturaleza: 'acreedora',
+        tipo: 'balance',
+        esDeDetalle: false,
+      });
+      await puerta;
+    });
+    await espera(300);
+    const hijasVistas = enTransaccionSegura(contexto, async (tx) => {
+      await tx.select().from(cuentas).where(eq(cuentas.id, otra!.id)).for('no key update');
+      const [fila] = await tx.select({ total: count() }).from(cuentas).where(eq(cuentas.padreId, otra!.id));
+      return fila!.total;
+    });
+    await espera(500);
+    soltar();
+    await hija;
+    expect(await hijasVistas).toBe(1);
+  });
+
+  it('quien le crea una hija toma for share de la cuenta superior y espera a quien la está cambiando', async () => {
+    let soltar!: () => void;
+    const puerta = new Promise<void>((resolver) => (soltar = resolver));
+    const cambio = enTransaccionSegura(contexto, async (tx) => {
+      await tx.select().from(cuentas).where(eq(cuentas.id, padreId)).for('no key update');
+      await puerta;
+    });
+    await espera(300);
+    let leyo = false;
+    const lectura = enTransaccionSegura(contexto, (tx) =>
+      tx.select().from(cuentas).where(eq(cuentas.id, padreId)).for('share'),
+    ).then(() => (leyo = true));
+    await espera(500);
+    expect(leyo).toBe(false);
+    soltar();
+    await cambio;
+    await lectura;
+    expect(leyo).toBe(true);
+  });
+});

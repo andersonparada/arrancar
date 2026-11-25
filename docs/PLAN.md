@@ -5010,3 +5010,130 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   del contador):** ¿se mantiene el bloqueo de la nota que pasa del total o se registra con aviso fuerte y un motivo?
   Quedan también las preguntas 1 a 3 del dictamen (liberar `no_corresponde_a_la_empresa`, texto de la causa para el
   talonario y aviso que solo informa o exige confirmar).
+
+- **2026-11-23 (CT-0e y CT-0f, Contabilidad)**:
+  - CT-0e (Empresas, sin migración): avisos `empresas.carga_por_cerrar` y `empresas.carga_por_reabrir`
+    (`{ empresaId, fechaDeInicio }`) declarados en `core/contratos/empresas.contratos.ts`. Puerto nuevo `AvisosDeLaCarga`
+    (`empresas/aplicacion/puertos/avisos-de-empresa.ts`), implementado por `AvisosDeEmpresaEnMediador`. `CerrarCargaInicial`
+    avisa después de guardar el cierre y antes de auditar, y `ReabrirCargaInicial` después de guardar la reapertura, los dos
+    dentro de la transacción, con el operador de la empresa de la carga: un error del que escucha deshace todo (veto del
+    período cerrado). Pruebas unitarias (`avisos-de-la-carga.prueba.ts`) y de API
+    (`pruebas-api/empresas-avisos-de-la-carga.api.prueba.ts`). Nadie escucha todavía: Contabilidad lo hará en CT-6.
+  - CT-0f (documentación): `diseno-cp5-reportes.md` §2.3 corregido: un documento eliminado sí estaba provisionado y
+    eliminarlo cancela su partida. Corregido en la revisión: eliminar un documento sí cambia el saldo neto y el total de
+    los cortes pasados; hoy solo se elimina un documento no autorizado y con el Libro de compras abierto, y «período
+    contable abierto» es regla futura con Contabilidad. Leyenda nueva en `LEYENDAS_DE_SALDOS` («Un documento eliminado
+    después del corte ya no aparece…»), por validar con el contador. La prueba de API de CT-0e no se pudo correr aquí
+    (ECONNRESET a PostgreSQL :5433 desde el entorno del agente): correrla antes de unir.
+
+- **2026-11-23 (CT-1, Contabilidad: esqueleto, inicio y nomenclatura)**:
+  - Módulo `contabilidad` (`dependeDe: ['terceros']`) creado con el generador y registrado en `modulos/indice.ts`; la
+    cuenta salió de `generador/definiciones/contabilidad/cuenta.ts` y se completó a mano (el cliente generado se quitó:
+    las pantallas son de CT-1c). Migraciones `0000_ct1_cuentas_e_inicios` (tablas `inicios` y `cuentas`, RLS por empresa,
+    únicos, `check`, árbol con llave compuesta) y `0001_ct1_hoja_de_detalle_y_auditoria` (disparador
+    `cuentas_hoja_de_detalle` y auditoría permanente de `contabilidad.cuentas` y `contabilidad.inicio`).
+  - Dominio: `MascaraDeCuentas`, `Cuenta` (la cuenta superior y el nivel salen del código; rubros completos de §5.2 en
+    `rubros.ts`), `InicioContable`. Casos de uso: `GuardarInicio` y `ObtenerInicio`; `CrearCuenta`, `ActualizarCuenta`
+    (inactivar y reactivar con auditoría), `EliminarCuenta` (auditoría `eliminar`), `ListarCuentas` y `ObtenerCuenta`. API:
+    `GET/PUT /contabilidad/inicio` y `/contabilidad/cuentas` con Excel (exportar, plantilla e importar todo o nada). La
+    carga inicial se consulta por el mediador (`empresas.obtener_carga_inicial`).
+  - Decisiones: `activo` en vez de `activa`; el código de una cuenta no cambia; `corriente` no nulo; `moneda_codigo`
+    (`char(3)`, FK a `core.monedas`) solo como columna; lo que revisa tablas que aún no existen (saldo cero, enlaces,
+    líneas, partidas contabilizadas) queda para CT-2 y CT-3. Detalle en `diseno-contabilidad.md` §5.2. Sin plantillas
+    (CT-1p espera la del contador).
+  - Pruebas: 101 de Contabilidad (dominio, casos de uso, tablas y disparador contra PostgreSQL, API de inicio y de
+    cuentas con Excel) y 80 de seguridad y registro de módulos. Nota del entorno: desde el entorno del agente el puerto
+    publicado :5433 responde `ECONNRESET`; las pruebas se corrieron en un contenedor que comparte la red de la base de
+    desarrollo (`docker run --network container:arrancar-dev-postgres-1 …` con un reenviador :5433 a :5432).
+  - Corrección de la revisión de CT-1 (migración `0002_bloqueo_del_padre_en_hoja_de_detalle`): (1) `GuardarInicio` solo
+    valida la fecha y el caso contra la carga al crear el inicio o cuando cambian; los firmantes se cambian siempre.
+    (2) El disparador `cuentas_hoja_de_detalle` bloquea la cuenta superior (`FOR SHARE`) antes de revisar si es de detalle
+    (prueba con dos conexiones). (3) `RepositorioInicios.obtener(bloqueo)`: `exclusivo` al guardar el inicio y
+    `compartido` al crear cuentas, para que una máscara nueva y la primera cuenta no se crucen sin verse. Pendiente de
+    decisión: qué pasa con `inicios.fecha` cuando la empresa cambia su fecha de inicio (hoy queda distinta sin aviso y
+    solo se detecta al cambiar la fecha del inicio; opciones: vetar el cambio o avisar por el mediador).
+  - Segunda corrección de la revisión de CT-1: la regla «`tipo` igual al del padre» tenía la misma carrera. `ActualizarCuenta`
+    lee la cuenta con `buscarParaCambiar` (`FOR NO KEY UPDATE`) antes de `tieneHijas`, y al crear se lee al padre con
+    `buscarPorCodigoParaCompartir` (`FOR SHARE`), que choca con el bloqueo del otro lado. Pruebas con dos conexiones.
+- **2026-11-23 (CT-2, Contabilidad: enlaces de roles y llaves)**:
+  - Tabla `contabilidad.enlaces` (migración `0003_ct2_enlaces`: RLS por empresa, único `(empresa_id, rol, coalesce(llave, ''))`,
+    llave compuesta con la cuenta, `check` del rol y de la llave) y `0004_ct2_auditoria_permanente_de_enlaces` (`--custom`).
+    Catálogo de roles con metadatos en `dominio/roles-de-enlace.ts`; entidad `Enlace` (cuenta de detalle y activa, llave solo
+    en roles que la llevan).
+  - Casos de uso: `ListarEnlaces` (roles de los módulos activos), `ListarLlavesDeEnlace`, `GuardarEnlace` (crea o cambia la
+    cuenta; audita `corregir`; marca de control la cuenta de un rol de auxiliar), `QuitarEnlace` (audita `quitar`) y las dos
+    piezas del Excel. API `GET/PUT/DELETE /contabilidad/enlaces…` con Excel y permisos `ver`, `editar`, `importar`, `exportar`.
+  - Pregunta `contabilidad.llaves_de_enlace` respondida por Bancos (cuentas y conceptos), Libro de compras (reglas de
+    retención y conceptos de gasto) y Cuentas por pagar (categorías de proveedor). Los nombres de las reglas pasaron a
+    `dominio/nombres-de-reglas-de-retencion.ts` (los usa también el Excel de retenciones).
+  - Se cerró lo de CT-1 sobre enlaces: una cuenta enlazada no se inactiva ni se vuelve de mayor (`cuenta_con_enlaces`).
+    Detalle y decisiones en `diseno-contabilidad.md` §5.3.
+  - Pruebas: 47 nuevas (dominio y catálogo, casos de uso, tabla contra PostgreSQL, API con Excel y permisos, y las tres
+    respuestas); 369 en las carpetas tocadas, en verde. Nota del entorno: el puerto :5433 sigue respondiendo `ECONNRESET`
+    al agente; las pruebas se corrieron en un contenedor propio con `SERVIDOR` de `nombres-de-bases.ts` apuntando a su
+    puerto, cambio local que no se confirmó.
+- **2026-11-23 (CT-2, segunda ronda de correcciones)**:
+  - `QuitarEnlace` lee el enlace con `for update` por id (`buscarParaQuitar`): si otra transacción lo cambia o lo quita, espera
+    y audita lo que de verdad borra (antes podía dejar `anterior` viejo o un segundo `quitar` falso). Pruebas de dos
+    conexiones en `enlace-concurrente.prueba.ts` (cambio de cuenta contra quitar; dos quitar a la vez; ambas fallan sin el cambio).
+  - `retencion_por_pagar` es rol de auxiliar (§5.3 y prueba del conjunto): el dictamen del contador
+    (`dictamen-contabilidad-2026-11-18.md` §8: «Retenciones por pagar: mayor = constancias pendientes»; cuentas de control) y §4.4
+    (Cuentas por pagar responde las retenciones pendientes de saldo inicial) la ponen entre las cuentas que cuadran con un auxiliar.
+    Decisión del programador con ese dictamen ya vigente: no se pudo consultar de nuevo a `contador-guatemala` desde este paso.
+    **Pendiente para el contador:** si `iva_credito_fiscal` (cuadra con el libro) y los puentes
+    (`puente_compras_de_activos`, `puente_de_apertura`), que el §8 de su dictamen también cuadra, deben ser de control.
+- **2026-11-23 (CT-2, correcciones de la revisión)**:
+  - `GuardarEnlace` lee la cuenta con `for no key update` (`buscarParaCambiar`): quien la renombra o inactiva espera y ya no
+    se pierde su cambio ni queda un enlace a una cuenta inactiva. Prueba de dos conexiones en
+    `infraestructura/persistencia/enlace-concurrente.prueba.ts`.
+  - Importar enlaces rechaza en su fila el par rol + llave repetido dentro del archivo (gana la última sin aviso era un
+    error de datos): gancho opcional `revisarLote` del motor de intercambio (sin estado entre solicitudes), con pruebas
+    unitarias y de API.
+  - `saldos_por_regularizar` es rol de auxiliar (§5.3 y prueba del conjunto). Pendiente: que `contador-guatemala` valide la
+    lista de auxiliares, incluido si `retencion_por_pagar` lo es por las retenciones pendientes de saldo inicial (§4.4);
+    por ahora no lo es.
+  - Entorno: el puerto :5433 sigue sin responder al agente; las pruebas corrieron en un contenedor propio (ya borrado).
+- **2026-11-23 (CT-1c y CT-2c, Contabilidad: pantallas de Inicio, Nomenclatura y Enlaces contables)**:
+  - Tres pantallas de Administración en `cliente/src/modulos/contabilidad/`: **Inicio de la contabilidad** (caso con su
+    explicación, fecha, máscara con ejemplo del código, firmantes; la máscara queda fija si ya hay cuentas; cambiar fecha o caso
+    pide confirmación), **Nomenclatura** (árbol plegable con búsqueda por código o nombre sin tildes, ver u ocultar inactivas,
+    abrir y plegar todo, «agregar cuenta inferior» con el código siguiente propuesto y naturaleza y tipo heredados, ventana
+    `CamposDeCuenta` que muestra solo lo que aplica a la cuenta, eliminar con confirmación, Excel de importar y exportar) y
+    **Enlaces contables** (roles agrupados por módulo, resumen de lo que falta con interruptor «solo lo que falta», un selector
+    de cuenta por fila que guarda al instante, confirmación al cambiar o quitar, enlaces huérfanos señalados, Excel).
+  - Sin vista previa del caso b (de CT-6). El campo «plantilla» del inicio no se edita aún: se conserva lo guardado hasta CT-1p.
+  - Quitar la marca de «cuenta de control» a una cuenta que es la de un rol de auxiliar pide confirmación con los roles afectados
+    (el aviso al desmarcar que dejó pendiente CT-2).
+  - Lógica pura con pruebas (37 en el módulo): máscara y código propuesto, árbol y filtro, filas y faltantes de enlaces, inicio.
+    Sin cambios en el servidor.
+  - Pendiente de cliente: la lista de cuentas se trae completa (sin paginar); está bien hasta unos miles de cuentas.
+  - **Correcciones de la revisión (2026-11-23)**: (1) la Nomenclatura ya no pide `inicio.ver`: nuevo `GET /contabilidad/cuentas/mascara`
+    (`cuentas.ver`) devuelve `{ mascara }`, nulo si no se ha iniciado; el árbol carga con solo ver cuentas. (2) Un fallo al cargar
+    (500, red) ya no se confunde con «sin iniciar»: Inicio y Nomenclatura muestran un estado de error con «Reintentar» y sin
+    formulario editable (así no se pisa lo guardado). (3) Un rol con llave sin cuenta general y sin registros conocidos cuenta como
+    faltante. (4) El catálogo de roles trae `opcional` (hoy solo `iva_no_acreditable`): no cuenta como faltante y la tarjeta explica
+    que sin cuenta va al costo de la línea. (5) Si fallan las llaves de un rol, se distinguen de «ninguna»: se avisa y no se marca
+    ningún enlace como huérfano. Pruebas: cliente 29 → 37 en el módulo, servidor con casos de máscara y `opcional`.
+  - **Segunda corrección (2026-11-23)**: (1) Enlaces usa `marcarFalloDeCarga`: un fallo al cargar muestra un estado de error con
+    «Reintentar», sin el resumen de faltantes ni «Todos los roles tienen su cuenta». (2) Un rol con llave sin cuenta general falta
+    si no se conocen sus registros (`null`) o si ningún registro conocido tiene enlace: un enlace huérfano no cubre el rol y un
+    enlace en un solo registro sin conocer los demás sigue faltando, así «solo lo que falta» no lo oculta. (3) «Quitar el enlace»
+    explica la consecuencia real (`consecuenciaDeQuitar`, función pura): opcional va al costo de cada línea, con cuenta general
+    el registro pasa a usarla, sin respaldo queda por contabilizar con error. Pruebas del módulo: 37 → 42.
+- **2026-11-24 (Contabilidad, servidor: retenciones de apertura)**: el usuario eligió la opción A. Rol nuevo
+  `retenciones_de_apertura` (Cuentas por pagar; de balance, sin auxiliar, sin llave; obligatorio de enlazar al principio, corregido abajo) en el contrato,
+  en el catálogo de roles, en el CHECK `enlaces_rol_valido` (migración 0003 y snapshots, sin cambiar sus id) y en §5.3. Queda
+  fijado para CT-3: el cierre da `pide_motivo` mientras tenga saldo y Cuentas por pagar responde `retenciones_por_practicar`
+  solo con `proposito = apertura`; hoy nadie responde `saldos_de_auxiliares` ni hay cierre contable. Los dos hallazgos de
+  `edicion-de-enlaces.ts` son del cliente y no se tocaron aquí.
+- **2026-11-24 (Contabilidad, cliente: Enlaces)**: (1) `sinElegirSegunOperacion` y `totalSegunOperacionSinElegir` reciben las
+  llaves: un rol «según la operación» con llave y sin cuenta general queda «sin elegir» si no se pudo traer la lista de
+  registros o si queda alguno activo sin enlace (un huérfano no cubre), sin sumarlo a los faltantes obligatorios; así
+  `retencion_por_pagar` con un enlace solo en la regla r1 ya no sale en verde ni se oculta con «solo lo que falta».
+  (2) `consecuenciaDeQuitar` cubre el registro sin cuenta general: lo de ese registro queda por contabilizar con error y los
+  demás siguen igual. El rol `retenciones_de_apertura` llega por la API y es obligatorio de enlazar; no requirió código propio.
+  Cuatro pruebas nuevas en el archivo (29 en total).
+- **2026-11-24 (Contabilidad, servidor: corrección de `retenciones_de_apertura`)**: el rol era obligatorio de enlazar sin que lo
+  decidiera el usuario ni lo validara el contador; contradecía a `retencion_por_pagar` y el criterio de no asumir agente
+  retenedor (una empresa que nunca retuvo veía un faltante imposible de resolver). Ahora es `segunOperacion` (se exige al llegar
+  el primer hecho). Prueba de `enlace.prueba.ts` ajustada y §5.3 corregida.

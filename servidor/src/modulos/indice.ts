@@ -12,6 +12,7 @@ import { moduloInventarios } from './inventarios/modulo.js';
 import { moduloMultimoneda } from './multimoneda/modulo.js';
 import { moduloParcelas } from './parcelas/modulo.js';
 import { moduloLibroDeVentas } from './libro-de-ventas/modulo.js';
+import { moduloContabilidad } from './contabilidad/modulo.js';
 // generador: importaciones
 
 /** Módulos instalados. `npm run generar -- modulo <clave>` suma uno nuevo en la marca. */
@@ -29,5 +30,6 @@ export const definicionesModulos: readonly DefinicionModulo[] = [
   moduloMultimoneda,
   moduloParcelas,
   moduloLibroDeVentas,
+  moduloContabilidad,
   // generador: modulos
 ];

@@ -1,4 +1,5 @@
 import type { Columna } from '../../core/intercambio/aplicacion/columnas.js';
+import { NOMBRES_DE_REGLAS_DE_RETENCION } from '../dominio/nombres-de-reglas-de-retencion.js';
 import type { ReporteDeRetencionesDto, RetencionDto } from '../aplicacion/dto/retenciones.dto.js';
 
 /** Una fila del Excel: una retención, con el plazo de su grupo y el estado de su documento. */
@@ -24,17 +25,7 @@ export interface FilaExportadaDeRetencion {
   estadoDelDocumento: string;
 }
 
-const REGLAS: Readonly<Record<string, string>> = {
-  iva_exportador_agropecuario: 'IVA exportador agropecuario',
-  iva_exportador: 'IVA exportador',
-  iva_contribuyente_especial: 'IVA contribuyente especial',
-  iva_otro_agente: 'IVA otro agente',
-  iva_sector_publico: 'IVA sector público',
-  iva_pequeno_contribuyente: 'IVA pequeño contribuyente (5 %)',
-  isr_opcional_simplificado: 'ISR opcional simplificado',
-  iva_factura_especial: 'IVA factura especial',
-  isr_factura_especial: 'ISR factura especial',
-};
+const REGLAS: Readonly<Record<string, string>> = NOMBRES_DE_REGLAS_DE_RETENCION;
 
 const documentoDe = ({ documento }: RetencionDto): string =>
   [documento.tipoDte, documento.serie, documento.numero].filter(Boolean).join(' ');

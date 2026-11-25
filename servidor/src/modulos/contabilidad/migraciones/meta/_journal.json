@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1795470950572,
+      "tag": "0000_ct1_cuentas_e_inicios",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795470955433,
+      "tag": "0001_ct1_hoja_de_detalle_y_auditoria",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795472571518,
+      "tag": "0002_bloqueo_del_padre_en_hoja_de_detalle",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795474888240,
+      "tag": "0003_ct2_enlaces",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795474897118,
+      "tag": "0004_ct2_auditoria_permanente_de_enlaces",
+      "breakpoints": true
+    }
+  ]
+}

@@ -214,9 +214,20 @@ reversa en noviembre). Para eso cada fila necesita su **fecha contable de anulac
 **Lo que no se puede reconstruir** (limitación, con leyenda en el reporte): las aplicaciones de notas **quitadas** o
 borradas al anular una contraseña, y las líneas cambiadas al **reaplicar** un pago, se ven como están hoy. Eso solo
 mueve el saldo **entre documentos del mismo proveedor** (antigüedad y saldos a favor), **nunca** el saldo neto del
-proveedor ni el total. Tampoco un documento **eliminado** (solo los no autorizados, que no estaban provisionados) ni una
-**desautorización** (el reporte usa el estado de autorización de hoy). Leyenda: «Las aplicaciones de notas y los pagos
-reaplicados se muestran como están hoy; el saldo neto de cada proveedor no depende de eso.»
+proveedor ni el total.
+
+**Documento eliminado (corrección de CT-0f, dictamen §0.4):** un documento eliminado **sí** estaba provisionado y
+eliminarlo cancela su partida, así que **sí cambia** el saldo neto del proveedor y el total de los cortes pasados que lo
+incluían. Hoy solo se puede eliminar un documento **no autorizado** (`noEstarAutorizado`, entre las
+`REGLAS_PARA_ELIMINAR`) y lo frena `exigirPeriodoAbierto` del Libro de compras (período declarado con el bloqueo
+encendido); no hay período contable que lo impida. Regla futura: con Contabilidad activa, eliminar solo se permite con
+el período contable abierto, y entonces un corte de un período cerrado ya no cambia. Tampoco se reconstruye una
+**desautorización** (el reporte usa el estado de autorización de hoy). Leyendas: «Las aplicaciones de notas y los pagos
+reaplicados se muestran como están hoy; el saldo neto de cada proveedor no depende de eso.» y «Este reporte no incluye
+documentos eliminados, aunque se hayan eliminado después de la fecha de corte. Si ya cerró ese mes con un reporte
+anterior, el saldo puede ser distinto.» (validada por el `contador-guatemala` el 2026-11-23: se muestra siempre mientras
+no exista un aviso condicional, que sería como `registrados_despues_del_corte` con cantidad y monto de lo eliminado
+después; entonces se retira la leyenda fija).
 
 Descartada la alternativa A (estado de hoy, sin columnas nuevas). Pendiente para más adelante (dictamen 3, fuera de
 CP5): marcar las aplicaciones de notas **no vigentes** en vez de borrarlas, para quitar esta limitación (§14).
@@ -240,7 +251,7 @@ CP5): marcar las aplicaciones de notas **no vigentes** en vez de borrarlas, para
    adenda del 2026-11-18 de `diseno-cp4-pagos.md`:** después de CP4-D3, el saldo de R2 es igual al saldo de la lista (la
    deuda), y lo disponible de R2, a lo disponible de la lista.
 4. Un corte pasado no cambia al anular después un pago, un reintegro, un ajuste o un documento (§2.3). Excepciones
-   esperadas, con su aviso o leyenda: un documento con fecha de efecto hasta el corte registrado después (§2.2) y un
+   esperadas (también un documento eliminado después, con su leyenda), con su aviso o leyenda: un documento con fecha de efecto hasta el corte registrado después (§2.2) y un
    cheque posfechado cuya conciliación se autoriza después (§2.1).
 5. Al día anterior a la fecha de inicio, el total de R1 = total del cuadre de saldos iniciales.
 
