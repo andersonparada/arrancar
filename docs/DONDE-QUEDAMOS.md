@@ -60,12 +60,12 @@ Actualizado: **2026-11-23** (noche). El usuario pidió seguir mañana. Si otra s
 - **Recomendaciones aceptadas en todos los puntos:** Cuentas por cobrar y Ventas (VC-P1 a VC-P24), Contabilidad (CT-P1 a
   CT-P18), Bancos aprobaciones y tarjeta (§16) y Parcelas (PA-1 a PA-19).
 
-**En curso (2026-11-24):** dos workflows (reanudables con `resumeFromRunId` en la misma sesión):
-- `arrancar-inventarios-completo` (run `wf_002a1ede-0ec`): INV-6c, 7c y 8c desde `main`; cadena INV-9 → 10 → 11 → 12 → 14 → 13, cada pantalla
-  (9c a 13c) sale de la rama de su paso; QA de punta a punta al final. Cada paso con revisión de Opus y hasta dos correcciones.
-- `arrancar-retenidas-y-decisiones` (run `wf_467850ed-b30`): las cuatro cadenas retenidas (`cc`, `vcc`, `lv`, `ct`) en sus mismas ramas, con
-  las respuestas del usuario del 2026-11-24 (`pendientes-tanda-9.md`); además AF-9b, venta de bienes de control (rama nueva desde `main`), y la
-  pantalla de VCJ-0d (cambio de NIT, rama nueva). Contador antes donde hay regla fiscal.
+**En curso (2026-11-24, noche):** tres workflows (reanudables con `resumeFromRunId` en la misma sesión).
+- **Ya en `main` hoy:** las cuatro cadenas retenidas (Caja chica CC-11, Libro de compras VC-0c, Libro de ventas hasta LV-2c, Contabilidad hasta
+  CT-2c), AF-9b (venta de bienes de control) y la pantalla de cambio de NIT. Suite: servidor 9584, cliente 2692, generador 46.
+- `arrancar-inventarios-completo` (run `wf_002a1ede-0ec`): INV-6c, 7c y 8c; cadena INV-9 → 10 → 11 → 12 → 14 → 13 con sus pantallas; QA al final.
+- `arrancar-cuarto-frente` (run `wf_c690a7c8-0ab`): Libro de ventas LV-3 → 4 → 5 → 5b → 6 con pantallas; Contabilidad CT-3 → 4 → 6 con
+  pantallas; AF-9c y AFI-6 → AFI-6c; Caja chica: diseño de la disputa en Libro de compras (arquitecto), CC-12, CC-13 y CC-13c.
 - `arrancar-mas-frentes` (run `wf_e5ea3971-420`): Parcelas PA-2 → 3 → 4 → AR (revisión de `seguridad`) → 5, con sus pantallas; aprobaciones de
   Bancos AB-1 → 2 → 3 y AB-5 (AB-4 espera a Caja chica); reportes AF-10 con AFI-7 y sus pantallas; dictamen del contador sobre las
   liquidaciones de Ventas y cobros (§24.8-B y Criterio SAT 1-2023) y revisión de `seguridad` del disparador `preparar_empresa`.
