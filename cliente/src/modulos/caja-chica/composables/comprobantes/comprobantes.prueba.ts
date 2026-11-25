@@ -11,9 +11,11 @@ import {
 } from './armado-de-asignacion';
 import {
   cantidadDeFiltros,
+  detallesDeComprobante,
   filtrarBandeja,
   marcasDelComprobante,
   proveedoresDeLaBandeja,
+  terceroDelComprobante,
   tituloDeComprobante,
 } from './detalles-de-comprobante';
 import { cuerpoDeVale, edicionDeVale } from './edicion-de-vale';
@@ -47,6 +49,8 @@ function documento(cambios: Partial<ComprobanteDeLaBandeja> = {}): ComprobanteDe
     motivoSinDocumento: null,
     asignadoEn: null,
     motivoDeAnulacion: null,
+    motivoDocumentoAnulado: null,
+    seguimiento: null,
     reposicionNumero: null,
     documento: {
       tipo: 'Factura',
@@ -148,6 +152,30 @@ describe('detalles de un comprobante', () => {
     expect(marcas).toHaveLength(5);
     expect(marcas).toContain('Sin bancarizar');
     expect(marcas).toContain('Repuesto en la reposición 4');
+  });
+});
+
+describe('faltantes y sobrantes en las hojas', () => {
+  const faltante = (cambios: Partial<ComprobanteDeLaBandeja> = {}) =>
+    documento({
+      clase: 'faltante',
+      documento: null,
+      descripcion: 'Faltante del arqueo 3',
+      destinoDelFaltante: 'cobrar_al_custodio',
+      ...cambios,
+    });
+
+  it('el faltante se titula con su arqueo y dice qué se hace, no «—»', () => {
+    expect(tituloDeComprobante(faltante())).toBe('Faltante del arqueo 3');
+    expect(terceroDelComprobante(faltante())).toBe('Se cobra al custodio');
+    expect(terceroDelComprobante(faltante({ destinoDelFaltante: 'perdida' }))).toBe('Pérdida del fondo');
+    expect(detallesDeComprobante(faltante())[2]?.etiqueta).toBe('Qué se hace');
+  });
+
+  it('el sobrante tampoco queda con un guion', () => {
+    const sobrante = faltante({ clase: 'sobrante', descripcion: 'Sobrante del arqueo 4', destinoDelFaltante: null });
+    expect(tituloDeComprobante(sobrante)).toBe('Sobrante del arqueo 4');
+    expect(terceroDelComprobante(sobrante)).not.toBe('—');
   });
 });
 

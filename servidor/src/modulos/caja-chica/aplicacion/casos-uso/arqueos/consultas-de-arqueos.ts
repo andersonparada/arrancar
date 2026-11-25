@@ -9,6 +9,7 @@ import { avisoDeArqueoVencido } from '../../../dominio/reglas-de-arqueos.js';
 import { avisoDeValeViejo } from '../../../dominio/reglas-de-vales-provisionales.js';
 import type { ArqueoDto, ArqueoResumenDto, PropuestaDeArqueoDto } from '../../dto/arqueos.dto.js';
 import { comprobanteDto } from '../comprobantes/armado-del-comprobante.js';
+import { avisoDeDocumentosPorResolver } from '../fondos/armado-del-fondo.js';
 import { custodioVigente, LectorDelFondo } from '../fondos/lector-del-fondo.js';
 import { resumenDelArqueo } from './armado-del-arqueo.js';
 import type { DependenciasDeArqueos } from './dependencias-de-arqueos.js';
@@ -90,7 +91,7 @@ export class ProponerArqueo {
     };
   }
 
-  /** «Sin arqueo» y «vale viejo», si tocan. */
+  /** «Sin arqueo», «vale viejo» y los documentos anulados por su emisor sin resolver, si tocan. */
   private async avisos(operador: Operador, por: { fondo: Fondo; lectura: DatosDeLectura }): Promise<string[]> {
     const { fondo, lectura } = por;
     const { configuracion, reloj } = this.dependencias;
@@ -109,6 +110,8 @@ export class ProponerArqueo {
             hoy,
             diasParaAvisar: await configuracion.diasParaAvisarDeVales(operador),
           });
-    return [sinArqueo, valeViejo].filter((aviso) => aviso !== null);
+    return [sinArqueo, valeViejo, ...avisoDeDocumentosPorResolver(lectura.documentosPorResolver)].filter(
+      (aviso) => aviso !== null,
+    );
   }
 }

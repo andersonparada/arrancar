@@ -66,11 +66,15 @@ const volver = { texto: 'Fondos de caja chica', ruta: { name: 'caja-chica.fondos
           :lista="ficha.comprobantes.value"
           :cargando="ficha.cargandoComprobantes.value"
           :puede-cambiar="acciones.abierto"
+          :por-resolver="ficha.fondo.value.documentosPorResolver"
           @agregar-factura="comprobantes.agregarFactura"
           @desde-la-bandeja="comprobantes.desdeLaBandeja"
           @vale-de-gasto="comprobantes.vale.abrir"
           @devolver="comprobantes.baja.pedir($event, 'devolver')"
           @anular="comprobantes.baja.pedir($event, 'anular')"
+          @resolver="comprobantes.documentoAnulado.resolver"
+          @disputa="comprobantes.documentoAnulado.ponerEnDisputa"
+          @retirar-disputa="comprobantes.documentoAnulado.retirarDeLaDisputa"
         />
         <SeccionDeVales
           :vales="ficha.movimientos.vales.value"

@@ -1,6 +1,7 @@
 import type { UnwrapNestedRefs } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Fondo } from '../../servicios/tipos-de-fondos';
+import { usarDocumentoAnulado } from '../documento-anulado/usar-documento-anulado';
 import { usarAsignacion } from './usar-asignacion';
 import { usarBajaDeComprobante } from './usar-baja-de-comprobante';
 import { usarValeDeGasto } from './usar-vale-de-gasto';
@@ -32,6 +33,7 @@ export function usarAccionesDeComprobantes(fondo: () => Fondo | null, recargar: 
     asignacion: usarAsignacion(recargar),
     vale: usarValeDeGasto(id, recargar),
     baja: usarBajaDeComprobante(recargar),
+    documentoAnulado: usarDocumentoAnulado(recargar),
     agregarFactura,
     desdeLaBandeja: () => void router.push({ name: 'caja-chica.bandeja', query: { fondo: id() } }),
   };

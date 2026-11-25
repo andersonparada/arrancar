@@ -4,6 +4,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import { detallesDeComprobante, tituloDeComprobante } from '../composables/comprobantes/detalles-de-comprobante';
 import type { Comprobante } from '../servicios/tipos-de-comprobantes';
+import EstadoDelDocumentoAnulado from './EstadoDelDocumentoAnulado.vue';
 import MarcasDelComprobante from './MarcasDelComprobante.vue';
 
 /**
@@ -11,7 +12,13 @@ import MarcasDelComprobante from './MarcasDelComprobante.vue';
  * esté repuesto; el servidor decide si se puede y explica por qué si no.
  */
 const props = defineProps<{ comprobante: Comprobante; puedeCambiar: boolean }>();
-const emit = defineEmits<{ devolver: []; anular: [] }>();
+const emit = defineEmits<{
+  devolver: [];
+  anular: [];
+  resolver: [];
+  disputa: [];
+  retirarDisputa: [];
+}>();
 
 const vigenteSinRepuesto = (): boolean =>
   props.comprobante.estado === 'vigente' && props.comprobante.reposicionNumero === null;
@@ -34,6 +41,12 @@ const vigenteSinRepuesto = (): boolean =>
         <dd class="break-words">{{ detalle.valor }}</dd>
       </div>
     </dl>
+    <EstadoDelDocumentoAnulado
+      :comprobante="comprobante"
+      @resolver="emit('resolver')"
+      @disputa="emit('disputa')"
+      @retirar-disputa="emit('retirarDisputa')"
+    />
     <p v-if="comprobante.motivoSinDocumento" class="text-sm text-tierra-600 dark:text-tierra-300">
       Sin factura: {{ comprobante.motivoSinDocumento }}
     </p>

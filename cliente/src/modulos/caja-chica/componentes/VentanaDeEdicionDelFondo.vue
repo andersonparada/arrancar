@@ -5,6 +5,7 @@ import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import type { EdicionDeDatosDelFondo } from '../composables/fondos/edicion-de-datos-del-fondo';
+import { avisoDelTope } from '../composables/fondos/aviso-del-tope';
 import { opcionesDeCuentas, opcionesDeLocalidades } from '../composables/fondos/opciones-de-fondos';
 import type { CuentaParaElFondo, LocalidadParaElFondo } from '../servicios/catalogos.api';
 import { AYUDA_DEL_TOPE, MAXIMO_DEL_MOTIVO } from '../textos';
@@ -18,6 +19,8 @@ const props = defineProps<{
   cuentas: readonly CuentaParaElFondo[];
   /** Si el tope escrito es otro que el del fondo: entonces se pide el motivo. */
   cambiaElTope: boolean;
+  /** El monto del fondo, para avisar si el tope lo pasa. */
+  monto: string;
 }>();
 const edicion = defineModel<EdicionDeDatosDelFondo>({ required: true });
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
@@ -45,6 +48,9 @@ const opcionesDeCuenta = computed(() => opcionesDeCuentas(props.cuentas, 'Sin cu
         :ayuda="AYUDA_DEL_TOPE"
         :error="errores.topePorComprobante"
       />
+      <p v-if="avisoDelTope(edicion.tope, monto)" class="text-sm text-tierra-700 dark:text-trigo-300" role="status">
+        {{ avisoDelTope(edicion.tope, monto) }}
+      </p>
       <CampoTexto
         v-if="cambiaElTope"
         v-model="edicion.motivo"

@@ -5,20 +5,21 @@ import { apiFondos } from '../../servicios/fondos.api';
 import type { Fondo } from '../../servicios/tipos-de-fondos';
 import type {
   ComprobanteDeLaBandeja,
-  EstadoDeLosComprobantes,
   ListaDeComprobantes,
+  VistaDeComprobantes,
 } from '../../servicios/tipos-de-comprobantes';
+import { estadoParaElServidor, filtrarPorVista } from '../documento-anulado/documento-anulado';
 import { usarMovimientosDelFondo } from '../movimientos/usar-movimientos-del-fondo';
 import { detallesDeLaFicha, partesDeLaEcuacion } from './detalles-de-fondo';
 
 const SIN_COMPROBANTES: ListaDeComprobantes = { elementos: [], totales: { pendiente: '0.00', repuesto: '0.00' } };
 
 /** Las tres lecturas de la ficha: el fondo, sus comprobantes según el estado elegido y las facturas con retención en la bandeja. */
-function cargasDeLaFicha(id: string, estado: () => EstadoDeLosComprobantes) {
+function cargasDeLaFicha(id: string, estado: () => VistaDeComprobantes) {
   return {
     fondo: usarCarga(() => apiFondos.obtener(id), null as Fondo | null, 'No se pudo cargar el fondo.'),
     comprobantes: usarCarga(
-      () => apiComprobantes.delFondo(id, estado()),
+      () => apiComprobantes.delFondo(id, estadoParaElServidor(estado())),
       SIN_COMPROBANTES,
       'No se pudieron cargar los comprobantes.',
     ),
@@ -35,7 +36,7 @@ function cargasDeLaFicha(id: string, estado: () => EstadoDeLosComprobantes) {
  * que esperan en la bandeja para asignarlas con la excepción.
  */
 export function usarFichaDelFondo(id: string) {
-  const estado = ref<EstadoDeLosComprobantes>('pendiente');
+  const estado = ref<VistaDeComprobantes>('pendiente');
   const { fondo, comprobantes, conRetencion } = cargasDeLaFicha(id, () => estado.value);
   watch(estado, comprobantes.cargar);
   const movimientos = usarMovimientosDelFondo(id);
@@ -45,7 +46,7 @@ export function usarFichaDelFondo(id: string) {
     estado,
     fondo: fondo.datos,
     cargando: computed(() => fondo.cargando.value && !fondo.datos.value),
-    comprobantes: comprobantes.datos,
+    comprobantes: computed(() => filtrarPorVista(comprobantes.datos.value, estado.value)),
     cargandoComprobantes: comprobantes.cargando,
     conRetencion: conRetencion.datos,
     ecuacion: computed(() => (fondo.datos.value ? partesDeLaEcuacion(fondo.datos.value) : [])),

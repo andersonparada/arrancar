@@ -1,18 +1,20 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import type {
   Comprobante,
+  DisputaSolicitada,
   ComprobanteDeLaBandeja,
   DocumentoPorAsignar,
   EstadoDeLosComprobantes,
   FiltroDeBandeja,
   ListaDeComprobantes,
   ResultadoDeAsignar,
+  SalidaSolicitada,
   ValeDeGastoSolicitado,
 } from './tipos-de-comprobantes';
 
 const RUTA = '/caja-chica';
 
-/** La bandeja, los comprobantes de un fondo y sus acciones (asignar, devolver, vales de gasto, anular). */
+/** La bandeja, los comprobantes de un fondo y sus acciones (asignar, devolver, vales de gasto, anular) y lo del documento anulado por su emisor. */
 export class ApiComprobantes {
   constructor(private readonly http: ClienteHttp) {}
 
@@ -38,6 +40,22 @@ export class ApiComprobantes {
 
   anular(id: string, motivo: string) {
     return this.http.crear<Comprobante>(`${RUTA}/comprobantes/${id}/anular`, { motivo });
+  }
+
+  resolverDocumentoAnulado(id: string, salida: SalidaSolicitada) {
+    return this.http.crear<Comprobante>(`${RUTA}/comprobantes/${id}/documento-anulado/resolver`, salida);
+  }
+
+  reemplazarDocumentoAnulado(id: string, cuerpo: { reemplazoId: string; motivo: string }) {
+    return this.http.crear<Comprobante>(`${RUTA}/comprobantes/${id}/documento-anulado/reemplazar`, cuerpo);
+  }
+
+  ponerEnDisputa(id: string, disputa: DisputaSolicitada) {
+    return this.http.crear<Comprobante>(`${RUTA}/comprobantes/${id}/documento-anulado/disputa`, disputa);
+  }
+
+  retirarDeLaDisputa(id: string, motivo: string) {
+    return this.http.crear<Comprobante>(`${RUTA}/comprobantes/${id}/documento-anulado/retirar-disputa`, { motivo });
   }
 }
 

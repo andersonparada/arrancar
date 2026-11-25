@@ -5,6 +5,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { EdicionDeCierre } from '../composables/cierre/edicion-de-cierre';
 import { opcionesDeCuentas } from '../composables/fondos/opciones-de-fondos';
@@ -30,6 +31,8 @@ const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const opciones = computed(() => opcionesDeCuentas(props.cuentas));
 const hayEfectivo = computed(() => Number(props.fondo.efectivoEsperado) > 0);
 const hayVales = computed(() => Number(props.fondo.valesAbiertos) > 0);
+const hayPorResolver = computed(() => props.fondo.documentosPorResolver > 0);
+const puedeCerrarConPendientes = usarSesion().puede('caja-chica.fondos.cerrar-con-documentos-por-resolver');
 </script>
 
 <template>
@@ -56,6 +59,22 @@ const hayVales = computed(() => Number(props.fondo.valesAbiertos) > 0);
         <span>
           Hay vales provisionales abiertos por {{ formatearMonto(fondo.valesAbiertos) }}. Liquídelos o anúlelos antes de
           cerrar: el sistema no deja cerrar con vales abiertos.
+        </span>
+      </div>
+      <div
+        v-if="hayPorResolver"
+        class="flex gap-2 rounded-2xl bg-trigo-300/40 p-3 text-sm text-tierra-900 dark:bg-trigo-500/20 dark:text-trigo-300"
+        role="alert"
+      >
+        <TriangleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+        <span v-if="puedeCerrarConPendientes">
+          Hay {{ fondo.documentosPorResolver }} factura(s) anulada(s) por su emisor sin resolver. Conviene resolverlas
+          antes de cerrar; si cierra así, el motivo que escriba queda en la auditoría como la excepción.
+        </span>
+        <span v-else>
+          Hay {{ fondo.documentosPorResolver }} factura(s) anulada(s) por su emisor sin resolver. Resuélvalas
+          (reemplazo, devolución, cobro o sin recuperación) antes de cerrar, o pida a quien tenga el permiso que cierre
+          el fondo.
         </span>
       </div>
       <p v-if="!fondo.ultimoArqueo" class="text-sm text-tierra-600 dark:text-tierra-300">
@@ -98,7 +117,14 @@ const hayVales = computed(() => Number(props.fondo.valesAbiertos) > 0);
     </form>
     <template #pie>
       <BotonBase variante="secundario" @click="emit('cerrar')">Cancelar</BotonBase>
-      <BotonBase tipo="submit" form="form-de-cierre" variante="peligro" :cargando="enviando">Cerrar el fondo</BotonBase>
+      <BotonBase
+        tipo="submit"
+        form="form-de-cierre"
+        variante="peligro"
+        :cargando="enviando"
+        :deshabilitado="hayPorResolver && !puedeCerrarConPendientes"
+        >Cerrar el fondo</BotonBase
+      >
     </template>
   </VentanaModal>
 </template>

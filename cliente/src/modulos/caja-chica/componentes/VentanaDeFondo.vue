@@ -12,6 +12,7 @@ import type {
   LocalidadParaElFondo,
   UsuarioParaElFondo,
 } from '../servicios/catalogos.api';
+import { avisoDelTope } from '../composables/fondos/aviso-del-tope';
 import { AYUDA_DEL_TOPE } from '../textos';
 import CamposDeEntrega from './CamposDeEntrega.vue';
 import CamposDelCustodio from './CamposDelCustodio.vue';
@@ -69,6 +70,13 @@ const propuesto = computed(
           :ayuda="AYUDA_DEL_TOPE"
           :error="errores.topePorComprobante"
         />
+        <p
+          v-if="avisoDelTope(edicion.tope, edicion.monto)"
+          class="text-sm text-tierra-700 dark:text-trigo-300"
+          role="status"
+        >
+          {{ avisoDelTope(edicion.tope, edicion.monto) }}
+        </p>
       </section>
       <section class="space-y-4" aria-labelledby="titulo-dinero">
         <h3 id="titulo-dinero" class="font-semibold">El dinero del fondo</h3>

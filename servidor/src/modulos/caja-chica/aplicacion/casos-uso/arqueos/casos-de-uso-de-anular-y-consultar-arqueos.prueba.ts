@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { operadorDePrueba } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 import { FONDO_ID } from '../comprobantes/dobles-de-comprobantes.soporte.js';
 import { ObtenerFondo } from '../fondos/consultas-de-fondos.js';
+import { consultas } from '../fondos/dobles-de-fondos.soporte.js';
 import { sembrarComprobante } from '../reposiciones/dobles-de-reposiciones.soporte.js';
 import { AnularArqueo } from './anular-arqueo.js';
 import { ListarArqueos, ObtenerArqueo, ProponerArqueo } from './consultas-de-arqueos.js';
@@ -142,6 +143,16 @@ describe('consultas de los arqueos', () => {
       '0.01',
     ]);
     expect(propuesta.pendientes).toHaveLength(1);
+  });
+});
+
+describe('el aviso de los documentos anulados por su emisor', () => {
+  it('la propuesta de arqueo lo dice si hay alguno sin resolver', async () => {
+    const dependencias = { ...m.dependenciasDeArqueos, consultasDeFondos: consultas({ documentosPorResolver: 2 }) };
+
+    const propuesta = await new ProponerArqueo(dependencias).ejecutar(operador, FONDO_ID);
+
+    expect(propuesta.avisos).toEqual([expect.stringContaining('2 documento(s) anulado(s) por su emisor sin resolver')]);
   });
 });
 

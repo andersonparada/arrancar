@@ -4399,3 +4399,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   prueba en rojo de `causa` en el libro y el fallo de CC-R4 (la prueba sembraba el vale con la fecha de la base en UTC, no la de
   Guatemala). Sin hacer, por decisión o por ser de otra parte: la marca de disputa en el documento del Libro de compras, la prueba de
   pago como PDF adjunto, las partidas de Contabilidad, el aviso en el arqueo y todo el cliente.
+- **2026-11-24 (CC-11, cliente: factura anulada por el emisor, disputa y tope):** la ficha del fondo muestra en cada comprobante con
+  documento anulado su estado (por resolver, en disputa con la fecha límite y si venció, o resuelto) y, con el permiso
+  `caja-chica.comprobantes.resolver`, «Resolver» (una ventana con reemplazo por una FEL nueva de la bandeja del mismo proveedor y
+  monto, devolución, cobro o no se recupera, con resumen de que el efectivo no cambia), «No reconozco la anulación» (motivo y prueba
+  de pago) y «Retirar la disputa»; funciona también en un fondo cerrado. Vista nueva «Facturas anuladas por resolver» y un enlace
+  desde el aviso. La ventana de cierre avisa de los pendientes y, sin el permiso de excepción, bloquea el botón. El arqueo avisa de
+  ellos (servidor). Al escribir un tope mayor que el monto del fondo (alta y edición) se avisa antes de guardar. El faltante y el
+  sobrante dejan de verse como «Faltante · —»: llevan el arqueo y el destino. Sin hacer: el motivo de la diferencia del arqueo en la
+  hoja (el comprobante no lo trae), la salida del gasto sin factura de un vale liquidado y el botón «Anular vale» de ese caso.

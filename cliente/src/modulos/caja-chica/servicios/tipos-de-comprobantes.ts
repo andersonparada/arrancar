@@ -13,6 +13,24 @@ export interface DocumentoDelComprobante {
   motivoFueraDelLibro: string | null;
 }
 
+export type SituacionDelDocumento = 'por_resolver' | 'en_disputa' | 'resuelto';
+export type SalidaDelDocumento = 'reemplazo' | 'devolucion' | 'cobro' | 'sin_recuperacion';
+export type DestinoDeLaSalida = 'proveedor' | 'custodio';
+
+/** En qué va un documento que su emisor anuló después de gastar. El efectivo no cambia en ningún caso. */
+export interface SeguimientoDelDocumento {
+  situacion: SituacionDelDocumento;
+  salida: SalidaDelDocumento | null;
+  /** La factura anulada que un reemplazo dejó atrás. */
+  documentoAnuladoId: string | null;
+  motivoDeLaResolucion: string | null;
+  /** Lo que se recupera, en la devolución y el cobro. */
+  monto: string | null;
+  destino: DestinoDeLaSalida | null;
+  /** En disputa: motivo, prueba de pago y hasta cuándo se puede tomar el crédito. */
+  disputa: { motivo: string; prueba: string; hasta: string } | null;
+}
+
 export interface Comprobante {
   id: string;
   fondoId: string | null;
@@ -41,6 +59,9 @@ export interface Comprobante {
   motivoSinDocumento: string | null;
   asignadoEn: string | null;
   motivoDeAnulacion: string | null;
+  /** Con valor, el emisor anuló la FEL: el comprobante sigue vigente y está por resolver. */
+  motivoDocumentoAnulado: string | null;
+  seguimiento: SeguimientoDelDocumento | null;
   reposicionNumero: number | null;
   documento: DocumentoDelComprobante | null;
 }
@@ -60,6 +81,22 @@ export interface ResultadoDeAsignar {
 }
 
 export type EstadoDeLosComprobantes = 'pendiente' | 'repuesto' | 'anulado' | 'todos';
+
+/** Lo que se ve en la ficha: un estado del servidor o «por resolver», que se arma con todos. */
+export type VistaDeComprobantes = EstadoDeLosComprobantes | 'por_resolver';
+
+/** Cómo se resuelve un documento anulado por su emisor (la devolución y el cobro piden monto y destino). */
+export interface SalidaSolicitada {
+  salida: Exclude<SalidaDelDocumento, 'reemplazo'>;
+  motivo: string;
+  monto: string | null;
+  destino: DestinoDeLaSalida | null;
+}
+
+export interface DisputaSolicitada {
+  motivo: string;
+  prueba: string;
+}
 
 export interface FiltroDeBandeja {
   proveedorId?: string;

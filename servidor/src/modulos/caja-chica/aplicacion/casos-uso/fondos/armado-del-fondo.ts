@@ -12,7 +12,7 @@ function cifrasDe(fondo: Fondo, datos: DatosDeLectura): DatosDeLectura {
 }
 
 /** El aviso de los documentos que su emisor anuló y siguen sin resolverse (reemplazo, devolución, cobro o pérdida). */
-const avisoDeDocumentosPorResolver = (cantidad: number): string[] =>
+export const avisoDeDocumentosPorResolver = (cantidad: number): string[] =>
   cantidad === 0
     ? []
     : [`${cantidad} documento(s) anulado(s) por su emisor sin resolver: no dan crédito fiscal ni son deducibles.`];
