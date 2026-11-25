@@ -66,6 +66,12 @@ Actualizado: **2026-11-23** (noche). El usuario pidió seguir mañana. Si otra s
 - `arrancar-retenidas-y-decisiones` (run `wf_467850ed-b30`): las cuatro cadenas retenidas (`cc`, `vcc`, `lv`, `ct`) en sus mismas ramas, con
   las respuestas del usuario del 2026-11-24 (`pendientes-tanda-9.md`); además AF-9b, venta de bienes de control (rama nueva desde `main`), y la
   pantalla de VCJ-0d (cambio de NIT, rama nueva). Contador antes donde hay regla fiscal.
+- `arrancar-mas-frentes` (run `wf_e5ea3971-420`): Parcelas PA-2 → 3 → 4 → AR (revisión de `seguridad`) → 5, con sus pantallas; aprobaciones de
+  Bancos AB-1 → 2 → 3 y AB-5 (AB-4 espera a Caja chica); reportes AF-10 con AFI-7 y sus pantallas; dictamen del contador sobre las
+  liquidaciones de Ventas y cobros (§24.8-B y Criterio SAT 1-2023) y revisión de `seguridad` del disparador `preparar_empresa`.
+- **No se lanzaron** por chocar con lo que corre o esperar al usuario: Multimoneda MM-B/L/C (migraciones de Bancos, Libro y CP), tarjeta TC-1 a
+  TC-9 (Bancos, después de AB), AP-4a a AP-6 (esperan P-1 a P-5 de §19 del diseño de aprobaciones), CT-3 en adelante (tras `ct`), LV-3 (tras
+  `lv`), VCJ-0b (migración de Inventarios, tras la cadena INV) y AFI-6, AF-9c y AF-12 (tras AF-9b).
 
 **Cierre del 2026-11-23 (noche).** En `main`, con suite completa en verde: CL-7 corregida; INV-6, 7 y 8; INV-2c, 4c y 5c; AFI-3, resto de
 AFI-4, AF-9 y AFI-5; AF-7c y AF-8c; VC-0b y VC-0a cliente; AP-1, 2 y 3; PA-0b, PA-1 y PA-1c; VCJ-0a y VCJ-0d (falta su pantalla: pedir
