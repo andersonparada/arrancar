@@ -13,6 +13,10 @@ import { fechaDeHoy } from '../reportes/fechas-de-reportes';
 type Tono = 'campo' | 'trigo' | 'tierra' | 'rojo';
 
 /** Cómo se llama cada salida y qué significa, tal como se le explica al operador. */
+/** Aviso cuando la bandeja no tiene un reemplazo válido: el servidor solo admite el mismo monto. */
+export const AVISO_SIN_REEMPLAZO =
+  'No hay en la bandeja una factura nueva del mismo proveedor y monto. Regístrela en Libro de compras con destino Caja chica. Si trae otro monto, pida al emisor una FEL del mismo monto.';
+
 export const TEXTOS_DE_SALIDA: Record<SalidaDelDocumento, { texto: string; ayuda: string }> = {
   reemplazo: {
     texto: 'El emisor dio otra factura (FEL) por el mismo gasto',

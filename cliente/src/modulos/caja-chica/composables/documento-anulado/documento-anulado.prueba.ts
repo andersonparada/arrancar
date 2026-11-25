@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { ComprobanteDeLaBandeja, SeguimientoDelDocumento } from '../../servicios/tipos-de-comprobantes';
 import { comprobanteDeEjemplo } from '../ejemplos.soporte';
 import {
+  AVISO_SIN_REEMPLAZO,
   candidatosDeReemplazo,
   cuantosPendientes,
   estadoDelDocumento,
@@ -162,5 +163,12 @@ describe('la disputa', () => {
   it('pide el motivo y la prueba de pago', () => {
     expect(Object.keys(faltaDeDisputa(edicionDeDisputa()))).toEqual(['motivo', 'prueba']);
     expect(faltaDeDisputa({ motivo: 'Sí pagamos', prueba: 'Cheque 5' })).toEqual({});
+  });
+});
+
+describe('el aviso sin reemplazo', () => {
+  it('no manda a una devolución o un cobro por la diferencia', () => {
+    expect(AVISO_SIN_REEMPLAZO).not.toMatch(/devoluci[oó]n|cobro/i);
+    expect(AVISO_SIN_REEMPLAZO).toContain('pida al emisor una FEL del mismo monto');
   });
 });

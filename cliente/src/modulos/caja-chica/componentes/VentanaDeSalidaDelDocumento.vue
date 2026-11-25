@@ -5,7 +5,11 @@ import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { tituloDeComprobante } from '../composables/comprobantes/detalles-de-comprobante';
-import { opcionesDeReemplazo, TEXTOS_DE_SALIDA } from '../composables/documento-anulado/documento-anulado';
+import {
+  AVISO_SIN_REEMPLAZO,
+  opcionesDeReemplazo,
+  TEXTOS_DE_SALIDA,
+} from '../composables/documento-anulado/documento-anulado';
 import {
   DESTINOS_DE_LA_SALIDA,
   resumenDeSalida,
@@ -66,8 +70,7 @@ const resumen = computed(() => (props.comprobante ? resumenDeSalida(props.compro
           class="text-sm text-tierra-600 dark:text-tierra-300"
           role="status"
         >
-          No hay en la bandeja una factura nueva del mismo proveedor y monto. Regístrela en Libro de compras con destino
-          Caja chica. Si trae otro monto, resuelva con una devolución o un cobro por la diferencia.
+          {{ AVISO_SIN_REEMPLAZO }}
         </p>
       </template>
       <template v-if="recupera">
