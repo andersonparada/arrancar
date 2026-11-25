@@ -141,24 +141,28 @@ describe('fecha de inicio de la empresa', () => {
 
     const correcta = await registrarEn(conInicio, {
       tipo: 'nota_de_credito',
+      ivaDelDte: '0.00',
       facturaAnterior: anterior,
       serie: 'N',
       numero: '1',
     });
     const posterior = await registrarEn(conInicio, {
       tipo: 'nota_de_credito',
+      ivaDelDte: '0.00',
       facturaAnterior: { ...anterior, fecha: dia(MES_PASADO, 18) },
       serie: 'N',
       numero: '2',
     });
     const sinInicio = await registrarEn(cambiante, {
       tipo: 'nota_de_credito',
+      ivaDelDte: '0.00',
       facturaAnterior: anterior,
       serie: 'N',
       numero: '3',
     });
     const dosFacturas = await registrarEn(conInicio, {
       tipo: 'nota_de_credito',
+      ivaDelDte: '0.00',
       facturaAnterior: anterior,
       documentoAfectadoId: correcta.cuerpo.documento.id,
       serie: 'N',
@@ -171,5 +175,28 @@ describe('fecha de inicio de la empresa', () => {
     expect(posterior.cuerpo.error.codigo).toBe('factura_anterior_invalida');
     expect(sinInicio.cuerpo.error.codigo).toBe('factura_anterior_invalida');
     expect(dosFacturas.cuerpo.error.codigo).toBe('nota_con_dos_facturas');
+  });
+
+  it('una nota sobre una factura anterior sin IVA del DTE y sin historial con fecha pide el IVA de la nota', async () => {
+    const anterior = { serie: 'A', numero: '8', fecha: dia(primerDiaDelMes(-3), 6) };
+
+    const sinIva = await registrarEn(conInicio, {
+      tipo: 'nota_de_credito',
+      facturaAnterior: anterior,
+      serie: 'N',
+      numero: '5',
+    });
+    const conIvaCero = await registrarEn(conInicio, {
+      tipo: 'nota_de_credito',
+      facturaAnterior: anterior,
+      ivaDelDte: '0.00',
+      serie: 'N',
+      numero: '6',
+    });
+
+    expect(sinIva.estado, JSON.stringify(sinIva.cuerpo)).toBe(400);
+    expect(sinIva.cuerpo.error.codigo).toBe('iva_de_la_nota_requerido');
+    expect(conIvaCero.estado, JSON.stringify(conIvaCero.cuerpo)).toBe(201);
+    expect(conIvaCero.cuerpo.documento.totales.iva).toBe('0.00');
   });
 });

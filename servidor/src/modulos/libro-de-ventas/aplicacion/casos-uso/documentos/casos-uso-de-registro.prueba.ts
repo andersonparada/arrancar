@@ -250,6 +250,7 @@ describe('notas', () => {
   it('una nota sin factura es error, y con factura del sistema anterior se acepta', async () => {
     await expect(registrar({ tipo: 'nota_de_credito' })).rejects.toThrow(NotaSinFactura);
     e.empresa.datos.fechaDeInicio = '2026-01-01';
+    e.historial.regimenConVigencia = { regimenIva: 'general', regimenIsr: 'utilidades' };
 
     const { documento, avisos } = await registrar({
       tipo: 'nota_de_credito',

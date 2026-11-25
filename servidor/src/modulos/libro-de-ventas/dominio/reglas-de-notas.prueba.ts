@@ -124,6 +124,13 @@ describe('tope de las notas de crédito', () => {
     expect(intento).toThrow(NotaExcedeLaFactura);
   });
 
+  it('el mensaje de la nota que pasa del total dice qué hacer: anular el DTE en la SAT y consultar al contador', () => {
+    const intento = () =>
+      exigirQueLaNotaNoSupereLaFactura(conNotas(), { tipo: 'nota_de_credito', total: 20000, iva: 2000 });
+
+    expect(intento).toThrow(/anúlelo en la SAT dentro del plazo y emita el correcto; consulte a su contador/);
+  });
+
   const conUnaNota = () =>
     conNotas({
       total: 10000,

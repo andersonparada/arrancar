@@ -32,7 +32,9 @@ export class NotaExcedeLaFactura extends ReglaDeNegocioInfringida {
   readonly codigo = 'nota_excede_la_factura';
 
   constructor() {
-    super('Las notas de crédito no pueden rebajar más que la factura (con sus notas de débito), en total ni en IVA.');
+    super(
+      'La nota pasa del total de la factura. Si el DTE se emitió así, anúlelo en la SAT dentro del plazo y emita el correcto; consulte a su contador.',
+    );
   }
 }
 

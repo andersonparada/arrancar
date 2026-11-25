@@ -55,6 +55,13 @@ export class HistorialFiscalEnMemoria implements HistorialFiscalParaVentas {
     this.consultas.push({ periodo, bloquear });
     return this.regimen;
   }
+
+  /** El régimen de una vigencia con fecha para los meses anteriores a la fecha de inicio; por omisión no hay historial. */
+  regimenConVigencia: RegimenDelMes | null = null;
+
+  async regimenConVigenciaEn() {
+    return this.regimenConVigencia;
+  }
 }
 
 export class ControlDePeriodosEnMemoria implements ControlDePeriodosParaVentas {

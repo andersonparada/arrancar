@@ -75,7 +75,9 @@ export class NotaDeDebitoSostieneNotasDeCredito extends ReglaDeNegocioInfringida
   readonly codigo = 'nota_de_debito_sostiene_notas_de_credito';
 
   constructor() {
-    super('Las notas de crédito de la factura dejarían de caber sin esta nota de débito: anúlelas primero.');
+    super(
+      'Esta nota de débito sostiene las notas de crédito de la factura: sin ella pasarían del total. Anule primero esas notas de crédito; consulte a su contador.',
+    );
   }
 }
 

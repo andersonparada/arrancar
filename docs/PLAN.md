@@ -4471,3 +4471,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   hacia el reverso contable). (2) La búsqueda de documentos (lista y selector de «Factura que corrige») también
   compara `serie-numero` (`concat_ws('-', serie, numero)`), así «A-123» encuentra la factura como se muestra. Pruebas:
   `reglas-de-baja-de-documento` y la API de consultas («LISTA-2»).
+- **2026-11-24 — Libro de ventas (servidor): correcciones de la revisión del IVA de la nota y del mensaje del tope.**
+  (1) La nota sobre una factura del sistema anterior sin IVA del DTE ya no presume el régimen de la fila base del
+  historial (`vigente_desde` nulo, «rige desde el inicio»): para meses anteriores a la fecha de inicio de la empresa
+  solo cuenta una vigencia con fecha (`regimenConVigenciaEn`); sin ella se pide el IVA de la nota (0 es válido,
+  `iva_de_la_nota_requerido`). Prueba de API del rechazo y del registro con IVA 0. (2) `NotaExcedeLaFactura` dice ahora
+  qué hacer («anúlelo en la SAT dentro del plazo y emita el correcto; consulte a su contador») y la anulación de una
+  nota de débito que sostiene notas de crédito tiene su propio texto; con pruebas. **Pendiente del usuario (pregunta 4
+  del contador):** ¿se mantiene el bloqueo de la nota que pasa del total o se registra con aviso fuerte y un motivo?
+  Quedan también las preguntas 1 a 3 del dictamen (liberar `no_corresponde_a_la_empresa`, texto de la causa para el
+  talonario y aviso que solo informa o exige confirmar).

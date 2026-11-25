@@ -1,4 +1,4 @@
-import { and, eq, isNull, lte, or, sql } from 'drizzle-orm';
+import { and, eq, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { datosFiscalesDeEmpresa } from '../../../libro-de-compras/infraestructura/persistencia/datos-fiscales.tablas.js';
 import type { HistorialFiscalParaVentas } from '../../aplicacion/puertos/puertos-de-documentos.js';
@@ -7,7 +7,7 @@ import type { RegimenDeIsr, RegimenDeIva, RegimenDelMes } from '../../dominio/re
 /**
  * El historial fiscal de la empresa vive en Libro de compras (del que este módulo depende) y aquí solo se lee: la
  * vigencia que rige en el mes es la última que empezó hasta ese mes (la base, con `vigente_desde` nulo, rige desde el
- * inicio). Con `bloquear` toma esas filas con `for share`: quien cambia el historial (`for update`) espera a que
+ * inicio). Para una factura del sistema anterior solo cuenta una vigencia con fecha (`regimenConVigenciaEn`). Con `bloquear` toma esas filas con `for share`: quien cambia el historial (`for update`) espera a que
  * termine el registro, o el registro espera al cambio.
  */
 export class HistorialFiscalParaVentasDrizzle implements HistorialFiscalParaVentas {
@@ -20,15 +20,25 @@ export class HistorialFiscalParaVentasDrizzle implements HistorialFiscalParaVent
         .where(eq(datosFiscalesDeEmpresa.empresaId, empresaId))
         .for('share');
     }
-    const [fila] = await transaccion
+    return this.vigenciaDelMes(
+      and(
+        eq(datosFiscalesDeEmpresa.empresaId, empresaId),
+        or(isNull(datosFiscalesDeEmpresa.vigenteDesde), lte(datosFiscalesDeEmpresa.vigenteDesde, periodo)),
+      ),
+    );
+  }
+
+  async regimenConVigenciaEn(empresaId: string, periodo: string): Promise<RegimenDelMes | null> {
+    return this.vigenciaDelMes(
+      and(eq(datosFiscalesDeEmpresa.empresaId, empresaId), lte(datosFiscalesDeEmpresa.vigenteDesde, periodo)),
+    );
+  }
+
+  private async vigenciaDelMes(condicion: SQL | undefined): Promise<RegimenDelMes | null> {
+    const [fila] = await transaccionEnCurso()
       .select({ regimenIva: datosFiscalesDeEmpresa.regimenIva, regimenIsr: datosFiscalesDeEmpresa.regimenIsr })
       .from(datosFiscalesDeEmpresa)
-      .where(
-        and(
-          eq(datosFiscalesDeEmpresa.empresaId, empresaId),
-          or(isNull(datosFiscalesDeEmpresa.vigenteDesde), lte(datosFiscalesDeEmpresa.vigenteDesde, periodo)),
-        ),
-      )
+      .where(condicion)
       .orderBy(sql`${datosFiscalesDeEmpresa.vigenteDesde} desc nulls last`)
       .limit(1);
     if (!fila) return null;

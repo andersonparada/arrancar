@@ -102,6 +102,7 @@ describe('anular una nota de débito', () => {
       exigirQueLasNotasDeCreditoSigaCabiendo({ ...factura, totalDeNotasDeCredito: 12000 }, { total: 1120, iva: 120 });
 
     expect(intento).toThrow(NotaDeDebitoSostieneNotasDeCredito);
+    expect(intento).toThrow(/Anule primero esas notas de crédito; consulte a su contador/);
   });
 
   it('usa la misma tolerancia de redondeo que al registrar las notas', () => {

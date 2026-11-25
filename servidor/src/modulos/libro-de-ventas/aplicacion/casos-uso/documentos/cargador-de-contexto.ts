@@ -66,14 +66,14 @@ export class CargadorDeContexto {
     return regimen;
   }
 
-  /** El régimen en el mes de la factura del sistema anterior, si la nota cita una y hay historial de ese mes. */
+  /** El régimen en el mes de la factura del sistema anterior, si la nota cita una y una vigencia con fecha la respalda. */
   private async regimenDeLaFacturaAnterior(
     operador: Operador,
     solicitud: SolicitudDeDocumentoDeVenta,
   ): Promise<RegimenDelMes | null> {
     if (!solicitud.facturaAnterior) return null;
     const periodo = primerDiaDelMes(solicitud.facturaAnterior.fecha);
-    return this.dependencias.historial.regimenEn(operador.empresaId, periodo, false);
+    return this.dependencias.historial.regimenConVigenciaEn(operador.empresaId, periodo);
   }
 
   private async exigirLocalidad(localidadId: string | null): Promise<void> {

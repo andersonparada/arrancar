@@ -92,6 +92,11 @@ export interface CatalogosParaDocumentos {
 export interface HistorialFiscalParaVentas {
   /** El régimen vigente en el mes; `null` si la empresa no tiene datos fiscales. `bloquear` toma el historial con `for share`. */
   regimenEn(empresaId: string, periodo: string, bloquear: boolean): Promise<RegimenDelMes | null>;
+  /**
+   * El régimen según una vigencia con fecha (`vigente_desde`) que empezó hasta el mes; `null` si no la hay. La fila base
+   * («rige desde el inicio») no cuenta: antes de la fecha de inicio de la empresa no hay historial que la respalde.
+   */
+  regimenConVigenciaEn(empresaId: string, periodo: string): Promise<RegimenDelMes | null>;
 }
 
 export interface EstadoDelPeriodo {
