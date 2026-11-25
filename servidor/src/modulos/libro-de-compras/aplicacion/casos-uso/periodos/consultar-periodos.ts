@@ -9,8 +9,9 @@ import {
   type PeriodosDelAnioDto,
 } from '../../dto/periodo.dto.js';
 import type { DeclaracionGuardada } from '../../puertos/puertos-de-periodos.js';
-import { armarLibro, periodoDelLibro } from '../libro/consultar-libro.js';
-import { fotoDelLibro, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
+import { periodoDelLibro } from '../libro/consultar-libro.js';
+import { fotoDelPeriodoDeHoy, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
+import { remanenteAnteriorDelPeriodo } from './remanentes-del-periodo.js';
 import { revisionDelPeriodo } from './revision-del-periodo.js';
 
 const MESES = Array.from({ length: 12 }, (_, indice) => indice + 1);
@@ -62,9 +63,24 @@ export class ObtenerPeriodo {
     });
   }
 
+  /**
+   * Los saldos con que se calcularía hoy el período: los del mes previo tal como está ahora (si se rectificó, el cambio
+   * llega aquí) y, si el previo no tiene remanente, los que ya traía la declaración.
+   */
+  private async remanentesVigentes(ultima: DeclaracionGuardada) {
+    const formulario = ultima.foto?.remanentes?.formulario ?? ultima.foto?.saldosIniciales?.formulario;
+    if (!formulario) return undefined;
+    const anterior = await remanenteAnteriorDelPeriodo(this.dependencias.periodos, {
+      periodo: ultima.periodo,
+      formulario,
+    });
+    return { formulario, anterior };
+  }
+
   /** El libro de hoy contra la foto de la última declaración: «cambió después de declarar». */
   private async cambios(operador: Operador, ultima: DeclaracionGuardada): Promise<CambioDesdeLaDeclaracionDto> {
-    const actual = fotoDelLibro(await armarLibro(this.dependencias, operador, ultima.periodo));
+    const remanentes = await this.remanentesVigentes(ultima);
+    const actual = await fotoDelPeriodoDeHoy(this.dependencias, operador, { periodo: ultima.periodo, remanentes });
     return {
       contraLaSecuencia: ultima.secuencia,
       ...diferenciaDeFotos(ultima.foto!, actual),

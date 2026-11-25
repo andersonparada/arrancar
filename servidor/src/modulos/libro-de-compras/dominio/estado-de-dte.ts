@@ -4,8 +4,11 @@ import { ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.
 export const ESTADOS_DE_DTE = ['pendiente', 'registrado', 'descartado', 'bloqueado'] as const;
 export type EstadoDeDte = (typeof ESTADOS_DE_DTE)[number];
 
-/** Por qué una fila queda bloqueada (hoy solo uno; el recibo FEL a la empresa ya no bloquea). */
-export const MOTIVOS_DE_BLOQUEO = ['registrado_en_otra_empresa'] as const;
+/**
+ * Por qué una fila queda bloqueada: su DTE ya está en otra empresa de la cuenta, o es una factura especial recibida
+ * (en la FESP el emisor es el comprador: lo que llega a recibidos es una venta, de Libro de ventas).
+ */
+export const MOTIVOS_DE_BLOQUEO = ['registrado_en_otra_empresa', 'factura_especial_de_venta'] as const;
 export type MotivoDeBloqueo = (typeof MOTIVOS_DE_BLOQUEO)[number];
 
 /** El estado del DTE en la SAT, tal como llegó en el archivo. */

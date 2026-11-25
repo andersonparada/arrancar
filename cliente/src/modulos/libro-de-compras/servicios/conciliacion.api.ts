@@ -12,6 +12,7 @@ export type ClaveDeResultado =
   | 'noVaEnElLibro'
   | 'anuladoEnLaSatYVigenteAqui'
   | 'descartado'
+  | 'facturaEspecialDeVentaRegistradaComoCompra'
   | 'anterioresALaFechaDeInicio';
 
 export type CampoComparado =

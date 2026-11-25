@@ -1,0 +1,44 @@
+import type { CifraDeVentas, RemanentesDeRetenciones, RespuestaDeVentas } from '../../servicios/sat-2237.api';
+import { SECCION_DE_VENTAS as textos } from '../../textos-del-sat-2237';
+
+export interface LineaDeRemanente {
+  etiqueta: string;
+  /** Monto con dos decimales, como lo manda el servidor; `null` si está por confirmar. */
+  valor: string | null;
+  /** Lo que se traslada o se paga: se resalta. */
+  destacada: boolean;
+}
+
+/** Todas las cifras que respondieron los módulos de ventas, en el orden en que llegaron. */
+export const cifrasDeVentas = (respuestas: RespuestaDeVentas[]): CifraDeVentas[] =>
+  respuestas.flatMap((respuesta) => respuesta.cifras);
+
+/** Las líneas del remanente con los nombres del formulario: retenciones en el SAT-2237, constancias en el SAT-2046. */
+export function lineasDeRemanente(remanentes: RemanentesDeRetenciones): LineaDeRemanente[] {
+  const nombres = remanentes.formulario === 'SAT-2046' ? textos.constancias : textos.retenciones;
+  return [
+    { etiqueta: nombres.delPeriodo, valor: remanentes.retencionesDelPeriodo, destacada: false },
+    { etiqueta: nombres.anterior, valor: remanentes.remanenteAnterior, destacada: false },
+    ...lineaDeCredito(remanentes, 'anterior'),
+    { etiqueta: nombres.impuestoDelMes, valor: remanentes.impuestoDelMes, destacada: false },
+    { etiqueta: textos.impuestoAPagar, valor: remanentes.impuestoAPagar, destacada: true },
+    { etiqueta: nombres.alSiguiente, valor: remanentes.remanenteAlSiguiente, destacada: true },
+    ...lineaDeCredito(remanentes, 'alSiguiente'),
+  ];
+}
+
+/** El crédito fiscal solo se muestra en el SAT-2237 y cuando la declaración lo trae. */
+function lineaDeCredito(remanentes: RemanentesDeRetenciones, cual: 'anterior' | 'alSiguiente'): LineaDeRemanente[] {
+  const valor = cual === 'anterior' ? remanentes.creditoAnterior : remanentes.creditoAlSiguiente;
+  if (remanentes.formulario !== 'SAT-2237' || valor === undefined) return [];
+  return [{ etiqueta: textos.credito[cual], valor, destacada: cual === 'alSiguiente' }];
+}
+
+/** Lo que no se puede calcular mientras falte el saldo del mes anterior: los nombres del formulario, sin monto. */
+export function lineasPorConfirmar(formulario: RemanentesDeRetenciones['formulario'] | null): LineaDeRemanente[] {
+  const nombres = formulario === 'SAT-2046' ? textos.constancias : textos.retenciones;
+  return [
+    { etiqueta: textos.impuestoAPagar, valor: null, destacada: true },
+    { etiqueta: nombres.alSiguiente, valor: null, destacada: true },
+  ];
+}

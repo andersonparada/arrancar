@@ -281,6 +281,13 @@
       "when": 1795054968167,
       "tag": "0039_inv_marca_de_inventario",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1795468997473,
+      "tag": "0040_factura_especial_de_venta",
+      "breakpoints": true
     }
   ]
 }

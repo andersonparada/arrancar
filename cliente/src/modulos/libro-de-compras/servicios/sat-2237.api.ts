@@ -59,9 +59,44 @@ export interface VistaDelFormularioSat2237 {
   seccion9: { nombre: string; cantidad: string; monto: string; lineas: OperacionDelSegmento9[] };
 }
 
+/** Una cifra que respondió el módulo de ventas: monto con dos decimales o cantidad entera, como texto. */
+export interface CifraDeVentas {
+  clave: string;
+  etiqueta: string;
+  tipo: 'monto' | 'cantidad';
+  valor: string;
+}
+
+export interface RespuestaDeVentas {
+  modulo: string;
+  clave: string;
+  cifras: CifraDeVentas[];
+}
+
+/**
+ * El remanente de retenciones del SAT-2237 o, en el SAT-2046, el saldo de constancias (`retencionesDelPeriodo` son
+ * las constancias del período). Todo viaja como texto con dos decimales.
+ */
+export interface RemanentesDeRetenciones {
+  formulario: 'SAT-2237' | 'SAT-2046';
+  retencionesDelPeriodo: string;
+  remanenteAnterior: string;
+  /** El remanente de crédito fiscal que traía el mes y el que deja (SAT-2237); ausentes en declaraciones viejas. */
+  creditoAnterior?: string;
+  impuestoDelMes: string;
+  impuestoAPagar: string;
+  remanenteAlSiguiente: string;
+  creditoAlSiguiente?: string;
+}
+
 interface Encabezado {
   periodo: string;
   empresa: { nombre: string; nit: string | null };
+  /** Vacío si ningún módulo de ventas responde. */
+  ventas: RespuestaDeVentas[];
+  remanentes: RemanentesDeRetenciones | null;
+  /** Por qué no se puede calcular con qué saldo empieza el mes (sus cifras quedan «por confirmar»); `null` si no falta. */
+  avisoDeSaldos: string | null;
 }
 
 export interface Sat2237 extends Encabezado {

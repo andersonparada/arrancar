@@ -5186,3 +5186,73 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   hoja (el comprobante no lo trae), la salida del gasto sin factura de un vale liquidado y el botón «Anular vale» de ese caso.
 
 - **2026-11-24** (Caja chica, QA CC-11): el reemplazo del documento anulado por una FEL de otro monto sigue sin permitirse, pero el mensaje ya no manda a una devolución o cobro (camino que dejaba la FEL suelta en la bandeja y el comprobante sin respaldo fiscal). Pendiente de decisión del usuario (pregunta 2 del dictamen): aceptar un monto menor y registrar la diferencia como devolución o cobro en la misma operación, sin cambiar la reposición.
+- **2026-11-23**:
+  - VC-0c1 (Libro de compras para Ventas): pregunta `libro-de-compras.cifras_para_la_declaracion` (`core/contratos`) y
+    `foto.ventas` en `DeclararPeriodo` (la declaración y la rectificación; la diferencia y el aviso «cambió después de
+    declarar» comparan también las cifras de ventas; sin módulo de ventas activo la foto sale como antes). Migración
+    `0040_factura_especial_de_venta`: motivo de bloqueo nuevo y bloqueo de las `FESP` pendientes de la bandeja. Toda `FESP`
+    recibida es una venta: entra bloqueada en la carga, no se confirma (`dte_es_una_venta`) y vuelve bloqueada al
+    restaurarla o soltarla de su documento. La `FESP` ya registrada como compra no se toca: el cuadre de compras la lista
+    aparte («factura especial de venta registrada como compra», por revisar) y las `FESP` bloqueadas no salen como
+    faltantes de la SAT. Falta: VC-0c2 (remanentes) y VC-0c-c (pantallas).
+
+- **2026-11-23 — VC-0c1, correcciones de revisión.** (1) La conciliación ya no pone en «anteriores a la fecha de inicio»
+  las facturas especiales bloqueadas como venta (`factura_especial_de_venta`), y la bandeja no las marca como anteriores
+  ni «en plazo de crédito»: una venta no es una compra con crédito fiscal posible. (2) `diferenciaDeFotos` compara las
+  cifras de ventas de un módulo solo si las dos fotos traen respuesta de ese módulo; sin respuesta no hay punto de
+  comparación (antes se tomaba como cero y desactivar Libro de ventas inventaba «cambió después de declarar»).
+  Pendiente: informar aparte en la pantalla que un módulo de ventas no tiene punto de comparación.
+- **2026-11-23 — VC-0c1, segunda corrección de revisión.** La exclusión de la factura especial (FESP) en la conciliación
+  y en las marcas de la bandeja se decide por `tipoDte === 'FESP'` y no por el motivo de bloqueo: descartar limpia el
+  motivo y un bloqueo previo `registrado_en_otra_empresa` tampoco lo tenía, y así una venta salía como compra con crédito
+  posible. Una FESP descartada sigue en el grupo `descartado` para poder restaurarla. Con pruebas de ambos casos.
+- **2026-11-23 — VC-0c2 y VC-0c-c (remanente de retenciones y pantallas).** Sin migración: todo vive en el `jsonb` de la
+  foto. `foto.remanentes` (`formulario`, `retencionesDelPeriodo`, `remanenteAnterior`, `impuestoDelMes`, `impuestoAPagar`,
+  `remanenteAlSiguiente`) lo calcula Libro de compras con `calcularRemanentesDeRetenciones` (dominio puro, centavos): SAT-2237,
+  máx(0, retenciones + anterior − (débito − crédito fiscal)); SAT-2046, lo mismo con las constancias y el 5 % de los ingresos.
+  Las cifras de ventas que lee son las de la respuesta `ventas`: `debito`, `retenciones_de_iva` e `ingresos` (contrato para
+  Libro de ventas, LV-5). El anterior sale de la foto del mes previo (del mismo formulario); sin ella, del campo
+  `remanenteDeRetencionesAnterior` de `POST …/declarar` (primer mes); sin él, del que ya traía la última declaración del
+  mismo período (rectificar no lo pierde) o 0. La diferencia de la rectificación y el «cambió después de declarar» comparan
+  el remanente solo si las dos fotos lo traen. `GET …/libro/sat-2237` trae `ventas` y `remanentes` (también para el
+  SAT-2046). Cliente: `SeccionDeVentas` en «Datos para el SAT-2237» y en la página del SAT-2046 (con selector de período) y
+  el campo del remanente anterior en la ventana de declarar. La casilla exacta del SAT-2237 sigue por confirmar con una
+  captura (VC-P29): no bloquea. Pendiente: sumar la sección de ventas al Excel del SAT-2237; el remanente del crédito
+  fiscal anterior no se rastrea (lo llena la SAT), así que el impuesto del mes lo ignora; las pruebas de API nuevas
+  (`libro-de-compras-periodos-remanentes`) no pudieron correrse en el entorno del agente (la base rechazaba la conexión:
+  ECONNRESET): correr con la base de desarrollo levantada.
+- **2026-11-23 — Correcciones de la revisión de VC-0c2 y VC-0c.** (1) El remanente del crédito fiscal sí se rastrea ahora:
+  `foto.remanentes` suma `creditoAnterior` y `creditoAlSiguiente`; el impuesto del SAT-2237 es máx(0, débito − crédito −
+  remanente de crédito anterior) y lo que sobra pasa al mes siguiente (antes se descartaba). El valor inicial del primer mes
+  se escribe en `remanenteDeCreditoAnterior` de `POST …/declarar`. Las fotos viejas sin esos campos cuentan como 0.
+  (2) El impuesto del SAT-2046 no baja de cero (ingresos netos negativos ya no crean saldo a favor). (3) «Cambió después de
+  declarar» recalcula con el remanente vigente del mes previo, no con el de su propia foto: al rectificar un mes, el
+  siguiente ya declarado muestra `remanentes.remanenteAnterior` cambiado. Solo avisa un mes de distancia: el mes de después
+  se avisa cuando se rectifica el intermedio. (4) Sin respuesta de ventas la foto guarda `saldosIniciales` (formulario,
+  retenciones y crédito escritos), y una rectificación con ventas los recupera. (5) Página del SAT-2046: el selector de
+  período siempre se ve, con aviso si el mes no es del SAT-2046 o sin ventas. (6) El pequeño contribuyente electrónico
+  (derogado, SAT-2241) no lleva cálculo de remanentes, ni en pantalla ni en la foto (`llevaCalculoDeRemanente`). Las
+  pruebas de API corrieron con una base propia (la 5433 compartida rechazaba conexiones).
+- **2026-11-23 — Segunda corrección de la revisión de VC-0c2 y VC-0c.** (1) Un mes declarado sin ventas ya no pierde sus
+  saldos: el mes siguiente toma los `saldosIniciales` del previo (mismo formulario) tal cual, sin sumarles el crédito del
+  mes, porque sin ventas no hay débito conocido; también en el detalle (`remanentesVigentes`). Queda por confirmar con
+  `contador-guatemala` si el crédito de un mes sin ventas debe pasar al siguiente; no bloquea. (2) Al declarar, cada saldo
+  que el usuario deja vacío conserva el de la declaración anterior del mismo período (antes el vacío pasaba a 0). (3) La
+  tabla «cambió después de declarar» nombra las cifras `remanentes.*` en español y, con el SAT-2046, habla de constancias.
+- **2026-11-24 — Tercera corrección de la revisión de VC-0c2 y VC-0c.** Respuesta del usuario a la consulta del contador: un
+  mes sin débito conocido deja su saldo al siguiente «sin determinar» y el saldo se escribe en el mes siguiente con los
+  campos de «remanente del mes anterior» (opción A); mientras falte, ese mes muestra sus cifras por confirmar. Ya estaba
+  programado. Falta cerrar un camino: el cero del primer mes en Arrancar (sin declaraciones anteriores) se guardaba como
+  dato y una rectificación posterior, ya con un mes previo declarado, lo reutilizaba sin aviso. Ahora ese cero se marca
+  como supuesto (`supuestos` en `remanentes`; en `saldosIniciales` se guarda `null`), se usa solo al calcular y la
+  rectificación lo vuelve a evaluar: con un mes previo queda sin dato con el aviso. La marca no entra en la tabla de
+  cambios. Sin migración.
+- **2026-11-24 — Parte de cliente de la tercera corrección de VC-0c2 y VC-0c.** Las pantallas de datos del SAT-2237 y del
+  SAT-2046 reciben `avisoDeSaldos` y, cuando falta el saldo del mes anterior (el remanente no se calcula), muestran el
+  aviso y «Por confirmar» en el impuesto por pagar y en lo que pasa al mes siguiente, con la indicación de escribir el saldo
+  del formulario presentado en «Remanente del mes anterior» al declarar. Opción A del contador (captura en el mes
+  siguiente), sin campos nuevos. Pendiente del servidor: exponer el saldo vigente en el detalle del período para
+  mostrarlo en la ventana de rectificar.
+- **2026-11-24 — Libro de compras: un cierre nacido de un cero supuesto no pasa al mes siguiente.** Si el mes previo se
+  calculó con un saldo supuesto en cero y ya hay declaraciones anteriores a él, el mes siguiente queda sin dato con un
+  aviso que pide rectificar el previo o escribir el saldo (`remanentes-del-periodo.ts`); con prueba de tres meses.

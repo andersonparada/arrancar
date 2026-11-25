@@ -4,7 +4,8 @@ import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/uni
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { exigirConfirmable } from '../../../dominio/confirmabilidad-del-dte.js';
 import type { DteRecibido } from '../../../dominio/dte-recibido.js';
-import { DteRegistradoEnOtraEmpresa } from '../../../dominio/errores-de-bandeja.js';
+import type { MotivoDeBloqueo } from '../../../dominio/estado-de-dte.js';
+import { DteEsUnaVenta, DteRegistradoEnOtraEmpresa } from '../../../dominio/errores-de-bandeja.js';
 import type { CatalogosParaDocumentos } from '../../puertos/puertos-de-documentos.js';
 import type { AutorizacionesRegistradasFuera } from '../../puertos/puertos-de-la-bandeja.js';
 import type { RepositorioDeDteRecibidos } from '../../puertos/repositorio-de-dte-recibidos.js';
@@ -66,8 +67,9 @@ export class ConfirmadorDeFila {
     opciones: OpcionesDelConfirmador,
   ): Promise<{ documentoId: string; avisos: string[] }> {
     const { unidadDeTrabajo, registrar } = this.dependencias;
-    const bloqueada = await unidadDeTrabajo.ejecutar(operador, () => this.revisarBloqueo(id));
-    if (bloqueada) throw new DteRegistradoEnOtraEmpresa();
+    const motivo = await unidadDeTrabajo.ejecutar(operador, () => this.revisarBloqueo(id));
+    if (motivo === 'factura_especial_de_venta') throw new DteEsUnaVenta();
+    if (motivo) throw new DteRegistradoEnOtraEmpresa();
     const preparada = await unidadDeTrabajo.ejecutar(operador, () => this.preparar(operador, id, opciones));
     const registrado = await registrar.ejecutar(operador, preparada.peticion);
     const avisos = [...new Set([...preparada.avisos, ...registrado.avisos])];
@@ -75,20 +77,33 @@ export class ConfirmadorDeFila {
   }
 
   /**
-   * Una fila pendiente cuyo DTE ya está registrado en otra empresa de la cuenta queda bloqueada, y una bloqueada cuya
-   * otra empresa lo soltó vuelve a pendiente. @returns `true` si queda bloqueada.
+   * Una factura especial recibida es una venta: queda bloqueada con ese motivo. Una fila pendiente cuyo DTE ya está
+   * registrado en otra empresa de la cuenta queda bloqueada, y una bloqueada cuya otra empresa lo soltó vuelve a
+   * pendiente. @returns el motivo por el que queda bloqueada, o `null` si no lo está.
    */
-  private async revisarBloqueo(id: string): Promise<boolean> {
-    const { filas, autorizaciones } = this.dependencias;
+  private async revisarBloqueo(id: string): Promise<MotivoDeBloqueo | null> {
     const fila = await this.bloquear(id);
-    const { estado, autorizacionFel } = fila.instantanea();
-    if (estado !== 'pendiente' && estado !== 'bloqueado') return false;
-    const fuera = await autorizaciones.estaRegistrada(autorizacionFel);
-    if (fuera === (estado === 'bloqueado')) return fuera;
-    if (fuera) fila.bloquear('registrado_en_otra_empresa');
-    else fila.devolverAPendiente();
-    await filas.guardar(fila);
-    return fuera;
+    const { estado } = fila.instantanea();
+    if (estado !== 'pendiente' && estado !== 'bloqueado') return null;
+    if (fila.esVenta) {
+      if (estado === 'pendiente') await this.guardarBloqueo(fila, 'factura_especial_de_venta');
+      return fila.instantanea().motivoDeBloqueo;
+    }
+    const fuera = await this.dependencias.autorizaciones.estaRegistrada(fila.instantanea().autorizacionFel);
+    if (fuera === (estado === 'bloqueado')) return fila.instantanea().motivoDeBloqueo;
+    if (fuera) await this.guardarBloqueo(fila, 'registrado_en_otra_empresa');
+    else await this.soltarBloqueo(fila);
+    return fila.instantanea().motivoDeBloqueo;
+  }
+
+  private async guardarBloqueo(fila: DteRecibido, motivo: MotivoDeBloqueo): Promise<void> {
+    fila.bloquear(motivo);
+    await this.dependencias.filas.guardar(fila);
+  }
+
+  private async soltarBloqueo(fila: DteRecibido): Promise<void> {
+    fila.devolverAPendiente();
+    await this.dependencias.filas.guardar(fila);
   }
 
   private async preparar(operador: Operador, id: string, opciones: OpcionesDelConfirmador): Promise<FilaPreparada> {

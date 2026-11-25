@@ -1,4 +1,9 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
+import {
+  esFormularioConRemanente,
+  llevaCalculoDeRemanente,
+} from '../../../dominio/periodos/remanentes-de-retenciones.js';
 import { PeriodoDeclaradoEnElLibro } from '../../../dominio/eventos.js';
 import { PeriodoYaDeclarado } from '../../../dominio/periodos/errores-de-periodos.js';
 import { diferenciaDeFotos, type FotoDelPeriodo } from '../../../dominio/periodos/foto-del-periodo.js';
@@ -13,8 +18,9 @@ import {
 import { dtoDeDeclaracion, dtoDePeriodo, type ResultadoDeCambioDePeriodoDto } from '../../dto/periodo.dto.js';
 import type { DeclaracionGuardada } from '../../puertos/puertos-de-periodos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
-import { armarLibro, periodoDelLibro } from '../libro/consultar-libro.js';
-import { fotoDelLibro, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
+import { periodoDelLibro } from '../libro/consultar-libro.js';
+import { fotoDelPeriodoDeHoy, type DependenciasDePeriodos } from './dependencias-de-periodos.js';
+import { remanenteAnteriorDelPeriodo, type SaldosEscritos } from './remanentes-del-periodo.js';
 import { revisionDelPeriodo } from './revision-del-periodo.js';
 
 interface Dependencias extends DependenciasDePeriodos {
@@ -28,6 +34,31 @@ export interface PeticionDeDeclaracion {
   numeroDeFormulario?: string | undefined;
   /** Sin ella: hoy. */
   fechaDePresentacion?: string | undefined;
+  /**
+   * El remanente de retenciones (o el saldo de constancias) con que empieza el período, en quetzales. Solo vale cuando
+   * el mes previo no dejó un cierre calculado (el primer mes, un mes sin ventas, otro formulario...); vacío es «no lo
+   * cambié» y cero es un dato.
+   */
+  remanenteDeRetencionesAnterior?: string | undefined;
+  /** El remanente del crédito fiscal del mes anterior, en quetzales; vale en las mismas condiciones que el de retenciones (no cuenta en el SAT-2046). */
+  remanenteDeCreditoAnterior?: string | undefined;
+}
+
+/** Lo que el usuario escribió como saldos con que empieza el período; sin nada escrito, `undefined`. */
+function saldosEscritos(peticion: PeticionDeDeclaracion): SaldosEscritos | undefined {
+  const { remanenteDeRetencionesAnterior: retenciones, remanenteDeCreditoAnterior: credito } = peticion;
+  if (retenciones === undefined && credito === undefined) return undefined;
+  return {
+    retencionesCentavos: retenciones === undefined ? undefined : aCentavos(retenciones),
+    creditoCentavos: credito === undefined ? undefined : aCentavos(credito),
+  };
+}
+
+interface EntradaDeGuardado {
+  periodo: string;
+  datos: Omit<Awaited<ReturnType<DeclararPeriodo['datosDeLaDeclaracion']>>, 'sinCalculo'>;
+  escrito: SaldosEscritos | undefined;
+  sinCalculo: boolean;
 }
 
 /**
@@ -64,11 +95,13 @@ export class DeclararPeriodo {
     exigirPeriodoTerminado(periodo, hoy);
     const fila = await periodos.bloquear(operador.empresaId, periodo);
     if (fila.estado === 'declarado' && (await ajuste.encendido())) throw new PeriodoYaDeclarado(periodo);
-    const datos = await this.datosDeLaDeclaracion(operador, { ...peticion, periodo }, hoy);
-    const guardada = await this.guardar(operador, periodo, datos);
+    const { sinCalculo, ...datos } = await this.datosDeLaDeclaracion(operador, { ...peticion, periodo }, hoy);
+    const guardada = await this.guardar(operador, { periodo, datos, escrito: saldosEscritos(peticion), sinCalculo });
     await periodos.marcarDeclarado(operador.empresaId, periodo, operador.usuarioId);
     const declarado = await periodos.buscar(periodo);
     const avisos = (await revisionDelPeriodo(consultasDelPeriodo, periodo)).map((aviso) => aviso.mensaje);
+    const sinSaldo = guardada.foto?.saldosIniciales?.aviso;
+    if (sinSaldo) avisos.push(sinSaldo);
     return {
       periodo: dtoDePeriodo(periodo, { fila: declarado, ultima: guardada, hoy }),
       declaracion: dtoDeDeclaracion(guardada, true),
@@ -84,6 +117,7 @@ export class DeclararPeriodo {
     const fecha = peticion.fechaDePresentacion ?? hoy;
     exigirFechaDePresentacion(peticion.periodo, fecha);
     return {
+      sinCalculo: !llevaCalculoDeRemanente(regimen),
       formulario,
       numeroDeFormulario: numeroDeFormularioValido(peticion.numeroDeFormulario, formulario),
       fechaDePresentacion: fecha,
@@ -93,11 +127,13 @@ export class DeclararPeriodo {
   /** Arma la foto con el código del libro, la compara con la declaración anterior y agrega la fila del historial. */
   private async guardar(
     operador: Operador,
-    periodo: string,
-    datos: Awaited<ReturnType<DeclararPeriodo['datosDeLaDeclaracion']>>,
+    { periodo, datos, escrito, sinCalculo }: EntradaDeGuardado,
   ): Promise<DeclaracionGuardada> {
     const { periodos } = this.dependencias;
-    const foto = fotoDelLibro(await armarLibro(this.dependencias, operador, periodo));
+    const foto = await fotoDelPeriodoDeHoy(this.dependencias, operador, {
+      periodo,
+      remanentes: sinCalculo ? undefined : await this.remanentes(periodo, datos.formulario, escrito),
+    });
     const previas = (await periodos.historial(periodo)).filter((declaracion) => declaracion.evento !== 'reapertura');
     const evento = eventoDeLaDeclaracion(previas.length);
     const diferencia = evento === 'rectificacion' ? await this.diferencia(previas.at(-1)!, foto) : null;
@@ -110,6 +146,13 @@ export class DeclararPeriodo {
       diferencia,
       motivo: null,
     });
+  }
+
+  /** Solo el SAT-2237 y el SAT-2046 llevan remanente de retenciones; el anterior sale de la foto del mes previo. */
+  private async remanentes(periodo: string, formulario: FormularioDeDeclaracion, escrito?: SaldosEscritos) {
+    if (!esFormularioConRemanente(formulario)) return undefined;
+    const anterior = await remanenteAnteriorDelPeriodo(this.dependencias.periodos, { periodo, formulario, escrito });
+    return { formulario, anterior };
   }
 
   private async diferencia(anterior: DeclaracionGuardada, foto: FotoDelPeriodo) {

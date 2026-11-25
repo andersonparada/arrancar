@@ -52,6 +52,7 @@ export const VACIO_POR_PESTANA: Record<EstadoDeDte, string> = {
 /** El motivo de un bloqueo, en palabras del usuario. */
 export const MOTIVOS_DE_BLOQUEO: Record<string, string> = {
   registrado_en_otra_empresa: 'Ya está registrado en otra empresa de su cuenta.',
+  factura_especial_de_venta: 'Es una venta: regístrela en Libro de ventas.',
 };
 
 /** Lo que falta en una fila para poder confirmarla. */

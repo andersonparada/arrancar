@@ -66,6 +66,14 @@ export const TARJETAS_DE_CONCILIACION: TarjetaDeConciliacion[] = [
     porRevisar: true,
   },
   {
+    clave: 'facturaEspecialDeVentaRegistradaComoCompra',
+    texto: 'Factura especial de venta registrada como compra',
+    explicacion:
+      'Es una venta (el comprador la emitió a nombre de su empresa). Elimínela de las compras y regístrela en Libro de ventas.',
+    tono: 'rojo',
+    porRevisar: true,
+  },
+  {
     clave: 'sinDatosDeLaSat',
     texto: 'Sin datos de la SAT',
     explicacion: 'Registradas de un mes del que no se ha cargado el archivo de la SAT. No se pueden comparar.',

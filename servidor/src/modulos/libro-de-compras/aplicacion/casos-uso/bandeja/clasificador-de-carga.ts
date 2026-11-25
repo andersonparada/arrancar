@@ -67,6 +67,7 @@ function filaNueva(datos: DatosDelDte, conocimiento: ConocimientoPrevio): DteRec
   });
   const documentoId = conocimiento.documentosVigentes.get(datos.autorizacionFel);
   if (documentoId) fila.registrar(documentoId);
+  else if (fila.esVenta) fila.bloquear('factura_especial_de_venta');
   else if (conocimiento.registradasEnOtraEmpresa.has(datos.autorizacionFel))
     fila.bloquear('registrado_en_otra_empresa');
   return fila;

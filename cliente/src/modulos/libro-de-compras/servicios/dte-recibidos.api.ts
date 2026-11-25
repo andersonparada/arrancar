@@ -9,7 +9,7 @@ import type {
 
 export type EstadoDeDte = 'pendiente' | 'registrado' | 'descartado' | 'bloqueado';
 export type EstadoDeDteEnLaSat = 'vigente' | 'anulado';
-export type MotivoDeBloqueo = 'registrado_en_otra_empresa';
+export type MotivoDeBloqueo = 'registrado_en_otra_empresa' | 'factura_especial_de_venta';
 
 /** Lo que el usuario completó de una fila; `null` es «sin completar» (se usa la propuesta). */
 export interface BorradorDeDte {

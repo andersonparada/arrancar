@@ -1,8 +1,14 @@
+import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import type { FotoDelPeriodo } from '../../../dominio/periodos/foto-del-periodo.js';
+import {
+  calcularRemanentesDeRetenciones,
+  type FormularioConRemanente,
+  type SaldosAnteriores,
+} from '../../../dominio/periodos/remanentes-de-retenciones.js';
 import { huellaDelLibro } from '../libro/libro-para-imprimir.js';
 import { dtoDelLibro } from '../../dto/libro.dto.js';
 import type {
@@ -10,7 +16,9 @@ import type {
   ConsultasDelPeriodo,
   RepositorioDePeriodos,
 } from '../../puertos/puertos-de-periodos.js';
-import type { DependenciasParaArmarElLibro, LibroArmado } from '../libro/consultar-libro.js';
+import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { CifrasDeVentas } from '../../puertos/cifras-de-ventas.js';
+import { armarLibro, type DependenciasParaArmarElLibro, type LibroArmado } from '../libro/consultar-libro.js';
 
 /** Lo que comparten los casos de uso de períodos: el libro (para la foto), el historial, el ajuste y el rastro. */
 export interface DependenciasDePeriodos extends DependenciasParaArmarElLibro {
@@ -18,6 +26,7 @@ export interface DependenciasDePeriodos extends DependenciasParaArmarElLibro {
   periodos: RepositorioDePeriodos;
   consultasDelPeriodo: ConsultasDelPeriodo;
   ajuste: AjusteDelControl;
+  cifrasDeVentas: CifrasDeVentas;
   auditoria: Auditoria;
   reloj: Reloj;
   publicadorEventos: PublicadorEventos;
@@ -31,5 +40,52 @@ export function fotoDelLibro(armado: LibroArmado): FotoDelPeriodo {
     documentos: armado.libro.filas.length,
     huella: huellaDelLibro(armado.libro.filas),
     resumen: dtoDelLibro(armado.libro, armado).resumen as unknown as Record<string, unknown>,
+  };
+}
+
+export interface PedidoDeFoto {
+  /** `AAAA-MM-01`. */
+  periodo: string;
+  /** Con el formulario y el remanente anterior (centavos), la foto trae el remanente de retenciones. */
+  remanentes?: { formulario: FormularioConRemanente; anterior: SaldosAnteriores } | undefined;
+}
+
+/**
+ * La foto del período con el libro de hoy, las cifras de ventas que responden los módulos de ventas y, si se pide, el
+ * remanente de retenciones (necesita el crédito del libro y el débito de ventas).
+ */
+export async function fotoDelPeriodoDeHoy(
+  dependencias: DependenciasDePeriodos,
+  operador: Operador,
+  pedido: PedidoDeFoto,
+): Promise<FotoDelPeriodo> {
+  const armado = await armarLibro(dependencias, operador, pedido.periodo);
+  const foto = fotoDelLibro(armado);
+  const ventas = await dependencias.cifrasDeVentas.delPeriodo(operador, pedido.periodo);
+  const { remanentes: pedidos } = pedido;
+  const remanentes = pedidos
+    ? calcularRemanentesDeRetenciones({
+        ...pedidos,
+        ventas,
+        creditoCentavos: armado.libro.resumen.creditoFiscalDelPeriodo,
+      })
+    : null;
+  return {
+    ...foto,
+    ...(ventas.length > 0 ? { ventas } : {}),
+    ...(remanentes ? { remanentes } : {}),
+    ...(pedidos && !remanentes ? { saldosIniciales: saldosIniciales(pedidos, ventas.length > 0) } : {}),
+  };
+}
+
+/** Sin remanente que calcular, la foto guarda al menos con qué saldos empezó el período (el crédito no cuenta en el SAT-2046). */
+function saldosIniciales({ formulario, anterior }: NonNullable<PedidoDeFoto['remanentes']>, respondeVentas: boolean) {
+  const monto = (centavos: number | null, supuesto?: true) =>
+    centavos === null || supuesto ? null : deCentavos(centavos);
+  return {
+    formulario,
+    retenciones: monto(anterior.retencionesCentavos, anterior.supuestos?.retenciones),
+    credito: formulario === 'SAT-2046' ? '0.00' : monto(anterior.creditoCentavos, anterior.supuestos?.credito),
+    ...(respondeVentas && anterior.aviso ? { aviso: anterior.aviso } : {}),
   };
 }

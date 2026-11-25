@@ -1,8 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import CaminoDelSat2046 from '../componentes/sat-2046/CaminoDelSat2046.vue';
 import NotaDelSat2046 from '../componentes/sat-2046/NotaDelSat2046.vue';
+import SeccionDeVentas from '../componentes/sat-2237/SeccionDeVentas.vue';
+import { usarSat2237 } from '../composables/sat-2237/usar-sat-2237';
 import { VENTANA_DEL_SAT_2046 as textos } from '../textos-del-sat-2046';
+
+/** La guía es fija; si Libro de ventas responde, también muestra los ingresos, las constancias y el impuesto del mes. */
+const { periodo, datos, cargando, opcionesDePeriodo } = usarSat2237();
+const delSat2046 = computed(() => (datos.value?.formulario === 'SAT-2046' ? datos.value : null));
 </script>
 
 <template>
@@ -19,6 +27,27 @@ import { VENTANA_DEL_SAT_2046 as textos } from '../textos-del-sat-2046';
       <CaminoDelSat2046 v-for="camino in textos.caminos" :key="camino.clave" :camino="camino" />
       <p class="text-sm text-tierra-700 dark:text-tierra-200">{{ textos.siNoAparece }}</p>
       <p class="text-xs text-tierra-600 dark:text-tierra-300">{{ textos.fuente }}</p>
+    </div>
+    <div class="mt-6 max-w-3xl">
+      <CampoSelector v-model="periodo" etiqueta="Período" :opciones="opcionesDePeriodo" class="max-w-xs" />
+      <div :aria-busy="cargando">
+        <SeccionDeVentas
+          v-if="delSat2046"
+          :ventas="delSat2046.ventas"
+          :remanentes="delSat2046.remanentes"
+          :aviso-de-saldos="delSat2046.avisoDeSaldos"
+          formulario="SAT-2046"
+        />
+        <p v-if="datos && !delSat2046" class="mt-3 text-sm text-tierra-600 dark:text-tierra-300" role="status">
+          {{ textos.sinSat2046 }}
+        </p>
+        <p
+          v-else-if="delSat2046 && delSat2046.ventas.length === 0"
+          class="mt-3 text-sm text-tierra-600 dark:text-tierra-300"
+        >
+          {{ textos.sinVentas }}
+        </p>
+      </div>
     </div>
   </div>
 </template>

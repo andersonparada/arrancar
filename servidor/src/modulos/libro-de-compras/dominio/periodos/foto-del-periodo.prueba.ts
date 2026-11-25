@@ -76,3 +76,65 @@ describe('diferencia entre dos fotos', () => {
     expect(diferenciaDeFotos(foto(), foto({ huella: 'c'.repeat(64) }))).toEqual({ cambios: [], huellaCambio: true });
   });
 });
+
+describe('diferencia de las cifras de ventas de la foto', () => {
+  const ventas = (debito: string, cantidad: string): Partial<FotoDelPeriodo> => ({
+    ventas: [
+      {
+        modulo: 'libro-de-ventas',
+        clave: 'ventas',
+        cifras: [
+          { clave: 'debito', etiqueta: 'Débito fiscal', tipo: 'monto', valor: debito },
+          { clave: 'operaciones', etiqueta: 'Operaciones', tipo: 'cantidad', valor: cantidad },
+        ],
+      },
+    ],
+  });
+
+  it('compara también las cifras de ventas, montos y cantidades', () => {
+    const { cambios } = diferenciaDeFotos(foto(ventas('10.00', '2')), foto(ventas('25.50', '3')));
+
+    expect(cambios).toEqual([
+      { clave: 'ventas[libro-de-ventas].debito', anterior: '10.00', actual: '25.50', cambio: '15.50' },
+      { clave: 'ventas[libro-de-ventas].operaciones', anterior: '2', actual: '3', cambio: '1' },
+    ]);
+  });
+
+  it('una foto sin respuesta de ventas contra una con ventas no tiene punto de comparación', () => {
+    expect(diferenciaDeFotos(foto(), foto(ventas('10.00', '2'))).cambios).toEqual([]);
+  });
+
+  it('una foto con ventas contra una sin respuesta (módulo desactivado) no inventa un cambio a cero', () => {
+    expect(diferenciaDeFotos(foto(ventas('120.00', '2')), foto()).cambios).toEqual([]);
+  });
+
+  it('las mismas cifras de ventas no dan diferencia', () => {
+    expect(diferenciaDeFotos(foto(ventas('10.00', '2')), foto(ventas('10.00', '2'))).cambios).toEqual([]);
+  });
+});
+
+describe('diferencia del remanente de retenciones de la foto', () => {
+  const remanentes = (alSiguiente: string): Partial<FotoDelPeriodo> => ({
+    remanentes: {
+      formulario: 'SAT-2237',
+      retencionesDelPeriodo: '100.00',
+      remanenteAnterior: '0.00',
+      impuestoDelMes: '0.00',
+      impuestoAPagar: '0.00',
+      remanenteAlSiguiente: alSiguiente,
+    },
+  });
+
+  it('compara el remanente cuando las dos fotos lo traen', () => {
+    const { cambios } = diferenciaDeFotos(foto(remanentes('100.00')), foto(remanentes('70.00')));
+
+    expect(cambios).toEqual([
+      { clave: 'remanentes.remanenteAlSiguiente', anterior: '100.00', actual: '70.00', cambio: '-30.00' },
+    ]);
+  });
+
+  it('sin remanente en alguna de las dos no hay punto de comparación', () => {
+    expect(diferenciaDeFotos(foto(), foto(remanentes('70.00'))).cambios).toEqual([]);
+    expect(diferenciaDeFotos(foto(remanentes('70.00')), foto()).cambios).toEqual([]);
+  });
+});

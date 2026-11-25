@@ -2,6 +2,7 @@ import {
   esAnteriorALaFechaDeInicio,
   estaEnPlazoDeCredito,
 } from '../../../dominio/anterioridad-a-la-fecha-de-inicio.js';
+import { esFacturaEspecialDeVenta } from '../../../dominio/factura-especial-de-venta.js';
 import type { DteRecibido } from '../../../dominio/dte-recibido.js';
 import type { BorradorDeDteDto, DteRecibidoDto, PropuestaDeDteDto } from '../../dto/dte-recibido.dto.js';
 
@@ -47,9 +48,15 @@ function borrador(dte: DteRecibido): BorradorDeDteDto {
 
 type Marcas = Pick<DteRecibidoDto, 'anteriorALaFechaDeInicio' | 'enPlazoDeCredito'>;
 
-/** Las marcas de anterioridad se calculan al consultar; sin fecha de inicio nada se marca. */
+/**
+ * Las marcas de anterioridad se calculan al consultar; sin fecha de inicio nada se marca. Una factura especial que es
+ * una venta no es una compra con crédito fiscal posible: no se marca.
+ */
 function marcas(dte: DteRecibido, fechaDeInicio: string | null): Marcas {
-  const { fechaEmision } = dte.instantanea();
+  const { fechaEmision, ...datos } = dte.instantanea();
+  if (esFacturaEspecialDeVenta(datos)) {
+    return { anteriorALaFechaDeInicio: false, enPlazoDeCredito: false };
+  }
   return {
     anteriorALaFechaDeInicio: esAnteriorALaFechaDeInicio(fechaEmision, fechaDeInicio),
     enPlazoDeCredito: estaEnPlazoDeCredito(fechaEmision, fechaDeInicio),

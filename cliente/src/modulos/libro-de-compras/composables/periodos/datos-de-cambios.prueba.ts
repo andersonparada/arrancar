@@ -19,6 +19,14 @@ describe('etiquetaDeCifra', () => {
     expect(etiquetaDeCifra('resumen.combustibles.idp')).toBe('Combustibles: IDP');
   });
 
+  it('nombra las cifras del remanente y distingue constancias del SAT-2046', () => {
+    expect(etiquetaDeCifra('remanentes.remanenteAnterior', 'SAT-2237')).toBe('Remanente de retenciones anterior');
+    expect(etiquetaDeCifra('remanentes.remanenteAnterior', 'SAT-2046')).toBe('Saldo de constancias anterior');
+    expect(etiquetaDeCifra('remanentes.creditoAlSiguiente')).toBe('Remanente de crédito fiscal al siguiente mes');
+    expect(etiquetaDeCifra('remanentes.impuestoAPagar')).toBe('Impuesto por pagar');
+    expect(etiquetaDeCifra('remanentes.algoNuevo')).toBe('remanentes.algoNuevo');
+  });
+
   it('deja la clave tal cual si no la conoce', () => {
     expect(etiquetaDeCifra('resumen.algoNuevo')).toBe('resumen.algoNuevo');
   });
@@ -46,5 +54,16 @@ describe('cambios', () => {
     const base = { documentoId: 'x', cambio: 'anulado' as const, total: '1.00' };
     expect(nombreDelDocumentoCambiado({ ...base, tipoDte: 'FACT', serie: 'A', numero: '9' })).toBe('FACT A 9');
     expect(nombreDelDocumentoCambiado({ ...base, tipoDte: null, serie: null, numero: '9' })).toBe('9');
+  });
+});
+
+describe('etiquetas del impuesto del mes', () => {
+  it('cada formulario nombra su base', () => {
+    expect(etiquetaDeCifra('remanentes.impuestoDelMes', 'SAT-2237')).toBe(
+      'Impuesto del mes (débito menos crédito, antes de retenciones)',
+    );
+    expect(etiquetaDeCifra('remanentes.impuestoDelMes', 'SAT-2046')).toBe(
+      'Impuesto del mes (5 % de ingresos, antes de constancias)',
+    );
   });
 });

@@ -1,4 +1,5 @@
 import { esAnteriorALaFechaDeInicio, estaEnPlazoDeCredito } from '../anterioridad-a-la-fecha-de-inicio.js';
+import { esFacturaEspecialDeVenta } from '../factura-especial-de-venta.js';
 import { emparejar, type Parejas } from './emparejar.js';
 import { itemDeLaFila, itemDelDocumento } from './items-de-conciliacion.js';
 import type {
@@ -21,6 +22,7 @@ function resultadoVacio(): ResultadoDeConciliacion {
     sinDatosDeLaSat: [],
     anuladoEnLaSatYVigenteAqui: [],
     descartado: [],
+    facturaEspecialDeVentaRegistradaComoCompra: [],
     anterioresALaFechaDeInicio: [],
   };
 }
@@ -37,6 +39,7 @@ function clasificarDocumento(
   }
   const item = itemDelDocumento(documento, fila);
   if (fila.estadoSat === 'anulado') return ['anuladoEnLaSatYVigenteAqui', item];
+  if (esFacturaEspecialDeVenta(fila)) return ['facturaEspecialDeVentaRegistradaComoCompra', item];
   return [item.diferencias.length > 0 ? 'conDiferencias' : 'cuadra', item];
 }
 
@@ -46,7 +49,20 @@ function claveDeLaFilaConDocumento(
   documento: DocumentoConciliable,
 ): keyof ResultadoDeConciliacion {
   if (fila.estadoSat === 'anulado') return 'anuladoEnLaSatYVigenteAqui';
+  if (esFacturaEspecialDeVenta(fila)) return 'facturaEspecialDeVentaRegistradaComoCompra';
   return documento.fueraDelLibro ? 'noVaEnElLibro' : 'registradoEnOtroPeriodo';
+}
+
+/** Una fila vigente que Arrancar no tiene; una anulada o una factura especial (es una venta) no son un faltante. */
+const esFaltante = (fila: FilaConciliable): boolean => fila.estadoSat !== 'anulado' && !esFacturaEspecialDeVenta(fila);
+
+/** Una compra (no una venta ni una anulada que nadie registró) emitida antes de la fecha de inicio. */
+function esDeUnaCompraAnterior(fila: FilaConciliable, fechaDeInicio: string | null): boolean {
+  return (
+    esAnteriorALaFechaDeInicio(fila.fechaEmision, fechaDeInicio) &&
+    !esFacturaEspecialDeVenta(fila) &&
+    (fila.estado === 'descartado' || fila.estadoSat !== 'anulado')
+  );
 }
 
 /** Del lado de la SAT: una fila emitida en el mes que no cruzó con un documento del libro del período. */
@@ -57,15 +73,12 @@ function clasificarFila(
 ): [keyof ResultadoDeConciliacion, ItemDeConciliacion] | null {
   const item = itemDeLaFila(fila, documento ?? null);
   if (documento) return [claveDeLaFilaConDocumento(fila, documento), item];
-  if (
-    esAnteriorALaFechaDeInicio(fila.fechaEmision, fechaDeInicio) &&
-    (fila.estado === 'descartado' || fila.estadoSat !== 'anulado')
-  ) {
+  if (esDeUnaCompraAnterior(fila, fechaDeInicio)) {
     const enPlazoDeCredito = estaEnPlazoDeCredito(fila.fechaEmision, fechaDeInicio);
     return ['anterioresALaFechaDeInicio', { ...item, enPlazoDeCredito }];
   }
   if (fila.estado === 'descartado') return ['descartado', item];
-  return fila.estadoSat === 'anulado' ? null : ['enLaSatYNoEnArrancar', item];
+  return esFaltante(fila) ? ['enLaSatYNoEnArrancar', item] : null;
 }
 
 const ordenar = (a: ItemDeConciliacion, b: ItemDeConciliacion): number =>

@@ -3,6 +3,11 @@ import { FORMULARIOS_DE_DECLARACION } from '../dominio/periodos/reglas-de-declar
 
 /** El período del libro: `AAAA-MM` (mes del 01 al 12). */
 const periodo = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Escriba el período como AAAA-MM.');
+const montoEnQuetzales = (ejemplo: string) =>
+  z
+    .string()
+    .trim()
+    .regex(/^\d{1,12}(\.\d{1,2})?$/, `Escriba el monto en quetzales, por ejemplo ${ejemplo}.`);
 const motivo = z.string().trim().min(1, 'Escriba el motivo.').max(500, 'El motivo admite hasta 500 caracteres.');
 
 export const esquemaConsultaDePeriodos = z.object({ anio: z.coerce.number().int().min(2000).max(2100).optional() });
@@ -16,6 +21,8 @@ export const esquemaDeclaracion = z.object({
   formulario: z.enum(FORMULARIOS_DE_DECLARACION).optional(),
   numeroDeFormulario: z.string().trim().max(60, 'El número del formulario es muy largo.').optional(),
   fechaDePresentacion: z.iso.date().optional(),
+  remanenteDeRetencionesAnterior: montoEnQuetzales('125.50').optional(),
+  remanenteDeCreditoAnterior: montoEnQuetzales('80.00').optional(),
 });
 export type DeclaracionSolicitada = z.infer<typeof esquemaDeclaracion>;
 

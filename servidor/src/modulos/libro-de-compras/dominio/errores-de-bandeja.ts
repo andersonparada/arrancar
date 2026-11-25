@@ -36,6 +36,15 @@ export class DteRegistradoEnOtraEmpresa extends ReglaDeNegocioInfringida {
   }
 }
 
+/** El DTE es una factura especial recibida: es una venta y se registra en Libro de ventas, no aquí. */
+export class DteEsUnaVenta extends ReglaDeNegocioInfringida {
+  readonly codigo = 'dte_es_una_venta';
+
+  constructor() {
+    super('Es una venta: regístrela en Libro de ventas.');
+  }
+}
+
 /** El proveedor es nuevo y el usuario aún no confirmó su tipo de persona y su nombre: al confirmar no se adivinan. */
 export class ProveedorNuevoSinConfirmar extends ReglaDeNegocioInfringida {
   readonly codigo = 'proveedor_nuevo_sin_confirmar';

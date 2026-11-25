@@ -22,7 +22,8 @@ import {
   RepositorioDeFoliacionDrizzle,
 } from '../infraestructura/persistencia/repositorio-de-emisiones-del-libro.drizzle.js';
 import { RepositorioDeDatosFiscalesDeEmpresaDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales-de-empresa.drizzle.js';
-import { IdentidadDeLaEmpresaEnMediador } from '../infraestructura/vecinos-en-mediador.js';
+import { RepositorioDePeriodosDrizzle } from '../infraestructura/persistencia/repositorio-de-periodos.drizzle.js';
+import { CifrasDeVentasEnMediador, IdentidadDeLaEmpresaEnMediador } from '../infraestructura/vecinos-en-mediador.js';
 
 /** Uno solo para todo el proceso: dibujar bloquea, así que se hace una generación a la vez. */
 const generadorDePdf = new GeneradorPdfkitDelLibro();
@@ -67,7 +68,11 @@ export function rutasDeLibro() {
         excel: crearLibroDeExcel(),
         zonaHoraria: new PoliticaDeZonaHorariaEnConfiguracion(),
       }),
-      sat2237: new ConsultarSat2237(dependencias),
+      sat2237: new ConsultarSat2237({
+        ...dependencias,
+        periodos: new RepositorioDePeriodosDrizzle(),
+        cifrasDeVentas: new CifrasDeVentasEnMediador(),
+      }),
       exportarSat2237: new ExportarSat2237({ ...dependencias, excel: crearLibroDeExcel() }),
       ...casosDeUsoDeFolios(compartidas),
     }),

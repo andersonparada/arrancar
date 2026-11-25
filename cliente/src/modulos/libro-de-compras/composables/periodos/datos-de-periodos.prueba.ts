@@ -94,11 +94,28 @@ describe('cuerpoDeDeclaracion', () => {
   });
 
   it('envía lo escrito sin espacios sobrantes', () => {
-    expect(cuerpoDeDeclaracion({ formulario: 'SAT-2046', numero: ' AB12 ', fecha: '2026-10-05' })).toEqual({
-      formulario: 'SAT-2046',
+    const edicion = {
+      formulario: 'SAT-2237' as const,
+      numero: ' AB12 ',
+      fecha: '2026-10-05',
+      remanenteAnterior: ' 25.5 ',
+      creditoAnterior: ' 3 ',
+    };
+
+    expect(cuerpoDeDeclaracion(edicion)).toEqual({
+      formulario: 'SAT-2237',
       numeroDeFormulario: 'AB12',
       fechaDePresentacion: '2026-10-05',
+      remanenteDeRetencionesAnterior: '25.5',
+      remanenteDeCreditoAnterior: '3',
     });
+  });
+
+  it('el remanente que escribe el navegador como número se envía como texto, y el cero cuenta', () => {
+    const cuerpo = cuerpoDeDeclaracion({ ...declaracionVacia(), remanenteAnterior: 0 });
+
+    expect(cuerpo).toEqual({ remanenteDeRetencionesAnterior: '0' });
+    expect(cuerpoDeDeclaracion({ ...declaracionVacia(), remanenteAnterior: null })).toEqual({});
   });
 
   it('ofrece primero el formulario del régimen', () => {
@@ -124,5 +141,20 @@ describe('resúmenes', () => {
 
   it('reabrir explica que luego se rectifica', () => {
     expect(resumenDeReabrir(periodo({ estado: 'declarado' }), control(true)).join(' ')).toContain('rectificación');
+  });
+});
+
+describe('crédito fiscal anterior según el formulario', () => {
+  const edicion = { ...declaracionVacia(), remanenteAnterior: '5', creditoAnterior: '4' };
+  it('el SAT-2046 no envía el crédito, ni escrito ni heredado del formulario vigente', () => {
+    expect(cuerpoDeDeclaracion({ ...edicion, formulario: 'SAT-2046' })).toEqual({
+      formulario: 'SAT-2046',
+      remanenteDeRetencionesAnterior: '5',
+    });
+    expect(cuerpoDeDeclaracion(edicion, 'SAT-2046').remanenteDeCreditoAnterior).toBeUndefined();
+  });
+  it('el SAT-2237 y el automático sin historial lo envían', () => {
+    expect(cuerpoDeDeclaracion({ ...edicion, formulario: 'SAT-2237' }).remanenteDeCreditoAnterior).toBe('4');
+    expect(cuerpoDeDeclaracion(edicion).remanenteDeCreditoAnterior).toBe('4');
   });
 });

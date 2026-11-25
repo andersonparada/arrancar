@@ -3,6 +3,7 @@ import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiPeriodos, type DetalleDelPeriodo } from '../../servicios/periodos.api';
 import { VENTANA_DE_REAPERTURA } from '../../textos-de-periodos';
 import { usarAccionConMotivo } from '../retenciones/usar-accion-con-motivo';
+import { formularioDeLaUltimaDeclaracion } from './datos-de-cambios';
 import { accionesDelPeriodo } from './datos-de-periodos';
 import { usarDeclaracion } from './usar-declaracion';
 
@@ -19,11 +20,13 @@ export function usarDetalleDePeriodo(mes: () => string) {
     detalle.value ? accionesDelPeriodo(detalle.value.periodo, detalle.value.control) : null,
   );
 
+  const formularioVigente = () => (detalle.value ? formularioDeLaUltimaDeclaracion(detalle.value.historial) : null);
+
   return {
     detalle,
     cargando,
     acciones,
-    declaracion: usarDeclaracion(mes, cargar),
+    declaracion: usarDeclaracion(mes, cargar, formularioVigente),
     reapertura: usarAccionConMotivo(
       (_: true, motivo: string) => apiPeriodos.reabrir(mes(), motivo),
       cargar,

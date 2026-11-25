@@ -72,6 +72,7 @@ const ACCIONES: Record<ClaveDeResultado, AccionesPorGrupo> = {
   noVaEnElLibro: abrirSiHayDocumento,
   anuladoEnLaSatYVigenteAqui: abrirSiHayDocumento,
   descartado: restaurarSiHayFila,
+  facturaEspecialDeVentaRegistradaComoCompra: abrirSiHayDocumento,
   anterioresALaFechaDeInicio: accionesDeLasAnteriores,
 };
 

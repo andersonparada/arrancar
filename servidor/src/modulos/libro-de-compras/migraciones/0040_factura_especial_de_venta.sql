@@ -1,0 +1,3 @@
+ALTER TABLE "libro_de_compras"."dte_recibidos" DROP CONSTRAINT "dte_recibidos_motivo_de_bloqueo_valido";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."dte_recibidos" ADD CONSTRAINT "dte_recibidos_motivo_de_bloqueo_valido" CHECK ("libro_de_compras"."dte_recibidos"."motivo_de_bloqueo" is null or "libro_de_compras"."dte_recibidos"."motivo_de_bloqueo" in ('registrado_en_otra_empresa', 'factura_especial_de_venta'));--> statement-breakpoint
+UPDATE "libro_de_compras"."dte_recibidos" SET "estado" = 'bloqueado', "motivo_de_bloqueo" = 'factura_especial_de_venta' WHERE "tipo_dte" = 'FESP' AND "estado" = 'pendiente';

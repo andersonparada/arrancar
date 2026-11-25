@@ -1,4 +1,5 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
+import type { VentasDelFormulario } from '../casos-uso/libro/ventas-del-sat-2237.js';
 import type { DatosDelSat2237 } from '../../dominio/libro/datos-del-sat-2237.js';
 import type { FormularioDelRegimen } from '../../dominio/libro/formulario-del-regimen.js';
 import type { DetalleDeProveedores, ProveedorDelSat2237 } from '../../dominio/libro/proveedores-del-sat-2237.js';
@@ -30,7 +31,7 @@ interface FormularioEnTexto {
   seccion9: Omit<VistaDelFormularioSat2237['seccion9'], 'lineas'> & { lineas: OperacionEnTexto[] };
 }
 
-interface Encabezado {
+interface Encabezado extends VentasDelFormulario {
   periodo: string;
   empresa: { nombre: string; nit: string | null };
 }

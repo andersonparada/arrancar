@@ -6,6 +6,7 @@ import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import AvisosDelLibro from '../componentes/libro/AvisosDelLibro.vue';
 import PestanasDelSat2237 from '../componentes/sat-2237/PestanasDelSat2237.vue';
+import SeccionDeVentas from '../componentes/sat-2237/SeccionDeVentas.vue';
 import SinSat2237 from '../componentes/sat-2237/SinSat2237.vue';
 import VistaComoEnElFormulario from '../componentes/sat-2237/VistaComoEnElFormulario.vue';
 import VistaPorRubros from '../componentes/sat-2237/VistaPorRubros.vue';
@@ -52,6 +53,12 @@ const { periodo, datos, cargando, descargando, opcionesDePeriodo, exportar } = u
         <PestanasDelSat2237 v-model="comoEnElFormulario" />
         <VistaComoEnElFormulario v-if="comoEnElFormulario" :datos="datos" />
         <VistaPorRubros v-else :datos="datos" />
+        <SeccionDeVentas
+          :ventas="datos.ventas"
+          :remanentes="datos.remanentes"
+          :aviso-de-saldos="datos.avisoDeSaldos"
+          formulario="SAT-2237"
+        />
       </template>
     </div>
   </div>

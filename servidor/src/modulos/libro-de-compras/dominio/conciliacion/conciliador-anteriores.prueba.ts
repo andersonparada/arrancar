@@ -15,6 +15,7 @@ const fila = (cambios: Partial<FilaConciliable> = {}): FilaConciliable => ({
   fechaEmision: '2026-03-10',
   nitEmisor: '576937K',
   nombreEmisor: 'Agro del Norte',
+  nitReceptor: '1234567',
   total: '1120.00',
   iva: '120.00',
   idp: '0.00',
@@ -100,5 +101,36 @@ describe('conciliar con fecha de inicio', () => {
     const resultado = conciliar(entrada([fila({ estadoSat: 'anulado' })], '2026-05-01'));
 
     expect(resultado.anterioresALaFechaDeInicio).toHaveLength(0);
+  });
+
+  it('una factura especial de venta anterior al inicio no sale como anterior ni como faltante', () => {
+    const fesp = fila({ tipoDte: 'FESP', estado: 'bloqueado', motivoDeBloqueo: 'factura_especial_de_venta' });
+    const resultado = conciliar(entrada([fesp], '2026-04-01'));
+
+    expect(resultado.anterioresALaFechaDeInicio).toHaveLength(0);
+    expect(resultado.enLaSatYNoEnArrancar).toHaveLength(0);
+  });
+
+  it('una factura especial descartada no sale como compra anterior y se queda en descartado', () => {
+    const fesp = fila({ tipoDte: 'FESP', estado: 'descartado', motivoDeDescarte: 'no_aplica' });
+    const resultado = conciliar(entrada([fesp], '2026-04-01'));
+
+    expect(resultado.anterioresALaFechaDeInicio).toHaveLength(0);
+    expect(resultado.descartado).toHaveLength(1);
+  });
+
+  it('una FESP emitida por la propia empresa (emisor igual al receptor) sí es una compra anterior', () => {
+    const fesp = fila({ tipoDte: 'FESP', nitEmisor: '1234567', nitReceptor: '1234567' });
+    const resultado = conciliar(entrada([fesp], '2026-04-01'));
+
+    expect(resultado.anterioresALaFechaDeInicio).toHaveLength(1);
+  });
+
+  it('una factura especial bloqueada por otra empresa tampoco sale como compra anterior ni faltante', () => {
+    const fesp = fila({ tipoDte: 'FESP', estado: 'bloqueado', motivoDeBloqueo: 'registrado_en_otra_empresa' });
+    const resultado = conciliar(entrada([fesp], '2026-04-01'));
+
+    expect(resultado.anterioresALaFechaDeInicio).toHaveLength(0);
+    expect(resultado.enLaSatYNoEnArrancar).toHaveLength(0);
   });
 });

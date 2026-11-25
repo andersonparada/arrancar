@@ -18,6 +18,8 @@ export const VENTANA_DEL_SAT_2046 = {
   calculoTitulo: 'El cálculo del impuesto',
   calculo:
     'Arrancar calculará el 5 % sobre sus ventas del mes, con las retenciones que le hicieron, cuando esté disponible el módulo de Ventas. Mientras tanto use cualquiera de los dos caminos de abajo.',
+  sinSat2046: 'Ese mes no se declara en el SAT-2046: el régimen que regía entonces usa otro formulario o ninguno.',
+  sinVentas: 'Ningún módulo de ventas responde para ese mes: no hay ingresos ni constancias que mostrar.',
   caminos: [
     {
       clave: 'app-fel',

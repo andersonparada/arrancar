@@ -93,8 +93,38 @@ export interface EvaluacionDeBancarizacion {
   pagadoEnElMesCentavos: number;
 }
 
+/** Una cifra de ventas para la declaración del período (monto con dos decimales y signo, o cantidad entera). */
+export interface CifraDeDeclaracion {
+  /** Clave propia del módulo que responde: `debito_por_rubro`, `ventas_exentas`... */
+  clave: string;
+  /** «Ventas exentas». */
+  etiqueta: string;
+  tipo: 'monto' | 'cantidad';
+  valor: string;
+}
+
+/** Lo que un módulo de ventas dice de un período para la foto de la declaración. */
+export interface CifrasParaLaDeclaracion {
+  modulo: string;
+  /** Qué conjunto de cifras es (`ventas`). */
+  clave: string;
+  cifras: CifraDeDeclaracion[];
+}
+
 declare module './mediador.contratos.js' {
   interface PreguntasEntreModulos {
+    /**
+     * Al declarar o rectificar un período, Libro de compras pregunta a todos las cifras de ventas del mes (`periodo` es
+     * `AAAA-MM-01`); responde `null` quien no tenga nada que decir. Lo guarda en `foto.ventas`. Un mes sin ventas con
+     * el módulo activo y en uso responde las cifras en `0.00` (`debito`, `retenciones_de_iva`, `ingresos`): es un débito
+     * conocido igual a cero y el crédito se acumula (Ley del IVA, art. 21). `null` solo cuando no puede saberlo (por
+     * ejemplo, un mes anterior a empezar a usar el módulo): una lista de cifras vacía se trata como «sin respuesta» y
+     * cortaría la cadena de remanentes.
+     */
+    'libro-de-compras.cifras_para_la_declaracion': {
+      datos: { periodo: string };
+      respuesta: CifrasParaLaDeclaracion | null;
+    };
     /**
      * Cada módulo que paga a proveedores (Cuentas por pagar, Caja chica, Cuentas por liquidar) dice lo pagado al
      * proveedor en el mes (`mes` es `AAAA-MM-01`); responde `null` si no tiene nada que decir.

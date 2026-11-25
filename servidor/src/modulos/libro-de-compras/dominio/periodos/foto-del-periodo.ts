@@ -1,5 +1,6 @@
 import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { TipoDeLibro } from '../libro/tipo-de-libro.js';
+import type { FormularioConRemanente, RemanentesDeRetenciones } from './remanentes-de-retenciones.js';
 
 /**
  * Los totales del libro del período en el momento de declararlo. Los montos son texto con dos decimales; la huella es
@@ -12,6 +13,36 @@ export interface FotoDelPeriodo {
   huella: string;
   /** El resumen mensual del libro (totales por columna, por código DTE, crédito del período...). */
   resumen: Record<string, unknown>;
+  /** Las cifras de ventas que respondieron los módulos de ventas (vacío o ausente si no hay ninguno activo). */
+  ventas?: CifrasDeVentasEnLaFoto[];
+  /** El remanente de retenciones (SAT-2237) o de constancias (SAT-2046); ausente si no hay ventas que lo calculen. */
+  remanentes?: RemanentesDeRetenciones;
+  /**
+   * Los saldos con que empezó el período cuando no se pudo calcular el remanente (sin ventas o sin algún saldo anterior):
+   * lo que escribió el usuario no se pierde y una rectificación posterior lo recupera. No es el cierre del mes: ese
+   * solo existe en `remanentes`. `null` es un saldo sin dato, y `aviso` dice por qué falta.
+   */
+  saldosIniciales?: {
+    formulario: FormularioConRemanente;
+    retenciones: string | null;
+    credito: string | null;
+    aviso?: string;
+  };
+}
+
+/** Una cifra de ventas tal como se guarda en la foto. */
+export interface CifraDeVentasEnLaFoto {
+  clave: string;
+  etiqueta: string;
+  tipo: 'monto' | 'cantidad';
+  valor: string;
+}
+
+/** Lo que respondió un módulo de ventas sobre el período. */
+export interface CifrasDeVentasEnLaFoto {
+  modulo: string;
+  clave: string;
+  cifras: CifraDeVentasEnLaFoto[];
 }
 
 export interface CambioDeLaFoto {
@@ -44,9 +75,24 @@ function aplanar(valor: unknown, clave: string, salida: Map<string, string>): vo
   }
 }
 
-function cifrasDe(foto: FotoDelPeriodo): Map<string, string> {
+/** Los módulos de ventas que respondieron en las dos fotos: solo sus cifras se pueden comparar. */
+function modulosEnComun(anterior: FotoDelPeriodo, actual: FotoDelPeriodo): Set<string> {
+  const delAnterior = new Set((anterior.ventas ?? []).map((v) => v.modulo));
+  return new Set((actual.ventas ?? []).map((v) => v.modulo).filter((modulo) => delAnterior.has(modulo)));
+}
+
+/** Los supuestos son una marca interna del primer mes, no una cifra que comparar. */
+const sinSupuestos = (remanentes: FotoDelPeriodo['remanentes']) =>
+  remanentes && Object.fromEntries(Object.entries(remanentes).filter(([clave]) => clave !== 'supuestos'));
+
+function cifrasDe(foto: FotoDelPeriodo, modulos: Set<string>, conRemanentes: boolean): Map<string, string> {
   const cifras = new Map<string, string>([['documentos', String(foto.documentos)]]);
   aplanar(foto.resumen, 'resumen', cifras);
+  if (conRemanentes) aplanar(sinSupuestos(foto.remanentes), 'remanentes', cifras);
+  for (const { modulo, clave, cifras: deVentas } of foto.ventas ?? []) {
+    if (!modulos.has(modulo)) continue;
+    for (const cifra of deVentas) cifras.set(`${clave}[${modulo}].${cifra.clave}`, cifra.valor);
+  }
   return cifras;
 }
 
@@ -57,10 +103,16 @@ const restar = (actual: string, anterior: string): string =>
 
 const cero = (referencia: string): string => (esMonto(referencia) ? '0.00' : '0');
 
-/** Compara dos fotos cifra por cifra; lo que falta en una vale cero. Las cifras que no cambian no salen. */
+/**
+ * Compara dos fotos cifra por cifra; las del libro que falten en una valen cero. Las cifras de ventas se comparan solo
+ * si ambas fotos traen respuesta de ese módulo (sin respuesta no hay punto de comparación, no es cero). Las cifras que
+ * no cambian no salen.
+ */
 export function diferenciaDeFotos(anterior: FotoDelPeriodo, actual: FotoDelPeriodo): DiferenciaDeFotos {
-  const antes = cifrasDe(anterior);
-  const ahora = cifrasDe(actual);
+  const modulos = modulosEnComun(anterior, actual);
+  const conRemanentes = anterior.remanentes !== undefined && actual.remanentes !== undefined;
+  const antes = cifrasDe(anterior, modulos, conRemanentes);
+  const ahora = cifrasDe(actual, modulos, conRemanentes);
   const claves = [...new Set([...antes.keys(), ...ahora.keys()])].sort();
   const cambios: CambioDeLaFoto[] = [];
   for (const clave of claves) {

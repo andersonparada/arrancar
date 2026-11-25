@@ -33,6 +33,7 @@ const fila = (cambios: Partial<FilaConciliable> = {}): FilaConciliable => ({
   fechaEmision: '2026-03-10',
   nitEmisor: '576937K',
   nombreEmisor: 'Agro del Norte',
+  nitReceptor: '1234567',
   total: '1120.00',
   iva: '120.00',
   idp: '0.00',
@@ -192,5 +193,32 @@ describe('CoberturaDeLotes', () => {
     expect(lotes.cubreElMesDe('2026-02-01')).toBe(true);
     expect(lotes.cubreElMesDe('2026-04-01')).toBe(false);
     expect(lotes.cubreElMesDe('2026-01-31')).toBe(false);
+  });
+});
+
+describe('la factura especial recibida es una venta', () => {
+  it('registrada como compra sale aparte, para eliminarla', () => {
+    const resultado = conciliar({
+      periodo: PERIODO,
+      documentos: [documento({ tipoDte: 'FESP' })],
+      filas: [fila({ tipoDte: 'FESP' })],
+      cobertura,
+      fechaDeInicio: null,
+    });
+
+    expect(resultado.facturaEspecialDeVentaRegistradaComoCompra.map((i) => i.documentoId)).toEqual(['doc-1']);
+    expect(resultado.cuadra).toEqual([]);
+  });
+
+  it('bloqueada y sin documento no es un faltante: no sale en «en la SAT y no en Arrancar»', () => {
+    const resultado = conciliar({
+      periodo: PERIODO,
+      documentos: [],
+      filas: [fila({ tipoDte: 'FESP', estado: 'bloqueado', motivoDeBloqueo: 'factura_especial_de_venta' })],
+      cobertura,
+      fechaDeInicio: null,
+    });
+
+    expect(resultado.enLaSatYNoEnArrancar).toEqual([]);
   });
 });

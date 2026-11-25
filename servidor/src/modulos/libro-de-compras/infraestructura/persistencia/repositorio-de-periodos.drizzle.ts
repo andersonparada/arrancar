@@ -110,6 +110,15 @@ export class RepositorioDePeriodosDrizzle implements RepositorioDePeriodos {
     return filas.map(aDeclaracion);
   }
 
+  async hayDeclaracionesAntesDe(periodo: string): Promise<boolean> {
+    const filas = await transaccionEnCurso()
+      .select({ id: declaraciones.id })
+      .from(declaraciones)
+      .where(and(lt(declaraciones.periodo, periodo), ne(declaraciones.evento, 'reapertura')))
+      .limit(1);
+    return filas.length > 0;
+  }
+
   async filasDelAnio(anio: number): Promise<FilaDePeriodo[]> {
     const filas = await this.consultaDeFilas()
       .where(and(gte(periodos.periodo, `${anio}-01-01`), lt(periodos.periodo, `${anio + 1}-01-01`)))
