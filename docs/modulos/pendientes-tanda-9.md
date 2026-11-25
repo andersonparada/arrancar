@@ -144,3 +144,16 @@ Salió de la ronda de correcciones (workflow `wf_a9dc1b60-752`). Las cadenas ret
 
 - PA-1c (índice de errores por fila, suma de subparcelas en la ficha, sumas con filtro de texto): son del cliente y el commit 292b3031 ya los corrigió. No toqué nada del servidor para ellos. Queda pendiente decidir si la suma de subparcelas la calcula el servidor, porque hoy se calcula en el cliente.
 - PA-0b (casos-uso-de-valores.prueba.ts) y PA-1 (listar-parcelas-para-excel.ts) son del servidor, no de mi lado. No los toqué ni verifiqué si ya están corregidos.
+
+## Respuestas del usuario (2026-11-24)
+
+| Tema | Respuesta |
+|---|---|
+| Caja chica: factura anulada por el emisor después de liquidar, reponer o cerrar | **Regla propia del usuario:** se anula la partida contable (si la tiene) y el movimiento bancario (si lo tiene), y la liquidación vuelve a estado **guardada** para que puedan cambiar la factura. Antes de programarla la valida `contador-guatemala` (reposición ya pagada, fondo cerrado, crédito fiscal). |
+| Anulación que la empresa no reconoce | Sí: estado **«anulación en disputa»**, con motivo y prueba de pago, sin tomar el crédito mientras no se aclare. |
+| Tope por comprobante mayor que el fondo | Se acepta, con el aviso «el tope es mayor que el fondo y no tendrá efecto». |
+| Activos fijos: vender un bien de control | Sí, **con su resultado**: el precio sin IVA va a otros ingresos, con avisos de IVA e ISR. |
+| Costo fiscal del bien de control si no se dedujo | El **costo documentado** no deducido (régimen opcional simplificado o pequeño contribuyente); sin documento, cero. En el régimen sobre utilidades, cero. El aviso pide confirmarlo con el contador de la empresa. |
+| Libro de compras: saldo de cierre de un mes declarado sin ventas | Se escribe **en el mes siguiente**, con los campos de «remanente del mes anterior»; mientras falte, ese mes muestra sus cifras «por confirmar». |
+| Libro de ventas: nota sobre factura anterior sin IVA en el DTE ni historial | Se **pide el IVA** de la nota (0 es válido) solo en ese caso. |
+| Contabilidad: retenciones de antes del inicio, aún no enteradas | **Cuenta aparte**: rol nuevo `retenciones_de_apertura`, de balance, sin auxiliar ni llave; el cierre pide motivo mientras tenga saldo. Cuentas por pagar las responde solo con `proposito = apertura`. |
