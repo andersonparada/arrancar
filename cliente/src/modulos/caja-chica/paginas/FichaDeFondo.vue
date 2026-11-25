@@ -57,6 +57,7 @@ const volver = { texto: 'Fondos de caja chica', ruta: { name: 'caja-chica.fondos
       <div class="space-y-6">
         <ResumenDelFondo :partes="ficha.ecuacion.value" :avisos="ficha.fondo.value.avisos" />
         <SeccionDeRetenciones
+          v-if="acciones.abierto"
           :documentos="ficha.conRetencion.value"
           @asignar="comprobantes.asignacion.pedir([$event], ficha.fondo.value)"
         />
@@ -65,11 +66,15 @@ const volver = { texto: 'Fondos de caja chica', ruta: { name: 'caja-chica.fondos
           :lista="ficha.comprobantes.value"
           :cargando="ficha.cargandoComprobantes.value"
           :puede-cambiar="acciones.abierto"
+          :por-resolver="ficha.fondo.value.documentosPorResolver"
           @agregar-factura="comprobantes.agregarFactura"
           @desde-la-bandeja="comprobantes.desdeLaBandeja"
           @vale-de-gasto="comprobantes.vale.abrir"
           @devolver="comprobantes.baja.pedir($event, 'devolver')"
           @anular="comprobantes.baja.pedir($event, 'anular')"
+          @resolver="comprobantes.documentoAnulado.resolver"
+          @disputa="comprobantes.documentoAnulado.ponerEnDisputa"
+          @retirar-disputa="comprobantes.documentoAnulado.retirarDeLaDisputa"
         />
         <SeccionDeVales
           :vales="ficha.movimientos.vales.value"

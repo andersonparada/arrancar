@@ -7,6 +7,7 @@ import type { Fondo, UsoDelFondo } from '../../dominio/fondos.js';
 import {
   aperturasAnuladasDe,
   custodiosVigentesDe,
+  documentosPorResolverDe,
   montosDe,
   pendientesDe,
   ultimosArqueosDe,
@@ -21,6 +22,7 @@ interface Fuentes {
   montos: Map<string, number>;
   anuladas: Set<string>;
   pendientes: Map<string, number>;
+  porResolver: Map<string, number>;
   vales: Map<string, number>;
   valesViejos: Map<string, string>;
   arqueados: Map<string, string>;
@@ -46,6 +48,7 @@ function datosDe(id: string, fuentes: Fuentes): DatosDeLectura {
     valeMasViejo: de(fuentes.valesViejos, id),
     ultimoArqueo: de(fuentes.arqueados, id),
     aperturaAnulada: fuentes.anuladas.has(id),
+    documentosPorResolver: total(fuentes.porResolver, id),
   };
 }
 
@@ -76,6 +79,7 @@ export class ConsultasDeFondosDrizzle implements ConsultasDeFondos {
       montos: await montosDe(ids),
       anuladas: await aperturasAnuladasDe(ids),
       pendientes: await pendientesDe(ids),
+      porResolver: await documentosPorResolverDe(ids),
       vales: await valesAbiertosDe(ids),
       valesViejos: await valesMasViejosDe(ids),
       arqueados: await ultimosArqueosDe(ids),

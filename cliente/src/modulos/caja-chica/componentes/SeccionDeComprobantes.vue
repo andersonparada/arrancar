@@ -5,7 +5,7 @@ import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
-import type { Comprobante, EstadoDeLosComprobantes, ListaDeComprobantes } from '../servicios/tipos-de-comprobantes';
+import type { Comprobante, ListaDeComprobantes, VistaDeComprobantes } from '../servicios/tipos-de-comprobantes';
 import FilaDeComprobante from './FilaDeComprobante.vue';
 
 /** Los comprobantes del fondo con lo que se hace con ellos: agregar una factura, tomarla de la bandeja o hacer un vale. */
@@ -14,14 +14,19 @@ defineProps<{
   cargando: boolean;
   /** Se puede cambiar (devolver, anular): el fondo está abierto. */
   puedeCambiar: boolean;
+  /** Cuántos documentos anulados por su emisor siguen sin resolver en el fondo. */
+  porResolver: number;
 }>();
-const estado = defineModel<EstadoDeLosComprobantes>('estado', { required: true });
+const estado = defineModel<VistaDeComprobantes>('estado', { required: true });
 const emit = defineEmits<{
   agregarFactura: [];
   desdeLaBandeja: [];
   valeDeGasto: [];
   devolver: [comprobante: Comprobante];
   anular: [comprobante: Comprobante];
+  resolver: [comprobante: Comprobante];
+  disputa: [comprobante: Comprobante];
+  retirarDisputa: [comprobante: Comprobante];
 }>();
 
 /** «Agregar factura» abre Ingreso de facturas del libro de compras: hace falta poder registrar allá. */
@@ -31,8 +36,9 @@ const opciones = [
   { valor: 'pendiente', texto: 'Pendientes de reponer' },
   { valor: 'repuesto', texto: 'Ya repuestos' },
   { valor: 'anulado', texto: 'Anulados' },
+  { valor: 'por_resolver', texto: 'Facturas anuladas por resolver' },
   { valor: 'todos', texto: 'Todos' },
-] satisfies { valor: EstadoDeLosComprobantes; texto: string }[];
+] satisfies { valor: VistaDeComprobantes; texto: string }[];
 </script>
 
 <template>
@@ -52,6 +58,14 @@ const opciones = [
         <BotonBase variante="secundario" :icono="ReceiptText" @click="emit('valeDeGasto')">Vale de gasto</BotonBase>
       </div>
     </div>
+    <p
+      v-if="porResolver > 0 && estado !== 'por_resolver'"
+      class="flex flex-wrap items-center gap-2 text-sm"
+      role="status"
+    >
+      {{ porResolver }} factura(s) anulada(s) por su emisor esperan que las resuelva.
+      <BotonBase variante="secundario" pequeno @click="estado = 'por_resolver'">Verlas</BotonBase>
+    </p>
     <div class="max-w-xs">
       <CampoSelector v-model="estado" etiqueta="Mostrar" :opciones="opciones" />
     </div>
@@ -74,6 +88,9 @@ const opciones = [
           :puede-cambiar="puedeCambiar"
           @devolver="emit('devolver', comprobante)"
           @anular="emit('anular', comprobante)"
+          @resolver="emit('resolver', comprobante)"
+          @disputa="emit('disputa', comprobante)"
+          @retirar-disputa="emit('retirarDisputa', comprobante)"
         />
       </li>
     </ul>

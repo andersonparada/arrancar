@@ -36,6 +36,27 @@
       "when": 1795068980823,
       "tag": "0004_pagado_en_efectivo_por_proveedor",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795485697596,
+      "tag": "0005_documento_anulado_por_resolver",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795485837678,
+      "tag": "0006_nombre_de_quien_arquea",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795574211950,
+      "tag": "0007_seguimiento_del_documento_anulado",
+      "breakpoints": true
     }
   ]
 }

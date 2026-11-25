@@ -27,6 +27,8 @@ export const comprobanteDeEjemplo = (cambios: Partial<Comprobante> = {}): Compro
   motivoSinDocumento: null,
   asignadoEn: null,
   motivoDeAnulacion: null,
+  motivoDocumentoAnulado: null,
+  seguimiento: null,
   reposicionNumero: null,
   documento: {
     tipo: 'Factura',

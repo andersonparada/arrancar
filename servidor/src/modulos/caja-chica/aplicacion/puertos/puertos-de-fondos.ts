@@ -102,6 +102,8 @@ export interface DatosDeLectura {
   valeMasViejo: string | null;
   ultimoArqueo: string | null;
   aperturaAnulada: boolean;
+  /** Comprobantes vigentes con un documento anulado por su emisor, por resolver o en disputa. */
+  documentosPorResolver: number;
 }
 
 export interface ConsultasDeFondos {

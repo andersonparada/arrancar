@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { SEGUIMIENTO_POR_RESOLVER, type SeguimientoDelDocumento } from './documento-anulado.js';
 import {
   conceptoDeAjuste,
   conceptoDeLasLineas,
@@ -20,12 +21,36 @@ const documento = (enElLibro: boolean, motivoFueraDelLibro: string | null = null
   motivoFueraDelLibro,
 });
 
+const vigente = { motivoDocumentoAnulado: null, seguimiento: null };
+const anulado = (seguimiento: SeguimientoDelDocumento) => ({
+  motivoDocumentoAnulado: 'El emisor anuló la FEL',
+  seguimiento,
+});
+
 describe('esDeducible', () => {
   it('solo lo es un documento dentro del libro', () => {
-    expect(esDeducible({ clase: 'documento', documento: documento(true) })).toBe(true);
-    expect(esDeducible({ clase: 'documento', documento: documento(false) })).toBe(false);
-    expect(esDeducible({ clase: 'vale_de_gasto', documento: null })).toBe(false);
-    expect(esDeducible({ clase: 'faltante', documento: null })).toBe(false);
+    expect(esDeducible({ ...vigente, clase: 'documento', documento: documento(true) })).toBe(true);
+    expect(esDeducible({ ...vigente, clase: 'documento', documento: documento(false) })).toBe(false);
+    expect(esDeducible({ ...vigente, clase: 'vale_de_gasto', documento: null })).toBe(false);
+    expect(esDeducible({ ...vigente, clase: 'faltante', documento: null })).toBe(false);
+  });
+
+  it('un documento con la FEL anulada por su emisor no lo es, esté dentro del libro o no, hasta que lo reemplace otra', () => {
+    for (const situacion of [
+      SEGUIMIENTO_POR_RESOLVER,
+      { ...SEGUIMIENTO_POR_RESOLVER, situacion: 'en_disputa' as const },
+    ]) {
+      const comprobante = { ...anulado(situacion), clase: 'documento' as const, documento: documento(true) };
+      expect(esDeducible(comprobante)).toBe(false);
+    }
+    const sinRecuperar = {
+      ...SEGUIMIENTO_POR_RESOLVER,
+      situacion: 'resuelto' as const,
+      salida: 'sin_recuperacion' as const,
+    };
+    expect(esDeducible({ ...anulado(sinRecuperar), clase: 'documento', documento: documento(true) })).toBe(false);
+    const reemplazado = { ...SEGUIMIENTO_POR_RESOLVER, situacion: 'resuelto' as const, salida: 'reemplazo' as const };
+    expect(esDeducible({ ...anulado(reemplazado), clase: 'documento', documento: documento(true) })).toBe(true);
   });
 });
 
@@ -54,9 +79,31 @@ describe('conceptoDeAjuste', () => {
 
 describe('motivoSinDocumentoFiscal', () => {
   it('toma el motivo del vale o la causa de quedar fuera del libro', () => {
-    const vale = { clase: 'vale_de_gasto' as const, documento: null, motivoSinDocumento: 'El peaje no da factura' };
+    const vale = {
+      ...vigente,
+      clase: 'vale_de_gasto' as const,
+      documento: null,
+      motivoSinDocumento: 'El peaje no da factura',
+    };
     expect(motivoSinDocumentoFiscal(vale)).toBe('El peaje no da factura');
-    const fuera = { clase: 'documento' as const, documento: documento(false, 'recibo_fel'), motivoSinDocumento: null };
+    const fuera = {
+      ...vigente,
+      clase: 'documento' as const,
+      documento: documento(false, 'recibo_fel'),
+      motivoSinDocumento: null,
+    };
     expect(motivoSinDocumentoFiscal(fuera)).toBe('Es un recibo FEL');
+  });
+
+  it('con la FEL anulada por su emisor dice eso y el motivo del aviso', () => {
+    const anuladoPorElEmisor = {
+      ...anulado(SEGUIMIENTO_POR_RESOLVER),
+      clase: 'documento' as const,
+      documento: documento(true),
+      motivoSinDocumento: null,
+    };
+    expect(motivoSinDocumentoFiscal(anuladoPorElEmisor)).toBe(
+      'La FEL fue anulada por su emisor: El emisor anuló la FEL',
+    );
   });
 });

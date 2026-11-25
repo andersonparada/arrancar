@@ -9,6 +9,7 @@ import {
   FacturaConNotasEnElFondo,
   SoloUnDocumentoVuelveALaBandeja,
 } from '../../../dominio/errores-de-comprobantes.js';
+import { SituacionDelDocumentoNoPermite } from '../../../dominio/errores-de-documento-anulado.js';
 import { ComprobanteDeUnVale } from '../../../dominio/errores-de-vales-provisionales.js';
 import { exigirQueAlcanceElEfectivo, efectoEnLoPendiente } from '../../../dominio/reglas-de-comprobantes.js';
 import { exigirFondoAbierto } from '../../../dominio/reglas-del-fondo.js';
@@ -68,9 +69,18 @@ export class DevolverALaBandeja {
     };
   }
 
+  /** Un documento anulado por su emisor no vuelve a la bandeja: el gasto ya salió y se resuelve (reemplazo, devolución…). */
+  private exigirSinDocumentoAnulado({ seguimiento }: Comprobante): void {
+    if (seguimiento === null) return;
+    throw new SituacionDelDocumentoNoPermite(
+      'La FEL de este documento la anuló su emisor: no vuelve a la bandeja, resuélvalo (reemplazo, devolución, cobro o sin recuperación).',
+    );
+  }
+
   private async exigirDevolvible(comprobante: Comprobante): Promise<void> {
     if (comprobante.clase !== 'documento') throw new SoloUnDocumentoVuelveALaBandeja();
     if (comprobante.estado === 'anulado') throw new ComprobanteYaAnulado();
+    this.exigirSinDocumentoAnulado(comprobante);
     if (comprobante.valeProvisionalId !== null) throw new ComprobanteDeUnVale(etiquetaDelComprobante(comprobante));
     if (comprobante.reposicionNumero !== null) throw new ComprobanteRepuesto(comprobante.reposicionNumero);
     const { comprobantes, consultasDeFondos } = this.dependencias;

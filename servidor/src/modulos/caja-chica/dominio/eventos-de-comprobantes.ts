@@ -43,3 +43,25 @@ export class ComprobanteQuitado extends EventoDominio<DatosDeComprobanteQuitado>
     super(datos);
   }
 }
+
+export interface DatosDeDocumentoAnuladoResuelto {
+  empresaId: string;
+  fondoId: string;
+  comprobanteId: string;
+  documentoDeCompraId: string;
+  documentoAnuladoId: string | null;
+  salida: 'reemplazo' | 'devolucion' | 'cobro' | 'sin_recuperacion';
+  montoCentavos: number;
+  salidaCentavos: number | null;
+  destino: 'proveedor' | 'custodio' | null;
+  fecha: string;
+}
+
+/** Se resolvió el documento anulado por su emisor (reemplazo, devolución, cobro o sin recuperación). Se publica tras confirmar. */
+export class DocumentoAnuladoResuelto extends EventoDominio<DatosDeDocumentoAnuladoResuelto> {
+  readonly nombre = 'caja-chica.documento_anulado_resuelto';
+
+  constructor(datos: DatosDeDocumentoAnuladoResuelto) {
+    super(datos);
+  }
+}

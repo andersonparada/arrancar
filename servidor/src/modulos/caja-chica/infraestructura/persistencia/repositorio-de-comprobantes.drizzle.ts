@@ -12,9 +12,25 @@ import type {
   ValeDeGastoNuevo,
 } from '../../aplicacion/puertos/puertos-de-comprobantes.js';
 import type { Comprobante } from '../../dominio/comprobantes.js';
+import { SEGUIMIENTO_POR_RESOLVER, type SeguimientoDelDocumento } from '../../dominio/documento-anulado.js';
 import { aComprobante, comprobantesConSuContexto } from './comprobantes.lectura.js';
 import { comprobantes } from './comprobantes.tablas.js';
 import { reposicionComprobantes } from './reposicion-comprobantes.tablas.js';
+
+/** El seguimiento del documento anulado como columnas de `comprobantes`. */
+function columnasDelSeguimiento({ disputa, montoCentavos, ...seguimiento }: SeguimientoDelDocumento) {
+  return {
+    situacionDelDocumento: seguimiento.situacion,
+    salidaDelDocumento: seguimiento.salida,
+    documentoAnuladoId: seguimiento.documentoAnuladoId,
+    motivoDeLaResolucion: seguimiento.motivoDeLaResolucion,
+    montoDeLaSalida: montoCentavos === null ? null : deCentavos(montoCentavos),
+    destinoDeLaSalida: seguimiento.destino,
+    motivoDeLaDisputa: disputa?.motivo ?? null,
+    pruebaDePago: disputa?.prueba ?? null,
+    disputaHasta: disputa?.hasta ?? null,
+  };
+}
 
 /** Las tablas tienen seguridad por empresa y, las de un fondo, por el alcance de fondos (RLS). */
 export class RepositorioDeComprobantesDrizzle implements RepositorioDeComprobantes {
@@ -113,6 +129,24 @@ export class RepositorioDeComprobantesDrizzle implements RepositorioDeComprobant
         fechaDeAnulacion: anulacion.fechaDeAnulacion,
       })
       .where(eq(comprobantes.id, id));
+  }
+
+  async marcarDocumentoAnulado(id: string, motivo: string): Promise<void> {
+    await transaccionEnCurso()
+      .update(comprobantes)
+      .set({ motivoDocumentoAnulado: motivo, ...columnasDelSeguimiento(SEGUIMIENTO_POR_RESOLVER) })
+      .where(eq(comprobantes.id, id));
+  }
+
+  async guardarSeguimiento(id: string, seguimiento: SeguimientoDelDocumento): Promise<void> {
+    await transaccionEnCurso()
+      .update(comprobantes)
+      .set(columnasDelSeguimiento(seguimiento))
+      .where(eq(comprobantes.id, id));
+  }
+
+  async ponerDocumento(id: string, documentoDeCompraId: string): Promise<void> {
+    await transaccionEnCurso().update(comprobantes).set({ documentoDeCompraId }).where(eq(comprobantes.id, id));
   }
 
   async eliminar(id: string): Promise<void> {

@@ -1,0 +1,3096 @@
+{
+  "id": "6fbe07c2-932a-4c81-a61c-7ea3e8f5765d",
+  "prevId": "e6dea75b-30fa-414e-aa54-69816d2e8327",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "caja_chica.accesos_a_fondos": {
+      "name": "accesos_a_fondos",
+      "schema": "caja_chica",
+      "columns": {
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fondo_id": {
+          "name": "fondo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "accesos_a_fondos_fondo_idx": {
+          "name": "accesos_a_fondos_fondo_idx",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "accesos_a_fondos_empresa_id_empresas_id_fk": {
+          "name": "accesos_a_fondos_empresa_id_empresas_id_fk",
+          "tableFrom": "accesos_a_fondos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "accesos_a_fondos_fondo_fk": {
+          "name": "accesos_a_fondos_fondo_fk",
+          "tableFrom": "accesos_a_fondos",
+          "tableTo": "fondos",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "fondo_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "accesos_a_fondos_miembro_fk": {
+          "name": "accesos_a_fondos_miembro_fk",
+          "tableFrom": "accesos_a_fondos",
+          "tableTo": "empresa_usuarios",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id",
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "empresa_id",
+            "usuario_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "accesos_a_fondos_empresa_id_usuario_id_fondo_id_pk": {
+          "name": "accesos_a_fondos_empresa_id_usuario_id_fondo_id_pk",
+          "columns": [
+            "empresa_id",
+            "usuario_id",
+            "fondo_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "asignar_para_asignar": {
+          "name": "asignar_para_asignar",
+          "as": "RESTRICTIVE",
+          "for": "INSERT",
+          "to": [
+            "arrancar_app"
+          ],
+          "withCheck": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ','))"
+        },
+        "cambiar_para_asignar": {
+          "name": "cambiar_para_asignar",
+          "as": "RESTRICTIVE",
+          "for": "UPDATE",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ','))",
+          "withCheck": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ','))"
+        },
+        "quitar_para_asignar": {
+          "name": "quitar_para_asignar",
+          "as": "RESTRICTIVE",
+          "for": "DELETE",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ','))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "caja_chica.arqueos": {
+      "name": "arqueos",
+      "schema": "caja_chica",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fondo_id": {
+          "name": "fondo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anio_de_numero": {
+          "name": "anio_de_numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "realizado_en": {
+          "name": "realizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "arqueado_por": {
+          "name": "arqueado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "custodio": {
+          "name": "custodio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "custodio_usuario_id": {
+          "name": "custodio_usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lo_hizo_el_custodio": {
+          "name": "lo_hizo_el_custodio",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "conteo": {
+          "name": "conteo",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "efectivo_contado": {
+          "name": "efectivo_contado",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valores_por_cambiar": {
+          "name": "valores_por_cambiar",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "monto_del_fondo": {
+          "name": "monto_del_fondo",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pendiente_de_reponer": {
+          "name": "pendiente_de_reponer",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vales_abiertos": {
+          "name": "vales_abiertos",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "efectivo_esperado": {
+          "name": "efectivo_esperado",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "diferencia": {
+          "name": "diferencia",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comprobantes_completos": {
+          "name": "comprobantes_completos",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "motivo_de_diferencia": {
+          "name": "motivo_de_diferencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'vigente'"
+        },
+        "fecha_de_anulacion": {
+          "name": "fecha_de_anulacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "arqueos_fondo_idx": {
+          "name": "arqueos_fondo_idx",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "realizado_en",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "arqueos_empresa_id_empresas_id_fk": {
+          "name": "arqueos_empresa_id_empresas_id_fk",
+          "tableFrom": "arqueos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "arqueos_arqueado_por_usuarios_id_fk": {
+          "name": "arqueos_arqueado_por_usuarios_id_fk",
+          "tableFrom": "arqueos",
+          "tableTo": "usuarios",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "arqueado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "arqueos_custodio_usuario_id_usuarios_id_fk": {
+          "name": "arqueos_custodio_usuario_id_usuarios_id_fk",
+          "tableFrom": "arqueos",
+          "tableTo": "usuarios",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "custodio_usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "arqueos_fondo_fk": {
+          "name": "arqueos_fondo_fk",
+          "tableFrom": "arqueos",
+          "tableTo": "fondos",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "fondo_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "arqueos_numero_unico": {
+          "name": "arqueos_numero_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "empresa_id",
+            "anio_de_numero",
+            "numero"
+          ]
+        },
+        "arqueos_llave_unica": {
+          "name": "arqueos_llave_unica",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "alcance_caja_chica_fondos": {
+          "name": "alcance_caja_chica_fondos",
+          "as": "RESTRICTIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
+          "withCheck": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        }
+      },
+      "checkConstraints": {
+        "arqueos_numero_positivo": {
+          "name": "arqueos_numero_positivo",
+          "value": "\"caja_chica\".\"arqueos\".\"numero\" > 0"
+        },
+        "arqueos_custodio_valido": {
+          "name": "arqueos_custodio_valido",
+          "value": "\"caja_chica\".\"arqueos\".\"custodio\" is not null and (\"caja_chica\".\"arqueos\".\"custodio\" is null or (char_length(\"caja_chica\".\"arqueos\".\"custodio\") between 1 and 150 and \"caja_chica\".\"arqueos\".\"custodio\" = btrim(\"caja_chica\".\"arqueos\".\"custodio\")))"
+        },
+        "arqueos_conteo_es_arreglo": {
+          "name": "arqueos_conteo_es_arreglo",
+          "value": "jsonb_typeof(\"caja_chica\".\"arqueos\".\"conteo\") = 'array'"
+        },
+        "arqueos_montos_validos": {
+          "name": "arqueos_montos_validos",
+          "value": "\"caja_chica\".\"arqueos\".\"efectivo_contado\" >= 0 and \"caja_chica\".\"arqueos\".\"valores_por_cambiar\" >= 0"
+        },
+        "arqueos_fondo_y_vales_validos": {
+          "name": "arqueos_fondo_y_vales_validos",
+          "value": "\"caja_chica\".\"arqueos\".\"monto_del_fondo\" >= 0 and \"caja_chica\".\"arqueos\".\"vales_abiertos\" >= 0"
+        },
+        "arqueos_observaciones_validas": {
+          "name": "arqueos_observaciones_validas",
+          "value": "(\"caja_chica\".\"arqueos\".\"observaciones\" is null or (char_length(\"caja_chica\".\"arqueos\".\"observaciones\") between 1 and 500 and \"caja_chica\".\"arqueos\".\"observaciones\" = btrim(\"caja_chica\".\"arqueos\".\"observaciones\")))"
+        },
+        "arqueos_efectivo_esperado_cuadra": {
+          "name": "arqueos_efectivo_esperado_cuadra",
+          "value": "\"caja_chica\".\"arqueos\".\"efectivo_esperado\" = \"caja_chica\".\"arqueos\".\"monto_del_fondo\" - \"caja_chica\".\"arqueos\".\"pendiente_de_reponer\" - \"caja_chica\".\"arqueos\".\"vales_abiertos\""
+        },
+        "arqueos_diferencia_cuadra": {
+          "name": "arqueos_diferencia_cuadra",
+          "value": "\"caja_chica\".\"arqueos\".\"diferencia\" = \"caja_chica\".\"arqueos\".\"efectivo_contado\" + \"caja_chica\".\"arqueos\".\"valores_por_cambiar\" - \"caja_chica\".\"arqueos\".\"efectivo_esperado\""
+        },
+        "arqueos_motivo_de_diferencia": {
+          "name": "arqueos_motivo_de_diferencia",
+          "value": "(\"caja_chica\".\"arqueos\".\"diferencia\" <> 0) = (\"caja_chica\".\"arqueos\".\"motivo_de_diferencia\" is not null)"
+        },
+        "arqueos_motivo_de_diferencia_rango": {
+          "name": "arqueos_motivo_de_diferencia_rango",
+          "value": "(\"caja_chica\".\"arqueos\".\"motivo_de_diferencia\" is null or (char_length(\"caja_chica\".\"arqueos\".\"motivo_de_diferencia\") between 1 and 300 and \"caja_chica\".\"arqueos\".\"motivo_de_diferencia\" = btrim(\"caja_chica\".\"arqueos\".\"motivo_de_diferencia\")))"
+        },
+        "arqueos_estado_valido": {
+          "name": "arqueos_estado_valido",
+          "value": "\"caja_chica\".\"arqueos\".\"estado\" in ('vigente', 'anulado')"
+        },
+        "arqueos_anulacion_completa": {
+          "name": "arqueos_anulacion_completa",
+          "value": "(\"caja_chica\".\"arqueos\".\"estado\" = 'anulado') = (\"caja_chica\".\"arqueos\".\"anulado_en\" is not null) and (\"caja_chica\".\"arqueos\".\"anulado_en\" is not null) = (\"caja_chica\".\"arqueos\".\"anulado_por\" is not null) and (\"caja_chica\".\"arqueos\".\"anulado_por\" is not null) = (\"caja_chica\".\"arqueos\".\"motivo_de_anulacion\" is not null)"
+        },
+        "arqueos_motivo_de_anulacion_rango": {
+          "name": "arqueos_motivo_de_anulacion_rango",
+          "value": "\"caja_chica\".\"arqueos\".\"motivo_de_anulacion\" is null or char_length(\"caja_chica\".\"arqueos\".\"motivo_de_anulacion\") between 1 and 300"
+        },
+        "arqueos_fecha_de_anulacion_de_su_estado": {
+          "name": "arqueos_fecha_de_anulacion_de_su_estado",
+          "value": "(\"caja_chica\".\"arqueos\".\"estado\" = 'anulado') = (\"caja_chica\".\"arqueos\".\"fecha_de_anulacion\" is not null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "caja_chica.cambios_de_monto": {
+      "name": "cambios_de_monto",
+      "schema": "caja_chica",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fondo_id": {
+          "name": "fondo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "forma": {
+          "name": "forma",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "movimiento_id": {
+          "name": "movimiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'vigente'"
+        },
+        "fecha_de_anulacion": {
+          "name": "fecha_de_anulacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "cambios_movimiento_unico": {
+          "name": "cambios_movimiento_unico",
+          "columns": [
+            {
+              "expression": "movimiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"caja_chica\".\"cambios_de_monto\".\"movimiento_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "cambios_apertura_unica": {
+          "name": "cambios_apertura_unica",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"caja_chica\".\"cambios_de_monto\".\"tipo\" = 'apertura' and \"caja_chica\".\"cambios_de_monto\".\"estado\" = 'vigente'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "cambios_cierre_unico": {
+          "name": "cambios_cierre_unico",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"caja_chica\".\"cambios_de_monto\".\"tipo\" = 'cierre' and \"caja_chica\".\"cambios_de_monto\".\"estado\" = 'vigente'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "cambios_fondo_idx": {
+          "name": "cambios_fondo_idx",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "cambios_de_monto_empresa_id_empresas_id_fk": {
+          "name": "cambios_de_monto_empresa_id_empresas_id_fk",
+          "tableFrom": "cambios_de_monto",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "cambios_de_monto_movimiento_id_movimientos_id_fk": {
+          "name": "cambios_de_monto_movimiento_id_movimientos_id_fk",
+          "tableFrom": "cambios_de_monto",
+          "tableTo": "movimientos",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "movimiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "cambios_fondo_fk": {
+          "name": "cambios_fondo_fk",
+          "tableFrom": "cambios_de_monto",
+          "tableTo": "fondos",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "fondo_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "alcance_caja_chica_fondos": {
+          "name": "alcance_caja_chica_fondos",
+          "as": "RESTRICTIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
+          "withCheck": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        }
+      },
+      "checkConstraints": {
+        "cambios_tipo_valido": {
+          "name": "cambios_tipo_valido",
+          "value": "\"caja_chica\".\"cambios_de_monto\".\"tipo\" in ('apertura', 'aumento', 'disminucion', 'cierre')"
+        },
+        "cambios_forma_valida": {
+          "name": "cambios_forma_valida",
+          "value": "\"caja_chica\".\"cambios_de_monto\".\"forma\" in ('cheque', 'nota_de_debito', 'nota_de_credito', 'saldo_inicial', 'sin_deposito')"
+        },
+        "cambios_tipo_y_forma": {
+          "name": "cambios_tipo_y_forma",
+          "value": "(\"caja_chica\".\"cambios_de_monto\".\"tipo\" = 'apertura' and \"caja_chica\".\"cambios_de_monto\".\"forma\" in ('cheque', 'nota_de_debito', 'saldo_inicial'))\n      or (\"caja_chica\".\"cambios_de_monto\".\"tipo\" = 'aumento' and \"caja_chica\".\"cambios_de_monto\".\"forma\" in ('cheque', 'nota_de_debito'))\n      or (\"caja_chica\".\"cambios_de_monto\".\"tipo\" = 'disminucion' and \"caja_chica\".\"cambios_de_monto\".\"forma\" = 'nota_de_credito')\n      or (\"caja_chica\".\"cambios_de_monto\".\"tipo\" = 'cierre' and \"caja_chica\".\"cambios_de_monto\".\"forma\" in ('nota_de_credito', 'sin_deposito'))"
+        },
+        "cambios_monto_valido": {
+          "name": "cambios_monto_valido",
+          "value": "case when \"caja_chica\".\"cambios_de_monto\".\"tipo\" = 'cierre' then \"caja_chica\".\"cambios_de_monto\".\"monto\" >= 0 else \"caja_chica\".\"cambios_de_monto\".\"monto\" > 0 end"
+        },
+        "cambios_sin_deposito_es_cero": {
+          "name": "cambios_sin_deposito_es_cero",
+          "value": "(\"caja_chica\".\"cambios_de_monto\".\"forma\" = 'sin_deposito') = (\"caja_chica\".\"cambios_de_monto\".\"tipo\" = 'cierre' and \"caja_chica\".\"cambios_de_monto\".\"monto\" = 0)"
+        },
+        "cambios_movimiento_de_su_forma": {
+          "name": "cambios_movimiento_de_su_forma",
+          "value": "(\"caja_chica\".\"cambios_de_monto\".\"forma\" in ('saldo_inicial', 'sin_deposito')) = (\"caja_chica\".\"cambios_de_monto\".\"movimiento_id\" is null)"
+        },
+        "cambios_estado_valido": {
+          "name": "cambios_estado_valido",
+          "value": "\"caja_chica\".\"cambios_de_monto\".\"estado\" in ('vigente', 'anulado')"
+        },
+        "cambios_anulacion_completa": {
+          "name": "cambios_anulacion_completa",
+          "value": "(\"caja_chica\".\"cambios_de_monto\".\"estado\" = 'anulado') = (\"caja_chica\".\"cambios_de_monto\".\"anulado_en\" is not null) and (\"caja_chica\".\"cambios_de_monto\".\"anulado_en\" is not null) = (\"caja_chica\".\"cambios_de_monto\".\"anulado_por\" is not null) and (\"caja_chica\".\"cambios_de_monto\".\"anulado_por\" is not null) = (\"caja_chica\".\"cambios_de_monto\".\"motivo_de_anulacion\" is not null)"
+        },
+        "cambios_motivo_de_anulacion_rango": {
+          "name": "cambios_motivo_de_anulacion_rango",
+          "value": "\"caja_chica\".\"cambios_de_monto\".\"motivo_de_anulacion\" is null or char_length(\"caja_chica\".\"cambios_de_monto\".\"motivo_de_anulacion\") between 1 and 300"
+        },
+        "cambios_fecha_de_anulacion_de_su_estado": {
+          "name": "cambios_fecha_de_anulacion_de_su_estado",
+          "value": "(\"caja_chica\".\"cambios_de_monto\".\"estado\" = 'anulado') = (\"caja_chica\".\"cambios_de_monto\".\"fecha_de_anulacion\" is not null)"
+        },
+        "cambios_fecha_de_anulacion_valida": {
+          "name": "cambios_fecha_de_anulacion_valida",
+          "value": "\"caja_chica\".\"cambios_de_monto\".\"fecha_de_anulacion\" is null or \"caja_chica\".\"cambios_de_monto\".\"fecha_de_anulacion\" >= \"caja_chica\".\"cambios_de_monto\".\"fecha\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "caja_chica.comprobantes": {
+      "name": "comprobantes",
+      "schema": "caja_chica",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        },
+        "fondo_id": {
+          "name": "fondo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "clase": {
+          "name": "clase",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "documento_de_compra_id": {
+          "name": "documento_de_compra_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "destino_del_documento": {
+          "name": "destino_del_documento",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'caja-chica'"
+        },
+        "resta": {
+          "name": "resta",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "es_nota_de_credito": {
+          "name": "es_nota_de_credito",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "documento_afectado_id": {
+          "name": "documento_afectado_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "proveedor_id": {
+          "name": "proveedor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "con_retencion": {
+          "name": "con_retencion",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "monto_retenido": {
+          "name": "monto_retenido",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "motivo_con_retencion": {
+          "name": "motivo_con_retencion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "con_activo_fijo": {
+          "name": "con_activo_fijo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anio_de_numero": {
+          "name": "anio_de_numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pagado_a": {
+          "name": "pagado_a",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "concepto_de_gasto_id": {
+          "name": "concepto_de_gasto_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_sin_documento": {
+          "name": "motivo_sin_documento",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sobre_el_tope": {
+          "name": "sobre_el_tope",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "motivo_sobre_el_tope": {
+          "name": "motivo_sobre_el_tope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sin_bancarizar": {
+          "name": "sin_bancarizar",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "arqueo_id": {
+          "name": "arqueo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "destino_del_faltante": {
+          "name": "destino_del_faltante",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vale_provisional_id": {
+          "name": "vale_provisional_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asignado_en": {
+          "name": "asignado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asignado_por": {
+          "name": "asignado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'vigente'"
+        },
+        "fecha_de_anulacion": {
+          "name": "fecha_de_anulacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_documento_anulado": {
+          "name": "motivo_documento_anulado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "comprobantes_documento_unico": {
+          "name": "comprobantes_documento_unico",
+          "columns": [
+            {
+              "expression": "documento_de_compra_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"caja_chica\".\"comprobantes\".\"documento_de_compra_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_numero_unico": {
+          "name": "comprobantes_numero_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "anio_de_numero",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "numero",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"caja_chica\".\"comprobantes\".\"numero\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_fondo_idx": {
+          "name": "comprobantes_fondo_idx",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "estado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_bandeja_idx": {
+          "name": "comprobantes_bandeja_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"comprobantes\".\"fondo_id\" is null and \"caja_chica\".\"comprobantes\".\"estado\" = 'vigente'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_proveedor_fecha_idx": {
+          "name": "comprobantes_proveedor_fecha_idx",
+          "columns": [
+            {
+              "expression": "proveedor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"comprobantes\".\"proveedor_id\" is not null and \"caja_chica\".\"comprobantes\".\"estado\" = 'vigente'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_concepto_de_gasto_idx": {
+          "name": "comprobantes_concepto_de_gasto_idx",
+          "columns": [
+            {
+              "expression": "concepto_de_gasto_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"comprobantes\".\"concepto_de_gasto_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_proveedor_idx": {
+          "name": "comprobantes_proveedor_idx",
+          "columns": [
+            {
+              "expression": "proveedor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"comprobantes\".\"proveedor_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_cuenta_idx": {
+          "name": "comprobantes_cuenta_idx",
+          "columns": [
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_documento_afectado_idx": {
+          "name": "comprobantes_documento_afectado_idx",
+          "columns": [
+            {
+              "expression": "documento_afectado_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"comprobantes\".\"documento_afectado_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_arqueo_idx": {
+          "name": "comprobantes_arqueo_idx",
+          "columns": [
+            {
+              "expression": "arqueo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"comprobantes\".\"arqueo_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comprobantes_vale_idx": {
+          "name": "comprobantes_vale_idx",
+          "columns": [
+            {
+              "expression": "vale_provisional_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"comprobantes\".\"vale_provisional_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "comprobantes_empresa_id_empresas_id_fk": {
+          "name": "comprobantes_empresa_id_empresas_id_fk",
+          "tableFrom": "comprobantes",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "comprobantes_cuenta_id_cuentas_id_fk": {
+          "name": "comprobantes_cuenta_id_cuentas_id_fk",
+          "tableFrom": "comprobantes",
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "cuenta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "comprobantes_fondo_fk": {
+          "name": "comprobantes_fondo_fk",
+          "tableFrom": "comprobantes",
+          "tableTo": "fondos",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "fondo_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comprobantes_concepto_de_gasto_fk": {
+          "name": "comprobantes_concepto_de_gasto_fk",
+          "tableFrom": "comprobantes",
+          "tableTo": "conceptos_de_gasto",
+          "schemaTo": "libro_de_compras",
+          "columnsFrom": [
+            "concepto_de_gasto_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comprobantes_documento_fk": {
+          "name": "comprobantes_documento_fk",
+          "tableFrom": "comprobantes",
+          "tableTo": "documentos",
+          "schemaTo": "libro_de_compras",
+          "columnsFrom": [
+            "documento_de_compra_id",
+            "empresa_id",
+            "proveedor_id",
+            "destino_del_documento"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "proveedor_id",
+            "destino"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comprobantes_proveedor_fk": {
+          "name": "comprobantes_proveedor_fk",
+          "tableFrom": "comprobantes",
+          "tableTo": "proveedores",
+          "schemaTo": "terceros",
+          "columnsFrom": [
+            "proveedor_id",
+            "cuenta_id"
+          ],
+          "columnsTo": [
+            "id",
+            "cuenta_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comprobantes_afectado_fk": {
+          "name": "comprobantes_afectado_fk",
+          "tableFrom": "comprobantes",
+          "tableTo": "comprobantes",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "documento_afectado_id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comprobantes_arqueo_fk": {
+          "name": "comprobantes_arqueo_fk",
+          "tableFrom": "comprobantes",
+          "tableTo": "arqueos",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "arqueo_id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comprobantes_vale_provisional_fk": {
+          "name": "comprobantes_vale_provisional_fk",
+          "tableFrom": "comprobantes",
+          "tableTo": "vales_provisionales",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "vale_provisional_id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "comprobantes_llave_unica": {
+          "name": "comprobantes_llave_unica",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "alcance_caja_chica_fondos": {
+          "name": "alcance_caja_chica_fondos",
+          "as": "RESTRICTIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "fondo_id is null or 'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
+          "withCheck": "fondo_id is null or 'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        }
+      },
+      "checkConstraints": {
+        "comprobantes_clase_valida": {
+          "name": "comprobantes_clase_valida",
+          "value": "\"caja_chica\".\"comprobantes\".\"clase\" in ('documento', 'vale_de_gasto', 'faltante', 'sobrante')"
+        },
+        "comprobantes_clase_exige_fondo": {
+          "name": "comprobantes_clase_exige_fondo",
+          "value": "\"caja_chica\".\"comprobantes\".\"clase\" = 'documento' or \"caja_chica\".\"comprobantes\".\"fondo_id\" is not null"
+        },
+        "comprobantes_documento_de_su_clase": {
+          "name": "comprobantes_documento_de_su_clase",
+          "value": "(\"caja_chica\".\"comprobantes\".\"clase\" = 'documento') = (\"caja_chica\".\"comprobantes\".\"documento_de_compra_id\" is not null)"
+        },
+        "comprobantes_documento_con_proveedor": {
+          "name": "comprobantes_documento_con_proveedor",
+          "value": "\"caja_chica\".\"comprobantes\".\"clase\" <> 'documento' or \"caja_chica\".\"comprobantes\".\"proveedor_id\" is not null"
+        },
+        "comprobantes_monto_positivo": {
+          "name": "comprobantes_monto_positivo",
+          "value": "\"caja_chica\".\"comprobantes\".\"monto\" > 0"
+        },
+        "comprobantes_resta_coherente": {
+          "name": "comprobantes_resta_coherente",
+          "value": "\"caja_chica\".\"comprobantes\".\"resta\" = (\"caja_chica\".\"comprobantes\".\"clase\" = 'sobrante' or \"caja_chica\".\"comprobantes\".\"es_nota_de_credito\")"
+        },
+        "comprobantes_nota_solo_en_documentos": {
+          "name": "comprobantes_nota_solo_en_documentos",
+          "value": "not \"caja_chica\".\"comprobantes\".\"es_nota_de_credito\" or \"caja_chica\".\"comprobantes\".\"clase\" = 'documento'"
+        },
+        "comprobantes_afectado_solo_en_notas": {
+          "name": "comprobantes_afectado_solo_en_notas",
+          "value": "\"caja_chica\".\"comprobantes\".\"documento_afectado_id\" is null or \"caja_chica\".\"comprobantes\".\"es_nota_de_credito\""
+        },
+        "comprobantes_arqueo_de_su_clase": {
+          "name": "comprobantes_arqueo_de_su_clase",
+          "value": "(\"caja_chica\".\"comprobantes\".\"clase\" in ('faltante', 'sobrante')) = (\"caja_chica\".\"comprobantes\".\"arqueo_id\" is not null)"
+        },
+        "comprobantes_destino_del_faltante": {
+          "name": "comprobantes_destino_del_faltante",
+          "value": "(\"caja_chica\".\"comprobantes\".\"clase\" = 'faltante') = (\"caja_chica\".\"comprobantes\".\"destino_del_faltante\" is not null) and (\"caja_chica\".\"comprobantes\".\"destino_del_faltante\" is null or \"caja_chica\".\"comprobantes\".\"destino_del_faltante\" in ('perdida', 'cobrar_al_custodio'))"
+        },
+        "comprobantes_vale_provisional_valido": {
+          "name": "comprobantes_vale_provisional_valido",
+          "value": "\"caja_chica\".\"comprobantes\".\"vale_provisional_id\" is null or (\"caja_chica\".\"comprobantes\".\"clase\" in ('documento', 'vale_de_gasto') and \"caja_chica\".\"comprobantes\".\"fondo_id\" is not null)"
+        },
+        "comprobantes_numero_de_su_clase": {
+          "name": "comprobantes_numero_de_su_clase",
+          "value": "(\"caja_chica\".\"comprobantes\".\"clase\" = 'vale_de_gasto') = (\"caja_chica\".\"comprobantes\".\"numero\" is not null)"
+        },
+        "comprobantes_numero_positivo": {
+          "name": "comprobantes_numero_positivo",
+          "value": "\"caja_chica\".\"comprobantes\".\"numero\" is null or \"caja_chica\".\"comprobantes\".\"numero\" > 0"
+        },
+        "comprobantes_descripcion_obligatoria": {
+          "name": "comprobantes_descripcion_obligatoria",
+          "value": "\"caja_chica\".\"comprobantes\".\"clase\" = 'documento' or \"caja_chica\".\"comprobantes\".\"descripcion\" is not null"
+        },
+        "comprobantes_descripcion_valida": {
+          "name": "comprobantes_descripcion_valida",
+          "value": "(\"caja_chica\".\"comprobantes\".\"descripcion\" is null or (char_length(\"caja_chica\".\"comprobantes\".\"descripcion\") between 1 and 300 and \"caja_chica\".\"comprobantes\".\"descripcion\" = btrim(\"caja_chica\".\"comprobantes\".\"descripcion\")))"
+        },
+        "comprobantes_pagado_a_de_su_clase": {
+          "name": "comprobantes_pagado_a_de_su_clase",
+          "value": "(\"caja_chica\".\"comprobantes\".\"clase\" = 'vale_de_gasto') = (\"caja_chica\".\"comprobantes\".\"pagado_a\" is not null)"
+        },
+        "comprobantes_pagado_a_valido": {
+          "name": "comprobantes_pagado_a_valido",
+          "value": "(\"caja_chica\".\"comprobantes\".\"pagado_a\" is null or (char_length(\"caja_chica\".\"comprobantes\".\"pagado_a\") between 1 and 150 and \"caja_chica\".\"comprobantes\".\"pagado_a\" = btrim(\"caja_chica\".\"comprobantes\".\"pagado_a\")))"
+        },
+        "comprobantes_concepto_del_vale": {
+          "name": "comprobantes_concepto_del_vale",
+          "value": "\"caja_chica\".\"comprobantes\".\"clase\" <> 'vale_de_gasto' or \"caja_chica\".\"comprobantes\".\"concepto_de_gasto_id\" is not null"
+        },
+        "comprobantes_motivo_sin_documento_de_su_clase": {
+          "name": "comprobantes_motivo_sin_documento_de_su_clase",
+          "value": "(\"caja_chica\".\"comprobantes\".\"clase\" = 'vale_de_gasto') = (\"caja_chica\".\"comprobantes\".\"motivo_sin_documento\" is not null)"
+        },
+        "comprobantes_motivo_sin_documento_rango": {
+          "name": "comprobantes_motivo_sin_documento_rango",
+          "value": "(\"caja_chica\".\"comprobantes\".\"motivo_sin_documento\" is null or (char_length(\"caja_chica\".\"comprobantes\".\"motivo_sin_documento\") between 1 and 300 and \"caja_chica\".\"comprobantes\".\"motivo_sin_documento\" = btrim(\"caja_chica\".\"comprobantes\".\"motivo_sin_documento\")))"
+        },
+        "comprobantes_tope_con_motivo": {
+          "name": "comprobantes_tope_con_motivo",
+          "value": "\"caja_chica\".\"comprobantes\".\"sobre_el_tope\" = (\"caja_chica\".\"comprobantes\".\"motivo_sobre_el_tope\" is not null)"
+        },
+        "comprobantes_motivo_sobre_el_tope_rango": {
+          "name": "comprobantes_motivo_sobre_el_tope_rango",
+          "value": "(\"caja_chica\".\"comprobantes\".\"motivo_sobre_el_tope\" is null or (char_length(\"caja_chica\".\"comprobantes\".\"motivo_sobre_el_tope\") between 1 and 300 and \"caja_chica\".\"comprobantes\".\"motivo_sobre_el_tope\" = btrim(\"caja_chica\".\"comprobantes\".\"motivo_sobre_el_tope\")))"
+        },
+        "comprobantes_asignacion_completa": {
+          "name": "comprobantes_asignacion_completa",
+          "value": "(\"caja_chica\".\"comprobantes\".\"fondo_id\" is null) = (\"caja_chica\".\"comprobantes\".\"asignado_en\" is null) and (\"caja_chica\".\"comprobantes\".\"asignado_en\" is null) = (\"caja_chica\".\"comprobantes\".\"asignado_por\" is null)"
+        },
+        "comprobantes_estado_valido": {
+          "name": "comprobantes_estado_valido",
+          "value": "\"caja_chica\".\"comprobantes\".\"estado\" in ('vigente', 'anulado')"
+        },
+        "comprobantes_motivo_documento_anulado_rango": {
+          "name": "comprobantes_motivo_documento_anulado_rango",
+          "value": "(\"caja_chica\".\"comprobantes\".\"motivo_documento_anulado\" is null or (char_length(\"caja_chica\".\"comprobantes\".\"motivo_documento_anulado\") between 1 and 300 and \"caja_chica\".\"comprobantes\".\"motivo_documento_anulado\" = btrim(\"caja_chica\".\"comprobantes\".\"motivo_documento_anulado\")))"
+        },
+        "comprobantes_documento_anulado_solo_vigente_de_documento": {
+          "name": "comprobantes_documento_anulado_solo_vigente_de_documento",
+          "value": "\"caja_chica\".\"comprobantes\".\"motivo_documento_anulado\" is null or (\"caja_chica\".\"comprobantes\".\"clase\" = 'documento' and \"caja_chica\".\"comprobantes\".\"estado\" = 'vigente')"
+        },
+        "comprobantes_retenido_no_negativo": {
+          "name": "comprobantes_retenido_no_negativo",
+          "value": "\"caja_chica\".\"comprobantes\".\"monto_retenido\" >= 0"
+        },
+        "comprobantes_retencion_con_monto": {
+          "name": "comprobantes_retencion_con_monto",
+          "value": "\"caja_chica\".\"comprobantes\".\"con_retencion\" = (\"caja_chica\".\"comprobantes\".\"monto_retenido\" > 0)"
+        },
+        "comprobantes_retencion_con_motivo": {
+          "name": "comprobantes_retencion_con_motivo",
+          "value": "(\"caja_chica\".\"comprobantes\".\"con_retencion\" and \"caja_chica\".\"comprobantes\".\"fondo_id\" is not null) = (\"caja_chica\".\"comprobantes\".\"motivo_con_retencion\" is not null)"
+        },
+        "comprobantes_motivo_con_retencion_rango": {
+          "name": "comprobantes_motivo_con_retencion_rango",
+          "value": "(\"caja_chica\".\"comprobantes\".\"motivo_con_retencion\" is null or (char_length(\"caja_chica\".\"comprobantes\".\"motivo_con_retencion\") between 1 and 300 and \"caja_chica\".\"comprobantes\".\"motivo_con_retencion\" = btrim(\"caja_chica\".\"comprobantes\".\"motivo_con_retencion\")))"
+        },
+        "comprobantes_retencion_solo_en_documentos": {
+          "name": "comprobantes_retencion_solo_en_documentos",
+          "value": "not \"caja_chica\".\"comprobantes\".\"con_retencion\" or \"caja_chica\".\"comprobantes\".\"clase\" = 'documento'"
+        },
+        "comprobantes_destino_del_documento_fijo": {
+          "name": "comprobantes_destino_del_documento_fijo",
+          "value": "\"caja_chica\".\"comprobantes\".\"destino_del_documento\" = 'caja-chica'"
+        },
+        "comprobantes_anulacion_completa": {
+          "name": "comprobantes_anulacion_completa",
+          "value": "(\"caja_chica\".\"comprobantes\".\"estado\" = 'anulado') = (\"caja_chica\".\"comprobantes\".\"anulado_en\" is not null) and (\"caja_chica\".\"comprobantes\".\"anulado_en\" is not null) = (\"caja_chica\".\"comprobantes\".\"anulado_por\" is not null) and (\"caja_chica\".\"comprobantes\".\"anulado_por\" is not null) = (\"caja_chica\".\"comprobantes\".\"motivo_de_anulacion\" is not null)"
+        },
+        "comprobantes_motivo_de_anulacion_rango": {
+          "name": "comprobantes_motivo_de_anulacion_rango",
+          "value": "\"caja_chica\".\"comprobantes\".\"motivo_de_anulacion\" is null or char_length(\"caja_chica\".\"comprobantes\".\"motivo_de_anulacion\") between 1 and 300"
+        },
+        "comprobantes_fecha_de_anulacion_de_su_estado": {
+          "name": "comprobantes_fecha_de_anulacion_de_su_estado",
+          "value": "(\"caja_chica\".\"comprobantes\".\"estado\" = 'anulado') = (\"caja_chica\".\"comprobantes\".\"fecha_de_anulacion\" is not null)"
+        },
+        "comprobantes_fecha_de_anulacion_valida": {
+          "name": "comprobantes_fecha_de_anulacion_valida",
+          "value": "\"caja_chica\".\"comprobantes\".\"fecha_de_anulacion\" is null or \"caja_chica\".\"comprobantes\".\"fecha_de_anulacion\" >= \"caja_chica\".\"comprobantes\".\"fecha\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "caja_chica.custodios_de_fondos": {
+      "name": "custodios_de_fondos",
+      "schema": "caja_chica",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fondo_id": {
+          "name": "fondo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "custodio": {
+          "name": "custodio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "custodio_usuario_id": {
+          "name": "custodio_usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "desde": {
+          "name": "desde",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hasta": {
+          "name": "hasta",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_del_cambio": {
+          "name": "motivo_del_cambio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "arqueo_de_entrega_id": {
+          "name": "arqueo_de_entrega_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "custodios_vigente_unico": {
+          "name": "custodios_vigente_unico",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"caja_chica\".\"custodios_de_fondos\".\"hasta\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "custodios_fondo_idx": {
+          "name": "custodios_fondo_idx",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "desde",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "custodios_usuario_idx": {
+          "name": "custodios_usuario_idx",
+          "columns": [
+            {
+              "expression": "custodio_usuario_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"custodios_de_fondos\".\"custodio_usuario_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "custodios_de_fondos_empresa_id_empresas_id_fk": {
+          "name": "custodios_de_fondos_empresa_id_empresas_id_fk",
+          "tableFrom": "custodios_de_fondos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "custodios_de_fondos_custodio_usuario_id_usuarios_id_fk": {
+          "name": "custodios_de_fondos_custodio_usuario_id_usuarios_id_fk",
+          "tableFrom": "custodios_de_fondos",
+          "tableTo": "usuarios",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "custodio_usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "custodios_fondo_fk": {
+          "name": "custodios_fondo_fk",
+          "tableFrom": "custodios_de_fondos",
+          "tableTo": "fondos",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "fondo_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "custodios_arqueo_de_entrega_fk": {
+          "name": "custodios_arqueo_de_entrega_fk",
+          "tableFrom": "custodios_de_fondos",
+          "tableTo": "arqueos",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "arqueo_de_entrega_id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "alcance_caja_chica_fondos": {
+          "name": "alcance_caja_chica_fondos",
+          "as": "RESTRICTIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
+          "withCheck": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        }
+      },
+      "checkConstraints": {
+        "custodios_custodio_valido": {
+          "name": "custodios_custodio_valido",
+          "value": "\"caja_chica\".\"custodios_de_fondos\".\"custodio\" is not null and (\"caja_chica\".\"custodios_de_fondos\".\"custodio\" is null or (char_length(\"caja_chica\".\"custodios_de_fondos\".\"custodio\") between 1 and 150 and \"caja_chica\".\"custodios_de_fondos\".\"custodio\" = btrim(\"caja_chica\".\"custodios_de_fondos\".\"custodio\")))"
+        },
+        "custodios_periodo_valido": {
+          "name": "custodios_periodo_valido",
+          "value": "\"caja_chica\".\"custodios_de_fondos\".\"hasta\" is null or \"caja_chica\".\"custodios_de_fondos\".\"hasta\" >= \"caja_chica\".\"custodios_de_fondos\".\"desde\""
+        },
+        "custodios_motivo_valido": {
+          "name": "custodios_motivo_valido",
+          "value": "(\"caja_chica\".\"custodios_de_fondos\".\"motivo_del_cambio\" is null or (char_length(\"caja_chica\".\"custodios_de_fondos\".\"motivo_del_cambio\") between 1 and 300 and \"caja_chica\".\"custodios_de_fondos\".\"motivo_del_cambio\" = btrim(\"caja_chica\".\"custodios_de_fondos\".\"motivo_del_cambio\")))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "caja_chica.fondos": {
+      "name": "fondos",
+      "schema": "caja_chica",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "localidad_id": {
+          "name": "localidad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tope_por_comprobante": {
+          "name": "tope_por_comprobante",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cuenta_bancaria_id": {
+          "name": "cuenta_bancaria_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origen": {
+          "name": "origen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'banco'"
+        },
+        "fecha_de_apertura": {
+          "name": "fecha_de_apertura",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'abierto'"
+        },
+        "fecha_de_cierre": {
+          "name": "fecha_de_cierre",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cerrado_en": {
+          "name": "cerrado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cerrado_por": {
+          "name": "cerrado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_cierre": {
+          "name": "motivo_de_cierre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "fondos_nombre_unico": {
+          "name": "fondos_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fondos_lista_idx": {
+          "name": "fondos_lista_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "estado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fondos_localidad_idx": {
+          "name": "fondos_localidad_idx",
+          "columns": [
+            {
+              "expression": "localidad_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"fondos\".\"localidad_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fondos_cuenta_bancaria_idx": {
+          "name": "fondos_cuenta_bancaria_idx",
+          "columns": [
+            {
+              "expression": "cuenta_bancaria_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"caja_chica\".\"fondos\".\"cuenta_bancaria_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fondos_empresa_id_empresas_id_fk": {
+          "name": "fondos_empresa_id_empresas_id_fk",
+          "tableFrom": "fondos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fondos_cuenta_bancaria_id_cuentas_bancarias_id_fk": {
+          "name": "fondos_cuenta_bancaria_id_cuentas_bancarias_id_fk",
+          "tableFrom": "fondos",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "cuenta_bancaria_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fondos_localidad_fk": {
+          "name": "fondos_localidad_fk",
+          "tableFrom": "fondos",
+          "tableTo": "localidades",
+          "schemaTo": "empresas",
+          "columnsFrom": [
+            "localidad_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "fondos_id_empresa_unico": {
+          "name": "fondos_id_empresa_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "alcance_ver": {
+          "name": "alcance_ver",
+          "as": "RESTRICTIVE",
+          "for": "SELECT",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ',')) or 'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        },
+        "alcance_cambiar": {
+          "name": "alcance_cambiar",
+          "as": "RESTRICTIVE",
+          "for": "UPDATE",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
+          "withCheck": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        },
+        "alcance_eliminar": {
+          "name": "alcance_eliminar",
+          "as": "RESTRICTIVE",
+          "for": "DELETE",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        }
+      },
+      "checkConstraints": {
+        "fondos_nombre_valido": {
+          "name": "fondos_nombre_valido",
+          "value": "\"caja_chica\".\"fondos\".\"nombre\" is not null and (\"caja_chica\".\"fondos\".\"nombre\" is null or (char_length(\"caja_chica\".\"fondos\".\"nombre\") between 1 and 80 and \"caja_chica\".\"fondos\".\"nombre\" = btrim(\"caja_chica\".\"fondos\".\"nombre\")))"
+        },
+        "fondos_tope_positivo": {
+          "name": "fondos_tope_positivo",
+          "value": "\"caja_chica\".\"fondos\".\"tope_por_comprobante\" is null or \"caja_chica\".\"fondos\".\"tope_por_comprobante\" > 0"
+        },
+        "fondos_origen_valido": {
+          "name": "fondos_origen_valido",
+          "value": "\"caja_chica\".\"fondos\".\"origen\" in ('banco', 'saldo_inicial')"
+        },
+        "fondos_observaciones_validas": {
+          "name": "fondos_observaciones_validas",
+          "value": "(\"caja_chica\".\"fondos\".\"observaciones\" is null or (char_length(\"caja_chica\".\"fondos\".\"observaciones\") between 1 and 500 and \"caja_chica\".\"fondos\".\"observaciones\" = btrim(\"caja_chica\".\"fondos\".\"observaciones\")))"
+        },
+        "fondos_estado_valido": {
+          "name": "fondos_estado_valido",
+          "value": "\"caja_chica\".\"fondos\".\"estado\" in ('abierto', 'cerrado')"
+        },
+        "fondos_cierre_completo": {
+          "name": "fondos_cierre_completo",
+          "value": "(\"caja_chica\".\"fondos\".\"estado\" = 'cerrado') = (\"caja_chica\".\"fondos\".\"fecha_de_cierre\" is not null) and (\"caja_chica\".\"fondos\".\"fecha_de_cierre\" is not null) = (\"caja_chica\".\"fondos\".\"cerrado_en\" is not null) and (\"caja_chica\".\"fondos\".\"cerrado_en\" is not null) = (\"caja_chica\".\"fondos\".\"cerrado_por\" is not null) and (\"caja_chica\".\"fondos\".\"cerrado_por\" is not null) = (\"caja_chica\".\"fondos\".\"motivo_de_cierre\" is not null)"
+        },
+        "fondos_motivo_de_cierre_rango": {
+          "name": "fondos_motivo_de_cierre_rango",
+          "value": "(\"caja_chica\".\"fondos\".\"motivo_de_cierre\" is null or (char_length(\"caja_chica\".\"fondos\".\"motivo_de_cierre\") between 1 and 300 and \"caja_chica\".\"fondos\".\"motivo_de_cierre\" = btrim(\"caja_chica\".\"fondos\".\"motivo_de_cierre\")))"
+        },
+        "fondos_fecha_de_cierre_valida": {
+          "name": "fondos_fecha_de_cierre_valida",
+          "value": "\"caja_chica\".\"fondos\".\"fecha_de_cierre\" is null or \"caja_chica\".\"fondos\".\"fecha_de_cierre\" >= \"caja_chica\".\"fondos\".\"fecha_de_apertura\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "caja_chica.reposicion_comprobantes": {
+      "name": "reposicion_comprobantes",
+      "schema": "caja_chica",
+      "columns": {
+        "reposicion_id": {
+          "name": "reposicion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comprobante_id": {
+          "name": "comprobante_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fondo_id": {
+          "name": "fondo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vigente": {
+          "name": "vigente",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "reposicion_comprobantes_vigente_unico": {
+          "name": "reposicion_comprobantes_vigente_unico",
+          "columns": [
+            {
+              "expression": "comprobante_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"caja_chica\".\"reposicion_comprobantes\".\"vigente\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "reposicion_comprobantes_comprobante_idx": {
+          "name": "reposicion_comprobantes_comprobante_idx",
+          "columns": [
+            {
+              "expression": "comprobante_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "reposicion_comprobantes_fondo_idx": {
+          "name": "reposicion_comprobantes_fondo_idx",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "reposicion_comprobantes_empresa_id_empresas_id_fk": {
+          "name": "reposicion_comprobantes_empresa_id_empresas_id_fk",
+          "tableFrom": "reposicion_comprobantes",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reposicion_comprobantes_reposicion_fk": {
+          "name": "reposicion_comprobantes_reposicion_fk",
+          "tableFrom": "reposicion_comprobantes",
+          "tableTo": "reposiciones",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "reposicion_id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "reposicion_comprobantes_comprobante_fk": {
+          "name": "reposicion_comprobantes_comprobante_fk",
+          "tableFrom": "reposicion_comprobantes",
+          "tableTo": "comprobantes",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "comprobante_id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "reposicion_comprobantes_reposicion_id_comprobante_id_pk": {
+          "name": "reposicion_comprobantes_reposicion_id_comprobante_id_pk",
+          "columns": [
+            "reposicion_id",
+            "comprobante_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "alcance_caja_chica_fondos": {
+          "name": "alcance_caja_chica_fondos",
+          "as": "RESTRICTIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
+          "withCheck": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        }
+      },
+      "checkConstraints": {
+        "reposicion_comprobantes_monto_no_cero": {
+          "name": "reposicion_comprobantes_monto_no_cero",
+          "value": "\"caja_chica\".\"reposicion_comprobantes\".\"monto\" <> 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "caja_chica.reposiciones": {
+      "name": "reposiciones",
+      "schema": "caja_chica",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fondo_id": {
+          "name": "fondo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anio_de_numero": {
+          "name": "anio_de_numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "forma": {
+          "name": "forma",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "movimiento_id": {
+          "name": "movimiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio": {
+          "name": "custodio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "la_hizo_el_custodio": {
+          "name": "la_hizo_el_custodio",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'vigente'"
+        },
+        "fecha_de_anulacion": {
+          "name": "fecha_de_anulacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "reposiciones_movimiento_unico": {
+          "name": "reposiciones_movimiento_unico",
+          "columns": [
+            {
+              "expression": "movimiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"caja_chica\".\"reposiciones\".\"movimiento_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "reposiciones_fondo_idx": {
+          "name": "reposiciones_fondo_idx",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "reposiciones_empresa_id_empresas_id_fk": {
+          "name": "reposiciones_empresa_id_empresas_id_fk",
+          "tableFrom": "reposiciones",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reposiciones_movimiento_id_movimientos_id_fk": {
+          "name": "reposiciones_movimiento_id_movimientos_id_fk",
+          "tableFrom": "reposiciones",
+          "tableTo": "movimientos",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "movimiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "reposiciones_fondo_fk": {
+          "name": "reposiciones_fondo_fk",
+          "tableFrom": "reposiciones",
+          "tableTo": "fondos",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "fondo_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "reposiciones_numero_unico": {
+          "name": "reposiciones_numero_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "empresa_id",
+            "anio_de_numero",
+            "numero"
+          ]
+        },
+        "reposiciones_llave_unica": {
+          "name": "reposiciones_llave_unica",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "alcance_caja_chica_fondos": {
+          "name": "alcance_caja_chica_fondos",
+          "as": "RESTRICTIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
+          "withCheck": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        }
+      },
+      "checkConstraints": {
+        "reposiciones_numero_positivo": {
+          "name": "reposiciones_numero_positivo",
+          "value": "\"caja_chica\".\"reposiciones\".\"numero\" > 0"
+        },
+        "reposiciones_forma_valida": {
+          "name": "reposiciones_forma_valida",
+          "value": "\"caja_chica\".\"reposiciones\".\"forma\" in ('cheque', 'nota_de_debito', 'compensada_al_cerrar')"
+        },
+        "reposiciones_monto_positivo": {
+          "name": "reposiciones_monto_positivo",
+          "value": "\"caja_chica\".\"reposiciones\".\"monto\" > 0"
+        },
+        "reposiciones_movimiento_de_su_forma": {
+          "name": "reposiciones_movimiento_de_su_forma",
+          "value": "(\"caja_chica\".\"reposiciones\".\"forma\" = 'compensada_al_cerrar') = (\"caja_chica\".\"reposiciones\".\"movimiento_id\" is null)"
+        },
+        "reposiciones_custodio_valido": {
+          "name": "reposiciones_custodio_valido",
+          "value": "\"caja_chica\".\"reposiciones\".\"custodio\" is not null and (\"caja_chica\".\"reposiciones\".\"custodio\" is null or (char_length(\"caja_chica\".\"reposiciones\".\"custodio\") between 1 and 150 and \"caja_chica\".\"reposiciones\".\"custodio\" = btrim(\"caja_chica\".\"reposiciones\".\"custodio\")))"
+        },
+        "reposiciones_estado_valido": {
+          "name": "reposiciones_estado_valido",
+          "value": "\"caja_chica\".\"reposiciones\".\"estado\" in ('vigente', 'anulada')"
+        },
+        "reposiciones_anulacion_completa": {
+          "name": "reposiciones_anulacion_completa",
+          "value": "(\"caja_chica\".\"reposiciones\".\"estado\" = 'anulada') = (\"caja_chica\".\"reposiciones\".\"anulado_en\" is not null) and (\"caja_chica\".\"reposiciones\".\"anulado_en\" is not null) = (\"caja_chica\".\"reposiciones\".\"anulado_por\" is not null) and (\"caja_chica\".\"reposiciones\".\"anulado_por\" is not null) = (\"caja_chica\".\"reposiciones\".\"motivo_de_anulacion\" is not null)"
+        },
+        "reposiciones_motivo_de_anulacion_rango": {
+          "name": "reposiciones_motivo_de_anulacion_rango",
+          "value": "\"caja_chica\".\"reposiciones\".\"motivo_de_anulacion\" is null or char_length(\"caja_chica\".\"reposiciones\".\"motivo_de_anulacion\") between 1 and 300"
+        },
+        "reposiciones_fecha_de_anulacion_de_su_estado": {
+          "name": "reposiciones_fecha_de_anulacion_de_su_estado",
+          "value": "(\"caja_chica\".\"reposiciones\".\"estado\" = 'anulada') = (\"caja_chica\".\"reposiciones\".\"fecha_de_anulacion\" is not null)"
+        },
+        "reposiciones_fecha_de_anulacion_valida": {
+          "name": "reposiciones_fecha_de_anulacion_valida",
+          "value": "\"caja_chica\".\"reposiciones\".\"fecha_de_anulacion\" is null or \"caja_chica\".\"reposiciones\".\"fecha_de_anulacion\" >= \"caja_chica\".\"reposiciones\".\"fecha\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "caja_chica.vales_provisionales": {
+      "name": "vales_provisionales",
+      "schema": "caja_chica",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fondo_id": {
+          "name": "fondo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anio_de_numero": {
+          "name": "anio_de_numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entregado_a": {
+          "name": "entregado_a",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entregado_a_usuario_id": {
+          "name": "entregado_a_usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'abierto'"
+        },
+        "fecha_de_liquidacion": {
+          "name": "fecha_de_liquidacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "liquidado_en": {
+          "name": "liquidado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "liquidado_por": {
+          "name": "liquidado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "devuelto": {
+          "name": "devuelto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "fecha_de_anulacion": {
+          "name": "fecha_de_anulacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "vales_fondo_idx": {
+          "name": "vales_fondo_idx",
+          "columns": [
+            {
+              "expression": "fondo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "estado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "vales_provisionales_empresa_id_empresas_id_fk": {
+          "name": "vales_provisionales_empresa_id_empresas_id_fk",
+          "tableFrom": "vales_provisionales",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "vales_provisionales_entregado_a_usuario_id_usuarios_id_fk": {
+          "name": "vales_provisionales_entregado_a_usuario_id_usuarios_id_fk",
+          "tableFrom": "vales_provisionales",
+          "tableTo": "usuarios",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "entregado_a_usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "vales_provisionales_fondo_fk": {
+          "name": "vales_provisionales_fondo_fk",
+          "tableFrom": "vales_provisionales",
+          "tableTo": "fondos",
+          "schemaTo": "caja_chica",
+          "columnsFrom": [
+            "fondo_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "vales_numero_unico": {
+          "name": "vales_numero_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "empresa_id",
+            "anio_de_numero",
+            "numero"
+          ]
+        },
+        "vales_llave_unica": {
+          "name": "vales_llave_unica",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id",
+            "fondo_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "alcance_caja_chica_fondos": {
+          "name": "alcance_caja_chica_fondos",
+          "as": "RESTRICTIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
+          "withCheck": "'caja-chica.fondos' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or fondo_id in (\n      select a.fondo_id from caja_chica.accesos_a_fondos a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
+        }
+      },
+      "checkConstraints": {
+        "vales_numero_positivo": {
+          "name": "vales_numero_positivo",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"numero\" > 0"
+        },
+        "vales_entregado_a_valido": {
+          "name": "vales_entregado_a_valido",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"entregado_a\" is not null and (\"caja_chica\".\"vales_provisionales\".\"entregado_a\" is null or (char_length(\"caja_chica\".\"vales_provisionales\".\"entregado_a\") between 1 and 150 and \"caja_chica\".\"vales_provisionales\".\"entregado_a\" = btrim(\"caja_chica\".\"vales_provisionales\".\"entregado_a\")))"
+        },
+        "vales_monto_positivo": {
+          "name": "vales_monto_positivo",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"monto\" > 0"
+        },
+        "vales_motivo_valido": {
+          "name": "vales_motivo_valido",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"motivo\" is not null and (\"caja_chica\".\"vales_provisionales\".\"motivo\" is null or (char_length(\"caja_chica\".\"vales_provisionales\".\"motivo\") between 1 and 300 and \"caja_chica\".\"vales_provisionales\".\"motivo\" = btrim(\"caja_chica\".\"vales_provisionales\".\"motivo\")))"
+        },
+        "vales_estado_valido": {
+          "name": "vales_estado_valido",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"estado\" in ('abierto', 'liquidado', 'anulado')"
+        },
+        "vales_liquidacion_completa": {
+          "name": "vales_liquidacion_completa",
+          "value": "(\"caja_chica\".\"vales_provisionales\".\"estado\" = 'liquidado') = (\"caja_chica\".\"vales_provisionales\".\"fecha_de_liquidacion\" is not null) and (\"caja_chica\".\"vales_provisionales\".\"fecha_de_liquidacion\" is not null) = (\"caja_chica\".\"vales_provisionales\".\"liquidado_en\" is not null) and (\"caja_chica\".\"vales_provisionales\".\"liquidado_en\" is not null) = (\"caja_chica\".\"vales_provisionales\".\"liquidado_por\" is not null)"
+        },
+        "vales_liquidacion_posterior": {
+          "name": "vales_liquidacion_posterior",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"fecha_de_liquidacion\" is null or \"caja_chica\".\"vales_provisionales\".\"fecha_de_liquidacion\" >= \"caja_chica\".\"vales_provisionales\".\"fecha\""
+        },
+        "vales_devuelto_valido": {
+          "name": "vales_devuelto_valido",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"devuelto\" >= 0 and \"caja_chica\".\"vales_provisionales\".\"devuelto\" <= \"caja_chica\".\"vales_provisionales\".\"monto\""
+        },
+        "vales_abierto_sin_devuelto": {
+          "name": "vales_abierto_sin_devuelto",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"estado\" = 'liquidado' or \"caja_chica\".\"vales_provisionales\".\"devuelto\" = 0"
+        },
+        "vales_anulacion_completa": {
+          "name": "vales_anulacion_completa",
+          "value": "(\"caja_chica\".\"vales_provisionales\".\"estado\" = 'anulado') = (\"caja_chica\".\"vales_provisionales\".\"anulado_en\" is not null) and (\"caja_chica\".\"vales_provisionales\".\"anulado_en\" is not null) = (\"caja_chica\".\"vales_provisionales\".\"anulado_por\" is not null) and (\"caja_chica\".\"vales_provisionales\".\"anulado_por\" is not null) = (\"caja_chica\".\"vales_provisionales\".\"motivo_de_anulacion\" is not null)"
+        },
+        "vales_motivo_de_anulacion_rango": {
+          "name": "vales_motivo_de_anulacion_rango",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"motivo_de_anulacion\" is null or char_length(\"caja_chica\".\"vales_provisionales\".\"motivo_de_anulacion\") between 1 and 300"
+        },
+        "vales_fecha_de_anulacion_de_su_estado": {
+          "name": "vales_fecha_de_anulacion_de_su_estado",
+          "value": "(\"caja_chica\".\"vales_provisionales\".\"estado\" = 'anulado') = (\"caja_chica\".\"vales_provisionales\".\"fecha_de_anulacion\" is not null)"
+        },
+        "vales_fecha_de_anulacion_valida": {
+          "name": "vales_fecha_de_anulacion_valida",
+          "value": "\"caja_chica\".\"vales_provisionales\".\"fecha_de_anulacion\" is null or \"caja_chica\".\"vales_provisionales\".\"fecha_de_anulacion\" >= \"caja_chica\".\"vales_provisionales\".\"fecha\""
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "caja_chica": "caja_chica"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

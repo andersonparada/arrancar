@@ -39,6 +39,8 @@ export interface FondoResumenDto {
   /** La fecha del vale provisional abierto más viejo, si hay alguno. */
   valeMasViejo: string | null;
   ultimoArqueo: string | null;
+  /** Comprobantes con un documento anulado por su emisor, por resolver o en disputa. */
+  documentosPorResolver: number;
   avisos: string[];
 }
 

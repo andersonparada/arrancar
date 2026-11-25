@@ -22,6 +22,8 @@ export interface Arqueo {
   /** Fecha y hora del conteo, en ISO 8601 (UTC). */
   realizadoEn: string;
   arqueadoPor: string;
+  /** Nombre completo de quien arqueó, copiado al contar (para el acta). */
+  arqueadoPorNombre: string;
   custodio: string;
   custodioUsuarioId: string | null;
   loHizoElCustodio: boolean;

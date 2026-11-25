@@ -1,4 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { FondoConDocumentosPorResolver } from '../../../dominio/errores-de-documento-anulado.js';
 import { CuentaDelDepositoObligatoria } from '../../../dominio/errores-de-fondos.js';
 import { FondoCerrado, type ReposicionCompensadaEmitida } from '../../../dominio/eventos-de-fondos.js';
 import { MODULO_DE_ORIGEN, RECURSO_DE_FONDOS, type Fondo } from '../../../dominio/fondos.js';
@@ -27,7 +28,15 @@ export interface PeticionDeCierre {
   fecha?: string;
   cuentaBancariaId?: string | null;
   referencia?: string | null;
+  /** Quien cierra tiene el permiso de cerrar con documentos anulados por su emisor sin resolver (el motivo ya es obligatorio). */
+  puedeCerrarConDocumentosPorResolver?: boolean;
 }
+
+/** El motivo del cierre; si quedan documentos anulados sin resolver, la excepción lo dice. */
+const motivoDeAuditoria = (porResolver: number, motivo: string): string =>
+  porResolver === 0
+    ? motivo
+    : `Cerrado con ${porResolver} documento(s) anulado(s) por su emisor sin resolver: ${motivo}`;
 
 /** Lo ya decidido antes de tocar nada. */
 interface PlanDelCierre {
@@ -36,6 +45,8 @@ interface PlanDelCierre {
   hoy: string;
   depositoCentavos: number;
   cuentaBancariaId: string | null;
+  /** Los documentos anulados por su emisor que quedan sin resolver al cerrar (si el permiso lo deja). */
+  documentosPorResolver: number;
 }
 
 /**
@@ -56,7 +67,7 @@ export class CerrarFondo {
 
   /**
    * @throws RecursoNoEncontrado, FondoNoDisponible, FechaDelFondoInvalida, FechaAnteriorALaApertura,
-   * FechaDeLaReposicionInvalida, FondoConValesAbiertos, EfectivoNegativoAlCerrar, CuentaDelDepositoObligatoria y lo que
+   * FechaDeLaReposicionInvalida, FondoConValesAbiertos, FondoConDocumentosPorResolver, EfectivoNegativoAlCerrar, CuentaDelDepositoObligatoria y lo que
    * rechace Bancos.
    */
   async ejecutar(operador: Operador, pedido: PeticionDeCierre): Promise<FondoDto> {
@@ -73,7 +84,13 @@ export class CerrarFondo {
     const compensada = await this.reponedor.reponer(operador, await this.datosDeLaCompensada(plan));
     const movimiento = await this.depositar(operador, { plan, pedido });
     await this.cerrarElFondo(operador, { plan, motivo: pedido.motivo.trim(), movimiento });
-    await auditoria.registrar({ recurso: RECURSO_DE_FONDOS, registroId: plan.fondo.id, accion: 'cerrar', anterior });
+    await auditoria.registrar({
+      recurso: RECURSO_DE_FONDOS,
+      registroId: plan.fondo.id,
+      accion: 'cerrar',
+      anterior,
+      motivo: motivoDeAuditoria(plan.documentosPorResolver, pedido.motivo.trim()),
+    });
     const avisos = movimiento?.avisos.map(({ mensaje }) => mensaje) ?? [];
     return {
       dto: await this.lector.leer((await fondos.buscar(plan.fondo.id))!, avisos),
@@ -114,13 +131,18 @@ export class CerrarFondo {
     const fecha = pedido.fecha ?? hoy;
     exigirFechaNoFutura(fecha, hoy);
     exigirFechaDesdeLaApertura(fecha, fondo);
-    const depositoCentavos = depositoAlCerrar((await consultas.datosDeLectura([fondo.id])).get(fondo.id)!);
+    const lectura = (await consultas.datosDeLectura([fondo.id])).get(fondo.id)!;
+    const documentosPorResolver = lectura.documentosPorResolver;
+    if (documentosPorResolver > 0 && !pedido.puedeCerrarConDocumentosPorResolver) {
+      throw new FondoConDocumentosPorResolver(documentosPorResolver);
+    }
+    const depositoCentavos = depositoAlCerrar(lectura);
     const cuentaBancariaId = pedido.cuentaBancariaId ?? fondo.cuentaBancariaId;
     if (depositoCentavos > 0) {
       if (!cuentaBancariaId) throw new CuentaDelDepositoObligatoria();
       await referencias.exigirCuentaBancaria(cuentaBancariaId);
     }
-    return { fondo, fecha, hoy, depositoCentavos, cuentaBancariaId };
+    return { fondo, fecha, hoy, depositoCentavos, cuentaBancariaId, documentosPorResolver };
   }
 
   /** La nota de crédito del depósito; si no queda efectivo no hay movimiento. */

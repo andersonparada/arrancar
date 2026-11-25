@@ -19,9 +19,16 @@ import {
   restriccionesDeMarcas,
   restriccionesDelValeDeGasto,
 } from './comprobantes.restricciones.js';
+import {
+  restriccionesDelSeguimiento,
+  type DestinoDeLaSalida,
+  type SalidaDelDocumento,
+  type SituacionDelDocumento,
+} from './comprobantes.seguimiento.js';
 import { esquemaCajaChica } from './esquema.tablas.js';
 
 export type ClaseDeComprobante = 'documento' | 'vale_de_gasto' | 'faltante' | 'sobrante';
+export type { DestinoDeLaSalida, SalidaDelDocumento, SituacionDelDocumento } from './comprobantes.seguimiento.js';
 
 /**
  * Lo que gasta o desajusta el fondo: un documento del libro de compras, un vale de gasto (sin factura), el faltante o
@@ -82,6 +89,19 @@ export const comprobantes = esquemaCajaChica.table(
     anuladoEn: timestamp({ withTimezone: true }),
     anuladoPor: uuid(),
     motivoDeAnulacion: text(),
+    /** El emisor anuló la FEL en la SAT y el comprobante ya movió efectivo: sigue vigente, «por resolver». */
+    motivoDocumentoAnulado: text(),
+    /** En qué va el documento anulado (solo con `motivo_documento_anulado`): ver `comprobantes.seguimiento.ts`. */
+    situacionDelDocumento: text().$type<SituacionDelDocumento>(),
+    salidaDelDocumento: text().$type<SalidaDelDocumento>(),
+    /** La factura anulada, cuando un reemplazo puso otro documento en `documento_de_compra_id`. */
+    documentoAnuladoId: uuid(),
+    motivoDeLaResolucion: text(),
+    montoDeLaSalida: numeric({ precision: 14, scale: 2 }),
+    destinoDeLaSalida: text().$type<DestinoDeLaSalida>(),
+    motivoDeLaDisputa: text(),
+    pruebaDePago: text(),
+    disputaHasta: date(),
     ...marcasDeTiempo,
     ...autoria,
   },
@@ -91,6 +111,7 @@ export const comprobantes = esquemaCajaChica.table(
     ...restriccionesDelValeDeGasto(t),
     ...restriccionesDeMarcas(t),
     ...restriccionesDeLaRetencion(t),
+    ...restriccionesDelSeguimiento(t),
     ...restriccionesDeAnulacion('comprobantes', t),
     fechaDeAnulacionPosterior('comprobantes', t),
     ...indicesDeComprobante(t),

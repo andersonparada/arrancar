@@ -1,6 +1,7 @@
 import type { ContextoEmpresa } from '../../../core/compartido/aplicacion/contexto-empresa.js';
 import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import type { DocumentoParaDestino } from '../../../core/contratos/libro-de-compras.contratos.js';
+import type { CausaDeAnulacion } from '../../dominio/baja-de-documento.js';
 import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { DocumentoDeCompra } from '../../dominio/documento-de-compra.js';
@@ -113,10 +114,13 @@ export interface DestinosDeDocumentos {
   /** Orden `<destino>.recibir_documento`, dentro de la transacción en curso; devuelve los avisos que el destino quiere dar. */
   recibir(operador: Operador, destino: DestinoDeDocumento, documento: DocumentoParaDestino): Promise<string[]>;
   /** Aviso `documento_por_anular`, antes de anular: el destino revierte lo suyo o lanza su error. */
-  avisarPorAnular(operador: Operador, aviso: AvisoDeBaja & { motivo: string }): Promise<void>;
+  avisarPorAnular(operador: Operador, aviso: AvisoDeAnulacion): Promise<void>;
   /** Aviso `documento_por_eliminar`, antes de eliminar: el destino borra lo suyo o lanza su error. */
   avisarPorEliminar(operador: Operador, aviso: AvisoDeBaja): Promise<void>;
 }
+
+/** El aviso de anulación: además lleva el motivo y la causa (el destino no puede vetar una FEL anulada por su emisor). */
+export type AvisoDeAnulacion = AvisoDeBaja & { motivo: string; causa: CausaDeAnulacion };
 
 /** A qué destino y de qué documento se avisa una baja. */
 export interface AvisoDeBaja {

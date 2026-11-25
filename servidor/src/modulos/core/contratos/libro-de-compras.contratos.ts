@@ -147,7 +147,13 @@ declare module './mediador.contratos.js' {
   }
   interface AvisosEntreModulos {
     /** Antes de anular: el destino revierte lo suyo o lanza su error (se deshace todo). Su manejador es idempotente. */
-    'libro-de-compras.documento_por_anular': { documentoId: string; destino: DestinoDeDocumento; motivo: string };
+    'libro-de-compras.documento_por_anular': {
+      documentoId: string;
+      destino: DestinoDeDocumento;
+      motivo: string;
+      /** Por qué se anula el registro: `fel_anulada_por_el_emisor` es un hecho externo que el destino no puede vetar. */
+      causa: 'error_de_captura' | 'fel_anulada_por_el_emisor' | 'no_corresponde_a_la_empresa';
+    };
     /** Antes de eliminar: igual que el de anular. */
     'libro-de-compras.documento_por_eliminar': { documentoId: string; destino: DestinoDeDocumento };
   }

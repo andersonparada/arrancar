@@ -31,6 +31,19 @@ describe('CC-R2: reposiciones del período', () => {
     expect(reporte.total).toEqual({ cantidad: 1, deducible: '75.00', noDeducible: '50.00', total: '125.00' });
   });
 
+  it('no repite «Cheque» cuando la referencia de Bancos ya lo trae (QA de CC-11)', async () => {
+    const item: ReposicionDeReporte = {
+      reposicion: reposicion(),
+      fondoNombre: 'Fondo Central',
+      referenciaDeBancos: 'Cheque 3',
+      lineas: [],
+    };
+    const reporte = await new ReporteDeReposiciones(
+      dependencias({ reposicionesDelPeriodo: async () => [item] }),
+    ).ejecutar(operador, {});
+    expect(reporte.fondos[0]!.reposiciones[0]!.respaldo).toBe('Cheque 3');
+  });
+
   it('la compensada al cerrar no lleva cheque', async () => {
     const item: ReposicionDeReporte = {
       reposicion: reposicion({ forma: 'compensada_al_cerrar', movimientoId: null }),

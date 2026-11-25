@@ -59,6 +59,22 @@ export async function pendientesDe(ids: readonly string[]): Promise<TotalesPorFo
   return aTotales(filas);
 }
 
+/** Cuántos comprobantes vigentes de cada fondo tienen su documento anulado por el emisor y sin resolver. */
+export async function documentosPorResolverDe(ids: readonly string[]): Promise<TotalesPorFondo> {
+  const filas = await transaccionEnCurso()
+    .select({ fondoId: comprobantes.fondoId, total: sql<string>`count(*)::text` })
+    .from(comprobantes)
+    .where(
+      and(
+        inArray(comprobantes.fondoId, [...ids]),
+        eq(comprobantes.estado, 'vigente'),
+        inArray(comprobantes.situacionDelDocumento, ['por_resolver', 'en_disputa']),
+      ),
+    )
+    .groupBy(comprobantes.fondoId);
+  return new Map(filas.flatMap(({ fondoId, total }) => (fondoId === null ? [] : [[fondoId, Number(total)]])));
+}
+
 /** Lo entregado en vales provisionales que siguen abiertos. */
 export async function valesAbiertosDe(ids: readonly string[]): Promise<TotalesPorFondo> {
   const total = sql<string>`coalesce(sum(${valesProvisionales.monto}), 0)::text`;

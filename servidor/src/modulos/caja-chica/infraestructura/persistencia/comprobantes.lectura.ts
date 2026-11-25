@@ -3,6 +3,7 @@ import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { documentos } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import type { Comprobante } from '../../dominio/comprobantes.js';
+import type { SeguimientoDelDocumento } from '../../dominio/documento-anulado.js';
 import { comprobantes } from './comprobantes.tablas.js';
 import { reposicionComprobantes } from './reposicion-comprobantes.tablas.js';
 import { reposiciones } from './reposiciones.tablas.js';
@@ -84,6 +85,7 @@ function marcasDelComprobante(c: FilaDeComprobante['comprobante']) {
     asignadoEn: c.asignadoEn?.toISOString() ?? null,
     asignadoPor: c.asignadoPor,
     motivoDeAnulacion: c.motivoDeAnulacion,
+    motivoDocumentoAnulado: c.motivoDocumentoAnulado,
   };
 }
 
@@ -96,6 +98,24 @@ function datosDelVale(c: FilaDeComprobante['comprobante']) {
     pagadoA: c.pagadoA,
     conceptoDeGastoId: c.conceptoDeGastoId,
     motivoSinDocumento: c.motivoSinDocumento,
+  };
+}
+
+/** El seguimiento del documento anulado por su emisor, si lo hay. */
+function aSeguimiento(c: FilaDeComprobante['comprobante']): SeguimientoDelDocumento | null {
+  if (c.situacionDelDocumento === null) return null;
+  const disputa =
+    c.motivoDeLaDisputa === null || c.pruebaDePago === null || c.disputaHasta === null
+      ? null
+      : { motivo: c.motivoDeLaDisputa, prueba: c.pruebaDePago, hasta: c.disputaHasta };
+  return {
+    situacion: c.situacionDelDocumento,
+    salida: c.salidaDelDocumento,
+    documentoAnuladoId: c.documentoAnuladoId,
+    motivoDeLaResolucion: c.motivoDeLaResolucion,
+    montoCentavos: c.montoDeLaSalida === null ? null : aCentavos(c.montoDeLaSalida),
+    destino: c.destinoDeLaSalida,
+    disputa,
   };
 }
 
@@ -116,6 +136,7 @@ export function aComprobante({ comprobante, documento, reposicionNumero }: FilaD
     ...datosDelDocumento(comprobante),
     ...marcasDelComprobante(comprobante),
     ...datosDelVale(comprobante),
+    seguimiento: aSeguimiento(comprobante),
     reposicionNumero,
     documento: documento && aDocumento(documento),
   };

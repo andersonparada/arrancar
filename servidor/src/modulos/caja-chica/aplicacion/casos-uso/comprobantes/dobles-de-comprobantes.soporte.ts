@@ -6,6 +6,7 @@ import {
   UnidadDeTrabajoEnMemoria,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 import type { Comprobante } from '../../../dominio/comprobantes.js';
+import { SEGUIMIENTO_POR_RESOLVER, type SeguimientoDelDocumento } from '../../../dominio/documento-anulado.js';
 import { efectoEnLoPendiente } from '../../../dominio/reglas-de-comprobantes.js';
 import type {
   AnulacionDelComprobante,
@@ -16,6 +17,7 @@ import type {
   ValeDeGastoNuevo,
 } from '../../puertos/puertos-de-comprobantes.js';
 import type { ConsultasDeFondos } from '../../puertos/puertos-de-fondos.js';
+import { comprobanteBase } from './comprobante-base.soporte.js';
 import { BancarizacionFalsa } from './dobles-de-bancarizacion.soporte.js';
 import { FondosEnMemoria } from '../fondos/dobles-de-fondos.soporte.js';
 import type { DependenciasDeComprobantes } from './dependencias-de-comprobantes.js';
@@ -33,46 +35,10 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
   enElLibro = true;
   private secuencia = 0;
 
-  private base(id: string, fecha: string): Comprobante {
-    return {
-      id,
-      fondoId: null,
-      clase: 'documento',
-      estado: 'vigente',
-      fecha,
-      montoCentavos: 0,
-      resta: false,
-      esNotaDeCredito: false,
-      documentoDeCompraId: null,
-      documentoAfectadoId: null,
-      proveedorId: null,
-      conRetencion: false,
-      montoRetenidoCentavos: 0,
-      motivoConRetencion: null,
-      conActivoFijo: false,
-      sobreElTope: false,
-      motivoSobreElTope: null,
-      sinBancarizar: false,
-      valeProvisionalId: null,
-      destinoDelFaltante: null,
-      numero: null,
-      anioDeNumero: 0,
-      descripcion: null,
-      pagadoA: null,
-      conceptoDeGastoId: null,
-      motivoSinDocumento: null,
-      asignadoEn: null,
-      asignadoPor: null,
-      motivoDeAnulacion: null,
-      reposicionNumero: null,
-      documento: null,
-    };
-  }
-
   async agregarDocumento(nuevo: DocumentoRecibido): Promise<string> {
     const id = `comprobante-${++this.secuencia}`;
     this.filas.set(id, {
-      ...this.base(id, nuevo.fecha),
+      ...comprobanteBase(id, nuevo.fecha),
       montoCentavos: nuevo.montoCentavos,
       resta: nuevo.esNotaDeCredito,
       esNotaDeCredito: nuevo.esNotaDeCredito,
@@ -99,7 +65,7 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
   async agregarVale(nuevo: ValeDeGastoNuevo): Promise<string> {
     const id = `vale-${++this.secuencia}`;
     this.filas.set(id, {
-      ...this.base(id, nuevo.fecha),
+      ...comprobanteBase(id, nuevo.fecha),
       fondoId: nuevo.fondoId,
       clase: 'vale_de_gasto',
       montoCentavos: nuevo.montoCentavos,
@@ -154,6 +120,22 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
       sinBancarizar: false,
       fecha: fechaDeEmision,
     });
+  }
+
+  async marcarDocumentoAnulado(id: string, motivo: string): Promise<void> {
+    this.filas.set(id, {
+      ...this.filas.get(id)!,
+      motivoDocumentoAnulado: motivo,
+      seguimiento: SEGUIMIENTO_POR_RESOLVER,
+    });
+  }
+
+  async guardarSeguimiento(id: string, seguimiento: SeguimientoDelDocumento): Promise<void> {
+    this.filas.set(id, { ...this.filas.get(id)!, seguimiento });
+  }
+
+  async ponerDocumento(id: string, documentoDeCompraId: string): Promise<void> {
+    this.filas.set(id, { ...this.filas.get(id)!, documentoDeCompraId });
   }
 
   async anular(id: string, anulacion: AnulacionDelComprobante): Promise<void> {
@@ -229,6 +211,7 @@ export async function armarEscenario(montoDelFondoCentavos = 100_000): Promise<E
             valeMasViejo: null,
             ultimoArqueo: null,
             aperturaAnulada: false,
+            documentosPorResolver: 0,
           },
         ]),
       ),

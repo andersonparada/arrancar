@@ -15,6 +15,9 @@ import { HOY, type ComprobantesEnMemoria } from '../comprobantes/dobles-de-compr
 import { armarEscenarioDeReposiciones } from '../reposiciones/dobles-de-reposiciones.soporte.js';
 import type { DependenciasDeArqueos } from './dependencias-de-arqueos.js';
 
+/** El nombre que dan las pruebas a quien arquea. */
+export const NOMBRE_DEL_ARQUEADOR = 'Dueño de Prueba';
+
 /** Los arqueos en memoria. */
 export class ArqueosEnMemoria implements RepositorioDeArqueos {
   readonly filas = new Map<string, Arqueo>();
@@ -106,6 +109,7 @@ export async function armarEscenarioDeArqueos(custodioUsuarioId: string | null =
   const valores = { dias: 30, diasDeVales: 5, ahora: new Date('2026-11-18T20:00:00Z') };
   const consultas: ConsultasDeArqueos = {
     delFondo: async (fondoId) => [...arqueos.filas.values()].filter((a) => a.fondoId === fondoId),
+    nombreDelUsuario: async () => NOMBRE_DEL_ARQUEADOR,
     pendientesDelFondo: async (fondoId) => base.dependenciasDeReposiciones.consultas.pendientesDelFondo(fondoId),
   };
   const dependenciasDeArqueos: DependenciasDeArqueos = {

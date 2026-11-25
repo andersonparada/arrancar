@@ -39,6 +39,8 @@ export interface FondoResumen {
   pendienteDeReponer: string;
   valesAbiertos: string;
   ultimoArqueo: string | null;
+  /** Comprobantes con un documento anulado por su emisor, por resolver o en disputa. */
+  documentosPorResolver: number;
   avisos: string[];
 }
 

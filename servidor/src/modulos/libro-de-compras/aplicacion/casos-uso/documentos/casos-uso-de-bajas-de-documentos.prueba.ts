@@ -51,7 +51,7 @@ describe('anular un documento', () => {
     const { documento: ficha, avisos } = await anular('  Se registró dos veces ');
 
     expect(e.destinos.avisosDeAnular).toEqual([
-      { documentoId, destino: 'cuentas-por-pagar', motivo: 'Se registró dos veces' },
+      { documentoId, destino: 'cuentas-por-pagar', motivo: 'Se registró dos veces', causa: 'error_de_captura' },
     ]);
     expect(ficha).toMatchObject({
       estado: 'anulado',

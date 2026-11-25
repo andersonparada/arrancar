@@ -1,0 +1,40 @@
+import type { Comprobante } from '../../../dominio/comprobantes.js';
+
+/** Un comprobante de documento vigente, en la bandeja y sin nada especial: los dobles le ponen lo suyo. */
+export function comprobanteBase(id: string, fecha: string): Comprobante {
+  return {
+    id,
+    fondoId: null,
+    clase: 'documento',
+    estado: 'vigente',
+    fecha,
+    montoCentavos: 0,
+    resta: false,
+    esNotaDeCredito: false,
+    documentoDeCompraId: null,
+    documentoAfectadoId: null,
+    proveedorId: null,
+    conRetencion: false,
+    montoRetenidoCentavos: 0,
+    motivoConRetencion: null,
+    conActivoFijo: false,
+    sobreElTope: false,
+    motivoSobreElTope: null,
+    sinBancarizar: false,
+    valeProvisionalId: null,
+    destinoDelFaltante: null,
+    numero: null,
+    anioDeNumero: 0,
+    descripcion: null,
+    pagadoA: null,
+    conceptoDeGastoId: null,
+    motivoSinDocumento: null,
+    asignadoEn: null,
+    asignadoPor: null,
+    motivoDeAnulacion: null,
+    motivoDocumentoAnulado: null,
+    seguimiento: null,
+    reposicionNumero: null,
+    documento: null,
+  };
+}

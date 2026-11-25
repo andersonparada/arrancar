@@ -10,6 +10,7 @@ import VentanaDeCustodio from './VentanaDeCustodio.vue';
 import VentanaDeEdicionDelFondo from './VentanaDeEdicionDelFondo.vue';
 import VentanaDeDisminucion from './VentanaDeDisminucion.vue';
 import VentanaDeMotivo from './VentanaDeMotivo.vue';
+import VentanasDelDocumentoAnulado from './VentanasDelDocumentoAnulado.vue';
 import VentanaDeValeDeGasto from './VentanaDeValeDeGasto.vue';
 
 /** Todas las ventanas de la ficha de un fondo, juntas para que la página solo arme. */
@@ -29,6 +30,7 @@ defineProps<{
     :localidades="acciones.catalogos.localidades"
     :cuentas="acciones.catalogos.cuentas"
     :cambia-el-tope="acciones.cambiaElTope"
+    :monto="fondo.monto"
     @cerrar="acciones.edicion.cerrar"
     @guardar="acciones.edicion.guardar"
   />
@@ -111,4 +113,5 @@ defineProps<{
     @cerrar="comprobantes.baja.cerrar"
     @guardar="comprobantes.baja.guardar"
   />
+  <VentanasDelDocumentoAnulado :documento-anulado="comprobantes.documentoAnulado" />
 </template>

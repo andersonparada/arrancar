@@ -5,6 +5,7 @@ import { configuracionDeCajaChica } from './configuracion.js';
 import { PERMISOS_DE_CAJA_CHICA } from './permisos.js';
 import { rutasDeArqueosComponidas } from './composicion/arqueos.js';
 import { rutasDeAccesosAFondosComponidas } from './composicion/accesos-a-fondos.js';
+import { rutasDeDocumentoAnuladoComponidas } from './composicion/documento-anulado.js';
 import { rutasDeCatalogosComponidas } from './composicion/catalogos.js';
 import { rutasDeComprobantesComponidas } from './composicion/comprobantes.js';
 import { rutasDeFondosComponidas } from './composicion/fondos.js';
@@ -37,6 +38,7 @@ export const moduloCajaChica: DefinicionModulo = {
     rutasDeFondosComponidas(),
     rutasDeAccesosAFondosComponidas(),
     rutasDeComprobantesComponidas(),
+    rutasDeDocumentoAnuladoComponidas(),
     rutasDeReposicionesComponidas(),
     rutasDeArqueosComponidas(),
     rutasDeValesProvisionalesComponidas(),

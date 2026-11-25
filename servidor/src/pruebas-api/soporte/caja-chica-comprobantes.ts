@@ -154,9 +154,10 @@ export async function comprobanteEnBase(comprobanteId: string) {
     asignado_en: string | null;
     numero: number | null;
     fecha: string;
+    motivo_documento_anulado: string | null;
   }>(
     `select fondo_id, estado, monto::text, monto_retenido::text, motivo_con_retencion, motivo_sobre_el_tope,
-            sin_bancarizar, asignado_por, asignado_en::text, numero, fecha::text
+            sin_bancarizar, asignado_por, asignado_en::text, numero, fecha::text, motivo_documento_anulado
        from caja_chica.comprobantes where id = $1`,
     [comprobanteId],
   );

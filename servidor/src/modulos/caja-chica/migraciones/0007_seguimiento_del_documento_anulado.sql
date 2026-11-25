@@ -1,0 +1,27 @@
+ALTER TABLE "caja_chica"."comprobantes" ADD COLUMN "situacion_del_documento" text;--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD COLUMN "salida_del_documento" text;--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD COLUMN "documento_anulado_id" uuid;--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD COLUMN "motivo_de_la_resolucion" text;--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD COLUMN "monto_de_la_salida" numeric(14, 2);--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD COLUMN "destino_de_la_salida" text;--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD COLUMN "motivo_de_la_disputa" text;--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD COLUMN "prueba_de_pago" text;--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD COLUMN "disputa_hasta" date;--> statement-breakpoint
+UPDATE "caja_chica"."comprobantes" SET "situacion_del_documento" = 'por_resolver' WHERE "motivo_documento_anulado" IS NOT NULL;--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_documento_anulado_fk" FOREIGN KEY ("documento_anulado_id","empresa_id","proveedor_id","destino_del_documento") REFERENCES "libro_de_compras"."documentos"("id","empresa_id","proveedor_id","destino") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_situacion_del_documento_valida" CHECK ("caja_chica"."comprobantes"."situacion_del_documento" in ('por_resolver', 'en_disputa', 'resuelto'));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_situacion_con_documento_anulado" CHECK (("caja_chica"."comprobantes"."motivo_documento_anulado" is null) = ("caja_chica"."comprobantes"."situacion_del_documento" is null));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_salida_valida" CHECK ("caja_chica"."comprobantes"."salida_del_documento" in ('reemplazo', 'devolucion', 'cobro', 'sin_recuperacion'));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_salida_solo_resuelto" CHECK (coalesce("caja_chica"."comprobantes"."situacion_del_documento" = 'resuelto', false) = ("caja_chica"."comprobantes"."salida_del_documento" is not null));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_resolucion_con_motivo" CHECK (coalesce("caja_chica"."comprobantes"."situacion_del_documento" = 'resuelto', false) = ("caja_chica"."comprobantes"."motivo_de_la_resolucion" is not null));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_motivo_de_la_resolucion_rango" CHECK (("caja_chica"."comprobantes"."motivo_de_la_resolucion" is null or (char_length("caja_chica"."comprobantes"."motivo_de_la_resolucion") between 1 and 300 and "caja_chica"."comprobantes"."motivo_de_la_resolucion" = btrim("caja_chica"."comprobantes"."motivo_de_la_resolucion"))));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_reemplazo_con_anulado" CHECK (coalesce("caja_chica"."comprobantes"."salida_del_documento" = 'reemplazo', false) = ("caja_chica"."comprobantes"."documento_anulado_id" is not null));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_monto_y_destino_de_la_salida" CHECK (coalesce("caja_chica"."comprobantes"."salida_del_documento" in ('devolucion', 'cobro'), false) = ("caja_chica"."comprobantes"."monto_de_la_salida" is not null)
+      and ("caja_chica"."comprobantes"."monto_de_la_salida" is not null) = ("caja_chica"."comprobantes"."destino_de_la_salida" is not null)
+      and ("caja_chica"."comprobantes"."monto_de_la_salida" is null or "caja_chica"."comprobantes"."monto_de_la_salida" > 0)
+      and ("caja_chica"."comprobantes"."destino_de_la_salida" is null or "caja_chica"."comprobantes"."destino_de_la_salida" in ('proveedor', 'custodio')));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_disputa_completa" CHECK (coalesce("caja_chica"."comprobantes"."situacion_del_documento" = 'en_disputa', false) = ("caja_chica"."comprobantes"."motivo_de_la_disputa" is not null)
+      and ("caja_chica"."comprobantes"."motivo_de_la_disputa" is not null) = ("caja_chica"."comprobantes"."prueba_de_pago" is not null)
+      and ("caja_chica"."comprobantes"."motivo_de_la_disputa" is not null) = ("caja_chica"."comprobantes"."disputa_hasta" is not null));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_motivo_de_la_disputa_rango" CHECK (("caja_chica"."comprobantes"."motivo_de_la_disputa" is null or (char_length("caja_chica"."comprobantes"."motivo_de_la_disputa") between 1 and 300 and "caja_chica"."comprobantes"."motivo_de_la_disputa" = btrim("caja_chica"."comprobantes"."motivo_de_la_disputa"))));--> statement-breakpoint
+ALTER TABLE "caja_chica"."comprobantes" ADD CONSTRAINT "comprobantes_prueba_de_pago_rango" CHECK (("caja_chica"."comprobantes"."prueba_de_pago" is null or (char_length("caja_chica"."comprobantes"."prueba_de_pago") between 1 and 300 and "caja_chica"."comprobantes"."prueba_de_pago" = btrim("caja_chica"."comprobantes"."prueba_de_pago"))));

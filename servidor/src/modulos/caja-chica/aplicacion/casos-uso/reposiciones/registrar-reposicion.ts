@@ -17,6 +17,7 @@ import {
   desgloseDe,
   firmadosDe,
   lineasEmitidas,
+  marcarProcesadosEnElLibro,
   reposicionDto,
   totalDe,
   type ComprobanteFirmado,
@@ -93,7 +94,7 @@ export class RegistrarReposicion {
     const reposicionId = crypto.randomUUID();
     const movimiento = await this.ordenarEnBancos(operador, { pedido, plan, reposicionId });
     const reposicion = await this.guardar({ reposicionId, numero, anio, pedido, plan, movimiento, firmados });
-    await this.marcarProcesados(operador, firmados);
+    await marcarProcesadosEnElLibro(this.dependencias.libro, operador, firmados);
     const avisos = [...movimiento.avisos.map(({ mensaje }) => mensaje), ...(plan.aviso ? [plan.aviso] : [])];
     return {
       dto: reposicionDto({ reposicion, firmados, avisos }),
@@ -170,14 +171,6 @@ export class RegistrarReposicion {
       observaciones: pedido.observaciones ?? null,
     };
     return ordenarLaReposicion(this.dependencias.bancos, operador, { pago: pedido, datos });
-  }
-
-  /** Los documentos del libro ya se procesaron: dejan de poder eliminarse (solo se anulan). */
-  private async marcarProcesados(operador: Operador, firmados: readonly ComprobanteFirmado[]): Promise<void> {
-    for (const { comprobante } of firmados) {
-      if (comprobante.documentoDeCompraId === null) continue;
-      await this.dependencias.libro.marcarProcesado(operador, comprobante.documentoDeCompraId, true);
-    }
   }
 
   private evento(

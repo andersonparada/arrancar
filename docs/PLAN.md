@@ -5138,3 +5138,51 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   retenedor (una empresa que nunca retuvo veía un faltante imposible de resolver). Ahora es `segunOperacion` (se exige al llegar
   el primer hecho). Prueba de `enlace.prueba.ts` ajustada y §5.3 corregida.
 - **2026-11-24**: VCJ-0d, cliente. La ventana de empresas pide el motivo al quitar o cambiar un NIT existente (no al agregarlo por primera vez) y manda `motivoDelNit`; sin `empresas.nit.corregir` el campo NIT queda de solo lectura con la explicación. El 400 `motivo_del_cambio_de_nit_requerido` se marca en el campo del motivo y el 403 sale como aviso. Pruebas en `edicion-de-empresa.prueba.ts`.
+- **2026-11-23 (CC-11, QA de Caja chica):** recorrido en el navegador (escritorio y celular, claro y oscuro, impresión y Excel) de abrir con
+  cheque no negociable, factura desde la ficha, factura con retención (bandeja; asignada con permiso y motivo), vale sobre el tope, reponer
+  con desglose en Bancos, arqueo con faltante, custodio que repone (aviso), usuario sin el fondo asignado, bancarización con un cheque de
+  Cuentas por pagar y una factura de caja chica del mismo proveedor, vales provisionales, anular reposición y arqueo, cerrar, accesos y
+  los reportes CC-R1 a CC-R5; todo cuadra a mano (informe `docs/modulos/informe-qa-caja-chica-2026-11-23.md`). Errores: (media) se puede
+  anular el gasto sin factura de un vale liquidado, o su factura desde el libro, y el vale deja de cuadrar (dos `it.fails`); (baja) el acta
+  de arqueo imprime el uuid de quien arqueó (`it.fails`), la ficha repite cinco avisos si el fondo no se ve, el mensaje de un monto negativo
+  habla de decimales, la etiqueta del aviso de bancarización («Caja chica, A-1»). Corregidos: la ficha de un fondo cerrado ya no ofrece
+  «Asignar con retención» y «Cheque Cheque 3» del reporte de reposiciones. Prueba nueva de la bancarización compartida (cheque de Cuentas
+  por pagar más factura de caja chica). Observaciones para decidir: tope por comprobante mayor que el monto del fondo y rótulo del faltante.
+  **Corrección posterior:** el error medio ya no existe: el anulador compartido rechaza (`comprobante_de_un_vale_no_se_anula`, 422) el comprobante
+  de un vale provisional, tanto desde «Anular vale» como desde el aviso de anulación del libro; la ficha oculta el botón en esos gastos y las dos
+  pruebas pasaron de `it.fails` a normales (el efectivo esperado tras liquidar es Q2,650.00, no Q2,800.00).
+  **Segunda corrección (revisión):** `EliminarPorAviso` también rechaza (`comprobante_de_un_vale_no_se_anula`) la factura de un vale liquidado cuando el
+  libro la elimina (antes respondía 200 y el efectivo esperado subía de Q2,650.00 a Q2,950.00); prueba nueva. Queda **pendiente de decidir con
+  `contador-guatemala`** el camino para una factura de un vale liquidado que el emisor anula en la SAT (hoy el libro responde 422 y la factura sigue
+  vigente): por ejemplo reabrir o revertir la liquidación del vale con auditoría. Se corrigió el informe, que decía que anular el vale era la salida.
+  Entorno: el puerto 5433 del PostgreSQL de desarrollo no se alcanzaba desde el equipo (puente de Docker viejo con la misma red 172.19.0.0/16
+  que `arrancar-dev_default`): la QA usó un PostgreSQL propio y desechable.
+
+- **2026-11-24 (CC-11, servidor: factura anulada por el emisor, disputa y tope):** con el dictamen del contador sobre la regla del
+  usuario. Se **cambió** «anular el movimiento bancario y volver la liquidación a guardada» por «Reemplazar el documento anulado»:
+  la caja, el banco, el vale y la reposición no se tocan, solo cambia la clasificación del gasto. Con la FEL anulada por el emisor, un
+  comprobante que está en un fondo (también uno vigente sin reponer: antes se anulaba y el efectivo esperado subía, dando un faltante
+  falso) queda vigente y «por resolver»; la auditoría ahora dice `corregir`. Corregido el hallazgo alto: CC-R1, CC-R2, CC-R3 y los eventos
+  de reposición lo tratan como no deducible (CC-R3 lo trae con su motivo). Migración `0007` (situación, salida, factura anulada,
+  monto y destino de la salida, disputa). Rutas nuevas con el permiso `caja-chica.comprobantes.resolver`:
+  `POST /caja-chica/comprobantes/:id/documento-anulado/{resolver,reemplazar,disputa,retirar-disputa}`; resolver audita `ajustar`
+  (devolución, cobro o sin recuperación; monto y destino, sin pasar de lo gastado), el reemplazo exige la FEL nueva en la bandeja, del
+  mismo proveedor, monto y clase (otro monto se resuelve con devolución o cobro) y marca la nueva como procesada si ya estaba repuesto;
+  la disputa lleva motivo, prueba de pago y fecha límite de dos meses. Un fondo con documentos por resolver o en disputa no se cierra
+  sin el permiso nuevo `caja-chica.fondos.cerrar-con-documentos-por-resolver` (la excepción queda en el motivo de la auditoría); la
+  ficha trae `documentosPorResolver` y un aviso. El tope por comprobante mayor que el fondo se acepta con el aviso «el tope es mayor
+  que el fondo y no tendrá efecto». Evento nuevo `caja-chica.documento_anulado_resuelto` (nadie lo escucha todavía). Corregida la
+  prueba en rojo de `causa` en el libro y el fallo de CC-R4 (la prueba sembraba el vale con la fecha de la base en UTC, no la de
+  Guatemala). Sin hacer, por decisión o por ser de otra parte: la marca de disputa en el documento del Libro de compras, la prueba de
+  pago como PDF adjunto, las partidas de Contabilidad, el aviso en el arqueo y todo el cliente.
+- **2026-11-24 (CC-11, cliente: factura anulada por el emisor, disputa y tope):** la ficha del fondo muestra en cada comprobante con
+  documento anulado su estado (por resolver, en disputa con la fecha límite y si venció, o resuelto) y, con el permiso
+  `caja-chica.comprobantes.resolver`, «Resolver» (una ventana con reemplazo por una FEL nueva de la bandeja del mismo proveedor y
+  monto, devolución, cobro o no se recupera, con resumen de que el efectivo no cambia), «No reconozco la anulación» (motivo y prueba
+  de pago) y «Retirar la disputa»; funciona también en un fondo cerrado. Vista nueva «Facturas anuladas por resolver» y un enlace
+  desde el aviso. La ventana de cierre avisa de los pendientes y, sin el permiso de excepción, bloquea el botón. El arqueo avisa de
+  ellos (servidor). Al escribir un tope mayor que el monto del fondo (alta y edición) se avisa antes de guardar. El faltante y el
+  sobrante dejan de verse como «Faltante · —»: llevan el arqueo y el destino. Sin hacer: el motivo de la diferencia del arqueo en la
+  hoja (el comprobante no lo trae), la salida del gasto sin factura de un vale liquidado y el botón «Anular vale» de ese caso.
+
+- **2026-11-24** (Caja chica, QA CC-11): el reemplazo del documento anulado por una FEL de otro monto sigue sin permitirse, pero el mensaje ya no manda a una devolución o cobro (camino que dejaba la FEL suelta en la bandeja y el comprobante sin respaldo fiscal). Pendiente de decisión del usuario (pregunta 2 del dictamen): aceptar un monto menor y registrar la diferencia como devolución o cobro en la misma operación, sin cambiar la reposición.

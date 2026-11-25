@@ -3,7 +3,14 @@ import type { ReposicionCompensadaEmitida } from '../../../dominio/eventos-de-fo
 import type { Fondo } from '../../../dominio/fondos.js';
 import type { ReposicionNueva } from '../../puertos/puertos-de-reposiciones.js';
 import { exigirFechaDeLaReposicion } from '../../../dominio/reglas-de-reposiciones.js';
-import { desgloseDe, firmadosDe, lineasEmitidas, totalDe, type ComprobanteFirmado } from './armado-de-la-reposicion.js';
+import {
+  desgloseDe,
+  firmadosDe,
+  lineasEmitidas,
+  marcarProcesadosEnElLibro,
+  totalDe,
+  type ComprobanteFirmado,
+} from './armado-de-la-reposicion.js';
 import type { DependenciasDeReposiciones } from './dependencias-de-reposiciones.js';
 import { CLAVE_DE_REPOSICIONES } from './registrar-reposicion.js';
 
@@ -54,7 +61,7 @@ export class ReponedorAlCerrar {
     const { numero, anio } = await this.dependencias.correlativos.siguiente(CLAVE_DE_REPOSICIONES, datos.fecha);
     const reposicion = this.nueva({ datos, firmados, numero, anio });
     await this.dependencias.reposiciones.agregar(reposicion);
-    await this.marcarProcesados(operador, firmados);
+    await marcarProcesadosEnElLibro(this.dependencias.libro, operador, firmados);
     return {
       reposicionId: reposicion.id,
       numero,
@@ -87,12 +94,5 @@ export class ReponedorAlCerrar {
         montoCentavos: firmadoCentavos,
       })),
     };
-  }
-
-  private async marcarProcesados(operador: Operador, firmados: readonly ComprobanteFirmado[]): Promise<void> {
-    for (const { comprobante } of firmados) {
-      if (comprobante.documentoDeCompraId === null) continue;
-      await this.dependencias.libro.marcarProcesado(operador, comprobante.documentoDeCompraId, true);
-    }
   }
 }

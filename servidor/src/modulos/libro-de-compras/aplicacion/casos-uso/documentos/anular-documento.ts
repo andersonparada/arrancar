@@ -90,7 +90,7 @@ export class AnularDocumento {
     await exigirQueLaBajaRespeteElTope(this.dependencias, guardado);
     await exigirPeriodoAbierto(control, guardado.documento.periodo);
     const { destino } = guardado.documento;
-    await avisarAnulacion(destinos, operador, { documentoId, destino, motivo, origen });
+    await avisarAnulacion(destinos, operador, { documentoId, destino, motivo, causa, origen });
     await repositorio.anular(documentoId, { anuladoPor: operador.usuarioId, motivo, causa });
     await this.dependencias.bandeja.soltar(documentoId);
     await this.auditar(guardado, `${causa}: ${motivo}`);

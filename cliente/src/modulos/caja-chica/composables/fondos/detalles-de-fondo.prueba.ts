@@ -22,6 +22,7 @@ const fondo: Fondo = {
   pendienteDeReponer: '1800.00',
   valesAbiertos: '0.00',
   ultimoArqueo: null,
+  documentosPorResolver: 0,
   avisos: [],
   topePorComprobante: null,
   cuentaBancariaId: null,

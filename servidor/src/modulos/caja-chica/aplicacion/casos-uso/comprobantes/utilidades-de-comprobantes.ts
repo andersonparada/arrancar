@@ -3,6 +3,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
 import type { Comprobante } from '../../../dominio/comprobantes.js';
 import { ComprobanteAsignado, ComprobanteQuitado } from '../../../dominio/eventos-de-comprobantes.js';
+import { esDeducible } from '../../../dominio/reglas-de-reportes.js';
 import { efectivoEsperado } from '../../../dominio/monto-del-fondo.js';
 import type { ConsultasDeFondos } from '../../puertos/puertos-de-fondos.js';
 
@@ -26,7 +27,7 @@ export function eventoDeAsignado(operador: Operador, comprobante: Comprobante): 
     montoRetenidoCentavos: comprobante.montoRetenidoCentavos,
     resta: comprobante.resta,
     conceptoDeGastoId: comprobante.conceptoDeGastoId,
-    deducible: comprobante.documento?.enElLibro ?? false,
+    deducible: esDeducible(comprobante),
     conActivoFijo: comprobante.conActivoFijo,
   });
 }

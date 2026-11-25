@@ -1,7 +1,10 @@
 import type { ClaseDeComprobante, Comprobante } from './comprobantes.js';
+import { sinRespaldoFiscal } from './documento-anulado.js';
 
 export const SIN_CONCEPTO = 'Sin concepto';
 export const VARIOS_CONCEPTOS = 'Varios conceptos';
+
+const MOTIVO_DE_DOCUMENTO_ANULADO = 'La FEL fue anulada por su emisor';
 
 const CAUSAS_DE_FUERA_DEL_LIBRO: Record<string, string> = {
   sin_fel: 'No tiene FEL',
@@ -10,9 +13,14 @@ const CAUSAS_DE_FUERA_DEL_LIBRO: Record<string, string> = {
   recibo_fel: 'Es un recibo FEL',
 };
 
-/** Un documento del libro es deducible si quedó dentro del libro; un vale de gasto, un faltante o un sobrante, nunca. */
-export const esDeducible = ({ clase, documento }: Pick<Comprobante, 'clase' | 'documento'>): boolean =>
-  clase === 'documento' && (documento?.enElLibro ?? false);
+/**
+ * Un documento del libro es deducible si quedó dentro del libro y su FEL sigue vigente (o ya la reemplazó otra); un vale
+ * de gasto, un faltante, un sobrante o un documento anulado por su emisor sin reemplazo, nunca.
+ */
+export const esDeducible = (
+  comprobante: Pick<Comprobante, 'clase' | 'documento' | 'motivoDocumentoAnulado' | 'seguimiento'>,
+): boolean =>
+  comprobante.clase === 'documento' && (comprobante.documento?.enElLibro ?? false) && !sinRespaldoFiscal(comprobante);
 
 /** Lo que el comprobante aporta al fondo: positivo, salvo las notas de crédito y los sobrantes, que restan. */
 export const firmadoDelComprobante = ({
@@ -37,9 +45,13 @@ export const conceptoDeAjuste = (clase: ClaseDeComprobante): string | null => CO
 
 /** Por qué un gasto no tiene documento fiscal válido (CC-R3): el motivo del vale o la causa de quedar fuera del libro. */
 export function motivoSinDocumentoFiscal(
-  comprobante: Pick<Comprobante, 'clase' | 'documento' | 'motivoSinDocumento'>,
+  comprobante: Pick<
+    Comprobante,
+    'clase' | 'documento' | 'motivoSinDocumento' | 'motivoDocumentoAnulado' | 'seguimiento'
+  >,
 ): string {
   if (comprobante.clase === 'vale_de_gasto') return comprobante.motivoSinDocumento ?? '';
+  if (sinRespaldoFiscal(comprobante)) return `${MOTIVO_DE_DOCUMENTO_ANULADO}: ${comprobante.motivoDocumentoAnulado}`;
   const causa = comprobante.documento?.motivoFueraDelLibro ?? '';
   return CAUSAS_DE_FUERA_DEL_LIBRO[causa] ?? 'Quedó fuera del libro de compras';
 }

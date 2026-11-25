@@ -1,19 +1,30 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
+import { TEXTOS_DE_DESTINO_DEL_FALTANTE } from '../../textos';
 import type { Comprobante, ComprobanteDeLaBandeja, FiltroDeBandeja } from '../../servicios/tipos-de-comprobantes';
 
 /** El nombre de un comprobante: «Factura A-123», «Nota de crédito …» o «Vale de gasto N.º 7». */
 export function tituloDeComprobante(comprobante: Comprobante): string {
   if (comprobante.clase === 'vale_de_gasto') return `Vale de gasto N.º ${comprobante.numero ?? '—'}`;
   const documento = comprobante.documento;
-  if (!documento) return comprobante.clase === 'faltante' ? 'Faltante' : 'Sobrante';
+  if (!documento) return comprobante.descripcion ?? (comprobante.clase === 'faltante' ? 'Faltante' : 'Sobrante');
   const numero = documento.serie ? `${documento.serie}-${documento.numero}` : documento.numero;
   return `${comprobante.esNotaDeCredito ? 'Nota de crédito' : documento.tipo} ${numero}`;
 }
 
-/** Quién emitió el documento, o a quién se pagó el vale. */
-export const terceroDelComprobante = (comprobante: Comprobante): string =>
-  comprobante.documento?.proveedorNombre ?? comprobante.pagadoA ?? '—';
+/** Quién emitió el documento, a quién se pagó el vale o, en un faltante, qué se hace con él. */
+export function terceroDelComprobante(comprobante: Comprobante): string {
+  if (comprobante.destinoDelFaltante) return TEXTOS_DE_DESTINO_DEL_FALTANTE[comprobante.destinoDelFaltante];
+  if (comprobante.clase === 'sobrante') return 'Sobró efectivo en el arqueo';
+  return comprobante.documento?.proveedorNombre ?? comprobante.pagadoA ?? '—';
+}
+
+/** Lo que dice la primera columna de datos: el proveedor, a quién se pagó o el destino del faltante. */
+export function etiquetaDelTercero(comprobante: Comprobante): string {
+  if (comprobante.clase === 'faltante') return 'Qué se hace';
+  if (comprobante.clase === 'sobrante') return 'Origen';
+  return comprobante.clase === 'vale_de_gasto' ? 'Pagado a' : 'Proveedor';
+}
 
 /** Las marcas que el servidor puso en un comprobante, para mostrarlas como insignias. */
 export function marcasDelComprobante(comprobante: Comprobante): { texto: string; tono: 'trigo' | 'rojo' | 'tierra' }[] {
@@ -38,7 +49,7 @@ export function detallesDeComprobante(comprobante: Comprobante): DetalleDeRegist
     { etiqueta: 'Fecha', valor: formatearFecha(comprobante.fecha) },
     { etiqueta: 'Sale del fondo', valor: `${signo}${formatearMonto(comprobante.monto)}` },
     {
-      etiqueta: comprobante.clase === 'vale_de_gasto' ? 'Pagado a' : 'Proveedor',
+      etiqueta: etiquetaDelTercero(comprobante),
       valor: terceroDelComprobante(comprobante),
     },
   ];
