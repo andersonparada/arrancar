@@ -157,3 +157,11 @@ Salió de la ronda de correcciones (workflow `wf_a9dc1b60-752`). Las cadenas ret
 | Libro de compras: saldo de cierre de un mes declarado sin ventas | Se escribe **en el mes siguiente**, con los campos de «remanente del mes anterior»; mientras falte, ese mes muestra sus cifras «por confirmar». |
 | Libro de ventas: nota sobre factura anterior sin IVA en el DTE ni historial | Se **pide el IVA** de la nota (0 es válido) solo en ese caso. |
 | Contabilidad: retenciones de antes del inicio, aún no enteradas | **Cuenta aparte**: rol nuevo `retenciones_de_apertura`, de balance, sin auxiliar ni llave; el cierre pide motivo mientras tenga saldo. Cuentas por pagar las responde solo con `proposito = apertura`. |
+
+## Respuestas del usuario (2026-11-24, noche)
+
+| Tema | Respuesta |
+|---|---|
+| Activos fijos: quién usa el costo documentado al vender un bien de control | Lo decide la casilla «Lleva contabilidad completa (agente de retención del ISR)» de los datos fiscales (criterio del contador, ISR art. 89). Marcada, o sin datos fiscales: costo fiscal cero. |
+| Libro de ventas: documento anulado porque no corresponde a la empresa | Su número **queda libre** en la misma empresa, con aviso y auditoría. |
+| Libro de ventas: factura de papel anulada en el talonario | Se amplía el texto de la causa a «Anulado por el emisor (SAT o talonario)»; sin causa nueva. |
