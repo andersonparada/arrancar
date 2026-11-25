@@ -167,8 +167,9 @@ en_construccion ───────────► en_uso ──────�
   **motivo**. **Totalmente depreciado** no es un estado: se deduce por libro («Depreciado contable» cuando el contable
   llegó al residual, «Depreciado fiscal» cuando el fiscal llegó a cero). **[corrige el dictamen §5.4]**, que los pone
   como estados: guardarlos obligaría a mantenerlos al día en cada cierre y podrían contradecir los números.
-- Un bien de control o de terceros nace `en_uso` y no tiene libros ni cuotas; solo traslados, inventario y baja (sin
-  resultado: para uno de terceros, «devuelto al dueño»).
+- Un bien de control o de terceros nace `en_uso` y no tiene libros ni cuotas; solo traslados, inventario y baja. Sin
+  precio la baja no tiene resultado (para uno de terceros, «devuelto al dueño»); **un bien de control sí se vende, con su
+  resultado** (AF-9b): valor en libros cero, el precio sin IVA va a otros ingresos y el costo fiscal sale de §6.8.
 - **«Poner en uso» se presenta como «Disponible para uso»** (AFI, I-2 a): la fecha es la del día en que el bien quedó
   **recibido y listo para operar**, aunque nadie lo use todavía y esté guardado (NIIF 17.20), y es la **misma** en los
   dos libros. La columna sigue siendo `fecha_de_inicio_de_uso`: cambia el texto, no el dato. `en_construccion` es solo
@@ -233,7 +234,7 @@ mismo tipo de registro.
 **Bienes de control en lo fiscal** (AFI, I-5 a): en el régimen sobre las utilidades van al gasto también en lo fiscal.
 Al registrar uno, aviso: «La ley no fija un monto mínimo; si la SAT reclasifica, solo aceptaría el 20 % anual». Un bien
 de control lleva etiqueta, ubicación, responsable, `en_bodega`, traslados, división (solo la cantidad y, si los tiene,
-sus costos de referencia) y baja sin resultado.
+sus costos de referencia) y baja; sin precio no hay resultado, pero **vender un bien de control sí tiene resultado** (AF-9b, §6.8).
 
 ### 3.5 Los dos libros (D1 c)
 
@@ -654,12 +655,15 @@ usuario. RLS: empresa (se lee unido al activo, como `costos`).
 | `comprador`, `nit_del_comprador` | text | sí | Venta: 1–150; NIT válido o `CF` (dominio con `Nit`) |
 | `precio`, `iva` | numeric(14,2) | sí | Venta: `precio > 0`, `iva >= 0` |
 | `serie_fel`, `numero_fel`, `autorizacion_fel` | text, text, uuid | sí | Venta: número y autorización obligatorios |
+| `origen_del_costo_fiscal` | text | sí | Solo en una venta (`(causa = 'venta') = (origen is not null)`): `in ('en_libros','documentado','sin_documento','criterio_del_contador')` (AF-9b) |
+| `motivo_del_costo_fiscal` | text | sí | Obligatorio si y solo si el origen es `criterio_del_contador`; 1–300 |
 | `resultado_contable`, `resultado_fiscal` | numeric(14,2) | sí | Venta: check `= precio − valor_en_libros` y `= precio − (costo_fiscal − depreciacion_acumulada_fiscal)` (A1). En las demás causas son nulos (la pérdida es el valor en libros) |
 | anulación completa | | | `vigente`/`anulada`; anular devuelve el activo a `en_uso` (mes abierto) |
 
 Check `bajas_venta_completa`: `(causa = 'venta') = (precio is not null and comprador is not null and numero_fel is not
 null and autorizacion_fel is not null and resultado_contable is not null and resultado_fiscal is not null)`. Índices
-`(empresa_id, fecha)`, `(activo_id)`. RLS: empresa. Un bien de control o de terceros lleva los montos en cero.
+`(empresa_id, fecha)`, `(activo_id)`. RLS: empresa. Un bien de control o de terceros lleva los montos en cero; **la única excepción es `costo_fiscal` en la
+venta de un bien de control** (AF-9b), que puede ser mayor que cero.
 
 ### 5.13 Inventario físico
 
@@ -860,6 +864,28 @@ numeric(14,2) no nulas `default 0`), para que el cierre del mes la tome sin reca
 resultado fiscal de A1. Avisos: sin acta, robo o extravío sin denuncia, donación (IVA, V-12), faltante sin acta,
 componentes que también se dan de baja, ganancia de capital e IVA en la venta, venta de reproductor (V-10). Anular: mes abierto; audita
 `anular` con el DTO; el activo vuelve a `en_uso`.
+
+**Venta de un bien de control (AF-9b, dictamen del contador y respuestas del usuario del 2026-11-24).** Se vende con su
+resultado: costo, depreciación y valor en libros en cero, `resultado_contable = precio` (sin IVA, a otros ingresos: ganancia
+por baja, NIIF para las PYMES 17.28) y un solo cambio a «los montos en cero»: `costo_fiscal`. El criterio no es el régimen
+sino si la empresa **lleva contabilidad completa** (ISR, art. 89), que es la casilla «Lleva contabilidad completa» de sus
+datos fiscales (`esAgenteDeRetencionIsr`); sin datos fiscales se supone que sí. El costo fiscal sale de `costoFiscalDeControl`:
+
+| Caso | `costo_fiscal` | `origen_del_costo_fiscal` |
+|---|---|---|
+| Lleva contabilidad completa (cualquier régimen) | 0 (el bien ya se dedujo) | `en_libros` |
+| No la lleva y el bien tiene costos de referencia con documento | Σ costos vigentes con documento de compra o de soporte | `documentado` |
+| No la lleva y no hay documento | 0 | `sin_documento` |
+| El contador lo escribe (permiso `activos-fijos.bajas.costo-fiscal-manual`, con motivo; audita `corregir` con lo que daba la regla) | lo escrito | `criterio_del_contador` |
+
+El contador puede escribirlo en cualquier caso, pero solo al vender un bien de control (`baja_invalida` en otra venta). Una
+venta de un activo con libros guarda `en_libros`. Avisos (`avisos-de-venta-de-control.ts`): IVA del 12 % con la FEL en el
+régimen general; factura de pequeño contribuyente sin IVA desglosado (5 %, límite anual); ISR por régimen, siempre con
+«confírmelo con el contador de la empresa» (la ganancia de capital del 10 % y la posible lectura como renta de la actividad);
+retención al opcional simplificado; costo sin documento; costo sostenido por el contador; pérdida de capital no deducible.
+Certeza del dictamen: media en el art. 89 (fuente secundaria), baja en que el pequeño contribuyente pague además la ganancia
+de capital. El IVA de un pequeño contribuyente va en 0 (lo escribe quien vende). Un principal de control con componentes con
+libros no puede llevar la venta: el precio se reparte solo entre los que tienen libros.
 
 **Baja o venta de una parte (AFI):** `cantidad?` menor que la del activo → `DividirActivo` (causa `baja`) y la baja del
 activo nuevo, en una transacción, con `bajas.crear` (no pide `divisiones.crear`). Anular esa baja deja el activo nuevo
@@ -1390,9 +1416,9 @@ dos decimales.
   libros**: un bien de control que va con el principal queda como baja con causa `otra` y sin precio propio, y un componente de
   terceros impide vender, donar, dar por obsoleto o por faltante al principal (`bien_de_terceros_sin_destino`): no se inventa que
   se devolvió, se pide resolver antes su destino (devolverlo o darlo de baja por separado); con destrucción, robo, extravío u
-  «otra» se va con el principal con esa causa. Un principal de terceros o de control no se vende aunque tenga componentes propios
-  (`causa_de_baja_no_permitida`). **Cómo se registra la venta de un bien de control y el destino de los bienes de terceros queda
-  pendiente del dictamen de `contador-guatemala`**; mientras tanto se rechaza. Un componente se da de baja solo, pero si se dio de baja con su principal solo se anula con el principal
+  «otra» se va con el principal con esa causa. Un principal de terceros no se vende aunque tenga componentes propios
+  (`causa_de_baja_no_permitida`). La venta de un bien de control se registra desde AF-9b (§6.8); el destino de los bienes de terceros
+  sigue pendiente del dictamen de `contador-guatemala`. Un componente se da de baja solo, pero si se dio de baja con su principal solo se anula con el principal
   (`baja_de_componente_con_su_principal`); y uno dado de baja aparte no se anula mientras su principal esté dado de baja
   (`baja_de_componente_con_principal_dado_de_baja`). **Acta y denuncia son del acto**: se guardan en la baja del principal (subir
   desde el componente las manda ahí, con su auditoría `adjuntar`) y el componente las lee de ella para los avisos, `tieneActa` y la
@@ -1404,10 +1430,26 @@ dos decimales.
   sobre la baja, borra el archivo anterior y audita `adjuntar`. El tipo de acta viaja en la dirección porque el lector de
   documentos solo admite el archivo. Una baja anulada no admite documentos (`baja_anulada`) y sigue mostrando los que tenía.
 - Decisiones: la causa `faltante_de_inventario` se acepta **sin** `inventario_id` hasta AF-12 (la columna existe sin llave ni el check
-  de §5.12); `devuelto_al_dueno` solo vale para bienes de terceros, y un bien de terceros no se vende ni se dona (un bien de control tampoco se vende: baja sin resultado, §3.2 y §3.4); la baja de solo
+  de §5.12); `devuelto_al_dueno` solo vale para bienes de terceros, y un bien de terceros no se vende ni se dona (un bien de control sí se vende, con su resultado: AF-9b, §6.8); la baja de solo
   una parte de un grupo (`cantidad` menor) responde `baja_parcial_no_disponible` hasta AFI-6; `numero` del acta no es único (lo
   comparten el principal y sus componentes); no se dan de baja activos en construcción (se eliminan o se ponen en uso).
 - Falta para AF-9c: ventanas de baja y venta, acta imprimible, subir acta y denuncia, y mostrar los avisos.
+
+**Notas de lo programado en AF-9b (servidor, migración `0011_af9b_costo_fiscal_de_venta`):**
+
+- La venta de un bien de control ya no se rechaza: `baja.ts` y `reglas-de-baja.ts` la aceptan, con valor en libros cero y el
+  costo fiscal de §6.8. Columnas `origen_del_costo_fiscal` y `motivo_del_costo_fiscal` con tres checks; la migración rellena
+  `en_libros` en las ventas que ya existían. El BajaDto trae `origenDelCostoFiscal` y `motivoDelCostoFiscal`.
+- Permiso nuevo `activos-fijos.bajas.costo-fiscal-manual`; el cuerpo de `POST /activos-fijos/bajas` acepta
+  `costoFiscalDelContador { monto, motivo }` y la ruta responde 403 sin el permiso. El rastro es una entrada `corregir` en la
+  auditoría de `activos-fijos.bajas` con lo que daba la regla, lo que quedó y el motivo.
+- «Obligada a contabilidad completa» no necesita campo nuevo: es la casilla «Lleva contabilidad completa» de los datos fiscales
+  de la empresa, con la vigencia de la fecha de la venta (puerto `LectorDeDatosFiscales`).
+- Cliente (AF-9b): el botón «Dar de baja o vender» de la ficha (permiso `bajas.crear`) abre `VentanaDeBaja`: causa, quién
+  autoriza y, si se vende, `CamposDeVenta` (comprador, precio sin IVA, IVA en 0.00 del pequeño contribuyente, factura FEL y,
+  solo con `bajas.costo-fiscal-manual` y en un bien de control, el costo fiscal del contador con su motivo). La confirmación
+  resume lo que pasará y `VentanaDeResultadoDeBaja` muestra el resultado, el origen del costo fiscal y los avisos del servidor.
+  Falta de AF-9c: subir y abrir el acta y la denuncia, imprimir el acta y la anulación de la baja desde la pantalla.
 
 **Notas de lo programado en AFI-5 (servidor, migración `0010_afi5_divisiones`):**
 

@@ -110,9 +110,9 @@ describe('RegistrarVenta: avisos especiales', () => {
     const casa = await e.activoEnUso({ inciso: 'edificios', porcentaje: '5.00', monto: '500000.00' });
     const bodega = await e.activoEnUso({ inciso: 'edificios', porcentaje: '5.00', monto: '500000.00' });
 
-    e.bajas.tipoDePersona = 'individual';
+    e.bajas.datosFiscales = { ...e.bajas.datosFiscales, tipoDePersona: 'individual' };
     const individual = await e.vender(solicitudDeVenta(casa));
-    e.bajas.tipoDePersona = 'juridica';
+    e.bajas.datosFiscales = { ...e.bajas.datosFiscales, tipoDePersona: 'juridica' };
     const juridica = await e.vender(solicitudDeVenta(bodega));
 
     expect(codigos(individual.avisos)).toContain('inmueble_de_persona_individual');

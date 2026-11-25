@@ -3,20 +3,21 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
 import type { Activo } from '../../../dominio/activo.js';
 import { Baja } from '../../../dominio/baja.js';
-import { BajaParcialNoDisponible } from '../../../dominio/errores-de-baja.js';
+import { BajaParcialNoDisponible, VentaDeControlConComponentesConLibros } from '../../../dominio/errores-de-baja.js';
 import { FechaAnteriorAlUltimoTraslado } from '../../../dominio/errores-de-traslado.js';
-import type { CifrasDeBaja, NumeroDeActa } from '../../../dominio/tipos-de-baja.js';
+import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
+import type { NumeroDeActa } from '../../../dominio/tipos-de-baja.js';
 import type { BajaDto, SolicitudDeBaja } from '../../dto/baja.dto.js';
 import { exigirMesAbierto, IncisosDeClases } from '../traslados/dependencias-de-traslados.js';
 import { cifrasDelActivo } from './cifras-del-activo.js';
+import { conCostoFiscal, exigirIvaSegunElRegimen, type CifrasConCostoFiscal } from './costo-fiscal-de-la-venta.js';
 import { costosParaRepartir, datosDeBajaDe, datosDelActivo, ventasPorActivo } from './datos-de-baja.js';
-import { CORRELATIVO_DE_BAJAS, type DependenciasDeBajas } from './dependencias-de-bajas.js';
+import { CORRELATIVO_DE_BAJAS, RECURSO_DE_BAJAS, type DependenciasDeBajas } from './dependencias-de-bajas.js';
 import { eventoDeBaja } from './eventos-de-bajas.js';
 
 /** Lo que se calcula de cada activo antes de armar su baja. */
-interface ActivoConCifras {
+interface ActivoConCifras extends CifrasConCostoFiscal {
   activo: Activo;
-  cifras: CifrasDeBaja;
 }
 
 /**
@@ -41,38 +42,65 @@ export class RegistradorDeBajas {
     const { numero, anio } = await correlativos.siguiente(CORRELATIVO_DE_BAJAS, solicitud.fecha);
     const acta = { numero, anioDeNumero: anio };
     const hoy = await reloj.hoy(operador);
+    await exigirIvaSegunElRegimen(this.dependencias, solicitud);
     const calculados = await this.calcular(operador, { activos, solicitud });
     const bajas = await this.darDeBaja(calculados, { solicitud, acta, hoy });
+    await this.auditarCostoDelContador(calculados[0]!, bajas[0]!);
     const baja = await this.dependencias.consultasDeBajas.obtener(bajas[0]!.id.valor);
     return { baja, eventos: await this.eventosDe(calculados, bajas) };
   }
 
   /** El activo pedido y sus componentes vigentes, bloqueados; el principal primero. */
-  private async cargarActivos({ activoId, cantidad }: SolicitudDeBaja): Promise<Activo[]> {
+  private async cargarActivos(solicitud: SolicitudDeBaja): Promise<Activo[]> {
+    const { activoId, cantidad } = solicitud;
     const { repositorio } = this.dependencias;
     const [principal] = await repositorio.buscarBloqueando([activoId]);
     if (!principal) throw new RecursoNoEncontrado('El activo');
     const { codigo, cantidad: delActivo } = principal.instantanea();
     if (cantidad !== undefined && cantidad !== delActivo) throw new BajaParcialNoDisponible(codigo);
-    return [principal, ...(await repositorio.componentesDe([activoId]))];
+    const componentes = await repositorio.componentesDe([activoId]);
+    const conLibros = componentes.some((c) => c.instantanea().tipoDeRegistro === 'activo');
+    if (solicitud.causa === 'venta' && principal.instantanea().tipoDeRegistro === 'bien_de_control' && conLibros)
+      throw new VentaDeControlConComponentesConLibros(codigo);
+    return [principal, ...componentes];
   }
 
   private async calcular(operador: Operador, pedido: { activos: Activo[]; solicitud: SolicitudDeBaja }) {
     const { traslados, primerMes } = this.dependencias;
     const regla = await primerMes.paraEmpresa(operador);
-    const { fecha } = pedido.solicitud;
+    const { solicitud } = pedido;
+    const { fecha } = solicitud;
+    const componentesConLibros = pedido.activos.some((a, i) => i > 0 && a.instantanea().tipoDeRegistro === 'activo');
     const calculados: ActivoConCifras[] = [];
-    for (const activo of pedido.activos) {
+    for (const [i, activo] of pedido.activos.entries()) {
       const [ultimo] = await traslados.recientesDeActivo(activo.id.valor, 1);
       if (ultimo && fecha < ultimo.fecha)
         throw new FechaAnteriorAlUltimoTraslado(activo.instantanea().codigo, ultimo.fecha);
       activo.exigirPuedeDarseDeBaja();
-      calculados.push({
-        activo,
-        cifras: await cifrasDelActivo(this.dependencias, { activo, fecha, primerMes: regla }),
+      const cifras = await cifrasDelActivo(this.dependencias, { activo, fecha, primerMes: regla });
+      const esPrincipal = i === 0;
+      const conCosto = await conCostoFiscal(this.dependencias, {
+        ...{ activo, esPrincipal, solicitud, cifras, componentesConLibros },
       });
+      calculados.push({ activo, ...conCosto });
     }
     return calculados;
+  }
+
+  /** El costo fiscal que escribió el contador deja rastro: lo que daba la regla, lo que quedó y el motivo. */
+  private async auditarCostoDelContador({ costoFiscal, segunLaRegla, cifras }: ActivoConCifras, baja: Baja) {
+    if (!segunLaRegla) return;
+    await this.dependencias.auditoria.registrar({
+      recurso: RECURSO_DE_BAJAS,
+      registroId: baja.id.valor,
+      accion: 'corregir',
+      anterior: {
+        costoFiscalSegunLaRegla: deCentavos(segunLaRegla.costoFiscalCentavos),
+        origenSegunLaRegla: segunLaRegla.origen,
+        costoFiscalSostenido: deCentavos(cifras.costoFiscalCentavos),
+      },
+      motivo: costoFiscal.motivo,
+    });
   }
 
   private async darDeBaja(
@@ -100,9 +128,9 @@ export class RegistradorDeBajas {
       costoCentavos: cifras.costoCentavos,
     }));
     const ventas = ventasPorActivo(datos.venta, costosParaRepartir(partes));
-    return calculados.map(({ activo, cifras }, i) => {
+    return calculados.map(({ activo, cifras, costoFiscal }, i) => {
       const { id, empresaId, codigo, tipoDeRegistro, fechaDeInicioDeUso } = activo.instantanea();
-      const entrada = { empresaId, activoId: id.valor, cifras, ...contexto.acta };
+      const entrada = { empresaId, activoId: id.valor, cifras, costoFiscal, ...contexto.acta };
       const alContexto = { codigoDelActivo: codigo, tipoDeRegistro, fechaDeInicioDeUso, hoy: contexto.hoy };
       const confirmado = (contexto.solicitud.tercerosConfirmados ?? []).includes(codigo);
       const parte = { codigo, tipoDeRegistro, venta: ventas[i]!, esComponente: i > 0, confirmado };

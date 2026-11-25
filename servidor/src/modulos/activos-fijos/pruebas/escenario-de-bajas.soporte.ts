@@ -11,7 +11,7 @@ import { SubirDenunciaDeBaja } from '../aplicacion/casos-uso/bajas/subir-denunci
 import type { SolicitudDeBaja } from '../aplicacion/dto/baja.dto.js';
 import type { Activo } from '../dominio/activo.js';
 import type { IncisoFiscal } from '../dominio/incisos-fiscales.js';
-import { BajasEnMemoria } from './dobles-de-bajas.js';
+import { BajasEnMemoria, DatosFiscalesEnMemoria } from './dobles-de-bajas.js';
 import { DocumentosDePrueba } from './dobles-de-boleta-firmada.js';
 import { HistorialEnMemoria, MejorasEnMemoria } from './dobles-de-mejoras.js';
 import { armarUso, operador, uso } from './escenario-de-uso.soporte.js';
@@ -70,6 +70,7 @@ export function armarBajas() {
     documentos,
     bajas,
     consultasDeBajas: bajas,
+    datosFiscales: new DatosFiscalesEnMemoria(bajas),
     consultasDeMejoras: mejoras,
     consultasDeDivisiones: { fechaDeLaUltimaDeActivo: async () => null },
   };

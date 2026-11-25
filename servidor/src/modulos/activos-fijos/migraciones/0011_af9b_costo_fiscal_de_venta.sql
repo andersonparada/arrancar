@@ -1,0 +1,6 @@
+ALTER TABLE "activos_fijos"."bajas" ADD COLUMN "origen_del_costo_fiscal" text;--> statement-breakpoint
+ALTER TABLE "activos_fijos"."bajas" ADD COLUMN "motivo_del_costo_fiscal" text;--> statement-breakpoint
+UPDATE "activos_fijos"."bajas" SET "origen_del_costo_fiscal" = 'en_libros' WHERE "causa" = 'venta';--> statement-breakpoint
+ALTER TABLE "activos_fijos"."bajas" ADD CONSTRAINT "bajas_origen_del_costo_fiscal" CHECK ("activos_fijos"."bajas"."origen_del_costo_fiscal" is null or "activos_fijos"."bajas"."origen_del_costo_fiscal" in ('en_libros', 'documentado', 'sin_documento', 'criterio_del_contador'));--> statement-breakpoint
+ALTER TABLE "activos_fijos"."bajas" ADD CONSTRAINT "bajas_origen_solo_en_venta" CHECK (("activos_fijos"."bajas"."causa" = 'venta') = ("activos_fijos"."bajas"."origen_del_costo_fiscal" is not null));--> statement-breakpoint
+ALTER TABLE "activos_fijos"."bajas" ADD CONSTRAINT "bajas_motivo_del_costo_fiscal" CHECK (("activos_fijos"."bajas"."origen_del_costo_fiscal" is not distinct from 'criterio_del_contador') = ("activos_fijos"."bajas"."motivo_del_costo_fiscal" is not null) and ("activos_fijos"."bajas"."motivo_del_costo_fiscal" is null or char_length(btrim("activos_fijos"."bajas"."motivo_del_costo_fiscal")) between 1 and 300));

@@ -153,20 +153,6 @@ describe('vender un principal con un bien de control', () => {
   });
 });
 
-describe('lo que no se vende', () => {
-  it('un bien de control no se vende como activo y no queda baja', async () => {
-    await nuevaCuenta();
-    const control = await cuenta.propietario.post(
-      ACTIVOS,
-      datosDeActivo(vehiculosId, { tipoDeRegistro: 'bien_de_control' }),
-    );
-
-    const respuesta = await cuenta.propietario.post(BAJAS, venta(control.cuerpo.id));
-
-    expect([respuesta.estado, respuesta.cuerpo.error.codigo]).toEqual([422, 'causa_de_baja_no_permitida']);
-  });
-});
-
 describe('bienes de terceros', () => {
   const deTerceros = {
     tipoDeRegistro: 'de_terceros',

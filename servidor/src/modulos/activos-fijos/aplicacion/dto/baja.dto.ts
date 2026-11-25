@@ -1,5 +1,5 @@
 import type { AvisoDeBaja } from '../../dominio/avisos-de-baja.js';
-import type { CausaDeBaja, EstadoDeBaja, TipoDeActa } from '../../dominio/tipos-de-baja.js';
+import type { CausaDeBaja, EstadoDeBaja, OrigenDelCostoFiscal, TipoDeActa } from '../../dominio/tipos-de-baja.js';
 
 /** El activo que se dio de baja, lo necesario para imprimir el acta. */
 export interface ActivoDeBajaDto {
@@ -55,6 +55,9 @@ export interface BajaDto {
   autorizacionFel: string | null;
   resultadoContable: string | null;
   resultadoFiscal: string | null;
+  /** Solo en una venta: de dónde sale el costo fiscal (`criterio_del_contador` lleva su motivo). */
+  origenDelCostoFiscal: OrigenDelCostoFiscal | null;
+  motivoDelCostoFiscal: string | null;
   estado: EstadoDeBaja;
   anuladaEn: string | null;
   motivoDeAnulacion: string | null;
@@ -74,6 +77,12 @@ export interface SolicitudDeVenta {
   autorizacionFel: string;
 }
 
+/** El costo fiscal que sostiene el contador al vender un bien de control, con su motivo y el documento que lo respalda. */
+export interface SolicitudDeCostoFiscalDelContador {
+  monto: string;
+  motivo: string;
+}
+
 /** Lo que se recibe para dar de baja o vender un activo (con sus componentes). */
 export interface SolicitudDeBaja {
   activoId: string;
@@ -87,6 +96,8 @@ export interface SolicitudDeBaja {
   numeroDeDenuncia: string | null;
   inventarioId: string | null;
   venta: SolicitudDeVenta | null;
+  /** Solo al vender un bien de control, y solo con el permiso `activos-fijos.bajas.costo-fiscal-manual`. */
+  costoFiscalDelContador?: SolicitudDeCostoFiscalDelContador | null;
   /** Códigos de los componentes de terceros cuya pérdida o destrucción con el principal se confirma. */
   tercerosConfirmados?: string[];
 }

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { AccionesDeFicha } from '../../composables/activos/usar-acciones-de-ficha';
+import VentanaDeBaja from '../bajas/VentanaDeBaja.vue';
+import VentanaDeResultadoDeBaja from '../bajas/VentanaDeResultadoDeBaja.vue';
 import VentanaDeMotivo from '../comunes/VentanaDeMotivo.vue';
 import VentanaDeEstimacion from '../mejoras/VentanaDeEstimacion.vue';
 import VentanaDeMatricula from '../mejoras/VentanaDeMatricula.vue';
@@ -14,10 +16,20 @@ const props = defineProps<{
   residual: string | null;
 }>();
 // Los composables no cambian durante la vida de la ficha: se toman una vez para enlazar los modelos.
-const { mejoras, revisiones, traslado, anulacionDeTraslado: boleta } = props.acciones;
+const { mejoras, revisiones, traslado, anulacionDeTraslado: boleta, baja } = props.acciones;
 </script>
 
 <template>
+  <VentanaDeBaja
+    v-model="baja.edicion.value"
+    :abierta="baja.ventanaAbierta.value"
+    :errores="baja.errores.value"
+    :enviando="baja.enviando.value"
+    :puede-escribir-el-costo="baja.puedeEscribirElCosto()"
+    @cerrar="baja.cerrar"
+    @guardar="baja.registrar"
+  />
+  <VentanaDeResultadoDeBaja :baja="baja.resultado.value" @cerrar="baja.cerrarResultado" />
   <VentanaDeMejora
     v-model="mejoras.edicion.value"
     :abierta="mejoras.ventanaAbierta.value"

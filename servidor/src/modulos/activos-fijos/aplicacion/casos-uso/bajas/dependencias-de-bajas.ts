@@ -1,5 +1,6 @@
 import type { Correlativos } from '../../../../core/compartido/aplicacion/correlativos.js';
 import type { DocumentosProtegidos } from '../../../../core/compartido/aplicacion/documentos-protegidos.js';
+import type { LectorDeDatosFiscales } from '../../puertos/lector-de-datos-fiscales.js';
 import type { ConsultasBajas } from '../../puertos/consultas-bajas.js';
 import type { ConsultasDivisiones } from '../../puertos/consultas-divisiones.js';
 import type { ConsultasMejoras } from '../../puertos/consultas-mejoras.js';
@@ -24,4 +25,6 @@ export interface DependenciasDeBajas extends DependenciasDeCambioDeLibros {
   /** La fecha de la última división vigente: la baja no puede ser anterior a ella (AFI-5). */
   consultasDeDivisiones: Pick<ConsultasDivisiones, 'fechaDeLaUltimaDeActivo'>;
   documentos: DocumentosProtegidos;
+  /** Los datos fiscales de la empresa a la fecha de la venta: de ellos depende el costo fiscal de un bien de control. */
+  datosFiscales: LectorDeDatosFiscales;
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRightLeft, Building2, Hammer, SlidersHorizontal } from 'lucide-vue-next';
+import { ArrowRightLeft, Building2, Hammer, SlidersHorizontal, Trash2 } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 
 /**
@@ -7,7 +7,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
  * del activo, lo dice al intentarla. Un activo dado de baja no se mueve.
  */
 defineProps<{ dadoDeBaja: boolean; esEdificio: boolean }>();
-const emit = defineEmits<{ trasladar: []; mejora: []; estimacion: []; matricula: [] }>();
+const emit = defineEmits<{ trasladar: []; mejora: []; estimacion: []; matricula: []; baja: [] }>();
 </script>
 
 <template>
@@ -34,6 +34,9 @@ const emit = defineEmits<{ trasladar: []; mejora: []; estimacion: []; matricula:
       @click="emit('matricula')"
     >
       Cambiar matrícula o catastro
+    </BotonBase>
+    <BotonBase v-permiso="'activos-fijos.bajas.crear'" variante="peligro" :icono="Trash2" @click="emit('baja')">
+      Dar de baja o vender
     </BotonBase>
   </template>
 </template>

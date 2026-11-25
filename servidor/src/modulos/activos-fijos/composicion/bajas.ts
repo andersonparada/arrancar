@@ -17,6 +17,7 @@ import { ConsultasActivosDrizzle } from '../infraestructura/persistencia/consult
 import { ConsultasDivisionesDrizzle } from '../infraestructura/persistencia/consultas-divisiones.drizzle.js';
 import { ConsultasMejorasDrizzle } from '../infraestructura/persistencia/consultas-mejoras.drizzle.js';
 import { ConsultasBajasDrizzle } from '../infraestructura/persistencia/consultas-bajas.drizzle.js';
+import { DatosFiscalesDrizzle } from '../infraestructura/persistencia/datos-fiscales-en.js';
 import { HistorialDeDepreciacionDrizzle } from '../infraestructura/persistencia/historial-de-depreciacion.drizzle.js';
 import { RepositorioActivosDrizzle } from '../infraestructura/persistencia/repositorio-activos.drizzle.js';
 import { RepositorioBajasDrizzle } from '../infraestructura/persistencia/repositorio-bajas.drizzle.js';
@@ -47,9 +48,16 @@ function dependenciasDeBajas() {
     primerMes: new PrimerMesEnConfiguracion(),
     traslados: new RepositorioTrasladosDrizzle(),
     bajas: new RepositorioBajasDrizzle(),
+    ...consultasDeBajas(),
+  };
+}
+
+function consultasDeBajas() {
+  return {
     consultasDeBajas: new ConsultasBajasDrizzle(),
     consultasDeMejoras: new ConsultasMejorasDrizzle(),
     consultasDeDivisiones: new ConsultasDivisionesDrizzle(),
+    datosFiscales: new DatosFiscalesDrizzle(),
   };
 }
 

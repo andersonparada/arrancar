@@ -1,5 +1,6 @@
 import type { IncisoFiscal } from './incisos-fiscales.js';
-import { CAUSAS_CON_DENUNCIA, type CausaDeBaja, type TipoDeActa } from './tipos-de-baja.js';
+import { avisosDeVentaDeControl } from './avisos-de-venta-de-control.js';
+import { CAUSAS_CON_DENUNCIA, type CausaDeBaja, type OrigenDelCostoFiscal, type TipoDeActa } from './tipos-de-baja.js';
 
 /** Un aviso: se muestra, nunca bloquea (el efecto fiscal de no tener el documento lo explica el texto). */
 export interface AvisoDeBaja {
@@ -16,8 +17,14 @@ export interface DatosParaLosAvisos {
   /** La certificación de la denuncia ratificada, ya subida (no basta el número). */
   tieneDenuncia: boolean;
   esDeTerceros: boolean;
+  /** Un bien de control: su venta no tiene libros y se avisa distinto (AF-9b). */
+  esDeControl: boolean;
   /** Régimen de IVA vigente de la empresa; `null` si no hay datos fiscales. */
   regimenDeIva: string | null;
+  /** Régimen de ISR vigente de la empresa; `null` si no hay datos fiscales o no aplica. */
+  regimenDeIsr: string | null;
+  /** De dónde salió el costo fiscal de la venta; `null` si no es una venta. */
+  origenDelCostoFiscal: OrigenDelCostoFiscal | null;
   /** Cuántos componentes se dieron de baja junto con este activo. */
   componentes: number;
   incisoFiscal: IncisoFiscal;
@@ -143,6 +150,7 @@ function avisoDelResultado(resultadoFiscalCentavos: number): AvisoDeBaja {
 
 function avisosDeLaVenta(datos: DatosParaLosAvisos): AvisoDeBaja[] {
   if (datos.causa !== 'venta' || datos.resultadoFiscalCentavos === null) return [];
+  if (datos.esDeControl) return avisosDeVentaDeControl(datos);
   const avisos = [avisoDelIva(datos), avisoDelResultado(datos.resultadoFiscalCentavos)];
   if (datos.incisoFiscal === 'reproductores') avisos.push(AVISO_DEL_REPRODUCTOR);
   const exenta = esInmueble(datos.incisoFiscal) && datos.tipoDePersona === 'individual';

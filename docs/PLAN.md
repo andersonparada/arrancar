@@ -5256,3 +5256,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-24 — Libro de compras: un cierre nacido de un cero supuesto no pasa al mes siguiente.** Si el mes previo se
   calculó con un saldo supuesto en cero y ya hay declaraciones anteriores a él, el mes siguiente queda sin dato con un
   aviso que pide rectificar el previo o escribir el saldo (`remanentes-del-periodo.ts`); con prueba de tres meses.
+- **2026-11-24 — AF-9b (Activos fijos, servidor): venta de bienes de control.** Según las respuestas del usuario y el dictamen
+  de `contador-guatemala`, un bien de control se vende con su resultado: valor en libros cero, `resultado_contable = precio` (a
+  otros ingresos) y `costo_fiscal` por el criterio de «lleva contabilidad completa» (casilla de los datos fiscales, no el
+  régimen): cero si la lleva; el costo documentado de sus costos de referencia si no; cero sin documento; o el que escriba el
+  contador con el permiso nuevo `activos-fijos.bajas.costo-fiscal-manual`, con motivo y rastro `corregir` en la auditoría.
+  Migración `0011_af9b_costo_fiscal_de_venta` (columnas `origen_del_costo_fiscal` y `motivo_del_costo_fiscal`, tres checks y
+  relleno `en_libros`). Avisos propios de IVA (general y pequeño contribuyente) e ISR (utilidades, simplificado, pequeño). Se
+  ajustan §3.2, §3.4, §5.12 y §6.8 del diseño. Pendiente AF-9c (ventana).
+- **2026-11-24 — AF-9b (Activos fijos, cliente): ventana de baja y venta.** Botón «Dar de baja o vender» en la ficha, con la causa,
+  los datos de la venta (IVA 0.00 para el pequeño contribuyente), el costo fiscal del contador solo con su permiso, confirmación con
+  resumen y ventana de resultado con el origen del costo fiscal y los avisos de IVA e ISR. Quedan para AF-9c el acta y la denuncia
+  (subir, abrir, imprimir) y anular la baja desde la pantalla.
+- **2026-11-24 — AF-9b (Activos fijos, servidor): correcciones de la revisión.** Un principal de control con componentes con
+  libros se vende: el precio y el IVA se reparten entre los componentes y el principal se va como «otra» causa, sin costo fiscal
+  propio (`vendeControl` exige que el principal reciba la venta). Con régimen de IVA de pequeño contribuyente a la fecha, el
+  servidor rechaza `iva > 0` con `BajaInvalida` en el campo `venta.iva`; la ayuda de la ventana lo explica.

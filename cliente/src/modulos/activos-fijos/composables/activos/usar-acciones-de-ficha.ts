@@ -1,5 +1,6 @@
 import type { Ref } from 'vue';
 import type { ActivoFicha, Traslado } from '../../servicios/activos.api';
+import { usarBajaDeActivo } from '../bajas/usar-baja-de-activo';
 import { usarMejorasDeActivo } from '../mejoras/usar-mejoras-de-activo';
 import { usarRevisionesDeActivo } from '../mejoras/usar-revisiones-de-activo';
 import { usarAnulacionDeTraslado } from '../traslados/usar-anulacion-de-traslado';
@@ -7,7 +8,7 @@ import { usarTrasladoDeActivos } from '../traslados/usar-traslado-de-activo';
 
 /**
  * Las acciones de la ficha que cambian el activo: mejoras y costos posteriores, revisión de la estimación,
- * cambio de matrícula, traslado y anulación de la boleta. `cargar` vuelve a traer la ficha después de cada una.
+ * cambio de matrícula, traslado, anulación de la boleta y baja o venta. `cargar` vuelve a traer la ficha después de cada una.
  */
 export function usarAccionesDeFicha(activoId: string, registro: Ref<ActivoFicha | null>, cargar: () => Promise<void>) {
   const esEdificio = () => registro.value?.incisoFiscal === 'edificios';
@@ -16,6 +17,7 @@ export function usarAccionesDeFicha(activoId: string, registro: Ref<ActivoFicha 
   const revisiones = usarRevisionesDeActivo(() => registro.value, cargar);
   const traslado = usarTrasladoDeActivos(cargar);
   const anulacionDeTraslado = usarAnulacionDeTraslado(cargar);
+  const baja = usarBajaDeActivo(() => registro.value, cargar);
 
   function trasladar(): Promise<void> {
     const activo = registro.value;
@@ -27,7 +29,7 @@ export function usarAccionesDeFicha(activoId: string, registro: Ref<ActivoFicha 
       anulacionDeTraslado.pedir({ grupoId, numero, anioDeNumero, fecha });
   }
 
-  return { esEdificio, mejoras, revisiones, traslado, anulacionDeTraslado, trasladar, anularTraslado };
+  return { esEdificio, mejoras, revisiones, traslado, anulacionDeTraslado, baja, trasladar, anularTraslado };
 }
 
 export type AccionesDeFicha = ReturnType<typeof usarAccionesDeFicha>;
