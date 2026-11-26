@@ -28,3 +28,11 @@ services:
 
 volumes:
   datos-postgres:
+
+# Subred fija: en WSL un puente viejo de Docker puede reaparecer al reiniciar con la subred que se asignaría sola
+# (172.19.0.0/16) y quedarse con el tráfico, y entonces nada se conecta al 5433.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.31.250.0/24
